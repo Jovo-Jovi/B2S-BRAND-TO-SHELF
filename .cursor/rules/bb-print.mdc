@@ -1,0 +1,21 @@
+---
+description: Print engine — physical output, real units, measured verification
+globs: ["src/print/**", "src/modules/**/print/**"]
+alwaysApply: false
+---
+
+# Print is physical
+
+Someone prints these files and cuts material to them. A 2 mm error costs money.
+
+- Real units only (mm/cm) in the print DOM. Dual-DOM is mandatory: screen
+  version scaled in px, print version in real units.
+- One px↔mm constant, from src/print/. Never redefine locally.
+- Never mark a print criterion done on screen evidence. It requires a measured,
+  photographed printout.
+- Print gaps route back to the print engine. Never patch print CSS inside a
+  feature folder.
+
+Per-output page/margin/unit values are frozen in PRINT_CONTRACT.md. Do not
+infer them from legacy files — the contract is authoritative and some legacy
+values were wrong (the carton template prints px-only with no mm conversion).

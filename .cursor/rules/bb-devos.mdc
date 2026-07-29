@@ -1,0 +1,69 @@
+---
+description: BB Dev OS — always-on operating rules for the Balance Bites unified app
+alwaysApply: true
+---
+
+# BB Dev OS — always on
+
+## Session opener
+Read SESSION_CONTEXT.md before any work. Restate: current phase, active
+carry-forwards, this task's model class. If the selected model does not match
+the task's class, stop and say so.
+
+SESSION_CONTEXT.md and committed code outrank your memory and this
+conversation. If they conflict with what you believe, the repo wins.
+
+## One task per window
+Execute exactly one task per session. Do not batch. Do not "also fix while I'm
+here." Do not continue into the next task.
+
+## Never invent scope
+If it is not in SCOPE.md, PARITY_MATRIX.md, MODULE_SPEC.md, or a signed OD in
+DECISIONS.md, it does not exist. Flag and stop.
+
+STOP and flag before: changing any entity in DATA_MODEL.md; changing
+BrandConfig; changing the print engine or any @page rule; adding a dependency;
+touching components/ui or components/shared; editing test/fixtures/golden.
+
+## Hard rules (CI enforces — do not suppress or work around)
+- No hex colour, brand string, currency code, URL, phone, or Arabic UI literal
+  outside BrandConfig / i18n resources / CSS variables.
+- Nothing imports localStorage, indexedDB, or the File System Access API except
+  src/data/adapters/.
+- No CDN script/link at runtime. Fonts and libraries are bundled.
+- No window.print(), window.open for printing, or @page outside src/print/.
+- Every import, preset load, and BrandConfig write is zod-validated before it
+  reaches the store.
+- No user-derived value reaches innerHTML or dangerouslySetInnerHTML.
+
+If a guard blocks you, the guard is right. To change a rule, stop and flag for
+an ADR.
+
+## This is a port, not a greenfield build
+Reproduce legacy behaviour exactly; improve only where a signed decision says
+so. Money and quantity parity is exact — zero drift. Print parity is ±0.2 mm on
+a physical printout. When legacy behaviour looks wrong, report it as a finding;
+never silently correct it. Legacy .html files are read-only reference.
+
+## Model class
+Heavyweight: architecture, storage layer, print engine, migration importer,
+returns/COGS/profit math, BrandConfig schema, all gates.
+Standard: UI wiring, forms, tests, land tasks, CRUD on specified entities.
+
+## Design boundary
+components/ui and components/shared belong to the design surface. Compose and
+wire; never restyle. Token-only styling. Gaps route back to design.
+
+## Every session ends the same way
+Update SESSION_CONTEXT.md and append to DEVELOPMENT_JOURNAL.md:
+Date | Model | Phase/Task | Files | Issues | Next
+
+## Report honestly
+State deviations from the canonical prompt and why, done-when criteria you
+could not meet, and carry-forwards discovered. Never put credentials in any
+chat surface.
+
+## Stack
+Vite · React · TypeScript · zod · IndexedDB via adapter · static on Vercel.
+NOT used: Next.js, SSR, any backend, any database (until P10), runtime CDN,
+CSS frameworks outside the token system, localStorage as a primary store.

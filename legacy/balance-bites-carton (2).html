@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Balance Bites — Carton Template</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600;700&family=Syne:wght@700;800&family=Caveat:wght@600;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#0e0b06;color:#e8e0cc;font-family:'DM Sans',sans-serif;padding-bottom:54px;}
+#app{display:flex;min-height:100vh;}
+#sidebar{position:fixed;top:0;right:0;width:310px;height:100vh;background:#080603;border-left:1px solid rgba(201,168,76,.2);display:flex;flex-direction:column;z-index:100;transform:translateX(0);transition:transform .28s ease;}
+#sidebar.hidden{transform:translateX(100%);}
+#sb-head{padding:14px 16px;border-bottom:1px solid rgba(201,168,76,.15);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;}
+#sb-head h2{font-family:'Syne',sans-serif;font-size:7px;letter-spacing:4px;text-transform:uppercase;color:#c9a84c;}
+#sb-close{background:none;border:none;color:#6b5e3a;cursor:pointer;font-size:16px;padding:0;}
+#sb-body{flex:1;overflow-y:auto;padding:10px 14px 20px;}
+#sb-body::-webkit-scrollbar{width:3px;}
+#sb-body::-webkit-scrollbar-thumb{background:#2a2a1a;border-radius:2px;}
+#sb-foot{padding:10px 14px;border-top:1px solid rgba(201,168,76,.12);display:flex;gap:6px;}
+.sb-sec{font-family:'Syne',sans-serif;font-size:6px;letter-spacing:3px;text-transform:uppercase;padding:9px 0 5px;margin-top:8px;border-bottom:1px solid rgba(201,168,76,.1);color:#c9a84c;}
+.g1{display:grid;grid-template-columns:1fr;gap:5px;margin-top:6px;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px;}
+.ef{display:flex;flex-direction:column;gap:2px;}
+.ef label{font-size:6px;letter-spacing:1.5px;text-transform:uppercase;color:#6b5e3a;}
+.ef input,.ef select,.ef textarea{border-radius:3px;padding:4px 6px;font-family:'DM Sans',sans-serif;font-size:9px;outline:none;width:100%;border:1px solid rgba(201,168,76,.18);background:#111108;color:#e8e0cc;resize:none;}
+.ef input[type=color]{height:24px;padding:1px;cursor:pointer;}
+.ef input[type=range]{padding:4px 0;cursor:pointer;accent-color:#c9a84c;}
+.ef textarea{min-height:44px;line-height:1.4;}
+.slv{font-size:8px;color:#c9a84c;margin-top:1px;}
+.sbbtn{flex:1;padding:8px;border-radius:4px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:2px;text-transform:uppercase;font-weight:700;}
+.sbbtn-gold{background:linear-gradient(135deg,#c9a84c,#e8c96a);color:#060603;}
+.sbbtn-dim{background:rgba(201,168,76,.1);color:#c9a84c;}
+#edToggle{position:fixed;top:16px;right:16px;z-index:200;padding:7px 14px;border-radius:5px;border:1px solid rgba(201,168,76,.35);background:#0e0b06;color:#c9a84c;cursor:pointer;font-family:'Syne',sans-serif;font-size:8px;letter-spacing:3px;text-transform:uppercase;}
+#canvas{flex:1;padding:36px 28px;margin-right:310px;transition:margin-right .28s;}
+#canvas.full{margin-right:0;}
+#sizeTabs{display:flex;gap:8px;margin-bottom:22px;align-items:center;}
+.stab{padding:6px 18px;border-radius:4px;border:1px solid rgba(201,168,76,.2);background:transparent;color:#6b5e3a;cursor:pointer;font-family:'Syne',sans-serif;font-size:8px;letter-spacing:3px;text-transform:uppercase;transition:all .15s;}
+.stab.active{background:rgba(201,168,76,.12);color:#c9a84c;border-color:rgba(201,168,76,.5);}
+#sizeLabel{font-family:'DM Sans',sans-serif;font-size:9px;color:#4a4030;letter-spacing:1px;margin-right:auto;}
+.carton-wrap{display:flex;flex-direction:column;gap:0;max-width:980px;}
+.face-lbl{font-family:'Syne',sans-serif;font-size:6px;letter-spacing:3px;text-transform:uppercase;color:#3a3020;margin-bottom:3px;margin-top:14px;}
+#presetBar{position:fixed;bottom:0;left:0;right:0;z-index:9999;background:rgba(6,6,3,.98);border-top:1px solid rgba(201,168,76,.25);display:flex;align-items:center;gap:8px;padding:0 14px;height:50px;font-family:'DM Sans',sans-serif;}
+#presetBar .pbl{font-size:7px;letter-spacing:3px;text-transform:uppercase;color:#c9a84c;flex-shrink:0;border-right:1px solid rgba(201,168,76,.15);padding-right:10px;white-space:nowrap;}
+#pbSlots{display:flex;gap:4px;flex:1;overflow-x:auto;align-items:center;padding:4px 0;}
+#pbSlots::-webkit-scrollbar{height:3px;}
+#pbSlots::-webkit-scrollbar-thumb{background:#2a2a18;border-radius:2px;}
+.pbs{display:flex;align-items:stretch;flex-shrink:0;border:1px solid rgba(201,168,76,.18);border-radius:5px;overflow:hidden;transition:border-color .15s;}
+.pbs:hover{border-color:rgba(201,168,76,.45);}
+.pbs-load{padding:5px 10px;background:transparent;border:none;cursor:pointer;color:#d0c8b0;font-family:'DM Sans',sans-serif;font-size:9px;white-space:nowrap;display:flex;flex-direction:column;gap:1px;align-items:flex-start;}
+.pbs-load:hover{background:rgba(201,168,76,.1);color:#c9a84c;}
+.pbs-load.empty{color:#2a2a18;font-size:13px;cursor:default;padding:5px 14px;align-items:center;justify-content:center;}
+.pbs-load.empty:hover{background:transparent;}
+.pbs-nm{font-size:9px;font-weight:600;}.pbs-dt{font-size:7px;color:#5a5040;}
+.pbs-exp,.pbs-del{padding:5px 7px;background:transparent;border:none;border-left:1px solid rgba(201,168,76,.1);cursor:pointer;font-size:10px;transition:color .15s;}
+.pbs-exp{color:#3a3020;}.pbs-exp:hover{color:#c9a84c;}
+.pbs-del{color:#2e2820;}.pbs-del:hover{color:#cc6655;background:rgba(204,102,85,.12);}
+.pbs-exp.hidden,.pbs-del.hidden{display:none;}
+#pbRight{display:flex;align-items:center;gap:5px;flex-shrink:0;border-left:1px solid rgba(201,168,76,.15);padding-left:10px;}
+#pbNameIn{background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.2);border-radius:4px;padding:5px 8px;color:#e8e0cc;font-family:'DM Sans',sans-serif;font-size:9px;outline:none;width:120px;}
+#pbNameIn::placeholder{color:#2e2820;}
+.pbtn{padding:5px 11px;border-radius:4px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;white-space:nowrap;}
+.pbtn-save{background:linear-gradient(135deg,#c9a84c,#e8c96a);color:#060603;}
+.pbtn-imp{background:rgba(201,168,76,.1);color:#c9a84c;border:1px solid rgba(201,168,76,.2);}
+.pbtn-prt{background:transparent;color:#8a7848;border:1px solid rgba(201,168,76,.18);}
+#pbToast{position:fixed;bottom:58px;right:16px;background:rgba(6,6,3,.97);border:1px solid rgba(201,168,76,.4);border-radius:6px;padding:8px 16px;font-family:'DM Sans',sans-serif;font-size:9px;color:#c9a84c;letter-spacing:1px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:10000;}
+#pbToast.show{opacity:1;}
+@media print{@page{size:A3 landscape;margin:8mm;}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}#sidebar,#edToggle,#sizeTabs,#presetBar,#pbToast,.face-lbl{display:none!important;}body{background:#fff!important;padding-bottom:0;}#canvas{margin-right:0!important;padding:0;}.carton-wrap{gap:0;}}
+</style>
+</head>
+<body>
+<button id="edToggle" onclick="toggleSidebar()">⚙ تعديل</button>
+<div id="sidebar">
+  <div id="sb-head"><h2>✦ Carton Editor — Balance Bites</h2><button id="sb-close" onclick="toggleSidebar()">✕</button></div>
+  <div id="sb-body">
+    <div class="sb-sec">📦 نوع الكرتون</div>
+    <div class="g1"><div class="ef"><label>ستايل</label><select id="cType"><option value="dark">Dark Luxury</option><option value="brown">Brown Kraft</option><option value="white">White Clean</option><option value="custom">Custom</option></select></div></div>
+    <div class="sb-sec">🎨 الألوان</div>
+    <div class="g2">
+      <div class="ef"><label>خلفية</label><input type="color" id="cBg" value="#12100a"></div>
+      <div class="ef"><label>ذهبي</label><input type="color" id="cGold" value="#c9a84c"></div>
+    </div>
+    <div class="g2">
+      <div class="ef"><label>تمييز</label><input type="color" id="cAcc" value="#3a8a7a"></div>
+      <div class="ef"><label>نص</label><input type="color" id="cTxt" value="#e8e0cc"></div>
+    </div>
+    <div class="sb-sec">🏷 البراند</div>
+    <div class="g2">
+      <div class="ef"><label>Monogram</label><input type="text" id="eMono" value="BB"></div>
+      <div class="ef"><label>وزن العبوة</label><input type="text" id="eUnitWt" value="40G"></div>
+    </div>
+    <div class="g1">
+      <div class="ef"><label>Brand Name</label><input type="text" id="eBrand" value="Balance Bites"></div>
+      <div class="ef"><label>Flavor</label><input type="text" id="eFlavor" value="Za'atar"></div>
+      <div class="ef"><label>Type</label><input type="text" id="eType" value="Crackers"></div>
+      <div class="ef"><label>Slogan</label><input type="text" id="eSlogan" value="Natural · Wholesome · Delicious"></div>
+      <div class="ef"><label>Website</label><input type="text" id="eWeb" value="balancebites.com"></div>
+    </div>
+    <div class="sb-sec">📋 البادجات</div>
+    <div class="g1">
+      <div class="ef"><label>Badge 1</label><input type="text" id="eBadge1" value="100% Natural"></div>
+      <div class="ef"><label>Badge 2</label><input type="text" id="eBadge2" value="Whole Wheat"></div>
+      <div class="ef"><label>Badge 3</label><input type="text" id="eBadge3" value="No Preservatives"></div>
+    </div>
+    <div class="sb-sec">📅 التواريخ والباركود</div>
+    <div class="g2">
+      <div class="ef"><label>تاريخ الإنتاج</label><input type="text" id="eProdDate" value="2025/06/01"></div>
+      <div class="ef"><label>تاريخ الانتهاء</label><input type="text" id="eExpDate" value="2025/09/01"></div>
+    </div>
+    <div class="g1"><div class="ef"><label>الباركود</label><input type="text" id="eBarcode" value="1615012"></div></div>
+    <div class="g2">
+      <div class="ef"><label>عرض صندوق التواريخ</label><input type="range" id="eDateBoxW" min="80" max="200" value="130" oninput="U('vDateBoxW',this.value,'px');render();"><span class="slv" id="vDateBoxW">130px</span></div>
+      <div class="ef"><label>حجم خط التاريخ</label><input type="range" id="eDateFS" min="8" max="22" value="13" oninput="U('vDateFS',this.value,'px');render();"><span class="slv" id="vDateFS">13px</span></div>
+    </div>
+    <div class="g2">
+      <div class="ef"><label>ارتفاع الباركود</label><input type="range" id="eBcH" min="30" max="80" value="50" oninput="U('vBcH',this.value,'px');render();"><span class="slv" id="vBcH">50px</span></div>
+      <div class="ef"><label>حجم خط المكونات</label><input type="range" id="eIngFS" min="7" max="16" value="10" oninput="U('vIngFS',this.value,'px');render();"><span class="slv" id="vIngFS">10px</span></div>
+    </div>
+    <div class="sb-sec">🌾 المكونات</div>
+    <div class="g1">
+      <div class="ef"><label>Ingredients EN</label><textarea id="eIngEn">Whole wheat flour, olive oil, sea salt, za'atar. Contains: Wheat.</textarea></div>
+      <div class="ef"><label>المكونات AR</label><textarea id="eIngAr">دقيق قمح كامل، زيت زيتون، ملح بحر، زعتر. يحتوي على: قمح.</textarea></div>
+    </div>
+    <div class="sb-sec">🔤 Typography</div>
+    <div class="g2">
+      <div class="ef"><label>Flavor (حجم)</label><input type="range" id="eFlavorFS" min="24" max="80" value="48" oninput="U('vFlavorFS',this.value,'px');render();"><span class="slv" id="vFlavorFS">48px</span></div>
+      <div class="ef"><label>Brand (حجم)</label><input type="range" id="eBrandFS" min="8" max="24" value="13" oninput="U('vBrandFS',this.value,'px');render();"><span class="slv" id="vBrandFS">13px</span></div>
+    </div>
+    <div class="g2">
+      <div class="ef"><label>Type (حجم)</label><input type="range" id="eTypeFS" min="8" max="28" value="15" oninput="U('vTypeFS',this.value,'px');render();"><span class="slv" id="vTypeFS">15px</span></div>
+      <div class="ef"><label>Badges (حجم)</label><input type="range" id="eBadgeFS" min="6" max="16" value="9" oninput="U('vBadgeFS',this.value,'px');render();"><span class="slv" id="vBadgeFS">9px</span></div>
+    </div>
+    <div class="g2">
+      <div class="ef"><label>Units رقم (حجم)</label><input type="range" id="eUnitsFS" min="30" max="100" value="60" oninput="U('vUnitsFS',this.value,'px');render();"><span class="slv" id="vUnitsFS">60px</span></div>
+      <div class="ef"><label>Net Weight (حجم)</label><input type="range" id="eWtFS" min="7" max="18" value="10" oninput="U('vWtFS',this.value,'px');render();"><span class="slv" id="vWtFS">10px</span></div>
+    </div>
+    <div class="g2">
+      <div class="ef"><label>عرض شريط Units</label><input type="range" id="eStripW" min="120" max="300" value="200" oninput="U('vStripW',this.value,'px');render();"><span class="slv" id="vStripW">200px</span></div>
+      <div class="ef"><label>Slogan (حجم)</label><input type="range" id="eSloganFS" min="6" max="16" value="9" oninput="U('vSloganFS',this.value,'px');render();"><span class="slv" id="vSloganFS">9px</span></div>
+    </div>
+  </div>
+  <div id="sb-foot">
+    <button class="sbbtn sbbtn-gold" onclick="window.print()">🖨 طباعة</button>
+    <button class="sbbtn sbbtn-dim" onclick="pbSaveQuick()">💾 حفظ سريع</button>
+  </div>
+</div>
+<div id="canvas">
+  <div id="sizeTabs">
+    <button class="stab active" onclick="setSize(24,this)">📦 24 عبوة</button>
+    <button class="stab" onclick="setSize(48,this)">📦 48 عبوة</button>
+    <span id="sizeLabel"></span>
+  </div>
+  <div class="carton-wrap" id="cartonWrap"></div>
+</div>
+<div id="presetBar">
+  <span class="pbl">⚡ Presets</span>
+  <div id="pbSlots"></div>
+  <div id="pbRight">
+    <input id="pbNameIn" placeholder="اسم الإعداد...">
+    <button class="pbtn pbtn-save" onclick="pbSave()">💾 حفظ</button>
+    <label class="pbtn pbtn-imp" style="cursor:pointer">📂<input type="file" accept=".json" onchange="pbImport(event)" style="display:none"></label>
+    <button class="pbtn pbtn-prt" onclick="window.print()">🖨 طباعة</button>
+  </div>
+</div>
+<div id="pbToast"></div>
+<script>
+var currentSize=24;
+var SIZES={
+  24:{label:'24 عبوة — 300×200×150 mm',totalWt:'960G',front:{w:700,h:360},top:{w:700,h:230},side:{w:230,h:360},bottom:{w:700,h:230}},
+  48:{label:'48 عبوة — 400×220×200 mm',totalWt:'1920G',front:{w:920,h:420},top:{w:920,h:270},side:{w:270,h:420},bottom:{w:920,h:270}}
+};
+var CARTON_PRESETS={
+  dark:{bg:'#12100a',gold:'#c9a84c',acc:'#3a8a7a',txt:'#e8e0cc'},
+  brown:{bg:'#7a5c1e',gold:'#f5d26a',acc:'#a0522d',txt:'#fdf5e6'},
+  white:{bg:'#f5f0e8',gold:'#a07820',acc:'#2d6a4f',txt:'#1a1208'},
+  custom:{bg:'#12100a',gold:'#c9a84c',acc:'#3a8a7a',txt:'#e8e0cc'}
+};
+
+function G(id){var e=document.getElementById(id);return e?e.value:'';}
+function GN(id,def){var v=parseFloat(G(id));return isNaN(v)?def:v;}
+function U(id,v,sfx){var e=document.getElementById(id);if(e)e.textContent=v+(sfx||'');}
+
+function hexA(hex,a){
+  hex=(hex||'#000').replace('#','');
+  if(hex.length===3)hex=hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+  return 'rgba('+parseInt(hex.slice(0,2),16)+','+parseInt(hex.slice(2,4),16)+','+parseInt(hex.slice(4,6),16)+','+a+')';
+}
+function darken(hex,amt){
+  hex=(hex||'#000').replace('#','');
+  if(hex.length===3)hex=hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+  return '#'+[0,2,4].map(function(i){return Math.max(0,Math.min(255,parseInt(hex.slice(i,i+2),16)-amt)).toString(16).padStart(2,'0');}).join('');
+}
+function lighten(hex,amt){return darken(hex,-amt);}
+function isLight(hex){
+  hex=(hex||'#000').replace('#','');
+  if(hex.length===3)hex=hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+  return (parseInt(hex.slice(0,2),16)*299+parseInt(hex.slice(2,4),16)*587+parseInt(hex.slice(4,6),16)*114)/1000>145;
+}
+function gg(gold){return 'linear-gradient(90deg,transparent,'+gold+','+lighten(gold,15)+','+gold+',transparent)';}
+function ggV(gold){return 'linear-gradient(180deg,transparent,'+gold+','+lighten(gold,15)+','+gold+',transparent)';}
+function pat(gold,light){var c=hexA(gold,light?0.09:0.05);return 'background-image:repeating-linear-gradient(45deg,'+c+' 0,'+c+' 1px,transparent 0,transparent 50%),repeating-linear-gradient(-45deg,'+c+' 0,'+c+' 1px,transparent 0,transparent 50%);background-size:16px 16px;';}
+function corners(gold,sz){
+  sz=sz||9;
+  return ['top:6px;right:6px','top:6px;left:6px','bottom:6px;right:6px','bottom:6px;left:6px'].map(function(p){
+    return '<div style="position:absolute;'+p+';font-size:'+sz+'px;color:'+hexA(gold,.45)+';z-index:10;line-height:1;pointer-events:none;">✦</div>';
+  }).join('');
+}
+function barcode(num,barH,tc,bc){
+  var s=0;for(var i=0;i<num.length;i++)s+=num.charCodeAt(i)*(i+1);
+  var ws=[1,2,1,1,2,1,2,1,1,2,2,1,1,2,1,2,1,1,2,2,1,1,2,1,2,1,2,1,1,2,1,2];
+  var b='';for(var j=0;j<32;j++){var bw=ws[(j+s)%ws.length],bh=Math.round(barH*(j%4===0?1:j%3===0?.85:.75));b+='<div style="width:'+bw+'px;height:'+bh+'px;background:'+tc+';flex-shrink:0;"></div>';}
+  return '<div style="display:inline-flex;flex-direction:column;align-items:center;gap:3px;background:'+bc+';padding:6px 8px;border-radius:3px;"><div style="display:flex;gap:1px;align-items:flex-end;">'+b+'</div><div style="font-family:\'DM Sans\',sans-serif;font-size:7px;letter-spacing:2px;color:'+tc+';font-weight:600;">'+num+'</div></div>';
+}
+
+function getVals(){
+  var ct=G('cType')||'dark',pr=CARTON_PRESETS[ct]||CARTON_PRESETS.dark;
+  var bg=G('cBg')||pr.bg,gold=G('cGold')||pr.gold,acc=G('cAcc')||pr.acc,txt=G('cTxt')||pr.txt;
+  return {
+    bg:bg,gold:gold,acc:acc,txt:txt,light:isLight(bg),
+    mono:G('eMono')||'BB',brand:G('eBrand')||'Balance Bites',
+    flavor:G('eFlavor')||"Za'atar",type:G('eType')||'Crackers',
+    slogan:G('eSlogan')||'Natural · Wholesome · Delicious',
+    web:G('eWeb')||'balancebites.com',unitWt:G('eUnitWt')||'40G',
+    barcode:G('eBarcode')||'1615012',
+    prodDate:G('eProdDate')||'2025/06/01',expDate:G('eExpDate')||'2025/09/01',
+    ingEn:G('eIngEn')||'',ingAr:G('eIngAr')||'',
+    badge1:G('eBadge1')||'',badge2:G('eBadge2')||'',badge3:G('eBadge3')||'',
+    flavorFS:GN('eFlavorFS',48),brandFS:GN('eBrandFS',13),typeFS:GN('eTypeFS',15),
+    badgeFS:GN('eBadgeFS',9),unitsFS:GN('eUnitsFS',60),wtFS:GN('eWtFS',10),
+    sloganFS:GN('eSloganFS',9),stripW:GN('eStripW',200),
+    dateBoxW:GN('eDateBoxW',130),dateFS:GN('eDateFS',13),
+    bcH:GN('eBcH',50),ingFS:GN('eIngFS',10)
+  };
+}
+
+function buildFront(sz,v){
+  var D=SIZES[sz].front,W=D.w,H=D.h;
+  var bg=v.bg,gold=v.gold,acc=v.acc,txt=v.txt,sw=v.stripW,mw=W-sw;
+  var PAD=16,p4=PAD+4;
+  var h='<div style="position:relative;width:'+W+'px;height:'+H+'px;background:'+bg+';border:1.5px solid '+hexA(gold,.4)+';overflow:hidden;flex-shrink:0;display:flex;">';
+  h+='<div style="position:absolute;inset:0;'+pat(gold,v.light)+'pointer-events:none;z-index:0;"></div>';
+  h+='<div style="position:absolute;top:0;left:0;right:0;height:4px;background:'+gg(gold)+';z-index:9;"></div>';
+  h+='<div style="position:absolute;bottom:0;left:0;right:0;height:4px;background:'+gg(gold)+';z-index:9;"></div>';
+  h+=corners(gold);
+  // watermark
+  h+='<div style="position:absolute;top:50%;left:'+(sw/2)+'px;transform:translate(-50%,-50%);font-family:\'Playfair Display\',serif;font-weight:900;font-size:'+Math.round(H*1.15)+'px;color:'+hexA(gold,.04)+';line-height:1;letter-spacing:-10px;z-index:1;pointer-events:none;white-space:nowrap;user-select:none;">'+v.mono+'</div>';
+  // MAIN area
+  h+='<div style="width:'+mw+'px;flex-shrink:0;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:'+p4+'px '+PAD+'px '+p4+'px;position:relative;z-index:5;overflow:hidden;">';
+  // top brand
+  h+='<div style="width:100%;text-align:center;">';
+  h+='<div style="font-family:\'Syne\',sans-serif;font-size:'+v.brandFS+'px;letter-spacing:'+Math.round(v.brandFS*.45)+'px;text-transform:uppercase;color:'+hexA(gold,.8)+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+v.brand+'</div>';
+  h+='<div style="height:1px;background:'+gg(gold)+';margin-top:5px;"></div>';
+  h+='</div>';
+  // middle
+  h+='<div style="flex:1;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:6px 0;overflow:hidden;">';
+  h+='<div style="font-family:\'Caveat\',cursive;font-weight:700;font-size:'+v.flavorFS+'px;line-height:1;color:'+gold+';text-shadow:0 2px 20px '+hexA(gold,.2)+';text-align:center;max-width:100%;overflow:hidden;">'+v.flavor+'</div>';
+  h+='<div style="font-family:\'Syne\',sans-serif;font-size:'+v.typeFS+'px;letter-spacing:5px;text-transform:uppercase;color:'+hexA(acc,.9)+';white-space:nowrap;">'+v.type+'</div>';
+  h+='<div style="height:1px;background:'+gg(gold)+';width:75%;"></div>';
+  var badges=[v.badge1,v.badge2,v.badge3].filter(Boolean);
+  if(badges.length){
+    h+='<div style="display:flex;flex-wrap:wrap;gap:5px;justify-content:center;">';
+    badges.forEach(function(b){h+='<div style="padding:2px 10px;border-radius:20px;border:1px solid '+hexA(gold,.5)+';background:'+hexA(gold,.1)+';font-family:\'DM Sans\',sans-serif;font-size:'+v.badgeFS+'px;color:'+gold+';letter-spacing:1px;text-transform:uppercase;font-weight:600;white-space:nowrap;">'+b+'</div>';});
+    h+='</div>';
+  }
+  h+='</div>';
+  // bottom
+  h+='<div style="width:100%;text-align:center;">';
+  h+='<div style="height:1px;background:'+gg(gold)+';margin-bottom:6px;"></div>';
+  h+='<div style="font-family:\'DM Sans\',sans-serif;font-size:'+v.wtFS+'px;font-weight:700;color:'+hexA(txt,.55)+';letter-spacing:2px;text-transform:uppercase;">NET WT '+SIZES[sz].totalWt+' ('+sz+'×'+v.unitWt+')</div>';
+  h+='<div style="font-family:\'DM Sans\',sans-serif;font-size:'+v.sloganFS+'px;color:'+hexA(gold,.45)+';letter-spacing:3px;text-transform:uppercase;margin-top:3px;">'+v.slogan+'</div>';
+  h+='</div>';
+  h+='</div>';
+  // STRIP
+  var stripBg='linear-gradient(180deg,'+hexA(acc,.38)+','+hexA(darken(acc,20),.52)+')';
+  h+='<div style="width:'+sw+'px;flex-shrink:0;height:100%;background:'+stripBg+';position:relative;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:20px 8px;overflow:hidden;">';
+  h+='<div style="position:absolute;right:0;top:0;bottom:0;width:2px;background:'+ggV(gold)+';z-index:8;"></div>';
+  h+='<div style="font-family:\'Playfair Display\',serif;font-weight:900;font-size:'+v.unitsFS+'px;color:'+gold+';line-height:1;text-align:center;text-shadow:0 0 24px '+hexA(gold,.3)+';z-index:5;flex-shrink:0;">'+sz+'</div>';
+  h+='<div style="width:60%;height:1px;background:'+hexA(gold,.4)+';flex-shrink:0;"></div>';
+  h+='<div style="font-family:\'Syne\',sans-serif;font-size:'+Math.round(v.unitsFS*.2)+'px;letter-spacing:3px;text-transform:uppercase;color:'+hexA(gold,.7)+';text-align:center;z-index:5;flex-shrink:0;">UNITS</div>';
+  h+='<div style="font-family:\'DM Sans\',sans-serif;font-size:'+Math.round(v.unitsFS*.15)+'px;color:'+hexA(txt,.4)+';letter-spacing:2px;text-align:center;z-index:5;flex-shrink:0;">'+v.unitWt+' each</div>';
+  h+='</div>';
+  h+='</div>';
+  return h;
+}
+
+function buildTop(sz,v){
+  var D=SIZES[sz].top,W=D.w,H=D.h;
+  var bg=v.bg,gold=v.gold,acc=v.acc,txt=v.txt;
+  var h='<div style="position:relative;width:'+W+'px;height:'+H+'px;background:'+bg+';border:1.5px solid '+hexA(gold,.4)+';border-bottom:none;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 18px;">';
+  h+='<div style="position:absolute;inset:0;'+pat(gold,v.light)+'pointer-events:none;z-index:0;"></div>';
+  h+='<div style="position:absolute;top:0;left:0;right:0;height:3px;background:'+gg(gold)+';z-index:9;"></div>';
+  h+=corners(gold,8);
+  h+='<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:\'Playfair Display\',serif;font-weight:900;font-size:'+Math.round(H*2.2)+'px;color:'+hexA(gold,.04)+';line-height:1;letter-spacing:-14px;z-index:1;pointer-events:none;white-space:nowrap;user-select:none;">'+v.mono+'</div>';
+  // LEFT units
+  h+='<div style="position:relative;z-index:5;display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0;">';
+  h+='<div style="font-family:\'Playfair Display\',serif;font-weight:900;font-size:'+Math.round(H*.48)+'px;color:'+gold+';line-height:1;">'+sz+'</div>';
+  h+='<div style="font-family:\'Syne\',sans-serif;font-size:'+Math.round(H*.1)+'px;letter-spacing:3px;text-transform:uppercase;color:'+hexA(gold,.6)+';white-space:nowrap;">UNITS</div>';
+  h+='</div>';
+  // CENTER brand+flavor
+  h+='<div style="position:relative;z-index:5;text-align:center;flex:1;padding:0 20px;overflow:hidden;">';
+  h+='<div style="font-family:\'Syne\',sans-serif;font-size:'+Math.round(H*.13)+'px;letter-spacing:'+Math.round(H*.05)+'px;text-transform:uppercase;color:'+gold+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+v.brand+'</div>';
+  h+='<div style="height:1px;background:'+gg(gold)+';margin:4px auto;width:80%;"></div>';
+  h+='<div style="font-family:\'Caveat\',cursive;font-weight:700;font-size:'+Math.round(H*.3)+'px;line-height:1.05;color:'+hexA(txt,.9)+';overflow:hidden;">'+v.flavor+'</div>';
+  h+='</div>';
+  // RIGHT web
+  h+='<div style="position:relative;z-index:5;flex-shrink:0;">';
+  h+='<div style="font-family:\'DM Sans\',sans-serif;font-size:'+Math.round(H*.09)+'px;letter-spacing:2px;text-transform:uppercase;color:'+hexA(gold,.45)+';white-space:nowrap;">'+v.web+'</div>';
+  h+='</div>';
+  h+='</div>';
+  return h;
+}
+
+function buildSide(sz,v){
+  var D=SIZES[sz].side,W=D.w,H=D.h;
+  var bg=v.bg,gold=v.gold,acc=v.acc,txt=v.txt;
+  var bottomH=Math.round(H*.17);
+  var h='<div style="position:relative;width:'+W+'px;height:'+H+'px;background:'+bg+';border:1.5px solid '+hexA(gold,.35)+';border-right:none;overflow:hidden;flex-shrink:0;">';
+  h+='<div style="position:absolute;inset:0;'+pat(gold,v.light)+'pointer-events:none;z-index:0;"></div>';
+  h+='<div style="position:absolute;right:0;top:0;bottom:0;width:3px;background:'+ggV(gold)+';z-index:9;"></div>';
+  h+='<div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:'+ggV(gold)+';z-index:9;"></div>';
+  // middle rotated
+  var monoSz=Math.round(W*.22),flSz=Math.round(W*.16),tySz=Math.round(W*.085);
+  h+='<div style="position:absolute;top:0;left:0;right:0;bottom:'+bottomH+'px;display:flex;align-items:center;justify-content:center;z-index:5;overflow:hidden;">';
+  h+='<div style="transform:rotate(90deg);white-space:nowrap;display:flex;align-items:center;gap:12px;">';
+  h+='<div style="font-family:\'Playfair Display\',serif;font-weight:900;font-size:'+monoSz+'px;color:'+gold+';line-height:1;letter-spacing:-1px;">'+v.mono+'</div>';
+  h+='<div style="width:1px;height:'+Math.round(W*.35)+'px;background:'+hexA(gold,.4)+';"></div>';
+  h+='<div style="display:flex;flex-direction:column;gap:3px;">';
+  h+='<div style="font-family:\'Caveat\',cursive;font-weight:700;font-size:'+flSz+'px;color:'+hexA(txt,.9)+';line-height:1;">'+v.flavor+'</div>';
+  h+='<div style="font-family:\'Syne\',sans-serif;font-size:'+tySz+'px;letter-spacing:3px;text-transform:uppercase;color:'+hexA(acc,.85)+';margin-top:2px;">'+v.type+'</div>';
+  h+='</div>';
+  h+='</div>';
+  h+='</div>';
+  // units bottom strip
+  var uSz=Math.round(W*.22);
+  h+='<div style="position:absolute;bottom:0;left:0;right:0;height:'+bottomH+'px;display:flex;align-items:center;justify-content:center;gap:4px;z-index:5;border-top:1px solid '+hexA(gold,.2)+';background:'+hexA(gold,.07)+'">';
+  h+='<div style="font-family:\'Playfair Display\',serif;font-weight:900;font-size:'+uSz+'px;color:'+gold+';line-height:1;">'+sz+'</div>';
+  h+='<div style="font-family:\'Syne\',sans-serif;font-size:'+Math.round(uSz*.28)+'px;letter-spacing:2px;text-transform:uppercase;color:'+hexA(gold,.55)+';padding-bottom:'+Math.round(uSz*.06)+'px;">PCS</div>';
+  h+='</div>';
+  h+='</div>';
+  return h;
+}
+
+function buildBottom(sz,v){
+  var D=SIZES[sz].bottom,W=D.w,H=D.h;
+  var bg=v.bg,gold=v.gold,acc=v.acc,txt=v.txt;
+  var bcTxt=v.light?darken(bg,160):lighten(bg,180);
+  var bcBg=v.light?lighten(bg,10):darken(bg,25);
+  var dw=v.dateBoxW,bw=Math.round(v.bcH*1.7+24);
+  var h='<div style="position:relative;width:'+W+'px;height:'+H+'px;background:'+bg+';border:1.5px solid '+hexA(gold,.35)+';border-top:none;overflow:hidden;flex-shrink:0;display:flex;align-items:stretch;">';
+  h+='<div style="position:absolute;inset:0;'+pat(gold,v.light)+'pointer-events:none;z-index:0;"></div>';
+  h+='<div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:'+gg(gold)+';z-index:9;"></div>';
+  h+=corners(gold,7);
+  // DATES col
+  h+='<div style="width:'+dw+'px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:12px;border-left:1px solid '+hexA(gold,.15)+';position:relative;z-index:5;overflow:hidden;">';
+  ['prodDate','expDate'].forEach(function(k){
+    h+='<div style="display:flex;flex-direction:column;align-items:center;gap:2px;width:100%;">';
+    h+='<div style="font-family:\'Syne\',sans-serif;font-size:'+Math.round(v.dateFS*.7)+'px;letter-spacing:2px;text-transform:uppercase;color:'+hexA(gold,.6)+';white-space:nowrap;">'+(k==='prodDate'?'PROD DATE':'EXP DATE')+'</div>';
+    h+='<div style="font-family:\'DM Sans\',sans-serif;font-size:'+v.dateFS+'px;font-weight:700;color:'+hexA(txt,.88)+';white-space:nowrap;">'+v[k]+'</div>';
+    h+='</div>';
+  });
+  h+='</div>';
+  // INGREDIENTS col
+  h+='<div style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:12px 10px;position:relative;z-index:5;overflow:hidden;">';
+  h+='<div style="font-family:\'Syne\',sans-serif;font-size:'+Math.round(v.ingFS*.88)+'px;letter-spacing:2px;text-transform:uppercase;color:'+hexA(gold,.65)+';text-align:center;white-space:nowrap;border-bottom:1px solid '+hexA(gold,.18)+';padding-bottom:4px;width:100%;">المكونات · INGREDIENTS</div>';
+  h+='<div style="font-family:\'DM Sans\',sans-serif;font-size:'+v.ingFS+'px;color:'+hexA(txt,.75)+';line-height:1.5;text-align:center;overflow:hidden;">'+v.ingEn+'</div>';
+  h+='<div style="font-family:\'Tajawal\',sans-serif;font-size:'+v.ingFS+'px;color:'+hexA(txt,.75)+';line-height:1.5;text-align:center;direction:rtl;overflow:hidden;">'+v.ingAr+'</div>';
+  h+='<div style="font-family:\'DM Sans\',sans-serif;font-size:'+Math.round(v.ingFS*.78)+'px;letter-spacing:2px;text-transform:uppercase;color:'+hexA(gold,.35)+';margin-top:2px;">'+v.web+'</div>';
+  h+='</div>';
+  // BARCODE col
+  h+='<div style="width:'+bw+'px;flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:12px;border-right:1px solid '+hexA(gold,.15)+';position:relative;z-index:5;">';
+  h+=barcode(v.barcode,v.bcH,bcTxt,bcBg);
+  h+='</div>';
+  h+='</div>';
+  return h;
+}
+
+function render(){
+  var v=getVals(),sz=currentSize;
+  document.getElementById('sizeLabel').textContent=SIZES[sz].label;
+  document.getElementById('cartonWrap').innerHTML=
+    '<div class="face-lbl">↑ الوجه العلوي (Top)</div>'+buildTop(sz,v)+
+    '<div class="face-lbl">الواجهة الأمامية (Front) + الجانب (Side)</div>'+
+    '<div style="display:flex;gap:0;">'+buildFront(sz,v)+buildSide(sz,v)+'</div>'+
+    '<div class="face-lbl">↓ الوجه السفلي (Bottom)</div>'+buildBottom(sz,v);
+}
+
+function applyCartonPreset(){
+  var ct=G('cType')||'dark';if(ct==='custom')return;
+  var p=CARTON_PRESETS[ct];
+  ['bg:cBg','gold:cGold','acc:cAcc','txt:cTxt'].forEach(function(s){var a=s.split(':');var e=document.getElementById(a[1]);if(e)e.value=p[a[0]];});
+  render();
+}
+function setSize(sz,btn){currentSize=sz;document.querySelectorAll('.stab').forEach(function(b){b.classList.remove('active');});if(btn)btn.classList.add('active');render();}
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('hidden');document.getElementById('canvas').classList.toggle('full');}
+
+var _PBK='bbcarton',_PBS=[],_PBMAX=8;
+function _pbLG(){try{return JSON.parse(localStorage.getItem(_PBK+'_pb')||'[]');}catch(e){return[];}}
+function _pbSav(a){try{localStorage.setItem(_PBK+'_pb',JSON.stringify(a));}catch(e){}}
+function pbToast(msg,dur){var t=document.getElementById('pbToast');if(!t)return;t.textContent=msg;t.classList.add('show');clearTimeout(pbToast._t);pbToast._t=setTimeout(function(){t.classList.remove('show');},dur||2400);}
+
+function presetGetState(){return {vals:getVals(),size:currentSize};}
+function presetSetState(st){
+  if(!st)return;
+  var sv=function(id,val){var e=document.getElementById(id);if(e&&val!==undefined)e.value=val;};
+  if(st.vals){
+    var v=st.vals;
+    sv('cBg',v.bg);sv('cGold',v.gold);sv('cAcc',v.acc);sv('cTxt',v.txt);
+    sv('eMono',v.mono);sv('eBrand',v.brand);sv('eFlavor',v.flavor);sv('eType',v.type);
+    sv('eSlogan',v.slogan);sv('eWeb',v.web);sv('eUnitWt',v.unitWt);sv('eBarcode',v.barcode);
+    sv('eProdDate',v.prodDate);sv('eExpDate',v.expDate);sv('eIngEn',v.ingEn);sv('eIngAr',v.ingAr);
+    sv('eBadge1',v.badge1);sv('eBadge2',v.badge2);sv('eBadge3',v.badge3);
+    sv('eFlavorFS',v.flavorFS);sv('eBrandFS',v.brandFS);sv('eTypeFS',v.typeFS);
+    sv('eBadgeFS',v.badgeFS);sv('eUnitsFS',v.unitsFS);sv('eWtFS',v.wtFS);
+    sv('eSloganFS',v.sloganFS);sv('eStripW',v.stripW);
+    sv('eDateBoxW',v.dateBoxW);sv('eDateFS',v.dateFS);sv('eBcH',v.bcH);sv('eIngFS',v.ingFS);
+    [['eFlavorFS','vFlavorFS'],['eBrandFS','vBrandFS'],['eTypeFS','vTypeFS'],['eBadgeFS','vBadgeFS'],
+     ['eUnitsFS','vUnitsFS'],['eWtFS','vWtFS'],['eSloganFS','vSloganFS'],['eStripW','vStripW'],
+     ['eDateBoxW','vDateBoxW'],['eDateFS','vDateFS'],['eBcH','vBcH'],['eIngFS','vIngFS']
+    ].forEach(function(pair){U(pair[1],G(pair[0]),'px');});
+  }
+  if(st.size)setSize(st.size);else render();
+}
+
+function pbSave(){
+  var name=(document.getElementById('pbNameIn').value||'').trim();
+  if(!name){pbToast('اكتب اسماً أولاً');return;}
+  var ts=new Date().toLocaleDateString('ar-EG');
+  var idx=_PBS.findIndex(function(p){return p.name===name;});
+  var obj={name:name,state:presetGetState(),date:ts};
+  if(idx>=0){_PBS[idx]=obj;}else{if(_PBS.length>=_PBMAX)_PBS.shift();_PBS.push(obj);}
+  _pbSav(_PBS);pbRender();document.getElementById('pbNameIn').value='';
+  pbToast('✓ تم حفظ "'+name+'"');
+}
+function pbSaveQuick(){document.getElementById('pbNameIn').value='Quick '+new Date().toLocaleTimeString('ar-EG');pbSave();}
+function pbLoad(idx){var p=_PBS[idx];if(!p)return;try{presetSetState(p.state);pbToast('✓ تم تحميل "'+p.name+'"');}catch(e){pbToast('خطأ: '+e.message);}}
+function pbDelete(idx){var nm=_PBS[idx]?_PBS[idx].name:'';_PBS.splice(idx,1);_pbSav(_PBS);pbRender();pbToast('🗑 حُذف "'+nm+'"');}
+function pbExport(idx){var p=_PBS[idx];if(!p)return;var a=document.createElement('a');a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify({name:p.name,template:'bbcarton',date:p.date,state:p.state},null,2));a.download='bbcarton-'+p.name.replace(/[^\w\u0600-\u06FF\- ]/g,'_')+'.json';document.body.appendChild(a);a.click();document.body.removeChild(a);pbToast('📥 تم تصدير "'+p.name+'"');}
+function pbImport(evt){var file=evt.target.files[0];if(!file)return;var r=new FileReader();r.onload=function(e){try{var data=JSON.parse(e.target.result);if(!data.state)throw new Error('ملف غير صالح');var name=data.name||file.name.replace('.json','');var ts=new Date().toLocaleDateString('ar-EG');var idx=_PBS.findIndex(function(p){return p.name===name;});var obj={name:name,state:data.state,date:ts};if(idx>=0){_PBS[idx]=obj;}else{if(_PBS.length>=_PBMAX)_PBS.shift();_PBS.push(obj);}_pbSav(_PBS);pbRender();pbToast('✓ تم استيراد "'+name+'"');}catch(err){pbToast('ملف غير صالح: '+err.message);}evt.target.value='';};r.readAsText(file);}
+function pbRender(){
+  var slots=document.getElementById('pbSlots');if(!slots)return;slots.innerHTML='';
+  for(var i=0;i<_PBMAX;i++){var p=_PBS[i];var slot=document.createElement('div');slot.className='pbs';
+    var lb=document.createElement('button');lb.className='pbs-load'+(p?'':' empty');
+    if(p){lb.innerHTML='<span class="pbs-nm">'+p.name+'</span><span class="pbs-dt">'+p.date+'</span>';lb.title='تحميل: '+p.name;lb.onclick=(function(i2){return function(){pbLoad(i2);};})(i);}else{lb.textContent='·';}
+    var ex=document.createElement('button');ex.className='pbs-exp'+(p?'':' hidden');ex.textContent='↓';ex.title='تصدير';if(p)ex.onclick=(function(i2){return function(e){e.stopPropagation();pbExport(i2);};})(i);
+    var db=document.createElement('button');db.className='pbs-del'+(p?'':' hidden');db.textContent='✕';db.title='حذف';if(p)db.onclick=(function(i2){return function(e){e.stopPropagation();pbDelete(i2);};})(i);
+    slot.appendChild(lb);slot.appendChild(ex);slot.appendChild(db);slots.appendChild(slot);}
+}
+
+(function(){
+  document.querySelectorAll('#sb-body input:not([type=range]):not([type=file]),#sb-body select,#sb-body textarea').forEach(function(inp){
+    inp.addEventListener('input',function(){if(inp.id==='cType')applyCartonPreset();else render();});
+  });
+  _PBS=_pbLG();
+  setTimeout(pbRender,100);
+  render();
+})();
+</script>
+</body>
+</html>

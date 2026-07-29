@@ -1,0 +1,28 @@
+---
+description: Returns logic — highest-risk calculations in the codebase
+globs: ["src/modules/inventory/**", "src/modules/invoicing/**", "src/modules/reports/**"]
+alwaysApply: false
+---
+
+# Returns
+
+Returns affect net revenue, COGS, product summary, ingredient usage, monthly
+profit, stock value, and print reports. Anything touching them is heavyweight
+class, full ceremony.
+
+Required parity cases, minimum:
+  1. partial return
+  2. full return
+  3. calculator-logged return WITH outAllocations
+  4. legacy return WITHOUT outAllocations
+
+Never assume outAllocations exists — returns logged before the Return
+Calculator do not have it. Both shapes must render without throwing.
+
+Disposition matters: expired (تالف) is a write-off; restock (مخزون) re-enters
+stock. They affect stock value and COGS differently. Do not conflate them.
+
+Invoice grouping is three-way: pending/paid · partial returns · full returns.
+Full returns are excluded from sales KPIs; partial returns use net amounts.
+
+Consult DATA_MODEL.md and DELTA_SCHEMA.md before writing any returns code.

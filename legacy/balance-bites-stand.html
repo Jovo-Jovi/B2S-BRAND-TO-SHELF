@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Balance Bites — Counter Display Stand Editor</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Montserrat:wght@400;500;600;700;800;900&family=DM+Sans:wght@300;400;500;600;700&family=Syne:wght@700;800&family=Tajawal:wght@400;500;700;800&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════
+   BASE
+══════════════════════════════════════ */
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#0a0804;color:#e8e0cc;font-family:'DM Sans',sans-serif;min-height:100vh;padding-bottom:52px;}
+#pageWrap{position:relative;width:100vw;min-height:100vh;overflow-x:hidden;}
+
+/* ── EDITOR TOGGLE ── */
+.editor-toggle {
+  position:fixed; top:18px; left:18px; z-index:200;
+  border-radius:5px; padding:7px 14px; cursor:pointer;
+  font-family:'Syne',sans-serif; font-size:8px; letter-spacing:3px;
+  text-transform:uppercase; border:1px solid rgba(201,168,76,0.4);
+  background:#0a0804; color:#c9a84c;
+}
+
+/* ── EDITOR PANEL ── */
+.editor-panel {
+  position:fixed; top:0; left:0; bottom:0; width:300px;
+  z-index:190; display:flex; flex-direction:column;
+  transform:translateX(-100%); transition:transform .28s ease;
+  background:#080806; border-right:1px solid rgba(201,168,76,0.2);
+}
+.editor-panel.open { transform:translateX(0); }
+
+.ep-head { padding:13px 15px 0; flex-shrink:0; border-bottom:1px solid rgba(201,168,76,0.15); }
+.ep-head h2 { font-family:'Syne',sans-serif; font-size:7px; letter-spacing:4px; text-transform:uppercase; color:#c9a84c; margin-bottom:12px; }
+
+/* ── TABS ── */
+#sb-tabs{display:flex;flex-wrap:wrap;border-bottom:none;flex-shrink:0;margin-bottom:8px;}
+.sb-tab{flex:1 1 30%;padding:8px 2px;background:transparent;border:none;color:#6b5e3a;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:7px;letter-spacing:2px;text-transform:uppercase;border-bottom:2px solid transparent;transition:all .15s;}
+.sb-tab.active{color:#c9a84c;border-bottom-color:#c9a84c;}
+
+.ep-body { flex:1; overflow-y:auto; padding:0 13px 20px; }
+.ep-body::-webkit-scrollbar { width:3px; }
+.ep-body::-webkit-scrollbar-thumb { background:#2a2a1a; border-radius:2px; }
+
+.sb-sec { font-family:'Syne',sans-serif; font-size:6px; letter-spacing:3px; text-transform:uppercase; padding:9px 0 5px; margin-top:4px; border-bottom:1px solid rgba(201,168,76,0.1); color:#c9a84c; }
+.g1 { display:grid; grid-template-columns:1fr; gap:5px; margin-top:6px; }
+.g2 { display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-top:6px; }
+
+.ef { display:flex; flex-direction:column; gap:2px; }
+.ef label { font-size:6px; letter-spacing:1.5px; text-transform:uppercase; color:#6b5e3a; }
+.ef input, .ef select, .ef textarea {
+  border-radius:3px; padding:4px 6px;
+  font-family:'DM Sans',sans-serif; font-size:9px;
+  outline:none; width:100%; border:1px solid rgba(201,168,76,0.18);
+  background:#111108; color:#e8e0cc; resize:none;
+}
+.ef input[type=color] { height:24px; padding:1px; cursor:pointer; }
+.ef input[type=range] { padding:3px 0; accent-color:#c9a84c; cursor:pointer; }
+.ef textarea { min-height:38px; line-height:1.35; }
+.slv { font-size:7px; color:#6b5e3a; margin-top:1px; }
+
+.uf { display:flex; gap:4px; align-items:center; margin-top:2px; }
+.uf input[type=file] { flex:1; background:#111108; border:1px solid rgba(201,168,76,0.18); border-radius:3px; padding:3px; color:#6b5e3a; font-size:7px; cursor:pointer; font-family:'DM Sans',sans-serif; }
+.uf button { background:transparent; border:1px solid rgba(201,168,76,0.18); border-radius:3px; color:#6b5e3a; font-size:7px; padding:3px 6px; cursor:pointer; }
+.uf button:hover { color:#cc6655; border-color:#cc6655; }
+
+#sb-foot { padding:10px 13px; border-top:1px solid rgba(201,168,76,0.12); display:flex; gap:6px; flex-shrink:0; }
+.sbbtn { padding:7px; border-radius:4px; border:none; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:7px; letter-spacing:2px; text-transform:uppercase; font-weight:700; width:100%; transition:all 0.15s; }
+.sbbtn-w { background:linear-gradient(135deg,#c9a84c,#e8c96a); color:#0a0804; }
+
+/* ── CANVAS AREA ── */
+#main { flex:1; display:flex; flex-direction:column; align-items:center; padding:24px; min-height:100vh; overflow-y:auto; transition:padding-left 0.28s ease;}
+@media (min-width: 900px) {
+  #main.shifted { padding-left: 324px; }
+}
+
+#controls { display:flex; gap:8px; margin-bottom:20px; align-items:center; flex-wrap:wrap; justify-content:center; }
+.ctrl-btn { padding:5px 12px; border-radius:3px; border:1px solid rgba(201,168,76,0.25); background:transparent; color:#6b5e3a; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:7px; letter-spacing:2px; text-transform:uppercase; transition:all .15s; }
+.ctrl-btn.active { background:rgba(201,168,76,0.1); color:#c9a84c; border-color:#c9a84c; }
+.panel-title { font-size:6px; letter-spacing:3px; text-transform:uppercase; color:#c9a84c; font-family:'Syne',sans-serif; margin-bottom:6px; text-align:center; display:block; }
+
+/* ══ PRESET BAR ══ */
+#presetBar{position:fixed;bottom:0;left:0;right:0;z-index:9999;background:rgba(6,6,3,0.98);border-top:1px solid rgba(201,168,76,.25);display:flex;align-items:center;gap:8px;padding:0 14px;height:50px;font-family:'DM Sans',sans-serif;}
+.pbl{font-size:7px;letter-spacing:3px;text-transform:uppercase;color:#c9a84c;flex-shrink:0;border-right:1px solid rgba(201,168,76,.15);padding-right:10px;white-space:nowrap;}
+#pbSlots{display:flex;gap:4px;flex:1;overflow-x:auto;align-items:center;padding:4px 0;}
+#pbSlots::-webkit-scrollbar{height:3px;}#pbSlots::-webkit-scrollbar-thumb{background:#2a2a18;border-radius:2px;}
+.pbs{display:flex;align-items:stretch;flex-shrink:0;border:1px solid rgba(201,168,76,.18);border-radius:5px;overflow:hidden;transition:border-color .15s;}
+.pbs:hover{border-color:rgba(201,168,76,.45);}
+.pbs-load{padding:5px 10px;background:transparent;border:none;cursor:pointer;color:#e8e0cc;font-family:'DM Sans',sans-serif;font-size:9px;white-space:nowrap;display:flex;flex-direction:column;gap:1px;align-items:flex-start;}
+.pbs-load:hover{background:rgba(201,168,76,.1);color:#c9a84c;}
+.pbs-load.empty{color:#2a2a18;font-size:13px;cursor:default;padding:5px 14px;align-items:center;justify-content:center;}
+.pbs-load.empty:hover{background:transparent;}
+.pbs-nm{font-size:9px;font-weight:600;}
+.pbs-dt{font-size:7px;color:#6b5e3a;}
+.pbs-exp,.pbs-del{padding:5px 7px;background:transparent;border:none;border-left:1px solid rgba(201,168,76,.1);cursor:pointer;font-size:10px;transition:color .15s;}
+.pbs-exp{color:#6b5e3a;}.pbs-exp:hover{color:#c9a84c;}
+.pbs-del{color:#6b5e3a;}.pbs-del:hover{color:#cc6655;background:rgba(204,102,85,.12);}
+.pbs-exp.hidden,.pbs-del.hidden{display:none;}
+#pbRight{display:flex;align-items:center;gap:5px;flex-shrink:0;border-left:1px solid rgba(201,168,76,.15);padding-left:10px;}
+#pbNameIn{background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.2);border-radius:4px;padding:5px 8px;color:#e8e0cc;font-family:'DM Sans',sans-serif;font-size:9px;outline:none;width:115px;}
+#pbNameIn::placeholder{color:#6b5e3a;}
+#pbNameIn:focus{border-color:rgba(201,168,76,.5);}
+.pbtn{padding:5px 11px;border-radius:4px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;white-space:nowrap;}
+.pbtn-save{background:linear-gradient(135deg,#c9a84c,#e8c96a);color:#0a0804;}
+.pbtn-imp{background:rgba(201,168,76,.1);color:#c9a84c;border:1px solid rgba(201,168,76,.2);}
+.pbtn-prt{background:transparent;color:#8a7848;border:1px solid rgba(201,168,76,.18);}
+#pbToast{position:fixed;bottom:58px;right:16px;background:rgba(6,6,3,.96);border:1px solid rgba(201,168,76,.4);border-radius:6px;padding:8px 16px;font-family:'DM Sans',sans-serif;font-size:9px;color:#c9a84c;letter-spacing:1px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:10000;}
+#pbToast.show{opacity:1;}
+.sw-p { display: none; } /* Hide print-on-demand containers on screen */
+@media print {
+  * { -webkit-print-color-adjust:exact!important; print-color-adjust:exact!important; }
+  body, #pageWrap, #main { background:#ffffff!important; margin:0!important; padding:0!important; overflow:visible!important; }
+  .editor-toggle, .editor-panel, #controls, #presetBar, #pbToast, .panel-title { display:none!important; }
+  #pageWrap { display:block!important; height:auto!important; }
+  #main { padding:0!important; overflow:visible!important; }
+  .panel-group { display:block!important; page-break-after:always; break-after:page; page-break-inside:avoid; break-inside:avoid-page; margin:0!important; padding:0!important; width:100%; min-height:100vh; position:relative!important; }
+  .sw-p { display:block!important; width:100%; height:auto; position:relative; overflow:visible!important; }
+  .sw-o { display:none!important; } /* Hide screen wrappers in print */
+  #standWrap { display:block!important; width:100%!important; }
+  div, img { box-shadow:none!important; filter:none!important; text-shadow:none!important; }
+}
+</style>
+</head>
+<body>
+<div id="pageWrap">
+<!-- EDITOR TOGGLE -->
+<button class="editor-toggle" id="edToggle" onclick="toggleEditor()">⚙ إعدادات</button>
+
+<!-- EDITOR PANEL -->
+<div class="editor-panel open" id="edPanel">
+  <div class="ep-head">
+    <h2>✦ Editor — Balance Bites</h2>
+    <div id="sb-tabs">
+      <button class="sb-tab active" onclick="switchTab('brand',this)">🎨 Brand</button>
+      <button class="sb-tab" onclick="switchTab('products',this)">🫙 Prod</button>
+      <button class="sb-tab" onclick="switchTab('style',this)">🖼 Style</button>
+      <button class="sb-tab" onclick="switchTab('badges',this)">🏅 Badge</button>
+      <button class="sb-tab" onclick="switchTab('size',this)">📐 Size</button>
+      <button class="sb-tab" onclick="switchTab('fonts',this)">🔤 Font</button>
+    </div>
+  </div>
+  <div class="ep-body" id="sb-body">
+
+    <!-- BRAND TAB -->
+    <div id="tab-brand">
+      <div class="sb-sec">🏷 BRAND INFO</div>
+      <div class="g1">
+        <div class="ef"><label>Brand Line 1</label><input type="text" id="eBrand1" value="BALANCE"></div>
+        <div class="ef"><label>Brand Line 2</label><input type="text" id="eBrand2" value="BITES"></div>
+        <div class="ef"><label>Logo Text</label><input type="text" id="eLogoTxt" value="BB"></div>
+        <div class="ef"><label>Tagline EN</label><input type="text" id="eTagline" value="WHOLE FOOD SNACKS · NATURALLY POWERFUL"></div>
+        <div class="ef"><label>Tagline AR</label><input type="text" id="eTaglineAr" value="وجبات خفيفة طبيعية · قوية بالطبيعة" dir="rtl"></div>
+        <div class="ef"><label>Call to Action</label><input type="text" id="eCTA" value="Try Our Natural Crackers!"></div>
+        <div class="ef"><label>Website</label><input type="text" id="eWeb" value="balancebites.com"></div>
+        <div class="ef"><label style="width: auto;flex:1;cursor:pointer;"><input type="checkbox" id="eShowShelfBrand" checked onchange="render()"> Show Shelf Brand</label></div>
+      </div>
+      <div class="sb-sec">📱 SOCIAL MEDIA</div>
+      <div class="g1">
+        <div class="ef"><label>Instagram</label><input type="text" id="eSocIG" value="@balancebites.eg"></div>
+        <div class="ef"><label>WhatsApp</label><input type="text" id="eSocWA" value="+20 123 456 7890"></div>
+        <div class="ef"><label>Extra Line</label><input type="text" id="eSocExtra" value=""></div>
+      </div>
+      <div class="sb-sec">🎨 FLAVOR COLORS</div>
+      <div class="g2">
+        <div class="ef"><label>Za'atar</label><input type="color" id="cZaatar" value="#2e7d32"></div>
+        <div class="ef"><label>Paprika</label><input type="color" id="cPaprika" value="#c62828"></div>
+      </div>
+      <div class="g2">
+        <div class="ef"><label>Rosemary</label><input type="color" id="cRosemary" value="#f9a825"></div>
+        <div class="ef"><label>B.Pepper</label><input type="color" id="cPepper" value="#1565c0"></div>
+      </div>
+      <div class="g2">
+        <div class="ef"><label>Cinnamon</label><input type="color" id="cCinnamon" value="#bf360c"></div>
+      </div>
+    </div>
+
+    <!-- PRODUCTS TAB -->
+    <div id="tab-products" style="display:none">
+      <div class="sb-sec">🫙 SHELF PRODUCTS</div>
+      <div class="g1">
+        <div class="ef"><label>Product 1 EN</label><input type="text" id="eProd1" value="Za'atar Crackers"></div>
+        <div class="ef"><label>Product 1 AR</label><input type="text" id="eProd1Ar" value="كراكرز زعتر" dir="rtl"></div>
+        <div class="ef"><label>Product 2 EN</label><input type="text" id="eProd2" value="Paprika Crackers"></div>
+        <div class="ef"><label>Product 2 AR</label><input type="text" id="eProd2Ar" value="كراكرز بابريكا" dir="rtl"></div>
+        <div class="ef"><label>Product 3 EN</label><input type="text" id="eProd3" value="Rosemary & Basil"></div>
+        <div class="ef"><label>Product 3 AR</label><input type="text" id="eProd3Ar" value="كراكرز روزماري و ريحان" dir="rtl"></div>
+        <div class="ef"><label>Product 4 EN</label><input type="text" id="eProd4" value="Black Pepper & Sea Salt"></div>
+        <div class="ef"><label>Product 4 AR</label><input type="text" id="eProd4Ar" value="كراكرز فلفل اسود و ملح بحر" dir="rtl"></div>
+        <div class="ef"><label>Product 5 EN</label><input type="text" id="eProd5" value="Cinnamon Roasted Peanuts"></div>
+        <div class="ef"><label>Product 5 AR</label><input type="text" id="eProd5Ar" value="فول سوداني بالقرفة" dir="rtl"></div>
+      </div>
+      <div class="sb-sec">💰 PRICING</div>
+      <div class="g2">
+        <div class="ef"><label>Weight</label><input type="text" id="eWt" value="40G"></div>
+        <div class="ef"><label>Price</label><input type="text" id="ePrice" value="EGP 45"></div>
+      </div>
+    </div>
+
+    <!-- STYLE TAB -->
+    <div id="tab-style" style="display:none">
+      <div class="sb-sec">🎨 PANEL BACKGROUND COLORS</div>
+      <div class="g2">
+        <div class="ef"><label>Mirror Face BG</label><input type="color" id="cBgFace" value="#1a1a1a"></div>
+        <div class="ef"><label>Shelf BG</label><input type="color" id="cBgShelf" value="#1a1a1a"></div>
+      </div>
+      <div class="g2">
+        <div class="ef"><label>Side L BG</label><input type="color" id="cBgSideL" value="#1a1a1a"></div>
+        <div class="ef"><label>Side R BG</label><input type="color" id="cBgSideR" value="#1a1a1a"></div>
+      </div>
+      <div class="sb-sec">🔲 PATTERN OVERLAYS</div>
+      <div class="g2">
+        <div class="ef"><label>Mirror Face Pattern</label>
+          <select id="patFace" oninput="render()"><option value="none">None</option><option value="diag">Diagonal Lines</option><option value="dots">Dots</option><option value="cross">Cross-Hatch</option><option value="wheat">Wheat Motif</option></select></div>
+        <div class="ef"><label>Shelf Pattern</label>
+          <select id="patShelf" oninput="render()"><option value="none">None</option><option value="diag">Diagonal Lines</option><option value="dots">Dots</option><option value="cross">Cross-Hatch</option></select></div>
+      </div>
+      <div class="g2">
+        <div class="ef"><label>Side L Pattern</label>
+          <select id="patSideL" oninput="render()"><option value="none">None</option><option value="diag">Diagonal Lines</option><option value="dots">Dots</option><option value="cross">Cross-Hatch</option></select></div>
+        <div class="ef"><label>Side R Pattern</label>
+          <select id="patSideR" oninput="render()"><option value="none">None</option><option value="diag">Diagonal Lines</option><option value="dots">Dots</option><option value="cross">Cross-Hatch</option></select></div>
+      </div>
+      <div class="g2">
+        <div class="ef"><label>Pattern Color</label><input type="color" id="cPat" value="#ffffff" oninput="render()"></div>
+        <div class="ef"><label>Pattern Opacity %</label><input type="range" id="tPatOpac" min="1" max="50" value="4" oninput="U('vPatOpac',this.value,'%');render();"><span class="slv" id="vPatOpac">4%</span></div>
+      </div>
+      <div class="sb-sec">🖼 BACKGROUND IMAGES</div>
+      <div class="g1">
+        <div class="ef"><label>Mirror Face BG Image</label><div class="uf"><input type="file" id="fiBgFace" accept="image/*" onchange="readB64(this,'hxBgFace')"><button onclick="clrB64('hxBgFace','fiBgFace')">✖</button></div><input type="hidden" id="hxBgFace" value=""></div>
+        <div class="ef"><label>Shelf BG Image</label><div class="uf"><input type="file" id="fiBgShelf" accept="image/*" onchange="readB64(this,'hxBgShelf')"><button onclick="clrB64('hxBgShelf','fiBgShelf')">✖</button></div><input type="hidden" id="hxBgShelf" value=""></div>
+        <div class="ef"><label>Side L BG Image</label><div class="uf"><input type="file" id="fiBgSideL" accept="image/*" onchange="readB64(this,'hxBgSideL')"><button onclick="clrB64('hxBgSideL','fiBgSideL')">✖</button></div><input type="hidden" id="hxBgSideL" value=""></div>
+        <div class="ef"><label>Side R BG Image</label><div class="uf"><input type="file" id="fiBgSideR" accept="image/*" onchange="readB64(this,'hxBgSideR')"><button onclick="clrB64('hxBgSideR','fiBgSideR')">✖</button></div><input type="hidden" id="hxBgSideR" value=""></div>
+      </div>
+      <div class="sb-sec">📎 QR CODES</div>
+      <div class="g1">
+        <div class="ef"><label>Shelf QR Code</label><div class="uf"><input type="file" id="fiQrShelf" accept="image/*" onchange="readB64(this,'hxQrShelf')"><button onclick="clrB64('hxQrShelf','fiQrShelf')">✖</button></div><input type="hidden" id="hxQrShelf" value=""></div>
+        <div class="ef"><label>Side L QR Code</label><div class="uf"><input type="file" id="fiQrSideL" accept="image/*" onchange="readB64(this,'hxQrSideL')"><button onclick="clrB64('hxQrSideL','fiQrSideL')">✖</button></div><input type="hidden" id="hxQrSideL" value=""></div>
+        <div class="ef"><label>Side R QR Code</label><div class="uf"><input type="file" id="fiQrSideR" accept="image/*" onchange="readB64(this,'hxQrSideR')"><button onclick="clrB64('hxQrSideR','fiQrSideR')">✖</button></div><input type="hidden" id="hxQrSideR" value=""></div>
+      </div>
+      <div class="sb-sec">📍 SIDE LOGO POSITION</div>
+      <div class="g2">
+        <div class="ef"><label>Logo L X Pos %</label><input type="range" id="tSideLogoXL" min="10" max="90" value="50" oninput="U('vSideLogoXL',this.value,'%');render();"><span class="slv" id="vSideLogoXL">50%</span></div>
+        <div class="ef"><label>Logo L Y Pos %</label><input type="range" id="tSideLogoYL" min="10" max="90" value="40" oninput="U('vSideLogoYL',this.value,'%');render();"><span class="slv" id="vSideLogoYL">40%</span></div>
+      </div>
+      <div class="g2">
+        <div class="ef"><label>Logo R X Pos %</label><input type="range" id="tSideLogoXR" min="10" max="90" value="50" oninput="U('vSideLogoXR',this.value,'%');render();"><span class="slv" id="vSideLogoXR">50%</span></div>
+        <div class="ef"><label>Logo R Y Pos %</label><input type="range" id="tSideLogoYR" min="10" max="90" value="40" oninput="U('vSideLogoYR',this.value,'%');render();"><span class="slv" id="vSideLogoYR">40%</span></div>
+      </div>
+      <div class="sb-sec">📍 QR POSITION (Sides)</div>
+      <div class="g2">
+        <div class="ef"><label>QR L X Pos %</label><input type="range" id="tQrXL" min="10" max="90" value="50" oninput="U('vQrXL',this.value,'%');render();"><span class="slv" id="vQrXL">50%</span></div>
+        <div class="ef"><label>QR L Y Pos %</label><input type="range" id="tQrYL" min="40" max="95" value="80" oninput="U('vQrYL',this.value,'%');render();"><span class="slv" id="vQrYL">80%</span></div>
+      </div>
+      <div class="g2">
+        <div class="ef"><label>QR R X Pos %</label><input type="range" id="tQrXR" min="10" max="90" value="50" oninput="U('vQrXR',this.value,'%');render();"><span class="slv" id="vQrXR">50%</span></div>
+        <div class="ef"><label>QR R Y Pos %</label><input type="range" id="tQrYR" min="40" max="95" value="80" oninput="U('vQrYR',this.value,'%');render();"><span class="slv" id="vQrYR">80%</span></div>
+      </div>
+      <div class="sb-sec">🎨 TEXT & LOGO COLORS</div>
+      <div class="g2">
+        <div class="ef"><label>Main Text Color</label><input type="color" id="cTxtMain" value="#ffffff" oninput="render()"></div>
+        <div class="ef"><label>Sub Text Color</label><input type="color" id="cTxtSub" value="#cccccc" oninput="render()"></div>
+      </div>
+      <div class="g2">
+        <div class="ef"><label>Logo Circle BG</label><input type="color" id="cLogoBg" value="#ffffff" oninput="render()"></div>
+        <div class="ef"><label>Logo Text Color</label><input type="color" id="cLogoTxtC" value="#1a1a1a" oninput="render()"></div>
+      </div>
+      <div class="sb-sec">⚙️ OPTIONS</div>
+      <div class="g1">
+        <label style="font-size:8px;display:flex;align-items:center;gap:6px;cursor:pointer;color:#ccc;"><input type="checkbox" id="chkFlavorDots" checked onchange="render()"> Show Flavor Color Dots (Mirror Face)</label>
+        <label style="font-size:8px;display:flex;align-items:center;gap:6px;cursor:pointer;color:#ccc;"><input type="checkbox" id="chkColorLines" checked onchange="render()"> Show Color Lines (Top/Bottom)</label>
+        <label style="font-size:8px;display:flex;align-items:center;gap:6px;cursor:pointer;color:#ccc;"><input type="checkbox" id="chkShowShelfSoc" checked onchange="render()"> Show Shelf Social</label>
+        <label style="font-size:8px;display:flex;align-items:center;gap:6px;cursor:pointer;color:#ccc;"><input type="checkbox" id="chkShowShelfBd" checked onchange="render()"> Show Shelf Badges</label>
+        <label style="font-size:8px;display:flex;align-items:center;gap:6px;cursor:pointer;color:#ccc;"><input type="checkbox" id="chkShowShelfQr" checked onchange="render()"> Show Shelf QR</label>
+        <label style="font-size:8px;display:flex;align-items:center;gap:6px;cursor:pointer;color:#ccc;"><input type="checkbox" id="chkPrintTitles" onchange="render()"> Show Panel Titles in Print</label>
+        <label style="font-size:8px;display:flex;align-items:center;gap:6px;cursor:pointer;color:#ccc;"><input type="checkbox" id="chkPrintCenter" checked onchange="render()"> Center Panels on Page</label>
+      </div>
+      <div class="sb-sec">📐 BG IMAGE OPTIONS</div>
+      <div class="g2">
+        <div class="ef"><label>Face BG Size</label>
+          <select id="bgSzFace" oninput="render()"><option value="cover" selected>Cover</option><option value="contain">Contain</option><option value="100% 100%">Stretch</option><option value="auto">Original</option></select></div>
+        <div class="ef"><label>Face Opacity %</label><input type="range" id="opFace" min="0" max="100" value="100" oninput="U('vOpFace',this.value,'%');render();"><span class="slv" id="vOpFace">100%</span></div>
+      </div>
+      <div class="g2">
+        <div class="ef"><label>Shelf BG Size</label>
+          <select id="bgSzShelf" oninput="render()"><option value="cover" selected>Cover</option><option value="contain">Contain</option><option value="100% 100%">Stretch</option><option value="auto">Original</option></select></div>
+        <div class="ef"><label>Shelf Opacity %</label><input type="range" id="opShelf" min="0" max="100" value="100" oninput="U('vOpShelf',this.value,'%');render();"><span class="slv" id="vOpShelf">100%</span></div>
+      </div>
+      <div class="g2">
+        <div class="ef"><label>Side L BG Size</label>
+          <select id="bgSzSideL" oninput="render()"><option value="cover" selected>Cover</option><option value="contain">Contain</option><option value="100% 100%">Stretch</option><option value="auto">Original</option></select></div>
+        <div class="ef"><label>Side L Opacity %</label><input type="range" id="opSideL" min="0" max="100" value="100" oninput="U('vOpSideL',this.value,'%');render();"><span class="slv" id="vOpSideL">100%</span></div>
+      </div>
+      <div class="g2">
+        <div class="ef"><label>Side R BG Size</label>
+          <select id="bgSzSideR" oninput="render()"><option value="cover" selected>Cover</option><option value="contain">Contain</option><option value="100% 100%">Stretch</option><option value="auto">Original</option></select></div>
+        <div class="ef"><label>Side R Opacity %</label><input type="range" id="opSideR" min="0" max="100" value="100" oninput="U('vOpSideR',this.value,'%');render();"><span class="slv" id="vOpSideR">100%</span></div>
+      </div>
+    </div>
+
+    <!-- BADGES TAB -->
+    <div id="tab-badges" style="display:none">
+      <div class="sb-sec">🏅 HEALTH BADGES</div>
+      <div style="font-size:7px;color:#888;margin:4px 0 6px;">Toggle badges shown on the shelf panel.</div>
+      <div class="g1">
+        <label style="font-size:8px;display:flex;align-items:center;gap:6px;cursor:pointer;color:#ccc;"><input type="checkbox" id="chkBd1" checked onchange="render()"> 🌿 100% Natural</label>
+        <label style="font-size:8px;display:flex;align-items:center;gap:6px;cursor:pointer;color:#ccc;"><input type="checkbox" id="chkBd2" checked onchange="render()"> 🌾 Whole Wheat</label>
+        <label style="font-size:8px;display:flex;align-items:center;gap:6px;cursor:pointer;color:#ccc;"><input type="checkbox" id="chkBd3" checked onchange="render()"> 🥗 For Diet</label>
+        <label style="font-size:8px;display:flex;align-items:center;gap:6px;cursor:pointer;color:#ccc;"><input type="checkbox" id="chkBd4" checked onchange="render()"> 💊 For Diabetes</label>
+        <label style="font-size:8px;display:flex;align-items:center;gap:6px;cursor:pointer;color:#ccc;"><input type="checkbox" id="chkBd5" onchange="render()"> Custom 1</label>
+        <label style="font-size:8px;display:flex;align-items:center;gap:6px;cursor:pointer;color:#ccc;"><input type="checkbox" id="chkBd6" onchange="render()"> Custom 2</label>
+      </div>
+      <div class="sb-sec">✏️ BADGE LABELS</div>
+      <div class="g1">
+        <div class="ef"><label>Badge 1 Label</label><input type="text" id="eBd1" value="100% Natural"></div>
+        <div class="ef"><label>Badge 1 Icon</label><input type="text" id="eBd1I" value="🌿"></div>
+        <div class="ef"><label>B1 PNG Icon</label><div class="uf"><input type="file" id="fiBd1" accept="image/*" onchange="readB64(this,'hxBd1')"><button onclick="clrB64('hxBd1','fiBd1')">✖</button></div><input type="hidden" id="hxBd1" value=""></div>
+      </div>
+      <div class="g1">
+        <div class="ef"><label>Badge 2 Label</label><input type="text" id="eBd2" value="Whole Wheat"></div>
+        <div class="ef"><label>Badge 2 Icon</label><input type="text" id="eBd2I" value="🌾"></div>
+        <div class="ef"><label>B2 PNG Icon</label><div class="uf"><input type="file" id="fiBd2" accept="image/*" onchange="readB64(this,'hxBd2')"><button onclick="clrB64('hxBd2','fiBd2')">✖</button></div><input type="hidden" id="hxBd2" value=""></div>
+      </div>
+      <div class="g1">
+        <div class="ef"><label>Badge 3 Label</label><input type="text" id="eBd3" value="For Diet"></div>
+        <div class="ef"><label>Badge 3 Icon</label><input type="text" id="eBd3I" value="🥗"></div>
+        <div class="ef"><label>B3 PNG Icon</label><div class="uf"><input type="file" id="fiBd3" accept="image/*" onchange="readB64(this,'hxBd3')"><button onclick="clrB64('hxBd3','fiBd3')">✖</button></div><input type="hidden" id="hxBd3" value=""></div>
+      </div>
+      <div class="g1">
+        <div class="ef"><label>Badge 4 Label</label><input type="text" id="eBd4" value="For Diabetes"></div>
+        <div class="ef"><label>Badge 4 Icon</label><input type="text" id="eBd4I" value="💊"></div>
+        <div class="ef"><label>B4 PNG Icon</label><div class="uf"><input type="file" id="fiBd4" accept="image/*" onchange="readB64(this,'hxBd4')"><button onclick="clrB64('hxBd4','fiBd4')">✖</button></div><input type="hidden" id="hxBd4" value=""></div>
+      </div>
+      <div class="g1">
+        <div class="ef"><label>Badge 5 Label</label><input type="text" id="eBd5" value="Custom Badge"></div>
+        <div class="ef"><label>Badge 5 Icon</label><input type="text" id="eBd5I" value="⭐"></div>
+        <div class="ef"><label>B5 PNG Icon</label><div class="uf"><input type="file" id="fiBd5" accept="image/*" onchange="readB64(this,'hxBd5')"><button onclick="clrB64('hxBd5','fiBd5')">✖</button></div><input type="hidden" id="hxBd5" value=""></div>
+      </div>
+      <div class="g1">
+        <div class="ef"><label>Badge 6 Label</label><input type="text" id="eBd6" value="Custom Badge 2"></div>
+        <div class="ef"><label>Badge 6 Icon</label><input type="text" id="eBd6I" value="✨"></div>
+        <div class="ef"><label>B6 PNG Icon</label><div class="uf"><input type="file" id="fiBd6" accept="image/*" onchange="readB64(this,'hxBd6')"><button onclick="clrB64('hxBd6','fiBd6')">✖</button></div><input type="hidden" id="hxBd6" value=""></div>
+      </div>
+      <div class="sb-sec">📏 BADGE SIZES</div>
+      <div class="g2">
+        <div class="ef"><label>Badge Icon Size</label><input type="range" id="tBdIconSz" min="5" max="300" value="16" oninput="U('vBdIconSz',this.value,'px');render();"><span class="slv" id="vBdIconSz">16px</span></div>
+        <div class="ef"><label>Badge Text Size</label><input type="range" id="tBdFS" min="2" max="300" value="6" step="0.5" oninput="U('vBdFS',this.value,'px');render();"><span class="slv" id="vBdFS">6px</span></div>
+      </div>
+    </div>
+
+    <!-- SIZE TAB -->
+    <div id="tab-size" style="display:none">
+      <div class="sb-sec">📏 MIRROR FACE</div>
+      <div class="g2">
+        <div class="ef"><label>Width (mm)</label><input type="range" id="dFaceW" min="250" max="500" value="400" oninput="U('vFaceW',this.value,'mm');render();"><span class="slv" id="vFaceW">400mm</span></div>
+        <div class="ef"><label>Height (mm)</label><input type="range" id="dFaceH" min="100" max="300" value="190" oninput="U('vFaceH',this.value,'mm');render();"><span class="slv" id="vFaceH">190mm</span></div>
+      </div>
+      <div class="sb-sec">📏 SHELF</div>
+      <div class="g2">
+        <div class="ef"><label>Width (mm)</label><input type="range" id="dShelfW" min="250" max="500" value="400" oninput="U('vShelfW',this.value,'mm');render();"><span class="slv" id="vShelfW">400mm</span></div>
+        <div class="ef"><label>Height (mm)</label><input type="range" id="dShelfH" min="30" max="150" value="85" oninput="U('vShelfH',this.value,'mm');render();"><span class="slv" id="vShelfH">85mm</span></div>
+      </div>
+      <div class="sb-sec">📏 SIDES</div>
+      <div class="g2">
+        <div class="ef"><label>Depth (mm)</label><input type="range" id="dSideW" min="150" max="400" value="320" oninput="U('vSideW',this.value,'mm');render();"><span class="slv" id="vSideW">320mm</span></div>
+        <div class="ef"><label>Front H (mm)</label><input type="range" id="dSideFH" min="40" max="200" value="85" oninput="U('vSideFH',this.value,'mm');render();"><span class="slv" id="vSideFH">85mm</span></div>
+      </div>
+      <div class="g2">
+        <div class="ef"><label>Back H (mm)</label><input type="range" id="dSideBH" min="100" max="500" value="290" oninput="U('vSideBH',this.value,'mm');render();"><span class="slv" id="vSideBH">290mm</span></div>
+      </div>
+      <div class="sb-sec">🖥 SCREEN & PRINT</div>
+      <div class="g1">
+        <div class="ef"><label>Screen Scale</label><input type="range" id="sScale" min="30" max="150" value="70" oninput="U('lScale',this.value,'%');render();"><span class="slv" id="lScale">70%</span></div>
+        <div class="ef"><label>Print Layout</label><select id="sPrintSize" oninput="render()"><option value="actual" selected>Exact Size (100% Match)</option><option value="a3">A3 Landscape</option><option value="a2">A2 Landscape</option></select></div>
+      </div>
+    </div>
+
+    <!-- FONTS TAB -->
+    <div id="tab-fonts" style="display:none">
+      <div class="sb-sec">🔤 TYPEFACE</div>
+      <div class="g2">
+        <div class="ef"><label>Header Font</label><select id="sFntH" oninput="render()"><option value="Montserrat" selected>Montserrat</option><option value="'Playfair Display'">Playfair</option><option value="Syne">Syne</option><option value="'DM Sans'">DM Sans</option></select></div>
+        <div class="ef"><label>Body Font</label><select id="sFntB" oninput="render()"><option value="'DM Sans'" selected>DM Sans</option><option value="Montserrat">Montserrat</option><option value="Tajawal">Tajawal</option><option value="'Caveat'">Caveat</option></select></div>
+      </div>
+      <div class="sb-sec">🔤 MIRROR FACE</div>
+      <div class="g2">
+        <div class="ef"><label>Brand Size</label><input type="range" id="tBrandFS" min="6" max="300" value="36" oninput="U('vBrandFS',this.value,'px');render();"><span class="slv" id="vBrandFS">36px</span></div>
+        <div class="ef"><label>Tagline Size</label><input type="range" id="tTagFS" min="6" max="300" value="10" oninput="U('vTagFS',this.value,'px');render();"><span class="slv" id="vTagFS">10px</span></div>
+      </div>
+      <div class="g2">
+        <div class="ef"><label>Logo Circle</label><input type="range" id="tLogoSz" min="10" max="300" value="80" oninput="U('vLogoSz',this.value,'px');render();"><span class="slv" id="vLogoSz">80px</span></div>
+        <div class="ef"><label>Logo Text</label><input type="range" id="tLogoFS" min="6" max="300" value="30" oninput="U('vLogoFS',this.value,'px');render();"><span class="slv" id="vLogoFS">30px</span></div>
+      </div>
+      <div class="g2">
+        <div class="ef"><label>CTA Size</label><input type="range" id="tCTAFS" min="6" max="300" value="14" oninput="U('vCTAFS',this.value,'px');render();"><span class="slv" id="vCTAFS">14px</span></div>
+      </div>
+      <div class="sb-sec">🔤 SHELF</div>
+      <div class="g2">
+        <div class="ef"><label>Product EN</label><input type="range" id="tProdFS" min="4" max="300" value="11" oninput="U('vProdFS',this.value,'px');render();"><span class="slv" id="vProdFS">11px</span></div>
+        <div class="ef"><label>Product AR</label><input type="range" id="tProdArFS" min="4" max="300" value="10" oninput="U('vProdArFS',this.value,'px');render();"><span class="slv" id="vProdArFS">10px</span></div>
+      </div>
+      <div class="g2">
+        <div class="ef"><label>Price</label><input type="range" id="tPriceFS" min="4" max="300" value="9" oninput="U('vPriceFS',this.value,'px');render();"><span class="slv" id="vPriceFS">9px</span></div>
+        <div class="ef"><label>Social</label><input type="range" id="tSocFS" min="4" max="300" value="9" oninput="U('vSocFS',this.value,'px');render();"><span class="slv" id="vSocFS">9px</span></div>
+      </div>
+      <div class="sb-sec">🔤 SIDES</div>
+      <div class="g2">
+        <div class="ef"><label>Side Brand</label><input type="range" id="tSideBrandFS" min="6" max="300" value="22" oninput="U('vSideBrandFS',this.value,'px');render();"><span class="slv" id="vSideBrandFS">22px</span></div>
+        <div class="ef"><label>Side Logo</label><input type="range" id="tSideLogoSz" min="10" max="300" value="40" oninput="U('vSideLogoSz',this.value,'px');render();"><span class="slv" id="vSideLogoSz">40px</span></div>
+      </div>
+      <div class="g2">
+        <div class="ef"><label>Logo L X Pos %</label><input type="range" id="tSideLogoXL" min="10" max="95" value="50" oninput="U('vSideLogoXL',this.value,'%');render();"><span class="slv" id="vSideLogoXL">50%</span></div>
+        <div class="ef"><label>Logo L Y Pos %</label><input type="range" id="tSideLogoYL" min="10" max="95" value="40" oninput="U('vSideLogoYL',this.value,'%');render();"><span class="slv" id="vSideLogoYL">40%</span></div>
+      </div>
+      <div class="g2">
+        <div class="ef"><label>Logo R X Pos %</label><input type="range" id="tSideLogoXR" min="10" max="95" value="50" oninput="U('vSideLogoXR',this.value,'%');render();"><span class="slv" id="vSideLogoXR">50%</span></div>
+        <div class="ef"><label>Logo R Y Pos %</label><input type="range" id="tSideLogoYR" min="10" max="95" value="40" oninput="U('vSideLogoYR',this.value,'%');render();"><span class="slv" id="vSideLogoYR">40%</span></div>
+      </div>
+      <div class="g2">
+        <div class="ef"><label>QR Size</label><input type="range" id="tQrSz" min="10" max="300" value="44" oninput="U('vQrSz',this.value,'px');render();"><span class="slv" id="vQrSz">44px</span></div>
+      </div>
+    </div>
+
+  </div> <!-- /ep-body -->
+  <div id="sb-foot">
+    <button class="sbbtn sbbtn-w" onclick="window.print()">🖨 Print</button>
+    <button class="sbbtn ctrl-btn" style="background:transparent;color:#6b5e3a;border:1px solid rgba(201,168,76,0.25);" onclick="pbSaveQuick()">💾 Save</button>
+    <button class="sbbtn ctrl-btn" style="background:transparent;color:#6b5e3a;border:1px solid rgba(201,168,76,0.25);" onclick="toggleEditor()">✕ Close</button>
+  </div>
+</div> <!-- /editor-panel -->
+
+<div id="main" class="shifted">
+  <div id="controls">
+    <span style="font-size:10px;color:#c9a84c;margin-bottom:6px;width:100%;text-align:center;font-family:'Syne',sans-serif;letter-spacing:1px;display:block;">CDS 140 Counter Display Stand</span>
+    <button class="ctrl-btn active" onclick="setPanel('all',this)">All Panels</button>
+    <button class="ctrl-btn" onclick="setPanel('face',this)">Mirror Face</button>
+    <button class="ctrl-btn" onclick="setPanel('shelf',this)">Shelf</button>
+    <button class="ctrl-btn" onclick="setPanel('sides',this)">Sides</button>
+  </div>
+  <div id="standWrap"></div>
+</div>
+</div> <!-- /pageWrap -->
+
+<div id="presetBar">
+  <span class="pbl">⚡ Presets</span>
+  <div id="pbSlots"></div>
+  <div id="pbRight">
+    <input id="pbNameIn" placeholder="Preset name...">
+    <button class="pbtn pbtn-save" onclick="pbSave()">💾 Save</button>
+    <label class="pbtn pbtn-imp" style="cursor:pointer">📂<input type="file" accept=".json" onchange="pbImport(event)" style="display:none"></label>
+    <button class="pbtn pbtn-prt" onclick="window.print()">🖨</button>
+  </div>
+</div>
+<div id="pbToast"></div>
+
+<script>
+var PX=3.78,currentPanel="all";
+function G(id){var e=document.getElementById(id);return e?e.value:"";}
+function GN(id,def){var v=parseFloat(G(id));return isNaN(v)?def:v;}
+function B(id,def){var e=document.getElementById(id);return e?e.checked:!!def;}
+function U(id,v,sfx){var e=document.getElementById(id);if(e)e.textContent=v+(sfx||"");}
+function mm(v){return Math.round(v*PX);}
+function hexA(hex,a){hex=(hex||"#fff").replace("#","");if(hex.length===3)hex=hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];return "rgba("+parseInt(hex.slice(0,2),16)+","+parseInt(hex.slice(2,4),16)+","+parseInt(hex.slice(4,6),16)+","+a+")";}
+function readB64(inp,hid){var f=inp.files[0];if(!f)return;var r=new FileReader();r.onload=function(e){document.getElementById(hid).value=e.target.result;render();};r.readAsDataURL(f);}
+function clrB64(hid,fid){document.getElementById(hid).value="";document.getElementById(fid).value="";render();}
+
+function clrB64(hid,fid){document.getElementById(hid).value="";document.getElementById(fid).value="";render();}
+
+function toggleEditor(){
+  var p = document.getElementById("edPanel");
+  var m = document.getElementById("main");
+  if(p.classList.contains("open")){
+    p.classList.remove("open");
+    if(m) m.classList.remove("shifted");
+  } else {
+    p.classList.add("open");
+    if(m) m.classList.add("shifted");
+  }
+}
+
+function patCSS(type, hexCol, opacity){
+  var a = Math.min(1, Math.max(0, opacity/100));
+  var col = hexA(hexCol, a);
+  var colHalf = hexA(hexCol, a*0.75);
+  
+  if(type==="diag") return "repeating-linear-gradient(45deg,"+col+" 0,"+col+" 1px,transparent 0,transparent 14px)";
+  if(type==="dots") return "radial-gradient(circle,"+colHalf+" 1.5px,transparent 1.5px)";
+  if(type==="cross") return "repeating-linear-gradient(45deg,"+col+" 0,"+col+" 1px,transparent 0,transparent 50%),repeating-linear-gradient(-45deg,"+col+" 0,"+col+" 1px,transparent 0,transparent 50%)";
+  if(type==="wheat") return "repeating-linear-gradient(75deg,"+colHalf+" 0,"+colHalf+" 2px,transparent 0,transparent 20px),repeating-linear-gradient(-75deg,"+colHalf+" 0,"+colHalf+" 2px,transparent 0,transparent 24px)";
+  return "none";
+}
+function patSize(type){
+  if(type==="dots") return "12px 12px";
+  if(type==="cross") return "16px 16px";
+  return "auto";
+}
+function patOverlay(type, cPat, tPatOpac){
+  if(type==="none") return "";
+  return '<div style="position:absolute;inset:0;background-image:'+patCSS(type, cPat, tPatOpac)+';background-size:'+patSize(type)+';pointer-events:none;"></div>';
+}
+
+function getVals(){
+  var bd=[];
+  for(var i=1;i<=6;i++){
+    if(B("chkBd"+i)) bd.push({label:G("eBd"+i)||"Badge",icon:G("eBd"+i+"I")||"⭐",png:G("hxBd"+i)||""});
+  }
+  return {
+    cZ:G("cZaatar")||"#2e7d32",cP:G("cPaprika")||"#c62828",cR:G("cRosemary")||"#f9a825",cB:G("cPepper")||"#1565c0",cCin:G("cCinnamon")||"#bf360c",
+    brand1:G("eBrand1")||"BALANCE",brand2:G("eBrand2")||"BITES",logoTxt:G("eLogoTxt")||"BB",
+    tagline:G("eTagline")||"",taglineAr:G("eTaglineAr")||"",cta:G("eCTA")||"",web:G("eWeb")||"",
+    socIG:G("eSocIG")||"",socWA:G("eSocWA")||"",socExtra:G("eSocExtra")||"",
+    prod1:G("eProd1")||"",p1Ar:G("eProd1Ar")||"",prod2:G("eProd2")||"",p2Ar:G("eProd2Ar")||"",
+    prod3:G("eProd3")||"",p3Ar:G("eProd3Ar")||"",prod4:G("eProd4")||"",p4Ar:G("eProd4Ar")||"",
+    prod5:G("eProd5")||"",p5Ar:G("eProd5Ar")||"",wt:G("eWt")||"40G",price:G("ePrice")||"",
+    bgFace:G("cBgFace")||"#1a1a1a",bgShelf:G("cBgShelf")||"#1a1a1a",bgSideL:G("cBgSideL")||"#1a1a1a",bgSideR:G("cBgSideR")||"#1a1a1a",
+    patFace:G("patFace")||"none",patShelf:G("patShelf")||"none",patSideL:G("patSideL")||"none",patSideR:G("patSideR")||"none",
+    imgFace:G("hxBgFace")||"",imgShelf:G("hxBgShelf")||"",imgSideL:G("hxBgSideL")||"",imgSideR:G("hxBgSideR")||"",
+    qrShelf:G("hxQrShelf")||"",qrSideL:G("hxQrSideL")||"",qrSideR:G("hxQrSideR")||"",
+    qrXL:GN("tQrXL",50),qrYL:GN("tQrYL",80),
+    qrXR:GN("tQrXR",50),qrYR:GN("tQrYR",80),
+    logoBg:G("cLogoBg")||"#ffffff",logoTxtC:G("cLogoTxtC")||"#1a1a1a",
+    showDots:B("chkFlavorDots",true),showLines:B("chkColorLines",true),
+    showShelfSoc:B("chkShowShelfSoc",true),showShelfBd:B("chkShowShelfBd",true),showShelfQr:B("chkShowShelfQr",true),
+    showShelfBrand:B("eShowShelfBrand",true),
+    printTitles:B("chkPrintTitles",false),printCenter:B("chkPrintCenter",true),
+    bgSzFace:G("bgSzFace")||"cover",bgSzShelf:G("bgSzShelf")||"cover",bgSzSideL:G("bgSzSideL")||"cover",bgSzSideR:G("bgSzSideR")||"cover",
+    opFace:GN("opFace",100)/100,opShelf:GN("opShelf",100)/100,opSideL:GN("opSideL",100)/100,opSideR:GN("opSideR",100)/100,
+    patCol:G("cPat")||"#ffffff",patOpac:GN("tPatOpac",4),
+    faceW:GN("dFaceW",400),faceH:GN("dFaceH",190),shelfW:GN("dShelfW",400),shelfH:GN("dShelfH",85),
+    sideW:GN("dSideW",320),sideFH:GN("dSideFH",85),sideBH:GN("dSideBH",290),scale:GN("sScale",70)/100,
+    brandFS:GN("tBrandFS",36),tagFS:GN("tTagFS",10),logoSz:GN("tLogoSz",80),logoFS:GN("tLogoFS",30),ctaFS:GN("tCTAFS",14),
+    prodFS:GN("tProdFS",11),prodArFS:GN("tProdArFS",10),priceFS:GN("tPriceFS",9),socFS:GN("tSocFS",9),
+    sideBrandFS:GN("tSideBrandFS",22),sideLogoSz:GN("tSideLogoSz",40),
+    sideLogoXL:GN("tSideLogoXL",50),sideLogoYL:GN("tSideLogoYL",40),
+    sideLogoXR:GN("tSideLogoXR",50),sideLogoYR:GN("tSideLogoYR",40),
+    qrSz:GN("tQrSz",44),
+    bdIconSz:GN("tBdIconSz",16),bdFS:GN("tBdFS",6),badges:bd,
+    txtMain:G("cTxtMain")||"#ffffff",txtSub:G("cTxtSub")||"#cccccc",
+    fntH:G("sFntH")||"Montserrat",fntB:G("sFntB")||"'DM Sans'",
+    pSize:G("sPrintSize")||"actual"
+  };
+}
+
+function buildMirrorFace(v){
+  var W=v.faceW,H=v.faceH,FH=v.fntH,FB=v.fntB;
+  var bgStyle='background-color:'+v.bgFace+';';
+  var h='<div style="width:'+W+'mm;height:'+H+'mm;'+bgStyle+'position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3mm;">';
+  if(v.imgFace) h+='<div style="position:absolute;inset:0;background-image:url('+v.imgFace+');background-size:'+v.bgSzFace+';background-position:center;background-repeat:no-repeat;opacity:'+v.opFace+';pointer-events:none;z-index:0;"></div>';
+  if(v.patFace!=='none') h+=patOverlay(v.patFace, v.patCol, v.patOpac);
+  if(v.showLines){
+    h+='<div style="position:absolute;top:0;left:0;right:0;height:1mm;background:linear-gradient(90deg,'+v.cZ+','+v.cP+','+v.cR+','+v.cB+','+v.cCin+');z-index:3;"></div>';
+    h+='<div style="position:absolute;bottom:0;left:0;right:0;height:1mm;background:linear-gradient(90deg,'+v.cCin+','+v.cB+','+v.cR+','+v.cP+','+v.cZ+');z-index:3;"></div>';
+  }
+  h+='<div style="width:'+v.logoSz+'px;height:'+v.logoSz+'px;border-radius:50%;background:'+v.logoBg+';display:flex;align-items:center;justify-content:center;z-index:2;box-shadow:0 1mm 3mm rgba(0,0,0,.3);">';
+  h+='<span style="font-family:'+FH+',sans-serif;font-weight:900;font-size:'+v.logoFS+'px;color:'+v.logoTxtC+';letter-spacing:-0.5px;">'+v.logoTxt+'</span></div>';
+  h+='<div style="font-family:'+FH+',sans-serif;font-weight:800;font-size:'+v.brandFS+'px;color:'+v.txtMain+';letter-spacing:1mm;line-height:1.05;text-align:center;z-index:2;">'+v.brand1+'<br>'+v.brand2+'</div>';
+  h+='<div style="height:0.5mm;width:20mm;background:linear-gradient(90deg,transparent,'+v.txtSub+',transparent);z-index:2;opacity:0.5;"></div>';
+  if(v.tagline) h+='<div style="font-family:'+FB+',sans-serif;font-size:'+v.tagFS+'px;color:'+v.txtSub+';letter-spacing:0.5mm;text-transform:uppercase;z-index:2;">'+v.tagline+'</div>';
+  if(v.taglineAr) h+='<div style="font-family:Tajawal,sans-serif;font-size:'+v.tagFS+'px;color:'+v.txtSub+';direction:rtl;z-index:2;">'+v.taglineAr+'</div>';
+  if(v.cta) h+='<div style="font-family:'+FH+',sans-serif;font-size:'+v.ctaFS+'px;font-weight:700;color:'+v.txtMain+';margin-top:1mm;letter-spacing:0.3mm;z-index:2;">'+v.cta+'</div>';
+  if(v.showDots){
+    var dotSz=Math.round(H*0.06);
+    h+='<div style="position:absolute;bottom:3mm;left:50%;transform:translateX(-50%);display:flex;gap:1.5mm;z-index:2;">';
+    [v.cZ,v.cP,v.cR,v.cB,v.cCin].forEach(function(c){h+='<div style="width:'+dotSz+'mm;height:'+dotSz+'mm;border-radius:50%;background:'+c+';border:0.4mm solid rgba(255,255,255,.4);"></div>';});
+    h+='</div>';
+  }
+  h+='</div>';
+  return h;
+}
+
+function buildShelf(v){
+  var W=v.shelfW,H=v.shelfH,FB=v.fntB,FH=v.fntH;
+  var bgStyle='background-color:'+v.bgShelf+';';
+  var h='<div style="width:'+W+'mm;height:'+H+'mm;'+bgStyle+'position:relative;overflow:hidden;display:flex;align-items:center;">';
+  if(v.imgShelf) h+='<div style="position:absolute;inset:0;background-image:url('+v.imgShelf+');background-size:'+v.bgSzShelf+';background-position:center;background-repeat:no-repeat;opacity:'+v.opShelf+';pointer-events:none;z-index:0;"></div>';
+  h+=patOverlay(v.patShelf, v.patCol, v.patOpac);
+  if(v.showLines) h+='<div style="position:absolute;top:0;left:0;right:0;height:1mm;background:linear-gradient(90deg,'+v.cZ+','+v.cP+','+v.cR+','+v.cB+','+v.cCin+');z-index:3;"></div>';
+  var smLogo=Math.round(H*0.4);
+  if(v.showShelfBrand){
+    h+='<div style="display:flex;align-items:center;gap:2mm;padding:0 3mm;flex-shrink:0;z-index:2;">';
+    h+='<div style="width:'+smLogo+'mm;height:'+smLogo+'mm;border-radius:50%;background:'+v.logoBg+';display:flex;align-items:center;justify-content:center;box-shadow:0 0.3mm 1mm rgba(0,0,0,.2);">';
+    h+='<span style="font-family:'+FH+',sans-serif;font-weight:900;font-size:'+Math.round(smLogo*0.38)+'mm;color:'+v.logoTxtC+';">'+v.logoTxt+'</span></div>';
+    h+='<div style="font-family:'+FH+',sans-serif;font-weight:800;font-size:'+Math.round(v.prodFS*1.2)+'px;color:'+v.txtMain+';letter-spacing:0.3mm;line-height:1.1;">'+v.brand1+'<br>'+v.brand2+'</div>';
+    h+='</div>';
+  }
+  var divider='<div style="width:1px;height:60%;background:'+v.txtSub+';opacity:0.3;flex-shrink:0;z-index:2;"></div>';
+  var blocks=[];
+  if(v.showShelfSoc){
+    var sh='<div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:0 12px;gap:2px;z-index:2;min-width:0;">';
+    if(v.socIG) sh+='<div style="font-family:'+FB+',sans-serif;font-size:'+v.socFS+'px;color:'+v.txtSub+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">📷 '+v.socIG+'</div>';
+    if(v.socWA) sh+='<div style="font-family:'+FB+',sans-serif;font-size:'+v.socFS+'px;color:'+v.txtSub+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">📱 '+v.socWA+'</div>';
+    if(v.socExtra) sh+='<div style="font-family:'+FB+',sans-serif;font-size:'+v.socFS+'px;color:'+v.txtSub+';opacity:0.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+v.socExtra+'</div>';
+    if(v.web) sh+='<div style="font-family:'+FB+',sans-serif;font-size:'+Math.round(v.socFS*0.85)+'px;color:'+v.txtSub+';opacity:0.6;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">🌐 '+v.web+'</div>';
+    sh+='</div>';
+    blocks.push(sh);
+  }
+  // Badges
+  if(v.showShelfBd && v.badges.length>0){
+    var bh='<div style="flex:1;display:flex;flex-wrap:wrap;gap:4px;padding:4px 8px;justify-content:center;align-items:center;z-index:2;min-width:0;">';
+    v.badges.forEach(function(bd){
+      var iconHtml=bd.png?'<img src="'+bd.png+'" style="width:'+v.bdIconSz+'px;height:'+v.bdIconSz+'px;object-fit:contain;">':'<span style="font-size:'+v.bdIconSz+'px;">'+bd.icon+'</span>';
+      bh+='<div style="display:flex;flex-direction:column;align-items:center;gap:1px;">'+iconHtml+'<span style="font-family:'+FB+',sans-serif;font-size:'+v.bdFS+'px;color:'+v.txtSub+';text-align:center;line-height:1.1;">'+bd.label+'</span></div>';
+    });
+    bh+='</div>';
+    blocks.push(bh);
+  }
+  // QR
+  if(v.showShelfQr && v.qrShelf){
+    blocks.push('<div style="padding:4px 10px;flex-shrink:0;z-index:2;display:flex;align-items:center;"><img src="'+v.qrShelf+'" style="width:'+v.qrSz+'px;height:'+v.qrSz+'px;object-fit:contain;background:#fff;padding:2px;border-radius:3px;"></div>');
+  }
+
+  if(blocks.length>0){
+    h+=divider;
+    h+=blocks.join(divider);
+  }
+  
+  h+='</div>';
+  return h;
+}
+
+function buildSide(v,which){
+  var W=v.sideW,frontH=v.sideFH,backH=v.sideBH,totalH=backH;
+  var FH=v.fntH,FB=v.fntB;
+  var clipL="polygon(0 0, 100% "+ ( (backH-frontH)/backH*100 ) +"%, 100% 100%, 0 100%)";
+  var clipR="polygon(0 "+ ( (backH-frontH)/backH*100 ) +"%, 100% 0, 100% 100%, 0 100%)";
+  var clip=which==="L"?clipL:clipR;
+  var bgCol=which==="L"?v.bgSideL:v.bgSideR;
+  var pat=which==="L"?v.patSideL:v.patSideR;
+  var bgImg=which==="L"?v.imgSideL:v.imgSideR;
+  var qr=which==="L"?v.qrSideL:v.qrSideR;
+  var bgSzS=which==="L"?v.bgSzSideL:v.bgSzSideR;
+  var opImg=which==="L"?v.opSideL:v.opSideR;
+  var bgStyle='background-color:'+bgCol+';';
+  var h='<div style="width:'+W+'mm;height:'+totalH+'mm;position:relative;">';
+  h+='<div style="width:100%;height:100%;'+bgStyle+'clip-path:'+clip+';-webkit-clip-path:'+clip+';position:relative;overflow:hidden;">';
+  var maskL='<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" viewBox="0 0 '+W+' '+totalH+'" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999;"><polygon points="0,0 '+W+',0 '+W+','+(backH-frontH)+'" fill="#ffffff"/></svg>';
+  var maskR='<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" viewBox="0 0 '+W+' '+totalH+'" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999;"><polygon points="0,0 '+W+',0 0,'+(backH-frontH)+'" fill="#ffffff"/></svg>';
+  h += (which==="L"?maskL:maskR);
+  if(bgImg) h+='<div style="position:absolute;inset:0;background-image:url('+bgImg+');background-size:'+bgSzS+';background-position:center;background-repeat:no-repeat;opacity:'+opImg+';pointer-events:none;z-index:0;"></div>';
+  h+=patOverlay(pat, v.patCol, v.patOpac);
+  var logoSzMM = (v.sideLogoSz / 3.7795).toFixed(2);
+  var qrSzMM = (v.qrSz / 3.7795).toFixed(2);
+  var cx = (W * (which==="L"?v.sideLogoXL:v.sideLogoXR) / 100).toFixed(2);
+  var cy = (totalH * (which==="L"?v.sideLogoYL:v.sideLogoYR) / 100).toFixed(2);
+  var qx = (W * (which==="L"?v.qrXL:v.qrXR) / 100).toFixed(2);
+  var qy = (totalH * (which==="L"?v.qrYL:v.qrYR) / 100).toFixed(2);
+  
+  // High-Precision Logo Centering (mm math)
+  h+='<div style="position:absolute;top:'+(cy - logoSzMM/2 - 10)+'mm;left:'+(cx - logoSzMM/2)+'mm;display:flex;flex-direction:column;align-items:center;gap:1.5mm;z-index:2;">';
+  h+='<div style="width:'+v.sideLogoSz+'px;height:'+v.sideLogoSz+'px;border-radius:50%;background:'+v.logoBg+';display:flex;align-items:center;justify-content:center;overflow:hidden;">';
+  h+='<span style="font-family:'+FH+',sans-serif;font-weight:900;font-size:'+Math.round(v.sideLogoSz*0.4)+'px;color:'+v.logoTxtC+';">'+v.logoTxt+'</span></div>';
+  h+='<div style="font-family:'+FH+',sans-serif;font-weight:800;font-size:'+v.sideBrandFS+'px;color:'+v.txtMain+';letter-spacing:0.5mm;text-align:center;line-height:1.1;">'+v.brand1+'<br>'+v.brand2+'</div>';
+  h+='</div>';
+  h+='</div>';
+  
+  // High-Precision QR Position (mm math)
+  if(qr){
+    h+='<div style="position:absolute;top:'+(qy - qrSzMM/2)+'mm;left:'+(qx - qrSzMM/2)+'mm;width:'+qrSzMM+'mm;height:'+qrSzMM+'mm;z-index:1000;page-break-inside:avoid;"><img src="'+qr+'" style="width:100%;height:100%;object-fit:contain;background:#fff;padding:2px;"></div>';
+  }
+  if(v.web) h+='<div style="position:absolute;bottom:3%;left:50%;transform:translateX(-50%);font-family:'+FB+',sans-serif;font-size:'+Math.round(v.sideBrandFS*0.35)+'px;color:'+v.txtSub+';opacity:0.6;letter-spacing:0.5mm;text-transform:uppercase;white-space:nowrap;z-index:2;">'+v.web+'</div>';
+  h+='</div>';
+  return h;
+}
+
+function render(){
+  var v=getVals(),s=v.scale,wrap=document.getElementById("standWrap"),html="";
+  var ps=document.getElementById('dynPrint');
+  if(!ps){ps=document.createElement('style');ps.id='dynPrint';document.head.appendChild(ps);}
+
+  var dynCss = '@media print{ ';
+  var pSz=G("sPrintSize")||"actual";
+  if(pSz==="a2") ps.textContent=dynCss + '@page{size:A2 landscape;margin:0;} .panel-group{height:420mm;} }';
+  else if(pSz==="a3") ps.textContent=dynCss + '@page{size:A3 landscape;margin:0;} .panel-group{height:297mm;} }';
+  else {
+    ps.textContent=dynCss + 
+      '@page face{size:'+v.faceW+'mm '+v.faceH+'mm;margin:0;} @page shelf{size:'+v.shelfW+'mm '+v.shelfH+'mm;margin:0;} @page side{size:'+v.sideW+'mm '+v.sideBH+'mm;margin:0;} ' +
+      '.pg-face{page:face;height:'+v.faceH+'mm;} .pg-shelf{page:shelf;height:'+v.shelfH+'mm;} .pg-side{page:side;height:'+v.sideBH+'mm;} }';
+  }
+
+  function sw(inner,w,h,cls){
+    // Dual Render: Screen uses scaled px; Print uses raw mm
+    var pxW=mm(w),pxH=mm(h);
+    var screen = '<div class="sw-o" style="width:'+(pxW*s)+'px;height:'+(pxH*s)+'px;overflow:hidden;border:1px dashed rgba(201,168,76,.1);">' +
+                 '<div class="sw-i" style="transform:scale('+s+');transform-origin:top left;width:'+pxW+'px;height:'+pxH+'px;">'+inner+'</div></div>';
+    var print = '<div class="sw-p '+(cls||"")+'" style="width:'+w+'mm;height:'+h+'mm;margin:0 auto;position:relative;">'+inner+'</div>';
+    return screen + print;
+  }
+  
+  if(currentPanel==="all"||currentPanel==="face"){
+    html+='<div class="panel-group pg-face"><div class="panel-title">① Mirror Face</div>'+sw(buildMirrorFace(v),v.faceW,v.faceH,'pg-face')+'</div>';
+  }
+  if(currentPanel==="all"||currentPanel==="shelf"){
+    html+='<div class="panel-group pg-shelf"><div class="panel-title">② Shelf</div>'+sw(buildShelf(v),v.shelfW,v.shelfH,'pg-shelf')+'</div>';
+  }
+  if(currentPanel==="all"||currentPanel==="sides"){
+    html+='<div class="panel-group pg-side"><div class="panel-title">③ Side L</div>'+sw(buildSide(v,"L"),v.sideW,v.sideBH,'pg-side')+'</div>';
+    html+='<div class="panel-group pg-side"><div class="panel-title">④ Side R</div>'+sw(buildSide(v,"R"),v.sideW,v.sideBH,'pg-side')+'</div>';
+  }
+  wrap.innerHTML=html;
+}
+
+
+function setPanel(p,btn){currentPanel=p;document.querySelectorAll(".ctrl-btn").forEach(function(b){b.classList.remove("active");});if(btn)btn.classList.add("active");render();}
+function switchTab(tab,btn){["brand","products","style","badges","size","fonts"].forEach(function(t){var e=document.getElementById("tab-"+t);if(e)e.style.display=t===tab?"block":"none";});document.querySelectorAll(".sb-tab").forEach(function(b){b.classList.remove("active");});if(btn)btn.classList.add("active");}
+
+var _PBK="bbstand3",_PBS=[],_PBMAX=8;
+function _pbLG(){try{return JSON.parse(localStorage.getItem(_PBK+"_pb")||"[]");}catch(e){return[];}}
+function _pbSav(a){try{localStorage.setItem(_PBK+"_pb",JSON.stringify(a));}catch(e){}}
+function pbToast(msg){var t=document.getElementById("pbToast");if(!t)return;t.textContent=msg;t.classList.add("show");clearTimeout(pbToast._t);pbToast._t=setTimeout(function(){t.classList.remove("show");},2400);}
+function pbSave(){var name=(document.getElementById("pbNameIn").value||"").trim();if(!name){pbToast("Enter a name");return;}var ts=new Date().toLocaleDateString("en-GB");var idx=_PBS.findIndex(function(p){return p.name===name;});var obj={name:name,state:{vals:getVals()},date:ts};if(idx>=0)_PBS[idx]=obj;else{if(_PBS.length>=_PBMAX)_PBS.shift();_PBS.push(obj);}_pbSav(_PBS);pbRender();document.getElementById("pbNameIn").value="";pbToast("✓ Saved: "+name);}
+function pbSaveQuick(){document.getElementById("pbNameIn").value="Quick "+new Date().toLocaleTimeString();pbSave();}
+function pbLoad(idx){var p=_PBS[idx];if(!p||!p.state||!p.state.vals)return;var v=p.state.vals,sv=function(id,val){var e=document.getElementById(id);if(e&&val!==undefined)e.value=val;};
+sv("cZaatar",v.cZ);sv("cPaprika",v.cP);sv("cRosemary",v.cR);sv("cPepper",v.cB);sv("cCinnamon",v.cCin);
+sv("eBrand1",v.brand1);sv("eBrand2",v.brand2);sv("eLogoTxt",v.logoTxt);sv("eTagline",v.tagline);sv("eTaglineAr",v.taglineAr);sv("eCTA",v.cta);sv("eWeb",v.web);
+sv("eSocIG",v.socIG);sv("eSocWA",v.socWA);sv("eSocExtra",v.socExtra);
+sv("eProd1",v.prod1);sv("eProd1Ar",v.p1Ar);sv("eProd2",v.prod2);sv("eProd2Ar",v.p2Ar);sv("eProd3",v.prod3);sv("eProd3Ar",v.p3Ar);sv("eProd4",v.prod4);sv("eProd4Ar",v.p4Ar);sv("eProd5",v.prod5);sv("eProd5Ar",v.p5Ar);
+sv("eWt",v.wt);sv("ePrice",v.price);
+sv("cBgFace",v.bgFace);sv("cBgShelf",v.bgShelf);sv("cBgSideL",v.bgSideL);sv("cBgSideR",v.bgSideR);
+sv("cLogoBg",v.logoBg||"#ffffff");sv("cLogoTxtC",v.logoTxtC||"#1a1a1a");
+sv("cTxtMain",v.txtMain||"#ffffff");sv("cTxtSub",v.txtSub||"#cccccc");
+sv("sFntH",v.fntH||"Montserrat");sv("sFntB",v.fntB||"'DM Sans'");
+sv("patFace",v.patFace);sv("patShelf",v.patShelf);sv("patSideL",v.patSideL);sv("patSideR",v.patSideR);
+sv("bgSzFace",v.bgSzFace||"cover");sv("bgSzShelf",v.bgSzShelf||"cover");sv("bgSzSideL",v.bgSzSideL||"cover");sv("bgSzSideR",v.bgSzSideR||"cover");
+sv("cPat",v.patCol||"#ffffff");sv("tPatOpac",v.patOpac!==undefined?v.patOpac:4);
+sv("opFace",v.opFace!==undefined?Math.round(v.opFace*100):100);sv("opShelf",v.opShelf!==undefined?Math.round(v.opShelf*100):100);
+sv("opSideL",v.opSideL!==undefined?Math.round(v.opSideL*100):100);sv("opSideR",v.opSideR!==undefined?Math.round(v.opSideR*100):100);
+var eDots=document.getElementById("chkFlavorDots");if(eDots)eDots.checked=v.showDots!==undefined?v.showDots:true;
+var eLines=document.getElementById("chkColorLines");if(eLines)eLines.checked=v.showLines!==undefined?v.showLines:true;
+var eSoc=document.getElementById("chkShowShelfSoc");if(eSoc)eSoc.checked=v.showShelfSoc!==undefined?v.showShelfSoc:true;
+var eBd=document.getElementById("chkShowShelfBd");if(eBd)eBd.checked=v.showShelfBd!==undefined?v.showShelfBd:true;
+var eQr=document.getElementById("chkShowShelfQr");if(eQr)eQr.checked=v.showShelfQr!==undefined?v.showShelfQr:true;
+var eShB=document.getElementById("eShowShelfBrand");if(eShB)eShB.checked=v.showShelfBrand!==undefined?v.showShelfBrand:true;
+var ePT=document.getElementById("chkPrintTitles");if(ePT)ePT.checked=v.printTitles!==undefined?v.printTitles:false;
+var ePC=document.getElementById("chkPrintCenter");if(ePC)ePC.checked=v.printCenter!==undefined?v.printCenter:true;
+sv("sPrintSize",v.pSize||"actual");
+// Restore images
+sv("hxBgFace",v.imgFace);sv("hxBgShelf",v.imgShelf);sv("hxBgSideL",v.imgSideL);sv("hxBgSideR",v.imgSideR);
+sv("hxQrShelf",v.qrShelf);sv("hxQrSideL",v.qrSideL);sv("hxQrSideR",v.qrSideR);
+// Restore badges
+if(v.badges){
+  for(var i=1;i<=6;i++){
+    var ebb=document.getElementById("chkBd"+i);if(ebb)ebb.checked=false;
+    sv("eBd"+i,"");sv("eBd"+i+"I","");sv("hxBd"+i,"");
+  }
+  v.badges.forEach(function(bd,idx){
+    var n=idx+1; if(n>6)return;
+    var ebb=document.getElementById("chkBd"+n);if(ebb)ebb.checked=true;
+    sv("eBd"+n,bd.label);sv("eBd"+n+"I",bd.icon);sv("hxBd"+n,bd.png);
+  });
+}
+sv("dFaceW",v.faceW);sv("dFaceH",v.faceH);sv("dShelfW",v.shelfW);sv("dShelfH",v.shelfH);sv("dSideW",v.sideW);sv("dSideFH",v.sideFH);sv("dSideBH",v.sideBH);
+sv("sScale",Math.round((v.scale||0.7)*100));
+sv("tBrandFS",v.brandFS);sv("tTagFS",v.tagFS);sv("tLogoSz",v.logoSz);sv("tLogoFS",v.logoFS);sv("tCTAFS",v.ctaFS);
+sv("tProdFS",v.prodFS);sv("tProdArFS",v.prodArFS);sv("tPriceFS",v.priceFS);sv("tSocFS",v.socFS);
+sv("tSideBrandFS",v.sideBrandFS);sv("tSideLogoSz",v.sideLogoSz);
+sv("tSideLogoXL",v.sideLogoXL!==undefined?v.sideLogoXL:50);sv("tSideLogoYL",v.sideLogoYL!==undefined?v.sideLogoYL:40);
+sv("tSideLogoXR",v.sideLogoXR!==undefined?v.sideLogoXR:50);sv("tSideLogoYR",v.sideLogoYR!==undefined?v.sideLogoYR:40);
+sv("tQrXL",v.qrXL!==undefined?v.qrXL:50);sv("tQrYL",v.qrYL!==undefined?v.qrYL:80);
+sv("tQrXR",v.qrXR!==undefined?v.qrXR:50);sv("tQrYR",v.qrYR!==undefined?v.qrYR:80);
+sv("tQrSz",v.qrSz);sv("tBdIconSz",v.bdIconSz);sv("tBdFS",v.bdFS);
+[["dFaceW","vFaceW","mm"],["dFaceH","vFaceH","mm"],["dShelfW","vShelfW","mm"],["dShelfH","vShelfH","mm"],["dSideW","vSideW","mm"],["dSideFH","vSideFH","mm"],["dSideBH","vSideBH","mm"],["sScale","lScale","%"],["tBrandFS","vBrandFS","px"],["tTagFS","vTagFS","px"],["tLogoSz","vLogoSz","px"],["tLogoFS","vLogoFS","px"],["tCTAFS","vCTAFS","px"],["tProdFS","vProdFS","px"],["tProdArFS","vProdArFS","px"],["tPriceFS","vPriceFS","px"],["tSocFS","vSocFS","px"],["tSideBrandFS","vSideBrandFS","px"],["tSideLogoSz","vSideLogoSz","px"],["tSideLogoXL","vSideLogoXL","%"],["tSideLogoYL","vSideLogoYL","%"],["tSideLogoXR","vSideLogoXR","%"],["tSideLogoYR","vSideLogoYR","%"],["tQrSz","vQrSz","px"],["tQrXL","vQrXL","%"],["tQrYL","vQrYL","%"],["tQrXR","vQrXR","%"],["tQrYR","vQrYR","%"],["tBdIconSz","vBdIconSz","px"],["tBdFS","vBdFS","px"],["tPatOpac","vPatOpac","%"],["opFace","vOpFace","%"],["opShelf","vOpShelf","%"],["opSideL","vOpSideL","%"],["opSideR","vOpSideR","%"]].forEach(function(p){U(p[1],G(p[0]),p[2]);});
+render();pbToast("✓ Loaded: "+p.name);}
+function pbDelete(idx){var nm=_PBS[idx]?_PBS[idx].name:"";_PBS.splice(idx,1);_pbSav(_PBS);pbRender();pbToast("Deleted: "+nm);}
+function pbExport(idx){var p=_PBS[idx];if(!p)return;var a=document.createElement("a");a.href="data:application/json;charset=utf-8,"+encodeURIComponent(JSON.stringify({name:p.name,template:"bbstand",state:p.state},null,2));a.download="bbstand-"+p.name.replace(/[^\w\- ]/g,"_")+".json";document.body.appendChild(a);a.click();document.body.removeChild(a);pbToast("Exported");}
+function pbImport(evt){var file=evt.target.files[0];if(!file)return;var r=new FileReader();r.onload=function(e){try{var data=JSON.parse(e.target.result);if(!data.state)throw new Error("Invalid");var name=data.name||file.name.replace(".json","");var ts=new Date().toLocaleDateString("en-GB");var idx=_PBS.findIndex(function(p){return p.name===name;});var obj={name:name,state:data.state,date:ts};if(idx>=0)_PBS[idx]=obj;else{if(_PBS.length>=_PBMAX)_PBS.shift();_PBS.push(obj);}_pbSav(_PBS);pbRender();pbToast("Imported: "+name);}catch(err){pbToast("Invalid file");}evt.target.value="";};r.readAsText(file);}
+function pbRender(){var slots=document.getElementById("pbSlots");if(!slots)return;slots.innerHTML="";for(var i=0;i<_PBMAX;i++){var p=_PBS[i];var slot=document.createElement("div");slot.className="pbs";var lb=document.createElement("button");lb.className="pbs-load"+(p?"":" empty");if(p){lb.innerHTML="<span class=\"pbs-nm\">"+p.name+"</span><span class=\"pbs-dt\">"+p.date+"</span>";lb.onclick=(function(j){return function(){pbLoad(j);};})(i);}else lb.textContent="·";var ex=document.createElement("button");ex.className="pbs-exp"+(p?"":" hidden");ex.textContent="↓";if(p)ex.onclick=(function(j){return function(e){e.stopPropagation();pbExport(j);};})(i);var db=document.createElement("button");db.className="pbs-del"+(p?"":" hidden");db.textContent="✕";if(p)db.onclick=(function(j){return function(e){e.stopPropagation();pbDelete(j);};})(i);slot.appendChild(lb);slot.appendChild(ex);slot.appendChild(db);slots.appendChild(slot);}}
+
+(function(){
+  document.querySelectorAll("#sb-body input:not([type=range]):not([type=file]):not([type=checkbox]),#sb-body select,#sb-body textarea").forEach(function(inp){inp.addEventListener("input",render);});
+  _PBS=_pbLG();setTimeout(pbRender,100);render();
+})();
+</script>
+</body>
+</html>

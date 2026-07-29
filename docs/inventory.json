@@ -1,0 +1,253 @@
+{
+  "meta": {
+    "project": "Balance Bites — tooling audit",
+    "auditDate": "2026-07-16",
+    "scope": "static analysis only; no source files modified",
+    "brand": "Balance Bites (Egyptian healthy-snacks; bilingual AR/EN; gold + dark-brown identity)",
+    "totalSourceLines": 14529,
+    "fileCount": 6,
+    "lineCountMethod": "System.IO.File.ReadAllLines (authoritative); earlier Measure-Object -Line undercounted every file",
+    "closedOut": {
+      "balanceBytesTypo": { "present": true, "ref": "balance-bites-label-v3.html:698-699", "note": "Top-Label default Title Line 2 = 'BYTES' (all-caps) next to 'BALANCE' -> renders 'BALANCE BYTES'; should be 'BITES'. Only occurrence; correct everywhere else. Case-sensitive grep for 'Bytes' misses the all-caps form." },
+      "illegalReturnStatement": { "present": false, "ref": "bb-stock-costs.html:5541-5574", "note": "init is a guarded async IIFE" },
+      "overEscapedDivBuildFace": { "present": false, "ref": "balance-bites-carton (2).html:236-375" }
+    }
+  },
+  "files": [
+    {
+      "name": "bb-stock-costs.html",
+      "sizeKB": 269.6,
+      "lines": 5577,
+      "family": "business/data",
+      "role": "data consumer / analytics",
+      "purpose": "Inventory, COGS/BOM, purchases, production, returns, operating costs, profit & stock reports. Consumes Invoice Pro's shared data folder.",
+      "features": [
+        "14 main tabs (dashboard, invoices, COGS, profit, stock value, purchases, raw materials, packaging, stickers, recipes, prep/BOM, production, returns, operating costs)",
+        "print report dropdown (5 report types) + fit-to-one-A4 toggle",
+        "dashboard stat cards + money-cycle + low-stock alerts",
+        "batch invoice reprint with per-preset colours and mm margins",
+        "prep/BOM calculator + saveable draft invoices (bb_pending_invoices)",
+        "dynamic theme engine with WCAG contrast picking",
+        "folder connect/reconnect (FSA)"
+      ],
+      "entities": {
+        "MaterialPackage": { "ref": "2317-2331", "fields": ["id","name","unit","costPerUnit","currentStock","minStock","supplier","notes"] },
+        "Sticker": { "ref": "2391-2415", "fields": ["...material","productId","templateKey"] },
+        "Recipe": { "ref": "2488-2502", "fields": ["id","name","batchSize","ingredients[{itemId,itemType,qty}]","productId","productWeight","unitPrice"] },
+        "Purchase": { "ref": "2665-2676", "fields": ["id","date","itemId","itemType","itemName","qty","costPerUnit","totalCost","supplier"] },
+        "Production": { "ref": "2758-2759", "fields": ["id","date","recipeId","recipeName","unitsProduced","notes","deductions[]","isAdjustment"] },
+        "PaymentStatus": { "ref": "2799", "fields": ["invoiceId->{status,updatedAt}"] },
+        "PendingInvoice": { "ref": "2874-2888", "fields": ["id","status","title","customerId","customerName","customerPhone","items[]","prepLines[]","prepSummary","completedInvoiceId"] },
+        "Return": { "ref": "2923-2932", "fields": ["id","date","invoiceId","invoiceNumber","customerName","amount","reason","notes"] },
+        "OperatingCost": { "ref": "2974-2981", "fields": ["id","date","name","category","amount","notes"] },
+        "ColorPreset": { "ref": "1142-1145", "fields": ["id","name","bg","gold","txt","mut","row","tot","grand"] }
+      },
+      "storage": {
+        "localStorageWrite": ["bb_materials","bb_packages","bb_stickers","bb_recipes","bb_purchases","bb_production","bb_color_presets","bb_invoice_payments","bb_returns","bb_operation_costs","bb_active_color_preset_id","bb_pending_invoices"],
+        "localStorageRead": ["bb_products","bb_invoices","bb_inv2"],
+        "localStoragePrefs": ["bb_active_theme","bb_prep_lines","bb_prep_ing_view","bb_prep_prod_mode","bb_prep_print_mode","bb_inv_print_margins","bb_inv_print_preset_id","bb_print_fit_one"],
+        "indexedDB": { "db": "bb_filestore_v1", "store": "h", "key": "dir (directory handle)", "ref": "1021-1058" },
+        "fileSystemAccess": { "picker": "1057", "writeKeyJson": "1089-1093", "loadAll": "1078-1087" },
+        "sharedFolderPath": { "value": "C:\\Users\\Marco\\Desktop\\BALANCE BITES\\invoices customers\\saved data", "ref": "1012" },
+        "crossLink": { "value": "file:///C:/Users/Marco/Desktop/balance-bites-invoice-pro.html", "ref": "762" }
+      },
+      "print": { "engines": ["new-window invoice reprint (3898)","hidden-iframe reports (4388-4424)"], "page": "A4 portrait", "marginsDefault": {"t":16,"r":14,"b":16,"l":14} },
+      "externalDeps": ["Google Fonts"],
+      "rtl": { "htmlDir": "rtl", "lang": "ar", "ref": "2", "arabicEditable": false }
+    },
+    {
+      "name": "balance-bites-invoice-pro.html",
+      "sizeKB": 177.1,
+      "lines": 3498,
+      "family": "business/data",
+      "role": "data producer",
+      "purpose": "Invoice builder + customer/category/product catalog + reports dashboard + price-list print. Produces the shared data folder.",
+      "features": [
+        "editable live A4 invoice page",
+        "customer/category/product CRUD + search + pickers",
+        "product picker with per-category and multi-category bulk add",
+        "reports dashboard (total/customer/top-product/product) with date range",
+        "price-list print",
+        "pending drafts from Stock & Costs (issue draft)",
+        "invoice history search + duplicate + delete",
+        "colour preset grid + folder connect",
+        "whole-state preset export/import (bbinv_pb)"
+      ],
+      "entities": {
+        "Customer": { "ref": "1243", "key": "bb_customers", "fields": ["id","name","phone","address","notes"] },
+        "Category": { "ref": "1370", "key": "bb_categories", "fields": ["id","name","color"] },
+        "Product": { "ref": "1432", "key": "bb_products", "fields": ["id","name","packType","weight","unitPrice","categoryId"] },
+        "InvoiceItem": { "ref": "1121", "fields": ["productId","name","packType","weight","categoryId","qty","price"] },
+        "Invoice": { "ref": "1854-1861", "key": "bb_invoices", "fields": ["id","invoiceNumber","date","customerId","customerName","customerPhone","items[]","subtotal","discount","discountAmount","total","notes"] },
+        "ColorPreset": { "ref": "1137-1142", "fields": ["id","name","bg","gold","txt","mut","row","tot","grand"], "note": "identical defaults to bb-stock-costs" }
+      },
+      "storage": {
+        "managed": ["bb_customers","bb_products","bb_invoices","bb_categories","bb_color_presets","bb_inv2","bb_active_color_preset_id","bb_pending_invoices"],
+        "presetBar": "bbinv_pb",
+        "indexedDB": { "db": "bb_filestore_v1", "store": "h", "ref": "959-960", "note": "same DB/store as bb-stock-costs" },
+        "fileSystemAccess": { "picker": "1020", "read": "1033-1037", "write": "1046" }
+      },
+      "invoiceNumber": { "format": "#INV-001", "logic": "max(existing numeric)+1, padStart(3)", "perCustomerOption": true, "ref": "816,1912,2609" },
+      "tax": { "vatField": false, "note": "only a discount % exists (tDiscount); no VAT/tax rate", "ref": "517,1109" },
+      "print": { "engines": ["window.print on page (677)","new-window price list (1750)"], "page": "A4 portrait", "marginsPage": "16mm 14mm", "marginsExport": "12mm 14mm", "ref": "261,1626" },
+      "externalDeps": ["Google Fonts"],
+      "rtl": { "htmlDir": "rtl", "lang": "ar", "ref": "2", "arabicEditable": true, "note": "brand/label strings editable via settings; default catalog still hardcoded AR" }
+    },
+    {
+      "name": "balance-bites-label-v3.html",
+      "sizeKB": 129.9,
+      "lines": 2041,
+      "family": "design",
+      "role": "label/sticker/cup designer",
+      "purpose": "Flexible single-shape label designer: rectangular, tapered/conical cup unwrap, circular seal, custom. Live preview, exact-cm print, PNG export.",
+      "features": [
+        "shape modes: rectangular / tapered-cup / circular / custom",
+        "conical unwrap geometry (R1/R2/arc/slant/bbox)",
+        "bilingual content fields (name, ingredients, allergen, tip, dates, storage)",
+        "crop modes incl. exact label crop + 3mm buffer",
+        "PNG export via dom-to-image",
+        "exact-cm or A4/Letter/A3 print",
+        "IndexedDB preset bar (30 slots) + single/bulk export/import"
+      ],
+      "entities": {
+        "LabelPreset": { "ref": "857", "store": "presets(keyPath=name)", "fields": ["name","date","state"] }
+      },
+      "storage": {
+        "indexedDB": { "db": "BBLabelDB", "store": "presets", "keyPath": "name", "ref": "856-857" },
+        "presetMax": 30,
+        "migration": { "from": ["bbbacklabel_pb3","bbbacklabel_pb","bbbacklabel_pb2"], "to": "BBLabelDB", "ref": "2011-2021" },
+        "exportTemplates": ["bbbacklabel", "bbbacklabel_bulk"]
+      },
+      "print": { "engine": "dynamic @page exact-cm or A4/Letter/A3", "unit": "PPC (px per cm)", "ref": "1590-1600" },
+      "externalDeps": ["dom-to-image 2.6.0 (cdnjs)", "Google Fonts"],
+      "rtl": { "htmlDir": null, "arabicEditable": true, "perFieldDir": true, "ref": "347-408,619" }
+    },
+    {
+      "name": "balance-bites-label-editor- latest.html",
+      "sizeKB": 92.7,
+      "lines": 2180,
+      "family": "design",
+      "role": "multi-panel wrap-label set editor",
+      "purpose": "Fixed 4-panel wrap label (front 5x3, neck 1x4.5, seal 3x3, back 5x3 cm) with full bilingual regulatory text + nutrition facts.",
+      "features": [
+        "front/neck/seal/back panels rendered as one strip",
+        "flavour + emoji/image, type, premium, 4 badges, weight, footer",
+        "bilingual ingredients/storage/validity EN+AR",
+        "bilingual nutrition-facts table (Label|Value|arLabel|arValue)",
+        "per-element typography (font+size, ~12 elements)",
+        "built-in flavour presets (Zaatar, etc.)",
+        "localStorage preset save/load"
+      ],
+      "entities": {
+        "Vals": { "ref": "1663-1697", "note": "~60 flat fields incl typography" },
+        "FlavourPreset": { "ref": "1708-1719", "note": "object keyed by flavour name" }
+      },
+      "storage": { "localStorage": ["bb_presets"], "ref": "1756,1935", "indexedDB": null, "migration": null },
+      "print": { "engine": "single-DOM screen+print strips; fixed cm/mm in print CSS", "ref": "969-1128,1701-1706" },
+      "externalDeps": ["Google Fonts"],
+      "rtl": { "htmlDir": null, "arabicEditable": true, "bilingualRegulatory": true, "ref": "1676-1719,1949-1960" }
+    },
+    {
+      "name": "balance-bites-stand.html",
+      "sizeKB": 64.0,
+      "lines": 774,
+      "family": "design",
+      "role": "counter display stand editor",
+      "purpose": "Counter Display Stand (CDS 140): mirror face, shelf, two tapered sides. Live preview; exact-mm or A3/A2 print.",
+      "features": [
+        "6 sidebar tabs + 4 panel views",
+        "two-line brand, EN/AR taglines, CTA, social, 5 flavour colours",
+        "5 products EN/AR + weight/price",
+        "per-panel colours/patterns/bg images/QRs + positions + toggles",
+        "6 toggleable health badges",
+        "mm dimensions + screen scale + actual/A3/A2 print",
+        "font controls",
+        "preset bar save/load/export/import"
+      ],
+      "entities": {
+        "State": { "ref": "502-542", "note": "flat vals incl base64 images/QRs" },
+        "Badge": { "ref": "503-506", "fields": ["label","icon","png"] },
+        "Preset": { "ref": "710", "fields": ["name","state:{vals}","date"] }
+      },
+      "storage": { "localStorage": ["bbstand3_pb"], "ref": "706-708", "exportTemplate": "bbstand", "keyTemplateMismatch": true },
+      "print": { "engine": "dual-DOM real-unit (screen px + print mm)", "pxPerMm": 3.78, "pages": ["actual @page","A3","A2"], "ref": "457,665-687" },
+      "externalDeps": ["Google Fonts"],
+      "rtl": { "htmlDir": null, "lang": "en", "perFieldDir": true, "ref": "153,183-191" }
+    },
+    {
+      "name": "balance-bites-carton (2).html",
+      "sizeKB": 36.4,
+      "lines": 459,
+      "family": "design",
+      "role": "shipping carton template",
+      "purpose": "Shipping-carton (24/48-pack) 4-face artwork template; prints to A3 landscape.",
+      "features": [
+        "24-pack (300x200x150) / 48-pack (400x220x200) size tabs",
+        "carton style presets (Dark Luxury/Brown Kraft/White Clean/Custom)",
+        "colour pickers + brand fields + 3 badge slots",
+        "typography sliders",
+        "bilingual ingredients EN/AR",
+        "faux barcode generator",
+        "preset bar (max 8) + export/import"
+      ],
+      "entities": {
+        "State": { "ref": "215-234", "note": "flat brand text + colours + ~14 numeric sizes" },
+        "Preset": { "ref": "429", "fields": ["name","state:{vals,size}","date"], "max": 8 }
+      },
+      "storage": { "localStorage": ["bbcarton_pb"], "ref": "396-398", "exportTemplate": "bbcarton" },
+      "print": { "engine": "single-DOM", "page": "A3 landscape", "margin": "8mm", "unitConversion": "none (px only)", "ref": "68" },
+      "externalDeps": ["Google Fonts"],
+      "rtl": { "htmlDir": "rtl", "lang": "ar", "ref": "2", "arabicEditable": true }
+    }
+  ],
+  "hardcodedValues": [
+    { "value": "Balance Bites", "brandConfigKey": "brand.name", "input": "text", "sites": ["bb-stock-costs.html:381","balance-bites-invoice-pro.html:510","balance-bites-carton (2).html:93","balance-bites-stand.html:149-150","balance-bites-label-editor- latest.html:1183","balance-bites-label-v3.html:7"] },
+    { "value": "BALANCE / BYTES (Top-Label default; TYPO -> should be BITES)", "brandConfigKey": "brand.nameLines", "input": "text", "sites": ["balance-bites-label-v3.html:698-699"] },
+    { "value": "BB", "brandConfigKey": "brand.monogram", "input": "text", "sites": ["balance-bites-invoice-pro.html:509","balance-bites-carton (2).html:89","balance-bites-stand.html:151","balance-bites-label-v3.html:204","balance-bites-label-editor- latest.html:1220"] },
+    { "value": "#c9a84c", "brandConfigKey": "theme.colors.primary", "input": "color", "sites": ["bb-stock-costs.html:1142","balance-bites-invoice-pro.html:1103","balance-bites-carton (2).html:81","balance-bites-label-editor- latest.html:1941"] },
+    { "value": "EGP", "brandConfigKey": "locale.currency", "input": "dropdown", "sites": ["balance-bites-invoice-pro.html:516","bb-stock-costs.html:3517","balance-bites-stand.html:196"] },
+    { "value": "balancebites.com", "brandConfigKey": "brand.web", "input": "text", "sites": ["bb-stock-costs.html:3516","balance-bites-invoice-pro.html:512","balance-bites-carton (2).html:97","balance-bites-stand.html:155","balance-bites-label-editor- latest.html:1308"] },
+    { "value": "فاتورة · Invoice", "brandConfigKey": "invoice.docTitle", "input": "text", "sites": ["balance-bites-invoice-pro.html:511","bb-stock-costs.html:3515"] },
+    { "value": "#INV-001", "brandConfigKey": "invoice.numberFormat", "input": "text", "sites": ["balance-bites-invoice-pro.html:816,2609"] },
+    { "value": "Playfair Display / DM Sans / Syne / Caveat / Tajawal", "brandConfigKey": "theme.fonts.*", "input": "dropdown", "sites": ["all files: Google Fonts head link"] },
+    { "value": "flavours (Za'atar/Paprika/Rosemary/Black Pepper/Cinnamon Peanuts)", "brandConfigKey": "catalog.flavors", "input": "repeatable-list", "sites": ["balance-bites-stand.html:182-191","balance-bites-carton (2).html:94","balance-bites-label-editor- latest.html:1708-1719"] },
+    { "value": "flavour colours", "brandConfigKey": "catalog.flavorColors", "input": "color", "sites": ["balance-bites-stand.html:166-174"] },
+    { "value": "1615012 (barcode)", "brandConfigKey": "product.barcode", "input": "text", "sites": ["balance-bites-carton (2).html:110","balance-bites-label-editor- latest.html:1291"] },
+    { "value": "op-cost categories (AR)", "brandConfigKey": "catalog.opCostCategories", "input": "repeatable-list", "sites": ["bb-stock-costs.html:779-786"] },
+    { "value": "return reasons (AR)", "brandConfigKey": "catalog.returnReasons", "input": "repeatable-list", "sites": ["bb-stock-costs.html:950-954"] },
+    { "value": "SHARED_DATA_PATH (absolute Windows path)", "brandConfigKey": "(deployment; remove)", "input": "none", "sites": ["bb-stock-costs.html:1012"] },
+    { "value": "file:///.../balance-bites-invoice-pro.html", "brandConfigKey": "(deployment; remove)", "input": "none", "sites": ["bb-stock-costs.html:762"] }
+  ],
+  "duplicationMatrix": [
+    { "subsystem": "preset save/load bar", "impls": 6, "sites": ["invoice-pro:2975-3011","bb-stock-costs.html:1134-1197","carton:396-447","stand:706-766","label-v3:853-2038","label-editor:1756-1935"] },
+    { "subsystem": "JSON preset export/import", "impls": 5, "sites": ["carton:437-447","stand:764-765","invoice-pro:3008-3011","label-v3:1932-1943","label-editor:bb_presets"] },
+    { "subsystem": "colour/theme engine", "impls": "2 full + 3 partial", "sites": ["bb-stock-costs.html:1139-1493","invoice-pro:1134-1197","carton:387-392"] },
+    { "subsystem": "colour-preset defaults (identical copy)", "impls": 2, "sites": ["bb-stock-costs.html:1137-1142","invoice-pro:1137-1142"] },
+    { "subsystem": "folder connection (FSA + IndexedDB handle)", "impls": 2, "sites": ["bb-stock-costs.html:1009-1122","invoice-pro:954-1096"] },
+    { "subsystem": "toast helper", "impls": 6, "sites": ["all files"] },
+    { "subsystem": "print scaffolding", "impls": 4, "sites": ["invoice-pro new-window:1750","stock iframe:4388-4424","carton/label-editor single-DOM","stand/label-v3 dual-DOM"] }
+  ],
+  "coupling": {
+    "producer": "balance-bites-invoice-pro.html",
+    "consumer": "bb-stock-costs.html",
+    "mechanisms": ["shared on-disk folder (File System Access API)","IndexedDB handle store bb_filestore_v1/h","shared JSON keys bb_products/bb_invoices/bb_inv2/bb_categories/bb_color_presets","bidirectional via bb_pending_invoices"],
+    "breaksIf": "invoice-pro changes Product/Invoice shape -> stock COGS/profit/stock-value break silently (no shared type/version)",
+    "designTools": "independent islands; share only copied branding constants + duplicated preset/theme code"
+  },
+  "bugs": [
+    { "sev": "High", "issue": "shared-folder data layer (absolute path + file:// + FSA/IndexedDB handle) cannot exist on Vercel", "sites": ["bb-stock-costs.html:1012","bb-stock-costs.html:762","bb-stock-costs.html:1009-1122","balance-bites-invoice-pro.html:954-1096"] },
+    { "sev": "High", "issue": "customer PII in plain localStorage + plaintext JSON; whole-state export can leak it", "sites": ["balance-bites-invoice-pro.html:953","balance-bites-invoice-pro.html:3008-3011"] },
+    { "sev": "High", "issue": "unescaped innerHTML from user input (XSS once multi-user)", "sites": ["bb-stock-costs.html:1595","bb-stock-costs.html:2352","balance-bites-invoice-pro.html:1181-1190","balance-bites-carton (2).html:365-366","balance-bites-stand.html:556"] },
+    { "sev": "High", "issue": "base64 images in localStorage presets -> quota overflow -> silent data loss", "sites": ["balance-bites-stand.html:737-738","balance-bites-label-editor- latest.html:1668"] },
+    { "sev": "High", "issue": "PNG export hard-depends on dom-to-image CDN -> breaks offline", "sites": ["balance-bites-label-v3.html:6","balance-bites-label-v3.html:1756-1767"] },
+    { "sev": "Medium", "issue": "silent failures: empty catch around Store/FSA/preset writes", "sites": ["bb-stock-costs.html:1073","balance-bites-invoice-pro.html:1091-1096","balance-bites-carton (2).html:397-398","balance-bites-stand.html:708"] },
+    { "sev": "Medium", "issue": "Brave file:// isolates/blocks FSA + IndexedDB -> sync no-ops", "sites": ["bb-stock-costs.html:1009-1122","balance-bites-invoice-pro.html:954-960"] },
+    { "sev": "Medium", "issue": "invoice-number collision risk (max+1 at save; per-customer vs global)", "sites": ["balance-bites-invoice-pro.html:1909-1912","balance-bites-invoice-pro.html:2600-2609"] },
+    { "sev": "Medium", "issue": "brand typo BYTES on Top-Label default -> renders 'BALANCE BYTES'", "sites": ["balance-bites-label-v3.html:698-699"] },
+    { "sev": "Medium", "issue": "duplicate element IDs tSideLogo*/vSideLogo* in Style and Fonts tabs (invalid HTML; Fonts copies dead; conflicting max)", "sites": ["balance-bites-stand.html:243","balance-bites-stand.html:412"] },
+    { "sev": "Low", "issue": "storage prefix != export template (bbstand3 vs bbstand)", "sites": ["balance-bites-stand.html:706","balance-bites-stand.html:764"] },
+    { "sev": "Low", "issue": "duplicate identical clrB64 definition", "sites": ["balance-bites-stand.html:465","balance-bites-stand.html:467"] },
+    { "sev": "Low", "issue": "carton preset omits cType (style dropdown) on restore", "sites": ["balance-bites-carton (2).html:402-422"] },
+    { "sev": "Low", "issue": "generic un-prefixed bb_presets key; no schema versioning", "sites": ["balance-bites-label-editor- latest.html:1756","balance-bites-label-editor- latest.html:1935"] }
+  ]
+}

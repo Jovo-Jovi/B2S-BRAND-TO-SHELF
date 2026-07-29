@@ -1,0 +1,2180 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Balance Bites — Label Editor</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600;700&family=Syne:wght@700;800&family=Caveat:wght@600&family=Amiri:wght@400;700&family=Inter:wght@400;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0d0d0d;
+            font-family: 'DM Sans', sans-serif;
+            color: #888;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* === SIDE-BY-SIDE LAYOUT === */
+        .app-header {
+            text-align: center;
+            padding: 10px 0 6px;
+            border-bottom: 1px solid #151515;
+            background: #090909;
+            flex-shrink: 0;
+        }
+
+        .app-header h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: 9px;
+            letter-spacing: 7px;
+            text-transform: uppercase;
+            color: #c9a84c;
+        }
+
+        .app-header p {
+            font-size: 7px;
+            color: #333;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+
+        .app-layout {
+            display: flex;
+            height: calc(100vh - 42px);
+        }
+
+        .editor-panel {
+            width: 420px;
+            min-width: 360px;
+            overflow-y: auto;
+            padding: 12px 14px 40px;
+            border-right: 1px solid #151515;
+            background: #090909;
+            flex-shrink: 0;
+        }
+
+        .preview-panel {
+            flex: 1;
+            overflow: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background: #0d0d0d;
+        }
+
+        .preview-panel .label-strip {
+            transform-origin: top center;
+        }
+
+        /* === EDITOR CONTROLS === */
+        .sec {
+            font-family: 'Syne', sans-serif;
+            font-size: 7px;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: #b8860b;
+            padding: 8px 0 4px;
+            border-bottom: 1px solid #181818;
+            margin-top: 8px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sec .arrow {
+            font-size: 8px;
+            transition: transform 0.2s;
+        }
+
+        .sec-body {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            padding-top: 6px;
+        }
+
+        .sec-body.collapsed {
+            display: none;
+        }
+
+        .f {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .f label {
+            font-size: 6px;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            color: #3a3a3a;
+        }
+
+        .f input,
+        .f select,
+        .f textarea {
+            background: #050505;
+            border: 1px solid #141414;
+            border-radius: 4px;
+            color: #888;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 9px;
+            padding: 4px 6px;
+            outline: none;
+            width: 100%;
+        }
+
+        .f input:focus,
+        .f select:focus,
+        .f textarea:focus {
+            border-color: #2e2e2e;
+            color: #bbb;
+        }
+
+        .f input[type="color"] {
+            height: 26px;
+            padding: 2px;
+            cursor: pointer;
+        }
+
+        .f input[type="range"] {
+            padding: 5px 0;
+            border: none;
+            background: none;
+            cursor: pointer;
+        }
+
+        .f input[type="number"] {
+            width: 100%;
+        }
+
+        .f textarea {
+            resize: vertical;
+            min-height: 36px;
+            font-size: 8px;
+            line-height: 1.4;
+        }
+
+        .f select {
+            cursor: pointer;
+            font-size: 8px;
+        }
+
+        .span2 {
+            grid-column: span 2;
+        }
+
+        .span3 {
+            grid-column: span 3;
+        }
+
+        .span4 {
+            grid-column: 1/-1;
+        }
+
+        .f.ar-field input,
+        .f.ar-field textarea {
+            direction: rtl;
+            font-family: 'Amiri', serif;
+        }
+
+        .typo-row {
+            display: grid;
+            grid-template-columns: 100px 1fr 60px;
+            gap: 4px;
+            align-items: end;
+        }
+
+        .typo-row label {
+            font-size: 6px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #3a3a3a;
+            padding-bottom: 4px;
+        }
+
+        .bar {
+            margin-top: 10px;
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 6px 14px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 8px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .btn-gold {
+            background: linear-gradient(135deg, #c9a84c, #e8c96a);
+            color: #111;
+        }
+
+        .btn-dim {
+            background: #070707;
+            color: #333;
+            border: 1px solid #141414;
+        }
+
+        .hint {
+            font-size: 7px;
+            color: #1e1e1e;
+            margin-left: 4px;
+        }
+
+        /* === PRESETS === */
+        .presets {
+            margin-top: 12px;
+        }
+
+        .presets h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 6px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: #1c1c1c;
+            margin-bottom: 5px;
+        }
+
+        .preset-row {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        .pb {
+            padding: 3px 8px;
+            border-radius: 100px;
+            border: 1px solid #1a1a1a;
+            cursor: pointer;
+            font-size: 8px;
+            font-weight: 600;
+            color: #3a3a3a;
+            background: #070707;
+        }
+
+        .pb:hover {
+            border-color: #c9a84c;
+            color: #c9a84c;
+        }
+
+        .pb.active {
+            border-color: #c9a84c;
+            color: #c9a84c;
+            background: rgba(201, 168, 76, 0.15);
+            box-shadow: 0 0 8px rgba(201, 168, 76, 0.4);
+        }
+
+        /* === LABEL STRIP (shared screen styles) === */
+        .label-strip {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 189px;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .pat {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .co {
+            position: absolute;
+            font-size: 7px;
+            opacity: 0.4;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .co.tl {
+            top: 7px;
+            left: 5px;
+        }
+
+        .co.tr {
+            top: 7px;
+            right: 5px;
+        }
+
+        .co.bl {
+            bottom: 7px;
+            left: 5px;
+        }
+
+        .co.br {
+            bottom: 7px;
+            right: 5px;
+        }
+
+        /* BACK PANEL - 5cm × 3cm same as front */
+        .back {
+            width: 189px;
+            height: 113px;
+            position: relative;
+            border: 2px solid #c9a84c;
+            border-radius: 6px 6px 0 0;
+            flex-shrink: 0;
+            transform: rotate(180deg);
+            padding: 7px 5px;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        .back-inner {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: row;
+            gap: 4px;
+            z-index: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .bk-col-left {
+            flex: 1.2;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+            min-width: 0;
+        }
+
+        .bk-col-top {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5px;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .bk-col-right {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5px;
+            border-left: 0.5px solid rgba(201, 168, 76, 0.3);
+            padding-left: 3px;
+            overflow: hidden;
+            min-width: 0;
+        }
+
+        .back-topbar,
+        .back-botbar {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 3px;
+            z-index: 2;
+        }
+
+        .back-topbar {
+            top: 0;
+        }
+
+        .back-botbar {
+            bottom: 0;
+        }
+
+        .back-hdr {
+            display: flex;
+            align-items: baseline;
+            gap: 3px;
+            margin-bottom: 1px;
+            position: relative;
+            z-index: 1;
+            flex-shrink: 0;
+        }
+
+        .b-mono {
+            font-family: 'Playfair Display', serif;
+            font-size: 7px;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+            line-height: 1;
+        }
+
+        .b-sub {
+            font-size: 4px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .bk-section {
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 2px;
+            padding: 1.5px 3px;
+            margin-bottom: 1px;
+            position: relative;
+            z-index: 1;
+            flex-shrink: 1;
+            overflow: hidden;
+        }
+
+        .bk-hdr {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 0.5px solid #ccc;
+            padding-bottom: 0.5px;
+            margin-bottom: 0.5px;
+        }
+
+        .bk-hdr span {
+            font-size: 2.8px;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #000;
+            line-height: 1;
+        }
+
+        .bk-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
+            margin-bottom: 1px;
+        }
+
+        .bk-col {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+        }
+
+        .bk-hdr .ar {
+            font-family: 'Amiri', serif;
+            text-transform: none;
+        }
+
+        .bk-txt {
+            font-size: 2.3px;
+            color: #111;
+            line-height: 1.1;
+            margin: 0;
+        }
+
+        .bk-txt.ar {
+            direction: rtl;
+            font-family: 'Amiri', serif;
+            text-align: right;
+            line-height: 1.1;
+        }
+
+        .validity-sec {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.96);
+            border-radius: 1px;
+            padding: 1px 3px;
+            margin-bottom: 0.5px;
+            position: relative;
+            z-index: 1;
+            flex-shrink: 1;
+            overflow: hidden;
+        }
+
+        .validity-sec p {
+            font-size: 3px;
+            color: #111;
+            line-height: 1.2;
+        }
+
+        .validity-sec .ar {
+            font-family: 'Amiri', serif;
+            direction: rtl;
+        }
+
+        /* NUTRITION TABLE */
+        .nut-section {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 1px;
+            padding: 1px;
+            margin-bottom: 0.5px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .nut-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .nut-table th,
+        .nut-table td {
+            font-size: 2.5px;
+            padding: 0.2px 1px;
+            border-bottom: 0.3px solid #ddd;
+            color: #111;
+            text-align: left;
+        }
+
+        .nut-table th {
+            font-size: 2.5px;
+            font-weight: 800;
+            text-transform: uppercase;
+            background: #eee;
+        }
+
+        .nut-table .ar-cell {
+            text-align: right;
+            direction: rtl;
+            font-family: 'Amiri', serif;
+        }
+
+        .nut-table .sub-hdr td {
+            font-weight: 700;
+            background: #f5f5f5;
+            font-size: 4px;
+        }
+
+        .nut-table .disclaimer {
+            font-size: 3px;
+            color: #555;
+            padding: 2px;
+        }
+
+        /* BOTTOM ROW - barcode + weight aligned together */
+        .back-bottom {
+            display: flex;
+            flex-direction: row;
+            align-items: flex-end;
+            gap: 4px;
+            padding: 0;
+            position: relative;
+            z-index: 1;
+            flex-shrink: 0;
+        }
+
+        .bc-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            flex-shrink: 0;
+        }
+
+        .bc-num {
+            font-size: 4px;
+            color: #888;
+            margin-top: 1px;
+            line-height: 1;
+        }
+
+        .wt-area {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .wt-val {
+            font-size: 6px;
+            font-weight: 800;
+            display: block;
+            line-height: 1;
+        }
+
+        .wt-label {
+            font-size: 3.5px;
+            text-transform: uppercase;
+            color: #888;
+            line-height: 1.2;
+        }
+
+        /* NECK DATE BOX */
+        .neck-date-box {
+            background: #ffffff;
+            border-radius: 2px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3px 1px;
+            gap: 1px;
+            box-shadow: 0 0 4px rgba(0,0,0,0.4);
+            position: relative;
+            z-index: 2;
+            overflow: hidden;
+            flex-shrink: 0;
+            writing-mode: vertical-lr;
+            transform: rotate(180deg);
+        }
+
+        .neck-date-label {
+            color: #555;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            line-height: 1;
+            white-space: nowrap;
+        }
+
+        .neck-date-val {
+            color: #111;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 700;
+            line-height: 1;
+            white-space: nowrap;
+        }
+
+        /* BARCODE WHITE BOX */
+        .bc-white-box {
+            background: #ffffff;
+            border-radius: 2px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
+        /* NECK */
+        .neck {
+            width: 38px;
+            height: 170px;
+            position: relative;
+            overflow: hidden;
+            border-left: 1.5px solid #c9a84c;
+            border-right: 1.5px solid #c9a84c;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .neck-text {
+            font-size: 4px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            writing-mode: vertical-lr;
+            transform: rotate(180deg);
+            line-height: 1.4;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* SEAL */
+        .seal {
+            width: 113px;
+            height: 113px;
+            position: relative;
+            overflow: hidden;
+            border: 1.5px solid #c9a84c;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 0 18px rgba(201, 168, 76, 0.18), inset 0 0 18px rgba(0, 0, 0, 0.5);
+        }
+
+        .seal::before {
+            content: '';
+            position: absolute;
+            inset: 6px;
+            border: 1px solid rgba(201, 168, 76, 0.2);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .seal-inner {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+        }
+
+        .s-mono {
+            font-family: 'Playfair Display', serif;
+            font-weight: 900;
+            font-size: 32px;
+            letter-spacing: -3px;
+            line-height: 1;
+        }
+
+        .s-div {
+            height: 1px;
+            width: 44px;
+            margin: 3px auto;
+        }
+
+        .s-brand {
+            font-size: 5px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        /* FRONT */
+        .front {
+            width: 189px;
+            height: 113px;
+            position: relative;
+            overflow: hidden;
+            border: 1.5px solid #c9a84c;
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .front-topbar {
+            width: 100%;
+            height: 3px;
+            flex-shrink: 0;
+        }
+
+        .front-cols {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        .arch {
+            width: 66px;
+            flex-shrink: 0;
+            border-radius: 0 46% 46% 0/0 40% 40% 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            padding: 4px;
+        }
+
+        .arch-mono {
+            font-family: 'Playfair Display', serif;
+            font-weight: 900;
+            font-size: 22px;
+            letter-spacing: -2px;
+            line-height: 1;
+            position: relative;
+            z-index: 1;
+        }
+
+        .arch-sub {
+            font-size: 4px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.7);
+            position: relative;
+            z-index: 1;
+            margin-top: 1px;
+            text-align: center;
+            line-height: 1.3;
+        }
+
+        .front-right {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 4px 5px 3px 4px;
+            overflow: hidden;
+        }
+
+        .fl-row {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        .fl-name {
+            font-family: 'Caveat', cursive;
+            font-weight: 600;
+            font-size: 18px;
+            line-height: 1;
+            flex-shrink: 1;
+            min-width: 0;
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .fl-emoji {
+            font-size: 20px;
+            line-height: 1;
+            flex-shrink: 0;
+            filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .fl-emoji img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .fl-type {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 6px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-top: 1px;
+        }
+
+        .prem-bar {
+            border-radius: 2px;
+            padding: 1px 5px;
+            margin: 2px 0;
+            text-align: center;
+        }
+
+        .prem-txt {
+            font-size: 4.5px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        .badges {
+            display: flex;
+            align-items: center;
+            margin-top: 2px;
+        }
+
+        .badge {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            flex: 1;
+        }
+
+        .badge-txt {
+            font-size: 4.5px;
+            font-weight: 700;
+            line-height: 1.2;
+            text-transform: uppercase;
+        }
+
+        .bsep {
+            width: 1px;
+            height: 10px;
+            margin: 0 2px;
+        }
+
+        .weight {
+            font-size: 9px;
+            font-weight: 700;
+            padding-left: 4px;
+        }
+
+        .front-foot {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2px 0 3px;
+            flex-shrink: 0;
+        }
+
+        .foot-txt {
+            font-size: 5px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* ZOOM */
+        .zoom-ctrl {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        .zoom-ctrl label {
+            font-size: 7px;
+            color: #444;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .zoom-ctrl input {
+            width: 100px;
+        }
+
+        .zoom-ctrl span {
+            font-size: 8px;
+            color: #666;
+            min-width: 30px;
+        }
+
+        /* DIMS */
+        .dims {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 12px;
+        }
+
+        .dc {
+            background: #070707;
+            border: 1px solid #131313;
+            border-radius: 6px;
+            padding: 4px 8px;
+            text-align: center;
+        }
+
+        .dc b {
+            font-family: monospace;
+            font-size: 9px;
+            font-weight: 700;
+            color: #c9a84c;
+            display: block;
+            line-height: 1;
+        }
+
+        .dc small {
+            font-size: 5px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #1e1e1e;
+            margin-top: 2px;
+            display: block;
+        }
+
+        /* === PRINT === */
+        #printRoot {
+            display: none;
+        }
+
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 0;
+            }
+
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            body {
+                overflow: visible;
+                height: auto;
+                background: #ffffff !important;
+            }
+
+            .app-header,
+            .editor-panel,
+            .preview-panel,
+            .app-layout {
+                display: none !important;
+            }
+
+            #printRoot {
+                display: block !important;
+                font-family: 'DM Sans', sans-serif;
+            }
+
+            #printRoot .label-strip {
+                width: 5cm;
+                margin: 0 auto;
+                padding-top: 1cm;
+            }
+
+            #printRoot .back {
+                width: 5cm;
+                height: 3cm;
+                border-width: 0.3mm;
+                border-radius: 1.5mm 1.5mm 0 0;
+                padding: 1.5mm 1.3mm;
+                box-sizing: border-box;
+                overflow: hidden;
+            }
+
+            #printRoot .back-inner {
+                width: 100%;
+                height: 100%;
+                position: relative;
+                gap: 1mm;
+            }
+
+            #printRoot .bk-section,
+            #printRoot .nut-section,
+            #printRoot .validity-sec {
+                padding: 0.4mm 0.8mm;
+                margin-bottom: 0.4mm;
+            }
+
+            #printRoot .bk-col-right {
+                border-left: 0.15mm solid rgba(201, 168, 76, 0.3);
+                padding-left: 0.8mm;
+            }
+
+            #printRoot .bk-hdr span {
+                font-size: 0.75mm;
+            }
+
+            #printRoot .bk-txt {
+                font-size: 0.62mm;
+                line-height: 1.15;
+            }
+
+            #printRoot .validity-sec p {
+                font-size: 0.7mm;
+            }
+
+            #printRoot .nut-table th,
+            #printRoot .nut-table td {
+                font-size: 0.6mm;
+                padding: 0.06mm 0.25mm;
+            }
+
+            #printRoot .nut-table th {
+                font-size: 0.65mm;
+            }
+
+            #printRoot .back-hdr .b-mono {
+                font-size: 1.8mm;
+            }
+
+            #printRoot .back-hdr .b-sub {
+                font-size: 1mm;
+            }
+
+            #printRoot .back-bottom .wt-val {
+                font-size: 1.6mm;
+            }
+
+            #printRoot .back-bottom .wt-label {
+                font-size: 0.9mm;
+            }
+
+            #printRoot .back-bottom .bc-num {
+                font-size: 1mm;
+            }
+
+            #printRoot .back-topbar,
+            #printRoot .back-botbar {
+                height: 0.8mm;
+            }
+
+            #printRoot .back-bottom {
+                gap: 1mm;
+                padding: 0;
+            }
+
+            #printRoot .neck-date-box {
+                border-radius: 0.5mm;
+                padding: 0.3mm 0.8mm;
+            }
+
+            #printRoot .bc-white-box {
+                border-radius: 0.5mm;
+                padding: 0.5mm 0.8mm 0.3mm;
+            }
+
+            #printRoot .wt-val {
+                font-size: 1.6mm !important;
+            }
+
+            #printRoot .wt-label {
+                font-size: 0.85mm !important;
+            }
+
+            #printRoot .bc-num {
+                font-size: 0.9mm !important;
+            }
+
+            #printRoot .neck {
+                width: 1cm;
+                height: 4.5cm;
+                border-width: 0.25mm;
+            }
+
+            #printRoot .seal {
+                width: 3cm;
+                height: 3cm;
+                border-width: 0.25mm;
+            }
+
+            #printRoot .front {
+                width: 5cm;
+                height: 3cm;
+                border-width: 0.25mm;
+                border-radius: 0 0 1.5mm 1.5mm;
+            }
+
+            #printRoot .arch {
+                width: 1.6cm;
+            }
+        }
+
+/* ══ PRESET BAR ══ */
+#presetBar{position:fixed;bottom:0;left:0;right:0;z-index:9999;background:rgba(6,6,3,0.98);
+  border-top:1px solid rgba(201,168,76,.28);display:flex;align-items:center;gap:8px;
+  padding:0 16px;height:50px;font-family:'DM Sans',sans-serif;}
+#presetBar .pbl{font-size:7px;letter-spacing:3px;text-transform:uppercase;color:#c9a84c;
+  flex-shrink:0;border-right:1px solid rgba(201,168,76,.15);padding-right:12px;white-space:nowrap;}
+#pbSlots{display:flex;gap:4px;flex:1;overflow-x:auto;align-items:center;padding:4px 0;}
+#pbSlots::-webkit-scrollbar{height:3px;}
+#pbSlots::-webkit-scrollbar-thumb{background:#2a2a18;border-radius:2px;}
+.pbs{display:flex;align-items:stretch;flex-shrink:0;border:1px solid rgba(201,168,76,.18);
+  border-radius:5px;overflow:hidden;transition:border-color .15s;}
+.pbs:hover{border-color:rgba(201,168,76,.5);}
+.pbs-load{padding:5px 11px;background:transparent;border:none;cursor:pointer;
+  color:#d0c8b0;font-family:'DM Sans',sans-serif;font-size:9px;white-space:nowrap;
+  display:flex;flex-direction:column;gap:1px;align-items:flex-start;}
+.pbs-load:hover{background:rgba(201,168,76,.1);color:#c9a84c;}
+.pbs-load.empty{color:#2a2a18;font-size:13px;cursor:default;padding:5px 14px;
+  align-items:center;justify-content:center;}
+.pbs-load.empty:hover{background:transparent;}
+.pbs-nm{font-size:9px;font-weight:600;}
+.pbs-dt{font-size:7px;color:#5a5040;letter-spacing:.5px;}
+.pbs-exp,.pbs-del{padding:5px 7px;background:transparent;border:none;
+  border-left:1px solid rgba(201,168,76,.1);cursor:pointer;font-size:10px;transition:color .15s;}
+.pbs-exp{color:#3a3020;} .pbs-exp:hover{color:#c9a84c;}
+.pbs-del{color:#2e2820;} .pbs-del:hover{color:#cc6655;background:rgba(204,102,85,.12);}
+.pbs-exp.hidden,.pbs-del.hidden{display:none;}
+#pbRight{display:flex;align-items:center;gap:6px;flex-shrink:0;
+  border-left:1px solid rgba(201,168,76,.15);padding-left:12px;}
+#pbNameIn{background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.2);
+  border-radius:4px;padding:5px 9px;color:#e8e0cc;font-family:'DM Sans',sans-serif;
+  font-size:9px;outline:none;width:130px;}
+#pbNameIn::placeholder{color:#2e2820;}
+#pbNameIn:focus{border-color:rgba(201,168,76,.5);}
+.pbtn{padding:5px 12px;border-radius:4px;border:none;cursor:pointer;
+  font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:1.5px;
+  text-transform:uppercase;font-weight:700;white-space:nowrap;}
+.pbtn-save{background:linear-gradient(135deg,#c9a84c,#e8c96a);color:#060603;}
+.pbtn-imp{background:rgba(201,168,76,.1);color:#c9a84c;border:1px solid rgba(201,168,76,.2);}
+.pbtn-prt{background:transparent;color:#8a7848;border:1px solid rgba(201,168,76,.18);}
+#pbToast{position:fixed;bottom:60px;right:16px;background:rgba(6,6,3,.97);
+  border:1px solid rgba(201,168,76,.45);border-radius:6px;padding:9px 18px;
+  font-family:'DM Sans',sans-serif;font-size:9px;color:#c9a84c;letter-spacing:1px;
+  opacity:0;transition:opacity .3s;pointer-events:none;z-index:10000;}
+#pbToast.show{opacity:1;}
+body{padding-bottom:52px;}
+@media print{#presetBar,#pbToast{display:none!important;}body{padding-bottom:0!important;}}
+    </style>
+</head>
+
+<body>
+    <div class="app-header">
+        <h1>Balance Bites</h1>
+        <p>Seal Sticker Label Editor</p>
+    </div>
+
+    <div class="app-layout">
+        <!-- ═══ LEFT: EDITOR ═══ -->
+        <div class="editor-panel">
+
+            <!-- COLORS -->
+            <div class="sec" onclick="tog(this)">🎨 Colors & Pattern <span class="arrow">▾</span></div>
+            <div class="sec-body">
+                <div class="f"><label>Background</label><input type="color" id="eBg" value="#1a1208" oninput="upd()">
+                </div>
+                <div class="f"><label>Gold/Border</label><input type="color" id="eGold" value="#c9a84c" oninput="upd()">
+                </div>
+                <div class="f"><label>Arch Accent</label><input type="color" id="eAcc" value="#3a8a7a" oninput="upd()">
+                </div>
+                <div class="f"><label>Badge1 Color</label><input type="color" id="eB1c" value="#c9a84c" oninput="upd()">
+                </div>
+                <div class="f"><label>Badge2 Color</label><input type="color" id="eB2c" value="#c9a84c" oninput="upd()">
+                </div>
+                <div class="f"><label>Pattern</label><select id="ePat" onchange="upd()">
+                        <option value="none">None</option>
+                        <option value="diag" selected>Diagonal</option>
+                        <option value="cross">Crosshatch</option>
+                        <option value="dots">Dots</option>
+                    </select></div>
+                <div class="f span2"><label>Pattern Opacity <span id="patPct">5%</span></label><input type="range"
+                        id="ePatOp" min="0" max="30" value="5"
+                        oninput="document.getElementById('patPct').textContent=this.value+'%';upd()"></div>
+            </div>
+
+            <!-- FRONT PANEL -->
+            <div class="sec" onclick="tog(this)">✦ Front Panel <span class="arrow">▾</span></div>
+            <div class="sec-body">
+                <div class="f span2"><label>Arch Monogram</label>
+                    <div style="display:flex;gap:4px;align-items:center;">
+                        <input id="eArchMono" value="BB" oninput="upd()" style="flex:1;">
+                        <input type="number" id="eArchMonoS" value="22" min="8" max="60" step="1" oninput="upd()" style="width:44px;" title="Font size px">
+                        <input type="color" id="eArchMonoC" value="#c9a84c" oninput="upd()" style="width:28px;height:26px;padding:2px;cursor:pointer;" title="Monogram color">
+                    </div>
+                </div>
+                <div class="f span2"><label>Arch Sub Text</label>
+                    <div style="display:flex;gap:4px;align-items:center;">
+                        <input id="eArchSub" value="BALANCE BITES" oninput="upd()" style="flex:1;">
+                        <input type="number" id="eArchSubS" value="4" min="2" max="20" step="0.5" oninput="upd()" style="width:44px;" title="Font size px">
+                    </div>
+                </div>
+                <div class="f span2"><label>Flavor Name</label><textarea id="eFlavor" rows="2" oninput="upd()" style="resize:vertical;">Cinnamon</textarea></div>
+                <div class="f"><label>Emoji / Icon</label>
+                    <div style="display: flex; gap: 4px; align-items: center;">
+                        <input id="eEmoji" value="🍂" oninput="upd()" style="flex: 1;">
+                        <input type="file" id="eFlavorImg" accept="image/png" style="display: none;"
+                            onchange="handleIconUpload(this)">
+                        <button class="btn btn-dim" style="padding: 4px 8px; font-size: 8px;"
+                            onclick="document.getElementById('eFlavorImg').click()">📂 PNG</button>
+                        <button class="btn btn-dim" style="padding: 4px 8px; font-size: 8px; color: #ff4444;"
+                            onclick="clearIcon()">✕</button>
+                    </div>
+                    <input type="hidden" id="eFlavorImgData" value="">
+                </div>
+                <div class="f"><label>Icon Size: <span id="iconSizePct">20px</span></label>
+                    <input type="range" id="eEmojiSize" min="5" max="60" value="20"
+                        oninput="document.getElementById('iconSizePct').textContent=this.value+'px';upd()">
+                </div>
+                <div class="f"><label>Sub-Type</label><input id="eType" value="Peanut" oninput="upd()"></div>
+                <div class="f"><label>Premium Text</label><input id="ePrem" value="P R E M I U M" oninput="upd()"></div>
+                <div class="f"><label>Badge 1</label><input id="eBadge1" value="100% Natural" oninput="upd()"></div>
+                <div class="f"><label>Badge 2</label><input id="eBadge2" value="No Preservations" oninput="upd()"></div>
+                <div class="f"><label>Badge 3</label><input id="eBadge3" value="Whole Wheat" oninput="upd()"></div>
+                <div class="f"><label>Badge 4</label><input id="eBadge4" value="No Added Sugar" oninput="upd()"></div>
+                <div class="f"><label>Net Weight</label><input id="eWeight" value="30g" oninput="upd()"></div>
+                <div class="f span2"><label>Footer</label><input id="eFooter" value="✦  BALANCEBITES.COM  ✦"
+                        oninput="upd()"></div>
+                <div class="f span4" style="border-top:1px solid #181818;padding-top:6px;margin-top:2px;">
+                    <label style="color:#c9a84c;letter-spacing:2px;">— FRONT NECK DATE BOX —</label>
+                </div>
+                <div class="f span2"><label>Prod. Date Label</label><input id="eProdLabel" value="Production Date:" oninput="upd()"></div>
+                <div class="f span2"><label>Prod. Date Value</label><input id="eProdDate" value="" placeholder="e.g. 2025/06/01" oninput="upd()"></div>
+                <div class="f"><label>Box Length <span id="pdWLbl">60px</span></label>
+                    <input type="range" id="ePdW" min="30" max="160" value="60" oninput="document.getElementById('pdWLbl').textContent=this.value+'px';upd()"></div>
+                <div class="f"><label>Box Thickness <span id="pdHLbl">14px</span></label>
+                    <input type="range" id="ePdH" min="8" max="40" value="14" oninput="document.getElementById('pdHLbl').textContent=this.value+'px';upd()"></div>
+                <div class="f"><label>Box Font Size <span id="pdFSLbl">5px</span></label>
+                    <input type="range" id="ePdFS" min="3" max="14" value="5" step="0.5" oninput="document.getElementById('pdFSLbl').textContent=this.value+'px';upd()"></div>
+            </div>
+
+            <!-- SEAL -->
+            <div class="sec" onclick="tog(this)">⬛ Center Seal <span class="arrow">▾</span></div>
+            <div class="sec-body">
+                <div class="f span2"><label>Monogram</label><input id="eSealMono" value="BB" oninput="upd()"></div>
+                <div class="f span2"><label>Brand Name</label><input id="eSealBrand" value="Balance Bites"
+                        oninput="upd()"></div>
+            </div>
+
+            <!-- NECK -->
+            <div class="sec" onclick="tog(this)">🔗 Neck <span class="arrow">▾</span></div>
+            <div class="sec-body">
+                <div class="f span4"><label>Vertical Text</label><input id="eNeck" value="SEALED · FRESHNESS"
+                        oninput="upd()"></div>
+            </div>
+
+            <!-- BACK PANEL -->
+            <div class="sec" onclick="tog(this)">🟦 Back Panel <span class="arrow">▾</span></div>
+            <div class="sec-body">
+                <div class="f"><label>Brand Mono</label><input id="eBMono" value="BB" oninput="upd()"></div>
+                <div class="f"><label>Brand Name</label><input id="eBSub" value="Balance Bites" oninput="upd()"></div>
+                <div class="f"><label>Prod. Date</label><input id="eProd" value="2025/06/01" oninput="upd()"></div>
+                <div class="f"><label>Barcode #</label><input id="eBarcode" value="1615012" oninput="upd()"></div>
+                <div class="f span2"><label>Ingredients (EN)</label><textarea id="eIngEn"
+                        oninput="upd()">Whole wheat flour, peanuts, cinnamon, sunflower oil, salt, natural flavors. Contains: Wheat, Peanuts.</textarea>
+                </div>
+                <div class="f span2 ar-field"><label>Ingredients (AR)</label><textarea id="eIngAr"
+                        oninput="upd()">دقيق القمح الكامل، فول سوداني، قرفة، زيت عباد الشمس، ملح، نكهات طبيعية. يحتوي على: قمح، فول سوداني.</textarea>
+                </div>
+                <div class="f span2"><label>Storage (EN)</label><textarea id="eStorEn"
+                        oninput="upd()">Store in a dry, well-ventilated place away from direct sunlight.</textarea>
+                </div>
+                <div class="f span2 ar-field"><label>Storage (AR)</label><textarea id="eStorAr"
+                        oninput="upd()">يخزن في مكان جاف جيد التهوية بعيدا عن أشعة الشمس المباشرة.</textarea></div>
+                <div class="f span2"><label>Validity (EN)</label><input id="eValidEn"
+                        value="Valid for 3 months from date of production" oninput="upd()"></div>
+                <div class="f span2 ar-field"><label>Validity (AR)</label><input id="eValidAr"
+                        value="صالح لمدة ٣ شهور من تاريخ الانتاج" oninput="upd()"></div>
+                <div class="f"><label>Approx Weight</label><input id="eApproxWt" value="150G" oninput="upd()"></div>
+                <div class="f"><label>Website</label><input id="eWeb" value="balancebites.com" oninput="upd()"></div>
+                <div class="f"><label>Barcode W <span id="bcWLbl">40px</span></label>
+                    <input type="range" id="eBcW" min="20" max="80" value="40"
+                        oninput="document.getElementById('bcWLbl').textContent=this.value+'px';upd()"></div>
+                <div class="f"><label>Barcode H <span id="bcHLbl">10px</span></label>
+                    <input type="range" id="eBcH" min="6" max="30" value="10"
+                        oninput="document.getElementById('bcHLbl').textContent=this.value+'px';upd()"></div>
+                <div class="f"><label>Wt. Number Size <span id="wtNSLbl">6px</span></label>
+                    <input type="range" id="eWtNumS" min="4" max="20" value="6"
+                        oninput="document.getElementById('wtNSLbl').textContent=this.value+'px';upd()"></div>
+                <div class="f"><label>Wt. Label Size <span id="wtLSLbl">3.5px</span></label>
+                    <input type="range" id="eWtLblS" min="2" max="10" value="3" step="0.5"
+                        oninput="document.getElementById('wtLSLbl').textContent=this.value+'px';upd()"></div>
+            </div>
+
+
+
+            <!-- NUTRITION -->
+            <div class="sec" onclick="tog(this)">📊 Nutrition Facts <span class="arrow">▾</span></div>
+            <div class="sec-body">
+                <div class="f span2"><label>Serving Size (EN)</label><input id="nSrvEn" value="Serving per size 100g"
+                        oninput="upd()"></div>
+                <div class="f span2 ar-field"><label>Serving Size (AR)</label><input id="nSrvAr"
+                        value="حجم الحصة ١٠٠ جم" oninput="upd()"></div>
+                <div class="f span4"><label>Nutrition Rows (Name EN | Value | Name AR | Value AR) one per line</label>
+                    <textarea id="nPerServ" rows="4" oninput="upd()">Calories|443 kcal|السعرات الحرارية|٤٤٣ سعرة
+Protein|12.3 g|بروتين|١٢.٣ جم
+Total Fat|6.49 g|الدهون الكلية|٦.٤٩ جم
+Total Carbohydrate|77.5 g|الكربوهيدرات الكلية|٧٧.٥ جم</textarea>
+                </div>
+            </div>
+
+            <!-- TYPOGRAPHY -->
+            <div class="sec" onclick="tog(this)">🔤 Typography <span class="arrow">▾</span></div>
+            <div class="sec-body" style="grid-template-columns:1fr;">
+                <div class="typo-row"><label>Flavor Name</label><select id="tyFlavorF" onchange="upd()">
+                        <option>Caveat</option>
+                        <option>DM Sans</option>
+                        <option>Playfair Display</option>
+                        <option>Syne</option>
+                        <option>Inter</option>
+                        <option>Amiri</option>
+                        <option>Arial</option>
+                        <option>Georgia</option>
+                    </select><input type="number" id="tyFlavorS" value="18" min="4" max="60" oninput="upd()"></div>
+                <div class="typo-row"><label>Sub-Type</label><select id="tyTypeF" onchange="upd()">
+                        <option>Syne</option>
+                        <option>DM Sans</option>
+                        <option>Playfair Display</option>
+                        <option>Caveat</option>
+                        <option>Inter</option>
+                        <option>Arial</option>
+                    </select><input type="number" id="tyTypeS" value="6" min="3" max="30" oninput="upd()"></div>
+                <div class="typo-row"><label>Premium</label><select id="tyPremF" onchange="upd()">
+                        <option>DM Sans</option>
+                        <option>Syne</option>
+                        <option>Playfair Display</option>
+                        <option>Inter</option>
+                        <option>Arial</option>
+                    </select><input type="number" id="tyPremS" value="4.5" min="3" max="20" step="0.5" oninput="upd()">
+                </div>
+                <div class="typo-row"><label>Front Badges</label><select id="tyBadgeF" onchange="upd()">
+                        <option>DM Sans</option>
+                        <option>Syne</option>
+                        <option>Inter</option>
+                        <option>Arial</option>
+                    </select><input type="number" id="tyBadgeS" value="4.5" min="3" max="20" step="0.5" oninput="upd()">
+                </div>
+                <div class="typo-row"><label>Weight</label><select id="tyWtF" onchange="upd()">
+                        <option>DM Sans</option>
+                        <option>Syne</option>
+                        <option>Playfair Display</option>
+                        <option>Inter</option>
+                    </select><input type="number" id="tyWtS" value="9" min="4" max="30" oninput="upd()"></div>
+                <div class="typo-row"><label>Seal Monogram</label><select id="tySMF" onchange="upd()">
+                        <option>Playfair Display</option>
+                        <option>Syne</option>
+                        <option>DM Sans</option>
+                        <option>Inter</option>
+                    </select><input type="number" id="tySMS" value="32" min="10" max="60" oninput="upd()"></div>
+                <div class="typo-row"><label>Seal Brand</label><select id="tySBF" onchange="upd()">
+                        <option>DM Sans</option>
+                        <option>Syne</option>
+                        <option>Playfair Display</option>
+                        <option>Inter</option>
+                    </select><input type="number" id="tySBS" value="5" min="3" max="20" step="0.5" oninput="upd()">
+                </div>
+                <div class="typo-row"><label>Neck Text</label><select id="tyNkF" onchange="upd()">
+                        <option>DM Sans</option>
+                        <option>Syne</option>
+                        <option>Inter</option>
+                        <option>Arial</option>
+                    </select><input type="number" id="tyNkS" value="4" min="2" max="15" step="0.5" oninput="upd()">
+                </div>
+                <div class="typo-row"><label>Back Headings</label><select id="tyBhF" onchange="upd()">
+                        <option>DM Sans</option>
+                        <option>Syne</option>
+                        <option>Inter</option>
+                        <option>Arial</option>
+                    </select><input type="number" id="tyBhS" value="5" min="3" max="15" step="0.5" oninput="upd()">
+                </div>
+                <div class="typo-row"><label>Back Body</label><select id="tyBbF" onchange="upd()">
+                        <option>DM Sans</option>
+                        <option>Amiri</option>
+                        <option>Inter</option>
+                        <option>Arial</option>
+                    </select><input type="number" id="tyBbS" value="4.5" min="3" max="15" step="0.5" oninput="upd()">
+                </div>
+                <div class="typo-row"><label>Nutrition Text</label><select id="tyNtF" onchange="upd()">
+                        <option>DM Sans</option>
+                        <option>Inter</option>
+                        <option>Arial</option>
+                        <option>Amiri</option>
+                    </select><input type="number" id="tyNtS" value="4" min="2" max="12" step="0.5" oninput="upd()">
+                </div>
+                <div class="typo-row"><label>Footer</label><select id="tyFtF" onchange="upd()">
+                        <option>DM Sans</option>
+                        <option>Syne</option>
+                        <option>Inter</option>
+                        <option>Arial</option>
+                    </select><input type="number" id="tyFtS" value="5" min="3" max="15" step="0.5" oninput="upd()">
+                </div>
+            </div>
+
+            <!-- ACTIONS -->
+            <div class="bar">
+                <button class="btn btn-gold" onclick="doPrint()">🖨 Print Label</button>
+                <button class="btn btn-dim" onclick="rst()">↺ Reset</button>
+                <span class="hint">Tip: Enable "Background graphics" in print dialog</span>
+            </div>
+
+            <!-- PRESETS -->
+            <div class="presets">
+                <h3>Quick Flavor Presets</h3>
+                <div class="preset-row">
+                    <button class="pb" onclick="ps('Zaatar')">🟢 Zaatar</button>
+                    <button class="pb" onclick="ps('Paprika')">🔴 Paprika</button>
+                    <button class="pb" onclick="ps('Pepper')">⚫ Pepper</button>
+                    <button class="pb" onclick="ps('Cinnamon')">🍂 Cinnamon</button>
+                    <button class="pb" onclick="ps('Herb')">🌿 Herb</button>
+                    <button class="pb" onclick="ps('Sesame')">🍯 Sesame</button>
+                </div>
+                <div style="margin-top: 8px;">
+                    <button class="btn btn-gold" style="font-size: 11px; padding: 6px 12px;" onclick="savePreset()">💾
+                        Save Current Preset</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ RIGHT: PREVIEW ═══ -->
+        <div class="preview-panel">
+            <div class="zoom-ctrl">
+                <label>Zoom</label>
+                <input type="range" id="zoomSlider" min="30" max="150" value="70"
+                    oninput="document.getElementById('zoomPct').textContent=this.value+'%';document.getElementById('screenStrip').style.transform='scale('+this.value/100+')'">
+                <span id="zoomPct">70%</span>
+            </div>
+            <div id="screenStrip" class="label-strip" style="transform:scale(0.7)"></div>
+            <div class="dims">
+                <div class="dc"><b>5×3cm</b><small>Front</small></div>
+                <div class="dc"><b>1×4.5cm</b><small>Neck</small></div>
+                <div class="dc"><b>3×3cm</b><small>Seal</small></div>
+                <div class="dc"><b>5×3cm</b><small>Back</small></div>
+            </div>
+        </div>
+    </div><!-- /app-layout -->
+
+    <!-- PRINT ROOT -->
+    <div id="printRoot">
+        <div id="printStrip" class="label-strip"></div>
+    </div>
+
+    <script>
+        function tog(el) { el.nextElementSibling.classList.toggle('collapsed'); var a = el.querySelector('.arrow'); a.textContent = a.textContent === '▾' ? '▸' : '▾'; }
+        function G(id) { return document.getElementById(id).value; }
+        function drk(h, a) { var n = parseInt(h.replace('#', ''), 16); return '#' + [n >> 16, (n >> 8) & 255, n & 255].map(function (c) { return Math.max(0, Math.min(255, c - a)).toString(16).padStart(2, '0'); }).join(''); }
+        function ltn(h, a) { return drk(h, -a); }
+        function h2r(h) { var n = parseInt(h.replace('#', ''), 16); return ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255); }
+
+        function patCSS(s, col, op) {
+            var c = 'rgba(' + h2r(col) + ',' + op + ')';
+            if (s === 'none') return null;
+            if (s === 'diag') return { img: 'repeating-linear-gradient(45deg,' + c + ' 0,' + c + ' 1px,transparent 0,transparent 50%),repeating-linear-gradient(-45deg,' + c + ' 0,' + c + ' 1px,transparent 0,transparent 50%)', sz: '13px 13px' };
+            if (s === 'cross') return { img: 'repeating-linear-gradient(0deg,' + c + ' 0,' + c + ' 1px,transparent 0,transparent 10px),repeating-linear-gradient(90deg,' + c + ' 0,' + c + ' 1px,transparent 0,transparent 10px)', sz: '10px 10px' };
+            if (s === 'dots') return { img: 'radial-gradient(circle,' + c + ' 1px,transparent 1px)', sz: '9px 9px' };
+            return null;
+        }
+
+        function parseNutRows(txt) {
+            var rows = [];
+            txt.split('\n').forEach(function (line) {
+                var p = line.split('|');
+                if (p.length >= 4) rows.push({ ne: p[0].trim(), ve: p[1].trim(), na: p[2].trim(), va: p[3].trim() });
+            });
+            return rows;
+        }
+
+        function handleIconUpload(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                document.getElementById('eFlavorImgData').value = e.target.result;
+                upd();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function clearIcon() {
+            document.getElementById('eFlavorImgData').value = '';
+            document.getElementById('eFlavorImg').value = '';
+            upd();
+        }
+
+        function buildLabel(v) {
+            var bg = v.bg, gold = v.gold, g2 = ltn(gold, 28), g3 = ltn(gold, 52), acc = v.acc;
+            var gTxt = 'background:linear-gradient(135deg,' + g2 + ',' + g3 + ');-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;';
+            var goldG = 'linear-gradient(90deg,transparent,' + gold + ',' + g2 + ',' + gold + ',transparent)';
+            var p = patCSS(v.pat, gold, v.patOp);
+            var patSt = p ? 'background-image:' + p.img + ';' + (p.sz ? 'background-size:' + p.sz + ';' : '') : '';
+            var accentDark = drk(acc, 28);
+            var h = '';
+
+            // icon html
+            var iconHtml = '<div class="fl-emoji" style="width:' + v.iconSize + 'px;height:' + v.iconSize + 'px;font-size:' + v.iconSize + 'px;">';
+            if (v.flavorImgData) {
+                iconHtml += '<img src="' + v.flavorImgData + '">';
+            } else {
+                iconHtml += v.emoji;
+            }
+            iconHtml += '</div>';
+
+            // === BACK PANEL ===
+            h += '<div class="back" style="background:' + bg + ';border-color:' + gold + ';">';
+            h += '<div class="pat" style="' + patSt + '"></div>';
+            h += '<div class="back-topbar" style="background:' + goldG + ';"></div>';
+            h += '<div class="back-botbar" style="background:' + goldG + ';"></div>';
+            h += '<span class="co tl" style="color:' + gold + '">✦</span><span class="co tr" style="color:' + gold + '">✦</span>';
+            h += '<span class="co bl" style="color:' + gold + '">✦</span><span class="co br" style="color:' + gold + '">✦</span>';
+            h += '<div class="back-inner">';
+
+            // --- LEFT COLUMN ---
+            h += '<div class="bk-col-left">';
+            h += '<div class="bk-col-top">';
+            // brand header
+            h += '<div class="back-hdr"><span class="b-mono" style="' + gTxt + '">' + v.bMono + '</span>';
+            h += '<span class="b-sub" style="color:' + gold + '">' + v.bSub + '</span></div>';
+
+            // ingredients
+            h += '<div class="bk-section"><div class="bk-hdr"><span style="font-family:' + v.tyBhF + ';font-size:' + v.tyBhS + 'px;">Ingredients / المكونات:</span></div>';
+            h += '<p class="bk-txt" style="font-family:' + v.tyBbF + ';font-size:' + v.tyBbS + 'px;">' + v.ingEn + '</p>';
+            h += '<p class="bk-txt ar" style="font-family:Amiri,serif;font-size:' + v.tyBbS + 'px;">' + v.ingAr + '</p></div>';
+
+            // storage
+            h += '<div class="bk-section"><div class="bk-hdr"><span style="font-family:' + v.tyBhF + ';font-size:' + v.tyBhS + 'px;">Storage / التخزين:</span></div>';
+            h += '<p class="bk-txt" style="font-family:' + v.tyBbF + ';font-size:' + v.tyBbS + 'px;">' + v.storEn + ' / ' + v.storAr + '</p></div>';
+
+            // validity
+            h += '<div class="validity-sec"><p style="font-family:' + v.tyBbF + ';font-size:' + v.tyBbS + 'px;">' + v.validEn + ' / ' + v.validAr + '</p></div>';
+            h += '</div>'; // /bk-col-top
+
+            // barcode + weight — side by side, bottom-aligned
+            var bcW = parseInt(v.bcW) || 40;
+            var bcH = parseInt(v.bcH) || 10;
+            var wtNumS = parseFloat(v.wtNumS) || 6;
+            var wtLblS = parseFloat(v.wtLblS) || 3;
+            h += '<div class="back-bottom">';
+            h += '<div class="bc-wrap"><div class="bc-white-box" style="width:' + (bcW + 6) + 'px;padding:2px 3px 1px;">';
+            h += '<svg width="' + bcW + '" height="' + bcH + '" viewBox="0 0 200 28" preserveAspectRatio="none"><rect x="0" y="0" width="200" height="28" fill="white"/><rect x="0" y="0" width="3" height="26" fill="#111"/><rect x="5" y="0" width="1" height="26" fill="#111"/><rect x="8" y="0" width="3" height="26" fill="#111"/><rect x="16" y="0" width="2" height="26" fill="#111"/><rect x="23" y="0" width="3" height="26" fill="#111"/><rect x="30" y="0" width="2" height="26" fill="#111"/><rect x="37" y="0" width="3" height="26" fill="#111"/><rect x="45" y="0" width="2" height="26" fill="#111"/><rect x="55" y="0" width="4" height="26" fill="#111"/><rect x="65" y="0" width="2" height="26" fill="#111"/><rect x="75" y="0" width="3" height="26" fill="#111"/><rect x="85" y="0" width="2" height="26" fill="#111"/><rect x="95" y="0" width="4" height="26" fill="#111"/><rect x="110" y="0" width="3" height="26" fill="#111"/><rect x="125" y="0" width="2" height="26" fill="#111"/><rect x="140" y="0" width="4" height="26" fill="#111"/><rect x="155" y="0" width="3" height="26" fill="#111"/><rect x="170" y="0" width="2" height="26" fill="#111"/><rect x="185" y="0" width="4" height="26" fill="#111"/><rect x="195" y="0" width="3" height="26" fill="#111"/></svg>';
+            h += '<div class="bc-num" style="color:#111;font-size:' + (bcW * 0.1) + 'px;text-align:center;background:white;width:100%;letter-spacing:0.5px;">' + v.barcode + '</div>';
+            h += '</div></div>';
+            h += '<div class="wt-area"><span class="wt-val" style="color:' + g3 + ';font-size:' + wtNumS + 'px;">' + v.approxWt + '</span>';
+            h += '<span class="wt-label" style="color:' + gold + ';font-size:' + wtLblS + 'px;">WEIGHT / الوزن</span></div>';
+            h += '</div>';
+            h += '</div>'; // /bk-col-left
+
+            // --- RIGHT COLUMN ---
+            h += '<div class="bk-col-right">';
+            // nutrition facts
+            h += '<div class="nut-section"><table class="nut-table">';
+            h += '<tr><th colspan="2" style="font-family:' + v.tyNtF + ';font-size:' + (parseFloat(v.tyNtS) + 0.5) + 'px;">Nutrition / حقائق التغذية</th></tr>';
+            h += '<tr><td colspan="2" style="font-family:' + v.tyNtF + ';font-size:' + v.tyNtS + 'px;">' + v.nSrvEn + ' / ' + v.nSrvAr + '</td></tr>';
+            var servRows = parseNutRows(v.nutPS);
+            servRows.forEach(function (r) {
+                h += '<tr><td style="font-family:' + v.tyNtF + ';font-size:' + v.tyNtS + 'px;">' + r.ne + ' / ' + r.na + '</td><td style="font-weight:700;font-size:' + v.tyNtS + 'px;">' + r.ve + ' / ' + r.va + '</td></tr>';
+            });
+            h += '</table></div>';
+            h += '</div>'; // /bk-col-right
+
+            h += '</div>'; // /back-inner
+            h += '</div>'; // /back
+
+            // === TOP NECK ===
+            h += '<div class="neck" style="background:' + bg + ';border-color:' + gold + ';"><div class="pat" style="' + patSt + '"></div>';
+            h += '<span class="neck-text" style="color:' + gold + ';font-family:' + v.tyNkF + ';font-size:' + v.tyNkS + 'px;">' + v.neck + '</span></div>';
+
+            // === SEAL ===
+            h += '<div class="seal" style="background:radial-gradient(circle at 40% 35%,' + ltn(bg, 18) + ',' + bg + ' 60%,' + drk(bg, 10) + ');border-color:' + gold + ';"><div class="pat" style="' + patSt + '"></div>';
+            h += '<div class="seal-inner"><div class="s-mono" style="' + gTxt + 'font-family:' + v.tySMF + ';font-size:' + v.tySMS + 'px;">' + v.sMono + '</div>';
+            h += '<div class="s-div" style="background:rgba(' + h2r(gold) + ',0.5);"></div>';
+            h += '<div class="s-brand" style="color:' + gold + ';font-family:' + v.tySBF + ';font-size:' + v.tySBS + 'px;">' + v.sBrand + '</div></div></div>';
+
+            // === BOTTOM NECK (front-facing) — with production date box ===
+            var pdW = parseInt(v.pdW) || 60;
+            var pdH = parseInt(v.pdH) || 14;
+            var pdFS = parseFloat(v.pdFS) || 5;
+            var hasDateBox = (v.prodLabel || v.prodDate);
+            h += '<div class="neck" style="background:' + bg + ';border-color:' + gold + ';"><div class="pat" style="' + patSt + '"></div>';
+            if (hasDateBox) {
+                h += '<div class="neck-date-box" style="height:' + pdW + 'px;width:' + pdH + 'px;">';
+                h += '<span class="neck-date-label" style="font-size:' + (pdFS * 0.75) + 'px;">' + v.prodLabel + '</span>';
+                h += '<span class="neck-date-val" style="font-size:' + pdFS + 'px;">' + (v.prodDate || '___________') + '</span>';
+                h += '</div>';
+            }
+            h += '</div>';
+
+            // === FRONT PANEL ===
+            h += '<div class="front" style="background:' + bg + ';border-color:' + gold + ';"><div class="pat" style="' + patSt + '"></div>';
+            h += '<div class="front-topbar" style="background:' + goldG + ';"></div>';
+            h += '<div class="front-cols">';
+            // arch
+            var archMonoStyle = v.archMonoC ? 'color:' + v.archMonoC + ';font-size:' + v.archMonoS + 'px;' : gTxt + 'font-size:' + v.archMonoS + 'px;';
+            h += '<div class="arch" style="background:linear-gradient(135deg,' + acc + ',' + accentDark + ');"><div class="arch-mono" style="' + archMonoStyle + '">' + v.archMono + '</div>';
+            h += '<div class="arch-sub" style="font-size:' + v.archSubS + 'px;">' + v.archSub.replace(/\s+/, '<br>') + '</div></div>';
+            // right
+            h += '<div class="front-right" style="background:' + bg + ';">';
+            h += '<div class="fl-row"><div class="fl-name" style="' + gTxt + 'font-family:' + v.tyFlavorF + ';font-size:' + v.tyFlavorS + 'px;">' + v.flavor.replace(/\n/g, '<br>') + '</div>';
+            h += iconHtml + '</div>';
+            h += '<div class="fl-type" style="color:' + acc + ';font-family:' + v.tyTypeF + ';font-size:' + v.tyTypeS + 'px;">' + v.type.toUpperCase() + '</div>';
+            h += '<div class="prem-bar" style="border:1px solid ' + gold + ';background:linear-gradient(90deg,transparent,rgba(' + h2r(gold) + ',0.1),transparent);">';
+            h += '<span class="prem-txt" style="color:' + gold + ';font-family:' + v.tyPremF + ';font-size:' + v.tyPremS + 'px;">' + v.prem + '</span></div>';
+            // badges - 2 rows of 2
+            h += '<div class="badges" style="flex-wrap:wrap;">';
+            h += '<div class="badge"><svg width="7" height="7" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="12" height="12" rx="2" stroke="' + v.c1 + '" stroke-width="1.2" fill="none"/><path d="M3.5 7l2.5 2.5 4.5-4.5" stroke="' + v.c1 + '" stroke-width="1.2" stroke-linecap="round"/></svg>';
+            h += '<div class="badge-txt" style="color:' + v.c1 + ';font-family:' + v.tyBadgeF + ';font-size:' + v.tyBadgeS + 'px;">' + v.badge1.toUpperCase() + '</div></div>';
+            h += '<div class="bsep" style="background:rgba(' + h2r(v.c1) + ',0.35)"></div>';
+            h += '<div class="badge"><svg width="7" height="7" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="' + v.c2 + '" stroke-width="1.2" fill="none"/><path d="M5 5l4 4M9 5l-4 4" stroke="' + v.c2 + '" stroke-width="1.2" stroke-linecap="round"/></svg>';
+            h += '<div class="badge-txt" style="color:' + v.c2 + ';font-family:' + v.tyBadgeF + ';font-size:' + v.tyBadgeS + 'px;">' + v.badge2.toUpperCase() + '</div></div>';
+            h += '</div>';
+            h += '<div class="badges">';
+            h += '<div class="badge"><svg width="7" height="7" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="12" height="12" rx="2" stroke="' + v.c1 + '" stroke-width="1.2" fill="none"/><path d="M3.5 7l2.5 2.5 4.5-4.5" stroke="' + v.c1 + '" stroke-width="1.2" stroke-linecap="round"/></svg>';
+            h += '<div class="badge-txt" style="color:' + v.c1 + ';font-family:' + v.tyBadgeF + ';font-size:' + v.tyBadgeS + 'px;">' + v.badge3.toUpperCase() + '</div></div>';
+            h += '<div class="bsep" style="background:rgba(' + h2r(v.c2) + ',0.35)"></div>';
+            h += '<div class="badge"><svg width="7" height="7" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="' + v.c2 + '" stroke-width="1.2" fill="none"/><path d="M5 5l4 4M9 5l-4 4" stroke="' + v.c2 + '" stroke-width="1.2" stroke-linecap="round"/></svg>';
+            h += '<div class="badge-txt" style="color:' + v.c2 + ';font-family:' + v.tyBadgeF + ';font-size:' + v.tyBadgeS + 'px;">' + v.badge4.toUpperCase() + '</div></div>';
+            h += '<div class="bsep" style="background:rgba(' + h2r(v.c2) + ',0.35)"></div>';
+            h += '<div class="weight" style="color:' + g3 + ';border-left:1px solid rgba(' + h2r(gold) + ',0.22);font-family:' + v.tyWtF + ';font-size:' + v.tyWtS + 'px;">' + v.weight + '</div>';
+            h += '</div>'; // /badges
+            h += '</div>'; // /front-right
+            h += '</div>'; // /front-cols
+            h += '<div class="front-foot" style="border-top:1px solid rgba(' + h2r(gold) + ',0.1)"><span class="foot-txt" style="color:rgba(' + h2r(gold) + ',0.35);font-family:' + v.tyFtF + ';font-size:' + v.tyFtS + 'px;">' + v.footer + '</span></div>';
+            h += '</div>'; // /front
+            return h;
+        }
+
+        function getVals() {
+            return {
+                bg: G('eBg'), gold: G('eGold'), acc: G('eAcc'), c1: G('eB1c'), c2: G('eB2c'),
+                pat: G('ePat'), patOp: parseFloat(G('ePatOp')) / 100,
+                archMono: G('eArchMono'), archMonoS: G('eArchMonoS') || '22', archMonoC: G('eArchMonoC') || '', archSub: G('eArchSub'), archSubS: G('eArchSubS') || '4', flavor: G('eFlavor'),
+                emoji: G('eEmoji'), flavorImgData: G('eFlavorImgData'), iconSize: G('eEmojiSize'),
+                type: G('eType'), prem: G('ePrem'),
+                badge1: G('eBadge1'), badge2: G('eBadge2'), badge3: G('eBadge3'), badge4: G('eBadge4'),
+                weight: G('eWeight'), footer: G('eFooter'),
+                prodLabel: G('eProdLabel') || 'Production Date:', prodDate: G('eProdDate') || '',
+                pdW: G('ePdW') || '60', pdH: G('ePdH') || '14', pdFS: G('ePdFS') || '5',
+                sMono: G('eSealMono'), sBrand: G('eSealBrand'), neck: G('eNeck'),
+                bMono: G('eBMono'), bSub: G('eBSub'),
+                ingEn: G('eIngEn'), ingAr: G('eIngAr'), storEn: G('eStorEn'), storAr: G('eStorAr'),
+                validEn: G('eValidEn'), validAr: G('eValidAr'),
+
+                nSrvEn: G('nSrvEn'), nSrvAr: G('nSrvAr'), nutPS: G('nPerServ'),
+                approxWt: G('eApproxWt'), barcode: G('eBarcode'), web: G('eWeb'),
+                bcW: G('eBcW') || '40', bcH: G('eBcH') || '10',
+                wtNumS: G('eWtNumS') || '6', wtLblS: G('eWtLblS') || '3',
+                // typography
+                tyFlavorF: G('tyFlavorF'), tyFlavorS: G('tyFlavorS'),
+                tyTypeF: G('tyTypeF'), tyTypeS: G('tyTypeS'),
+                tyPremF: G('tyPremF'), tyPremS: G('tyPremS'),
+                tyBadgeF: G('tyBadgeF'), tyBadgeS: G('tyBadgeS'),
+                tyWtF: G('tyWtF'), tyWtS: G('tyWtS'),
+                tySMF: G('tySMF'), tySMS: G('tySMS'),
+                tySBF: G('tySBF'), tySBS: G('tySBS'),
+                tyNkF: G('tyNkF'), tyNkS: G('tyNkS'),
+                tyBhF: G('tyBhF'), tyBhS: G('tyBhS'),
+                tyBbF: G('tyBbF'), tyBbS: G('tyBbS'),
+                tyNtF: G('tyNtF'), tyNtS: G('tyNtS'),
+                tyFtF: G('tyFtF'), tyFtS: G('tyFtS')
+            };
+        }
+
+        function upd() {
+            var v = getVals();
+            var html = buildLabel(v);
+            document.getElementById('screenStrip').innerHTML = html;
+            document.getElementById('printStrip').innerHTML = html;
+        }
+
+        function doPrint() { upd(); window.print(); }
+
+        let presetsData = {
+            'Zaatar': {
+                f: 'Zaatar', e: '🟢', t: 'Crackers', a: '#286030',
+                ie: 'Whole wheat flour, olive oil, thyme, salt, baking powder. Contains: Wheat.',
+                ia: 'دقيق قمح كامل، زيت زيتون، زعتر، ملح، بيكنج بودر. يحتوي على: قمح.',
+                se: 'Store in a cool, dry place away from direct sunlight.',
+                sa: 'يحفظ في مكان جاف وبارد بعيدًا عن أشعة الشمس المباشرة.',
+                ve: 'Valid for 3 months from date of production.',
+                va: 'صالح لمدة 3 أشهر من تاريخ الإنتاج.',
+                wt: '40G',
+                ne: 'Serving size 40g\nServings per pack: 1',
+                na: 'حجم الحصة 40 جم\nعدد الحصص في العبوة: 1',
+                nr: 'Calories | 168 kcal | السعرات الحرارية | 168 سعرة\nProtein | 4.8 g | البروتين | 4.8 جم\nTotal Fat | 4 g | الدهون الكلية | 4 جم\nSaturated Fat | 0.6 g | دهون مشبعة | 0.6 جم\nTotal Carbohydrate | 26 g | الكربوهيدرات الكلية | 26 جم\nDietary Fiber | 4 g | الألياف الغذائية | 4 جم\nTotal Sugars | <0.5 g | السكريات | أقل من 0.5 جم\nSodium | 160 mg | الصوديوم | 160 مجم'
+            },
+            'Paprika': {
+                f: 'Paprika', e: '🔴', t: 'Crackers', a: '#c04820',
+                ie: 'Whole wheat flour, olive oil, paprika, salt, garlic powder, baking powder. Contains: Wheat.',
+                ia: 'دقيق قمح كامل، زيت زيتون، بابريكا، ملح، بودرة ثوم، بيكنج بودر. يحتوي على: قمح.',
+                se: 'Store in a cool, dry place away from direct sunlight.',
+                sa: 'يحفظ في مكان جاف وبارد بعيدًا عن أشعة الشمس المباشرة.',
+                ve: 'Valid for 3 months from date of production.',
+                va: 'صالح لمدة 3 أشهر من تاريخ الإنتاج.',
+                wt: '40G',
+                ne: 'Serving size 40g\nServings per pack: 1',
+                na: 'حجم الحصة 40 جم\nعدد الحصص في العبوة: 1',
+                nr: 'Calories | 168 kcal | السعرات الحرارية | 168 سعرة\nProtein | 4.8 g | البروتين | 4.8 جم\nTotal Fat | 4 g | الدهون الكلية | 4 جم\nSaturated Fat | 0.6 g | دهون مشبعة | 0.6 جم\nTotal Carbohydrate | 26 g | الكربوهيدرات الكلية | 26 جم\nDietary Fiber | 4 g | الألياف الغذائية | 4 جم\nTotal Sugars | <0.5 g | السكريات | أقل من 0.5 جم\nSodium | 165 mg | الصوديوم | 165 مجم'
+            },
+            'Pepper': {
+                f: 'Black Pepper', e: '⚫', t: '& Sea Salt', a: '#5030a0',
+                ie: 'Whole wheat flour, olive oil, black pepper, sea salt, baking powder. Contains: Wheat.',
+                ia: 'دقيق قمح كامل، زيت زيتون، فلفل أسود، ملح بحري، بيكنج بودر. يحتوي على: قمح.',
+                se: 'Store in a cool, dry place away from direct sunlight.',
+                sa: 'يحفظ في مكان جاف وبارد بعيدًا عن أشعة الشمس المباشرة.',
+                ve: 'Valid for 3 months from date of production.',
+                va: 'صالح لمدة 3 أشهر من تاريخ الإنتاج.',
+                wt: '40G',
+                ne: 'Serving size 40g\nServings per pack: 1',
+                na: 'حجم الحصة 40 جم\nعدد الحصص في العبوة: 1',
+                nr: 'Calories | 168 kcal | السعرات الحرارية | 168 سعرة\nProtein | 4.8 g | البروتين | 4.8 جم\nTotal Fat | 4 g | الدهون الكلية | 4 جم\nSaturated Fat | 0.6 g | دهون مشبعة | 0.6 جم\nTotal Carbohydrate | 26 g | الكربوهيدرات الكلية | 26 جم\nDietary Fiber | 4 g | الألياف الغذائية | 4 جم\nTotal Sugars | <0.5 g | السكريات | أقل من 0.5 جم\nSodium | 170 mg | الصوديوم | 170 مجم'
+            },
+            'Cinnamon': { f: 'Cinnamon', e: '🍂', t: 'Peanut', a: '#3a8a7a' },
+            'Herb': { f: 'Herb', e: '🌿', t: 'Crackers', a: '#2e8040' },
+            'Sesame': { f: 'Sesame', e: '🍯', t: '& Honey', a: '#a07010' }
+        };
+
+        let activePresetKey = null;
+
+        // Load saved presets from localStorage
+        const saved = localStorage.getItem('bb_presets');
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                presetsData = Object.assign({}, presetsData, parsed);
+            } catch (e) {
+                console.error("Failed to load presets", e);
+            }
+        }
+
+        function ps(key) {
+            activePresetKey = key;
+
+            // UI feedback
+            document.querySelectorAll('.pb').forEach(b => {
+                b.classList.remove('active');
+                if (b.innerText.toLowerCase().includes(key.toLowerCase())) b.classList.add('active');
+            });
+            const d = presetsData[key];
+            if (!d) return;
+
+            // Helper: set input value
+            function sv(id, val) { var el = document.getElementById(id); if (el && val !== undefined && val !== null) el.value = val; }
+            // Helper: set select by value
+            function ss(id, val) {
+                var el = document.getElementById(id);
+                if (!el || val === undefined) return;
+                for (var i = 0; i < el.options.length; i++) {
+                    if (el.options[i].value === val) { el.selectedIndex = i; return; }
+                }
+            }
+
+            // Basic flavor fields
+            sv('eFlavor', d.f);
+            sv('eEmoji', d.e);
+            sv('eFlavorImgData', d.id || '');
+            sv('eEmojiSize', d.is || 20);
+            document.getElementById('iconSizePct').textContent = (d.is || 20) + 'px';
+            sv('eType', d.t);
+            sv('eAcc', d.a || '#c9a84c');
+
+            // Colors & pattern
+            if (d.bg) sv('eBg', d.bg);
+            if (d.gold) sv('eGold', d.gold);
+            if (d.c1) sv('eB1c', d.c1);
+            if (d.c2) sv('eB2c', d.c2);
+            if (d.pat) ss('ePat', d.pat);
+            if (d.patOp !== undefined) {
+                sv('ePatOp', d.patOp);
+                document.getElementById('patPct').textContent = d.patOp + '%';
+            }
+
+            // Front panel
+            if (d.archMono) sv('eArchMono', d.archMono);
+            if (d.archMonoS) sv('eArchMonoS', d.archMonoS);
+            if (d.archMonoC) sv('eArchMonoC', d.archMonoC);
+            if (d.archSub) sv('eArchSub', d.archSub);
+            if (d.archSubS) sv('eArchSubS', d.archSubS);
+            if (d.prem) sv('ePrem', d.prem);
+            if (d.badge1) sv('eBadge1', d.badge1);
+            if (d.badge2) sv('eBadge2', d.badge2);
+            if (d.badge3) sv('eBadge3', d.badge3);
+            if (d.badge4) sv('eBadge4', d.badge4);
+            if (d.weight) sv('eWeight', d.weight);
+            if (d.footer) sv('eFooter', d.footer);
+            if (d.prodLabel !== undefined) sv('eProdLabel', d.prodLabel);
+            if (d.prodDate !== undefined) sv('eProdDate', d.prodDate);
+            if (d.pdW !== undefined) { sv('ePdW', d.pdW); document.getElementById('pdWLbl').textContent = d.pdW + 'px'; }
+            if (d.pdH !== undefined) { sv('ePdH', d.pdH); document.getElementById('pdHLbl').textContent = d.pdH + 'px'; }
+            if (d.pdFS !== undefined) { sv('ePdFS', d.pdFS); document.getElementById('pdFSLbl').textContent = d.pdFS + 'px'; }
+
+            // Seal
+            if (d.sMono) sv('eSealMono', d.sMono);
+            if (d.sBrand) sv('eSealBrand', d.sBrand);
+
+            // Neck
+            if (d.neck) sv('eNeck', d.neck);
+
+            // Back panel
+            if (d.bMono) sv('eBMono', d.bMono);
+            if (d.bSub) sv('eBSub', d.bSub);
+            if (d.barcode) sv('eBarcode', d.barcode);
+            if (d.web) sv('eWeb', d.web);
+            if (d.bcW !== undefined) { sv('eBcW', d.bcW); document.getElementById('bcWLbl').textContent = d.bcW + 'px'; }
+            if (d.bcH !== undefined) { sv('eBcH', d.bcH); document.getElementById('bcHLbl').textContent = d.bcH + 'px'; }
+            if (d.wtNumS !== undefined) { sv('eWtNumS', d.wtNumS); document.getElementById('wtNSLbl').textContent = d.wtNumS + 'px'; }
+            if (d.wtLblS !== undefined) { sv('eWtLblS', d.wtLblS); document.getElementById('wtLSLbl').textContent = d.wtLblS + 'px'; }
+
+            // Back content
+            if (d.ie) sv('eIngEn', d.ie);
+            if (d.ia) sv('eIngAr', d.ia);
+            if (d.se) sv('eStorEn', d.se);
+            if (d.sa) sv('eStorAr', d.sa);
+            if (d.ve) sv('eValidEn', d.ve);
+            if (d.va) sv('eValidAr', d.va);
+            if (d.wt) sv('eApproxWt', d.wt);
+            if (d.ne) sv('nSrvEn', d.ne);
+            if (d.na) sv('nSrvAr', d.na);
+            if (d.nr) sv('nPerServ', d.nr);
+
+            // Typography
+            if (d.tyFlavorF) ss('tyFlavorF', d.tyFlavorF);
+            if (d.tyFlavorS) sv('tyFlavorS', d.tyFlavorS);
+            if (d.tyTypeF) ss('tyTypeF', d.tyTypeF);
+            if (d.tyTypeS) sv('tyTypeS', d.tyTypeS);
+            if (d.tyPremF) ss('tyPremF', d.tyPremF);
+            if (d.tyPremS) sv('tyPremS', d.tyPremS);
+            if (d.tyBadgeF) ss('tyBadgeF', d.tyBadgeF);
+            if (d.tyBadgeS) sv('tyBadgeS', d.tyBadgeS);
+            if (d.tyWtF) ss('tyWtF', d.tyWtF);
+            if (d.tyWtS) sv('tyWtS', d.tyWtS);
+            if (d.tySMF) ss('tySMF', d.tySMF);
+            if (d.tySMS) sv('tySMS', d.tySMS);
+            if (d.tySBF) ss('tySBF', d.tySBF);
+            if (d.tySBS) sv('tySBS', d.tySBS);
+            if (d.tyNkF) ss('tyNkF', d.tyNkF);
+            if (d.tyNkS) sv('tyNkS', d.tyNkS);
+            if (d.tyBhF) ss('tyBhF', d.tyBhF);
+            if (d.tyBhS) sv('tyBhS', d.tyBhS);
+            if (d.tyBbF) ss('tyBbF', d.tyBbF);
+            if (d.tyBbS) sv('tyBbS', d.tyBbS);
+            if (d.tyNtF) ss('tyNtF', d.tyNtF);
+            if (d.tyNtS) sv('tyNtS', d.tyNtS);
+            if (d.tyFtF) ss('tyFtF', d.tyFtF);
+            if (d.tyFtS) sv('tyFtS', d.tyFtS);
+
+            upd();
+        }
+
+        function savePreset() {
+            if (!activePresetKey) {
+                alert("Please select one of the flavor presets first to save changes to it.");
+                return;
+            }
+
+            const v = getVals();
+            // Save ALL values for this flavor
+            presetsData[activePresetKey] = {
+                // basic
+                f: v.flavor, e: v.emoji, t: v.type, a: v.acc,
+                id: v.flavorImgData, is: v.iconSize,
+                ie: v.ingEn, ia: v.ingAr,
+                se: v.storEn, sa: v.storAr,
+                ve: v.validEn, va: v.validAr,
+                wt: v.approxWt,
+                ne: v.nSrvEn, na: v.nSrvAr,
+                nr: v.nutPS,
+                // colors & pattern
+                bg: v.bg, gold: v.gold, c1: v.c1, c2: v.c2,
+                pat: v.pat, patOp: G('ePatOp'),
+                // front panel
+                archMono: v.archMono, archMonoS: v.archMonoS, archMonoC: v.archMonoC, archSub: v.archSub, archSubS: v.archSubS,
+                prem: v.prem,
+                badge1: v.badge1, badge2: v.badge2, badge3: v.badge3, badge4: v.badge4,
+                weight: v.weight, footer: v.footer,
+                prodLabel: v.prodLabel, prodDate: v.prodDate, pdW: v.pdW, pdH: v.pdH, pdFS: v.pdFS,
+                // seal
+                sMono: v.sMono, sBrand: v.sBrand,
+                // neck
+                neck: v.neck,
+                // back panel
+                bMono: v.bMono, bSub: v.bSub,
+                barcode: v.barcode, web: v.web,
+                bcW: v.bcW, bcH: v.bcH, wtNumS: v.wtNumS, wtLblS: v.wtLblS,
+                // typography
+                tyFlavorF: v.tyFlavorF, tyFlavorS: v.tyFlavorS,
+                tyTypeF: v.tyTypeF, tyTypeS: v.tyTypeS,
+                tyPremF: v.tyPremF, tyPremS: v.tyPremS,
+                tyBadgeF: v.tyBadgeF, tyBadgeS: v.tyBadgeS,
+                tyWtF: v.tyWtF, tyWtS: v.tyWtS,
+                tySMF: v.tySMF, tySMS: v.tySMS,
+                tySBF: v.tySBF, tySBS: v.tySBS,
+                tyNkF: v.tyNkF, tyNkS: v.tyNkS,
+                tyBhF: v.tyBhF, tyBhS: v.tyBhS,
+                tyBbF: v.tyBbF, tyBbS: v.tyBbS,
+                tyNtF: v.tyNtF, tyNtS: v.tyNtS,
+                tyFtF: v.tyFtF, tyFtS: v.tyFtS
+            };
+
+            localStorage.setItem('bb_presets', JSON.stringify(presetsData));
+            alert("✅ All settings saved to '" + activePresetKey + "' preset!");
+        }
+
+        function rst() {
+            var d = {
+                eBg: '#1a1208', eGold: '#c9a84c', eAcc: '#3a8a7a', eB1c: '#c9a84c', eB2c: '#c9a84c',
+                ePat: 'diag', ePatOp: '5',
+                eArchMono: 'BB', eArchSub: 'BALANCE BITES', eFlavor: 'Cinnamon', eEmoji: '🍂',
+                eType: 'Peanut', ePrem: 'P R E M I U M', eBadge1: '100% Natural', eBadge2: 'No Preservations',
+                eBadge3: 'Whole Wheat', eBadge4: 'No Added Sugar',
+                eWeight: '30g', eFooter: '✦  BALANCEBITES.COM  ✦',
+                eSealMono: 'BB', eSealBrand: 'Balance Bites', eNeck: 'SEALED · FRESHNESS',
+                eBMono: 'BB', eBSub: 'Balance Bites', eProd: '2025/06/01', eBarcode: '1615012',
+                eIngEn: 'Whole wheat flour, peanuts, cinnamon, sunflower oil, salt, natural flavors. Contains: Wheat, Peanuts.',
+                eIngAr: 'دقيق القمح الكامل، فول سوداني، قرفة، زيت عباد الشمس، ملح، نكهات طبيعية. يحتوي على: قمح، فول سوداني.',
+                eStorEn: 'Store in a dry, well-ventilated place away from direct sunlight.',
+                eStorAr: 'يخزن في مكان جاف جيد التهوية بعيدا عن أشعة الشمس المباشرة.',
+                eValidEn: 'Valid for 3 months from date of production',
+                eValidAr: 'صالح لمدة ٣ شهور من تاريخ الانتاج',
+
+                eApproxWt: '150G', eWeb: 'balancebites.com',
+                nSrvEn: 'Serving per size 100g', nSrvAr: 'حجم الحصة ١٠٠ جم'
+            };
+            for (var k in d) { var el = document.getElementById(k); if (el) el.value = d[k]; }
+            document.getElementById('nPerServ').value = 'Calories|443 kcal|السعرات الحرارية|٤٤٣ سعرة\nProtein|12.3 g|بروتين|١٢.٣ جم\nTotal Fat|6.49 g|الدهون الكلية|٦.٤٩ جم\nTotal Carbohydrate|77.5 g|الكربوهيدرات الكلية|٧٧.٥ جم';
+            document.getElementById('patPct').textContent = '5%';
+            // reset typography
+            var tyDefs = { tyFlavorF: 'Caveat', tyFlavorS: '18', tyTypeF: 'Syne', tyTypeS: '6', tyPremF: 'DM Sans', tyPremS: '4.5', tyBadgeF: 'DM Sans', tyBadgeS: '4.5', tyWtF: 'DM Sans', tyWtS: '9', tySMF: 'Playfair Display', tySMS: '32', tySBF: 'DM Sans', tySBS: '5', tyNkF: 'DM Sans', tyNkS: '4', tyBhF: 'DM Sans', tyBhS: '5', tyBbF: 'DM Sans', tyBbS: '4.5', tyNtF: 'DM Sans', tyNtS: '4', tyFtF: 'DM Sans', tyFtS: '5' };
+            for (var k in tyDefs) {
+                var el = document.getElementById(k);
+                if (el) { if (el.tagName === 'SELECT') { for (var i = 0; i < el.options.length; i++) { if (el.options[i].value === tyDefs[k]) { el.selectedIndex = i; break; } } } else { el.value = tyDefs[k]; } }
+            }
+            upd();
+        }
+
+        upd();
+
+        // ══════════════════════════════════════
+        // PRESET SYSTEM (key: bblabel)
+        // ══════════════════════════════════════
+        var _PBK = 'bblabel';
+        var _PBS = [];
+        var _PBMAX = 8;
+
+        function _pbLG(){ try{return JSON.parse(localStorage.getItem(_PBK+'_pb')||'[]');}catch(e){return[];} }
+        function _pbSav(a){ try{localStorage.setItem(_PBK+'_pb',JSON.stringify(a));}catch(e){} }
+
+        function pbToast(msg, dur){
+            var t = document.getElementById('pbToast'); if(!t) return;
+            t.textContent = msg; t.classList.add('show');
+            clearTimeout(pbToast._t);
+            pbToast._t = setTimeout(function(){ t.classList.remove('show'); }, dur||2400);
+        }
+
+        function presetGetState(){
+            var v = getVals();
+            return {
+                vals: v,
+                activeKey: activePresetKey,
+                presetsData: JSON.parse(JSON.stringify(presetsData))
+            };
+        }
+
+        function presetSetState(st){
+            if(!st) return;
+            // Restore presetsData if present
+            if(st.presetsData) presetsData = Object.assign({}, presetsData, st.presetsData);
+            // Restore active key and load its values
+            if(st.activeKey){
+                activePresetKey = st.activeKey;
+                // If we have vals, restore them directly to inputs
+                if(st.vals){
+                    var v = st.vals;
+                    function sv2(id, val){ var el = document.getElementById(id); if(el && val !== undefined && val !== null) el.value = val; }
+                    function ss2(id, val){
+                        var el = document.getElementById(id); if(!el || val === undefined) return;
+                        for(var i=0;i<el.options.length;i++){ if(el.options[i].value===val){ el.selectedIndex=i; return; } }
+                    }
+                    sv2('eBg', v.bg); sv2('eGold', v.gold); sv2('eAcc', v.acc);
+                    sv2('eB1c', v.c1); sv2('eB2c', v.c2);
+                    ss2('ePat', v.pat);
+                    sv2('ePatOp', v.patOp !== undefined ? (v.patOp*100).toFixed(0) : '5');
+                    document.getElementById('patPct').textContent = (v.patOp !== undefined ? (v.patOp*100).toFixed(0) : '5') + '%';
+                    sv2('eArchMono', v.archMono); sv2('eArchMonoS', v.archMonoS); sv2('eArchMonoC', v.archMonoC);
+                    sv2('eArchSub', v.archSub); sv2('eArchSubS', v.archSubS);
+                    sv2('eFlavor', v.flavor); sv2('eEmoji', v.emoji);
+                    sv2('eFlavorImgData', v.flavorImgData || '');
+                    sv2('eEmojiSize', v.iconSize);
+                    document.getElementById('iconSizePct').textContent = (v.iconSize||20) + 'px';
+                    sv2('eType', v.type); sv2('ePrem', v.prem);
+                    sv2('eBadge1', v.badge1); sv2('eBadge2', v.badge2);
+                    sv2('eBadge3', v.badge3); sv2('eBadge4', v.badge4);
+                    sv2('eWeight', v.weight); sv2('eFooter', v.footer);
+                    sv2('eProdLabel', v.prodLabel); sv2('eProdDate', v.prodDate);
+                    sv2('ePdW', v.pdW); sv2('ePdH', v.pdH); sv2('ePdFS', v.pdFS);
+                    if(document.getElementById('pdWLbl')) document.getElementById('pdWLbl').textContent = (v.pdW||60)+'px';
+                    if(document.getElementById('pdHLbl')) document.getElementById('pdHLbl').textContent = (v.pdH||14)+'px';
+                    if(document.getElementById('pdFSLbl')) document.getElementById('pdFSLbl').textContent = (v.pdFS||5)+'px';
+                    sv2('eSealMono', v.sMono); sv2('eSealBrand', v.sBrand);
+                    sv2('eNeck', v.neck);
+                    sv2('eBMono', v.bMono); sv2('eBSub', v.bSub);
+                    sv2('eIngEn', v.ingEn); sv2('eIngAr', v.ingAr);
+                    sv2('eStorEn', v.storEn); sv2('eStorAr', v.storAr);
+                    sv2('eValidEn', v.validEn); sv2('eValidAr', v.validAr);
+                    sv2('nSrvEn', v.nSrvEn); sv2('nSrvAr', v.nSrvAr);
+                    sv2('nPerServ', v.nutPS);
+                    sv2('eApproxWt', v.approxWt); sv2('eBarcode', v.barcode); sv2('eWeb', v.web);
+                    sv2('eBcW', v.bcW); sv2('eBcH', v.bcH);
+                    sv2('eWtNumS', v.wtNumS); sv2('eWtLblS', v.wtLblS);
+                    if(document.getElementById('bcWLbl')) document.getElementById('bcWLbl').textContent = (v.bcW||40)+'px';
+                    if(document.getElementById('bcHLbl')) document.getElementById('bcHLbl').textContent = (v.bcH||10)+'px';
+                    if(document.getElementById('wtNSLbl')) document.getElementById('wtNSLbl').textContent = (v.wtNumS||6)+'px';
+                    if(document.getElementById('wtLSLbl')) document.getElementById('wtLSLbl').textContent = (v.wtLblS||3)+'px';
+                    // typography
+                    var tyMap = {
+                        tyFlavorF:'tyFlavorF',tyFlavorS:'tyFlavorS',tyTypeF:'tyTypeF',tyTypeS:'tyTypeS',
+                        tyPremF:'tyPremF',tyPremS:'tyPremS',tyBadgeF:'tyBadgeF',tyBadgeS:'tyBadgeS',
+                        tyWtF:'tyWtF',tyWtS:'tyWtS',tySMF:'tySMF',tySMS:'tySMS',
+                        tySBF:'tySBF',tySBS:'tySBS',tyNkF:'tyNkF',tyNkS:'tyNkS',
+                        tyBhF:'tyBhF',tyBhS:'tyBhS',tyBbF:'tyBbF',tyBbS:'tyBbS',
+                        tyNtF:'tyNtF',tyNtS:'tyNtS',tyFtF:'tyFtF',tyFtS:'tyFtS'
+                    };
+                    Object.keys(tyMap).forEach(function(k){
+                        var el2 = document.getElementById(tyMap[k]);
+                        if(el2 && v[k] !== undefined){
+                            if(el2.tagName === 'SELECT'){
+                                for(var i=0;i<el2.options.length;i++){
+                                    if(el2.options[i].value===v[k]){ el2.selectedIndex=i; break; }
+                                }
+                            } else { el2.value = v[k]; }
+                        }
+                    });
+                }
+            } else if(st.vals){
+                // no key but has vals — just restore inputs
+                presetSetState({activeKey: '__custom__', vals: st.vals, presetsData: st.presetsData});
+                return;
+            }
+            upd();
+        }
+
+        function pbSave(){
+            var name = (document.getElementById('pbNameIn').value||'').trim();
+            if(!name){ pbToast('اكتب اسماً أولاً'); return; }
+            var state = presetGetState();
+            var ts = new Date().toLocaleDateString('ar-EG');
+            var idx = _PBS.findIndex(function(p){ return p.name===name; });
+            var obj = {name:name, state:state, date:ts};
+            if(idx>=0){ _PBS[idx]=obj; } else { if(_PBS.length>=_PBMAX) _PBS.shift(); _PBS.push(obj); }
+            _pbSav(_PBS); pbRender();
+            document.getElementById('pbNameIn').value = '';
+            pbToast('✓ تم حفظ "'+name+'"');
+        }
+
+        function pbLoad(idx){
+            var p = _PBS[idx]; if(!p) return;
+            try{ presetSetState(p.state); pbToast('✓ تم تحميل "'+p.name+'"'); }
+            catch(e){ pbToast('خطأ في التحميل: '+e.message); }
+        }
+
+        function pbDelete(idx){
+            var nm = _PBS[idx] ? _PBS[idx].name : '';
+            _PBS.splice(idx,1); _pbSav(_PBS); pbRender();
+            pbToast('🗑 حُذف "'+nm+'"');
+        }
+
+        function pbExport(idx){
+            var p = _PBS[idx]; if(!p) return;
+            var data = JSON.stringify({name:p.name, template:'bblabel', date:p.date, state:p.state}, null, 2);
+            var a = document.createElement('a');
+            a.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(data);
+            a.download = 'bblabel-' + p.name.replace(/[^\w\u0600-\u06FF\- ]/g,'_') + '.json';
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            pbToast('📥 تم تصدير "'+p.name+'"');
+        }
+
+        function pbImport(evt){
+            var file = evt.target.files[0]; if(!file) return;
+            var r = new FileReader();
+            r.onload = function(e){
+                try{
+                    var data = JSON.parse(e.target.result);
+                    if(!data.state) throw new Error('ملف غير صالح');
+                    var name = data.name || file.name.replace('.json','');
+                    var ts = new Date().toLocaleDateString('ar-EG');
+                    var idx = _PBS.findIndex(function(p){ return p.name===name; });
+                    var obj = {name:name, state:data.state, date:ts};
+                    if(idx>=0){ _PBS[idx]=obj; } else { if(_PBS.length>=_PBMAX) _PBS.shift(); _PBS.push(obj); }
+                    _pbSav(_PBS); pbRender();
+                    pbToast('✓ تم استيراد "'+name+'"');
+                } catch(err){ pbToast('ملف غير صالح: '+err.message); }
+                evt.target.value = '';
+            };
+            r.readAsText(file);
+        }
+
+        function pbRender(){
+            var slots = document.getElementById('pbSlots'); if(!slots) return;
+            slots.innerHTML = '';
+            for(var i=0; i<_PBMAX; i++){
+                var p = _PBS[i];
+                var slot = document.createElement('div'); slot.className='pbs';
+                var lb = document.createElement('button');
+                lb.className = 'pbs-load' + (p ? '' : ' empty');
+                if(p){
+                    lb.innerHTML = '<span class="pbs-nm">'+p.name+'</span><span class="pbs-dt">'+p.date+'</span>';
+                    lb.title = 'تحميل: '+p.name;
+                    lb.onclick = (function(i2){ return function(){ pbLoad(i2); }; })(i);
+                } else { lb.textContent = '·'; }
+                var ex = document.createElement('button');
+                ex.className = 'pbs-exp' + (p ? '' : ' hidden');
+                ex.textContent = '↓'; ex.title = 'تصدير';
+                if(p) ex.onclick = (function(i2){ return function(e){ e.stopPropagation(); pbExport(i2); }; })(i);
+                var db = document.createElement('button');
+                db.className = 'pbs-del' + (p ? '' : ' hidden');
+                db.textContent = '✕'; db.title = 'حذف';
+                if(p) db.onclick = (function(i2){ return function(e){ e.stopPropagation(); pbDelete(i2); }; })(i);
+                slot.appendChild(lb); slot.appendChild(ex); slot.appendChild(db);
+                slots.appendChild(slot);
+            }
+        }
+
+        // init preset bar
+        _PBS = _pbLG();
+        setTimeout(pbRender, 120);
+
+    </script>
+
+<!-- PRESET BAR -->
+<div id="presetBar">
+  <span class="pbl">⚡ Presets</span>
+  <div id="pbSlots"></div>
+  <div id="pbRight">
+    <input id="pbNameIn" placeholder="اسم الإعداد...">
+    <button class="pbtn pbtn-save" onclick="pbSave()">💾 حفظ</button>
+    <label class="pbtn pbtn-imp" style="cursor:pointer" title="استيراد ملف JSON">
+      📂<input type="file" accept=".json" onchange="pbImport(event)" style="display:none">
+    </label>
+    <button class="pbtn pbtn-prt" onclick="window.print()">🖨 طباعة</button>
+  </div>
+</div>
+<div id="pbToast"></div>
+</body>
+
+</html>
