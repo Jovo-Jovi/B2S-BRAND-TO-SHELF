@@ -25,7 +25,7 @@ Nothing in `legacy/` is ever deleted.
 |---|---|
 | **Name** | B2S — Brand to Shelf |
 | **Tagline** | build.package.sell |
-| **Repo** | `github.com/Jovo-Jovi/b2s` |
+| **Repo** | `github.com/Jovo-Jovi/B2S-BRAND-TO-SHELF` |
 | **What it is** | A multi-tenant white-label web product. A brand owner onboards through a wizard capturing identity, logo, type, colours and business data; the system produces on-brand packaging, labels, stickers, cartons, stands and garment tickets from a constrained template library — alongside product catalog, stock, purchasing, invoicing, payments and returns, all linked through one entity model. |
 | **Customer** | Brand owner, often a food producer |
 | **Tenancy** | One account = one company = one master brand, holding many product lines (e.g. Balance Bites / Balance Fit / Balance Fun) and many products. Unrelated companies require separate accounts. |
@@ -179,6 +179,8 @@ is signed.
 
 Nothing blocks document authoring. `CALC_SPEC.md` (Step 11) remains the only
 owner-authored document and it blocks the build, not the freeze.
+
+---
 
 ## 4. Module map — reviewed
 

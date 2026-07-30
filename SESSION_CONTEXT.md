@@ -1,5 +1,5 @@
 # SESSION CONTEXT
-Updated: 2026-07-31 · By: agent · Phase: PREPARE Step 7 · Last task: P-04 · Verdict: PENDING
+Updated: 2026-07-31 · By: agent · Phase: PREPARE Step 7b complete · Last task: P-04b · Verdict: PENDING · Next action: GATE 1
 
 ## Where we are
 Greenfield pivot: parity against the six legacy HTML tools is void (OD B1
@@ -265,6 +265,10 @@ is CF-40's own stated closure condition.
       and `data.name` is persisted and rendered as markup on every subsequent page
       load. Running total across the three extractions: 32 (stock-costs) + 14
       (invoice-pro) + 7 (design tools) = **53 unescaped sites**.
+      P-04 Part 7 enumerated every unescaped innerHTML site and every empty
+      catch(e){} site across the three design tools. Evidence now complete across
+      all five read tools. Owner unchanged: FEATURE_INVENTORY.md must-not-reproduce
+      at P-07.
 - [ ] CF-03 — Legacy catch(e){} swallowing. Owner: FEATURE_INVENTORY.md
       must-not-reproduce at P-07. Prior owner "every ported renderer" is void
       framing — nothing is ported. Evidence captured in EXTRACT_STOCK_COSTS.md
@@ -280,6 +284,10 @@ is CF-40's own stated closure condition.
       substitute ones are the identical `_pbLG`, which converts an unreadable slot
       list into an empty one that the next write then makes permanent. Running
       total: 7+2+11 (stock-costs) + 3+2+5 (invoice-pro) + 3+0+3 (design tools).
+      P-04 Part 7 enumerated every unescaped innerHTML site and every empty
+      catch(e){} site across the three design tools. Evidence now complete across
+      all five read tools. Owner unchanged: FEATURE_INVENTORY.md must-not-reproduce
+      at P-07.
 - [ ] CF-04 — Older returns lack outAllocations; both shapes must render.
       Evidence complete. P-03 R4 confirms EXTRACT_STOCK_COSTS.md Part 4 on every
       point of fact, with two divergences and two completions. Owner: Gate 1 read,
@@ -316,7 +324,14 @@ is CF-40's own stated closure condition.
       `bblabel_pb` / `bbstand3_pb` / `bbcarton_pb` / `bbinv_pb`, crossing the very
       boundary §3.3 treated as the axis of separation. Evidence complete; closes at
       Gate 1.
-- [ ] CF-12 — REPORT.md §1 and inventory.json meta line counts are wrong by ~3,953
+      ANSWERED by P-04 Part 8 §8.7 with six numbered corrections. REPORT.md §3.3
+      chose the wrong axis: the real division is tools that opted into the shared
+      folder (invoice-pro, bb-stock-costs, sticker) versus tools that did not
+      (label-editor, stand, carton) — a line running through the design family,
+      not around it. Closes at Gate 1 on read. One element of §8.5 rests on an
+      incidental glob hit from invoice-pro.html and is confirmed at Gate 1 against
+      EXTRACT_INVOICE_PRO.md.
+- [x] CF-12 — REPORT.md §1 and inventory.json meta line counts are wrong by ~3,953
       lines (stock 5577→7084, invoice-pro 3498→4284, sticker 3701 unlisted;
       total 14529→~18482). Owner: reviewer, closes at Gate 1.
       bb-stock-costs.html verified at 7,083 (wc -l), 7,084 as displayed. Drift
@@ -343,9 +358,17 @@ is CF-40's own stated closure condition.
       **This overturns the working assumption.** REPORT.md is not uniformly stale;
       it is stale *only* for the two files that kept growing after it was written,
       and authoritative for the three that were frozen. Its citations into LE, ST
-      and CA can be used directly. **CF-12's evidence is complete** — all five
+      and CA can be used directly.       **CF-12's evidence is complete** — all five
       surviving tools now have a verified count (label-v3 is deleted and
       unverifiable). Closes at Gate 1.
+      **CF-12 — CLOSED (P-04).** Design-tool counts verified exact against REPORT.md:
+      label-editor 2,179, stand 773, carton 458 (wc -l). REPORT.md is stale only
+      for the two business files that kept growing after it was written
+      (5,577→7,083 and 3,498→4,283) and accurate for the three frozen design
+      tools. REPORT.md uses the wc -l convention; CF-12's original corrected
+      figures used the displayed convention. Residual, no action: the sticker
+      tool's count was never independently verified; AUDIT_STICKER.md is its
+      record and no live document carries a wrong figure.
 - [x] CF-13 — CLOSED (P-01). RUNBOOK.md was uncommitted and carried stale/void
       steps contradicting current decisions (§1.1 backup, §1.3 PRIVATE +
       `master`, §2.4 backup diff). Superseded by `docs/method/B2S_PREPARE_PHASE.md`
@@ -358,7 +381,23 @@ is CF-40's own stated closure condition.
       **P-03 addendum:** `balance-bites-invoice-pro.html` contains **no**
       absolute path, OS account name or `file://` anchor — the exposure is
       confined to the files P-02 named and is not repeated in this tool.
+      P-04 found a live exposure in CURRENT content, not only in history:
+      AUDIT_STICKER.md:651 transcribed SHARED_DATA_PATH verbatim with the owner's
+      OS account name in a public repo. Redacted by P-04b. The same value remains
+      in bb-stock-costs.html:1178 and :902, which legacy/FREEZE.md forbids
+      modifying, so the exposure cannot be fully removed while legacy/ is
+      preserved verbatim in a public repo. The OD at P-06 chooses between four
+      options: (a) accept permanently, (b) make the repo private, which
+      contradicts G7 SIGNED public-by-design, (c) rewrite history and redact
+      legacy/, which violates the freeze, (d) move legacy/ out of the public
+      repo. Owner unchanged: RISK_REGISTER.md at P-05, replacement OD at P-06.
 - [ ] CF-22 — Label-editor vs sticker-tool capability delta. Owner: P-04.
+      ANSWERED by P-04 Part 2: overlapping-but-neither. The label editor is a
+      distinct physical output — a continuous five-segment cruciform wrap strip
+      no sticker-tool mode can express — sharing a substantially overlapping
+      content model with the sticker tool's back label, on weaker infrastructure.
+      Verdict rests on 11 of 11 AUDIT_STICKER.md citations spot-checked and
+      holding. Closes at Gate 1 on read.
 - [x] CF-25 — CLOSED (confirmed by P-01). `.gitattributes` exists at repo root
       with the exact required content; `git add --renormalize .` verified to
       produce zero diff. No line-ending commit needed.
@@ -421,7 +460,7 @@ is CF-40's own stated closure condition.
       inferred from the P-01c report — the reviewer verdict logged this as
       "CF-39 new" without landing wording here. Owner: reviewer, next light
       edit to `B2S_PREPARE_PHASE.md`.
-- [ ] CF-40 — Session-tracking carry-forwards (CF-38, and now CF-39/CF-40
+- [x] CF-40 — Session-tracking carry-forwards (CF-38, and now CF-39/CF-40
       themselves) are sometimes announced by a reviewer verdict as "new"
       without their descriptive text ever being supplied to the executing
       task. Each has had to be inferred from context and landed after the
@@ -450,6 +489,11 @@ is CF-40's own stated closure condition.
       landing anything: rows supplied = 3, stated = 3, ids matched = YES. Zero
       numbering or count defects. **Recommend closing at Gate 1** — P-04 cannot
       close it itself, as this task closes no carry-forward.
+      **CF-40 — CLOSED (P-04).** Closure condition was a CF-landing prompt executing
+      with zero numbering or count defects. P-04 reported rows supplied 3,
+      stated 3, ids matched, check run before landing. The stated-count plus
+      explicit-id-list plus halt-on-mismatch mechanism is retained as standing
+      practice, not as an open item.
 - [ ] CF-41 — B2S_PREPARE_PHASE.md §1's product-definition table gives the repo
       as github.com/Jovo-Jovi/b2s. The verified remote is
       github.com/Jovo-Jovi/B2S-BRAND-TO-SHELF, branch main, public. The repo
@@ -463,7 +507,12 @@ is CF-40's own stated closure condition.
       Acceptable for UI chrome; not acceptable for literals classified as
       business data or document template. Gate 1 check: if those are rolled up,
       P-02 reopens for that subset only. Owner: reviewer, Gate 1.
-- [ ] CF-43 — The P-02 STOP block mixed halt conditions with redact-and-continue
+      Two peers now exist. P-03 met the standard, enumerating every business-data
+      and document-template literal and rolling up only Arabic-only UI chrome.
+      P-04 exceeded it, enumerating all 50 Arabic-only UI chrome literals
+      individually although a rollup was permitted. P-02 remains the only extract
+      with a category rollup over 501 literals. Gate 1 check unchanged.
+- [x] CF-43 — The P-02 STOP block mixed halt conditions with redact-and-continue
       conditions under one heading, forcing the builder to resolve a reviewer
       defect mid-task. Corrected in P-03; must also be corrected in P-04.
       Owner: reviewer, closes on P-04 emission.
@@ -473,6 +522,8 @@ is CF-40's own stated closure condition.
       triggered and the redact-and-continue path was exercised (negative result,
       stated explicitly). **Recommend closing at Gate 1** — P-04 closes no
       carry-forward itself.
+      **CF-43 — CLOSED (P-04).** The P-04 prompt was emitted with the corrected STOP
+      block separating HALT conditions from REDACT-AND-CONTINUE conditions.
 - [ ] CF-44 — VOID. Never issued. Reviewer numbering error at the P-02 verdict:
       the number was skipped between CF-43 and CF-45, not lost. Reserved
       permanently so no future task invents content for it. No owner, no action.
@@ -514,6 +565,13 @@ is CF-40's own stated closure condition.
       different px↔real-unit constants** with no agreement (3.78, 3.7795, 37.795,
       and "none exists" twice). **Conclusion: money, quantity AND geometry rounding
       are all owner-authored. There is no legacy precedent anywhere.**
+      P-04 Part 3.4 closes the last avenue: only four calculations in the entire
+      design family state any rounding rule, and the conical unwrap, all seven
+      shape-geometry expressions and every stand @page dimension are explicitly
+      'none stated in source'. Geometry was the last place a legacy rounding
+      precedent could have existed. CALC_SPEC.md's tax basis, freight treatment
+      and every money and geometry rounding rule are owner-authored with
+      effectively no legacy source.
 - [ ] CF-46 — EXTRACT_STOCK_COSTS.md §C.4 lists ten findings awaiting
       accept/reject. None triaged. Owner: reviewer, Gate 1.
       **P-03 addendum:** EXTRACT_INVOICE_PRO.md §C.4 adds **fifteen** more, same
@@ -527,6 +585,8 @@ is CF-40's own stated closure condition.
       explicitly NOT defects so the reviewer is not asked to triage decisions as
       bugs. **Untriaged total remains 25.** Part 7's 52 are owned by
       FEATURE_INVENTORY.md at P-07, not by this row.
+      P-04 produced no §C.4-equivalent findings block; confirm at Gate 1. Count
+      stands at 25 pending that confirmation.
 - [ ] CF-47 — Costing is last-purchase-price-wins by unconditional overwrite
       (bb-stock-costs.html:2994-2999): one new purchase price retroactively
       restates COGS and profit for every closed month. Policy, not defect. B2S
@@ -618,6 +678,33 @@ is CF-40's own stated closure condition.
       the observation that `row`, `tot` and `grand` are document-theme roles with
       no packaging meaning, so the packaging half will use a subset whichever way
       it is canonicalised.
+      ANSWERED for the design half by P-04 Part 8: label-editor, stand and carton
+      each have zero occurrences of bb_color_presets, bb_active_color_preset_id
+      and bb_active_theme — no field set, no id scheme, no theme engine; all three
+      bind raw colour pickers directly to render sites. The design family
+      contributes NO third field set. STILL OPEN: EXTRACT_STOCK_COSTS.md gives
+      bb-stock-costs six colours while AUDIT_STICKER.md §C-3 says the sticker
+      tool's seven-colour set is identical to it — both cannot hold. Resolvable
+      by reading EXTRACT_STOCK_COSTS.md's field list against §C-3; no new
+      extraction required. The id count divergence (three seeds against four) is
+      confirmed; the fourth preset's name is unverified per CF-50. Owner:
+      reviewer at Gate 1, then DOMAIN_MODEL.md at P-07.
+- [ ] CF-50 — AUDIT_STICKER.md §3.4 names the three bb_color_presets seeds
+      "Balance Bites", "Dark Mode", "Ocean Blue". P-04's direct read gives
+      `Dark Gold`, `Obsidian Blue`, `Forest Night` — all three falsified. §3.4
+      is also the sole record of a fourth, sticker-absent preset name, now
+      UNVERIFIED. §C-3's seven-colour field set and cp_def1-cp_def4 id scheme
+      are correct and unaffected. AUDIT_STICKER.md is the only record of the
+      sticker tool, so an uncorrected false claim propagates into P-05 and P-07.
+      Annotated by P-04b, never rewritten. Owner: Gate 1 — do not treat §3.4's
+      naming claims as evidence; then P-07.
+- [ ] CF-51 — Prompt-template defect: "one commit" combined with "do not amend
+      or rewrite history" forbids any post-push correction, forcing a choice
+      between two explicit instructions. P-04 hit this and correctly landed a
+      second commit. Corrected standing rule: one commit for the deliverable; a
+      corrective follow-up commit is permitted, must be declared, and must carry
+      a subject line stating what it corrects. Third template defect after CF-40
+      and CF-43. Owner: reviewer, standing; applied from P-04b onward.
 
 ## Environment quirks (never re-discover)
 - Brave isolates IndexedDB per file:// origin. Legacy data is only visible from

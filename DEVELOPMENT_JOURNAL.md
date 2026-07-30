@@ -300,3 +300,51 @@ commit against the same three files rather than leaving a known-false claim in a
 requirements-evidence artifact. Every done-when criterion met.
 
 Next: GATE 1. Verdict: PENDING.
+
+---
+
+## 2026-07-31 | Sonnet (standard) | PREPARE Step 7b · P-04b — mechanical corrections and ledger update
+
+Files: `docs/method/B2S_PREPARE_PHASE.md`, `docs/requirements/extracts/AUDIT_STICKER.md`,
+`SESSION_CONTEXT.md`, `DEVELOPMENT_JOURNAL.md`. No file under `legacy/` touched;
+no extract other than `AUDIT_STICKER.md` touched.
+
+**Four mechanical corrections landed.** CF-39: reinstated the `---` horizontal
+rule between `B2S_PREPARE_PHASE.md` §3 and §4, matching every other section
+transition in the file. CF-41: corrected §1's Repo row from
+`github.com/Jovo-Jovi/b2s` to `github.com/Jovo-Jovi/B2S-BRAND-TO-SHELF`.
+CF-14: redacted the owner's OS account name out of `AUDIT_STICKER.md:651`'s
+`SHARED_DATA_PATH` transcription, replacing only the account-name segment with
+`<REDACTED>` and leaving the rest of the path structure intact. CF-50:
+annotated (not rewritten) `AUDIT_STICKER.md` §3.4 with a correction block
+directly beneath the original three-seed-name claim, stating the verified
+names (`Dark Gold`, `Obsidian Blue`, `Forest Night`), confirming §C-3's
+field-set and id-scheme claims are unaffected, and marking the fourth,
+sticker-absent preset name as unverified. §C-3 itself was not touched.
+
+**Account-name search performed as instructed.** A repo-wide search for the
+account-name string, run after the `:651` redaction, found six remaining
+file:line occurrences in two groups and none elsewhere: (a) under `docs/` —
+`docs/archive/2026-07/inventory.json:51`, `docs/archive/2026-07/inventory.json:52`,
+`docs/requirements/extracts/REPORT.md:218` (two occurrences on one line) — left
+unfixed, per scope; (b) under `legacy/`, immutable — `legacy/bb-stock-costs.html:902`,
+`legacy/bb-stock-costs.html:1178`, `legacy/balance-bites-sticker.html:1138`; (c)
+anywhere else — none. No remediation performed beyond `:651`; reporting only,
+per the prompt.
+
+**SESSION_CONTEXT.md ledger updated** after a count check performed before any
+edit (closures supplied 3, stated 3; new rows supplied 2, stated 2; amendments
+supplied 9, stated 9; ids matched exactly — no mismatch, no halt). Closed
+CF-12, CF-40 and CF-43 with their verbatim closing text. Landed CF-50 and
+CF-51 as new rows. Amended CF-02, CF-03, CF-11, CF-14, CF-22, CF-42, CF-45,
+CF-46 and CF-49 in place with their supplied append text, changing nothing
+else in each row. Header updated to phase = PREPARE Step 7b complete, last
+task = P-04b, verdict PENDING, next action = GATE 1; every other row carried
+forward unchanged.
+
+Issues: none — all four files stayed within the exactly-four-file write scope,
+`legacy/` was not touched, no git history operation was performed, and no rule,
+decision or requirement substance was changed, only the four named mechanical
+corrections and the ledger text supplied verbatim.
+
+Next: GATE 1. Verdict: PENDING.

@@ -648,7 +648,7 @@ The dropdowns offer families the page never loads. Selecting one silently falls 
 ### E-5. The absolute Windows path — `:1138`
 
 ```
-var SHARED_DATA_PATH='C:\\Users\\Marco\\Desktop\\BALANCE BITES\\invoices customers\\saved data';
+var SHARED_DATA_PATH='C:\\Users\\<REDACTED>\\Desktop\\BALANCE BITES\\invoices customers\\saved data';
 ```
 
 Three consumers: an `alert()` telling the user which folder to select (`:1148`), the `#fsPathHint` label (`:1181`), and an exported `getSharedPath()` accessor (`:1182`).
@@ -992,6 +992,15 @@ REPORT.md §3.1 has **10 rows**; `docs/inventory.json`'s `duplicationMatrix` has
 | **"Preset" shape** | Three incompatible shapes now coexist: label-v3's IndexedDB preset keyed by `name` (`label-v3:856-857`, still live in `BBLabelDB`); the sticker tool's `LabelTemplate` keyed by `id` with `name` as de-facto identity (`:1320`); and the legacy `bbbacklabel_pb*` localStorage arrays (`:3615`), if any survive. The importer must read all three |
 | **Storage-key convention** | The sticker tool uses `bb_*` prefixes for its own keys (`:1139-1140`), matching the business tools, while its legacy inputs use the `bbbacklabel_*` convention (`:3615`). Two conventions in one file. Additionally `bb_active_theme` (`:1310`) exists only here — it is in the sticker tool's `WRITE_KEYS` and therefore written to the shared folder, where no other tool reads it |
 | **Colour-preset defaults diverge — a live conflict** | The sticker tool seeds **3** presets (`cp_def1` "Balance Bites", `cp_def2` "Dark Mode", `cp_def3` "Ocean Blue", `:1273-1275`). `bb-stock-costs.html:1347-1350` seeds **4** — the same three plus **"Warm Ivory"**. Both write the same `bb_color_presets` key and both mirror it to the shared folder. Whichever tool seeds first wins; whichever loads second sees the other's set. If a user is on "Warm Ivory" and the sticker tool's seeding path runs against an empty store, that preset does not exist here and `bb_active_color_preset_id` dangles. Same field set (`:1273` ≡ `bb-stock-costs.html:1347`), different population. New row for §3.2 |
+
+> **CORRECTION — landed 2026-07-31 by P-04b, verified by P-04 direct read.**
+> The three seed names given above are wrong. Read directly from the source,
+> they are `Dark Gold`, `Obsidian Blue` and `Forest Night`. The seven-colour
+> field structure and the `cp_def1`-`cp_def4` id scheme stated in §C-3 are
+> correct and unaffected. The fourth, sticker-absent preset name given in this
+> section is UNVERIFIED — §3.4 is its sole record and no direct read confirms
+> it. Do not cite this section's naming claims as evidence.
+
 | **Print approach** | §3.2's print-approach row must now record: label-v3's approach is unavailable for comparison (source gone; §2.2F records exact-cm `@page` + PPC only), and the sticker tool is single-DOM with px-sized content and a dynamically rewritten `@page` (`:2867-2868`, `:2894-2901`). PPC is duplicated 4× *within* this one file (`:2219`, `:2519`, `:2842`, `:2874`) — an intra-file inconsistency §3.2 has no row for |
 | **`templateKey` semantics** | Overloaded to mean either a `LabelTemplate.id` or a `Sticker.id` (`bb-stock-costs.html:2720`, `:6186`). §3.2 has no row for ambiguous foreign keys |
 | **Date formatting** | Templates store `updatedAt` as ISO 8601 (`:1320`); the card meta line renders a locale string (`:3599`); the export envelope uses ISO (`:2140`); user-facing date *content* fields are free text (`:703`, `:706`, `:1094-1095`) with no validation or format contract |
