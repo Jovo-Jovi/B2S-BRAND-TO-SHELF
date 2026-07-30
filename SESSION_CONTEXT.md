@@ -1,5 +1,5 @@
 # SESSION CONTEXT
-Updated: 2026-07-31 · By: agent · Phase: PREPARE Step 6 · Last task: P-03 · Verdict: PENDING
+Updated: 2026-07-31 · By: agent · Phase: PREPARE Step 7 · Last task: P-04 · Verdict: PENDING
 
 ## Where we are
 Greenfield pivot: parity against the six legacy HTML tools is void (OD B1
@@ -141,17 +141,176 @@ supplied rows are landed verbatim below; **no CF-44 row was invented.** This is
 CF-40 recurring for a fourth time, in the same session in which CF-40 was
 amended to require exactly this not happen.
 
+P-04 performed the third and final requirements extraction, covering the three
+remaining design tools together:
+`legacy/balance-bites-label-editor- latest.html` (LE),
+`legacy/balance-bites-stand.html` (ST) and `legacy/balance-bites-carton (2).html`
+(CA) → `docs/requirements/extracts/EXTRACT_DESIGN_TOOLS.md` (new, REQUIREMENTS
+EVIDENCE banner copied verbatim from `EXTRACT_INVOICE_PRO.md`). All three read
+completely in sequential chunks — LE in 4 chunks to line 2180, ST in 2 chunks to
+line 774, CA in 1 chunk to line 459 — each final chunk reaching `</html>`.
+
+**All three line counts are EXACT against `REPORT.md`.** Verified 2,180 / 774 /
+459 (`wc -l` 2,179 / 773 / 458 plus the trailing-newline display convention,
+matching `REPORT.md`'s 2,179 / 773 / 458 exactly). **This is the opposite of
+P-02 and P-03 and it narrows CF-12 sharply:** `REPORT.md` is not uniformly
+stale — it is stale only for the two files that kept growing after it was
+written. The three design tools were frozen at the time of the report and its
+figures for them are authoritative. CF-12's remaining scope is the two business
+files, both already re-derived. **CF-12's evidence is now complete.**
+
+**No redaction was required.** Zero credentials, keys, tokens, connection
+strings, OS account names, absolute local paths or buyer PII across all three
+files; the only URLs are Google Fonts links and a placeholder website string.
+The negative result is stated explicitly in the extract at §0.3. **One exposure
+was found elsewhere and is NOT this task's to fix:**
+`docs/requirements/extracts/AUDIT_STICKER.md:651` transcribes
+`SHARED_DATA_PATH` **verbatim including the owner's OS account name**, in a
+public repo. P-04 could write only three files and `AUDIT_STICKER.md` is not one
+of them. This is CF-14's exposure recurring in a docs file rather than a legacy
+file — flagged for the reviewer, not remediated.
+
+All eight Parts complete, plus a Part 0 (provenance) and a Part 9 (closing).
+Part 6 exceeds the P-03 standard: **nothing was rolled up at all.** Every
+business-data and document-template literal is individually enumerated in both
+languages (36 document-template pairs, 6 business-data pairs, 5 fused
+literals, 18 English-only printed strings), and the Arabic-only UI chrome that
+CF-42's standard would have permitted as a rollup — all 50 of it — is enumerated
+individually as well.
+
+**Four structural findings dominate the pass.** First, **the design family does
+not divide the way `REPORT.md` §3.3 assumed.** LE, ST and CA touch no shared
+folder, no `bb_filestore_v1`, no IndexedDB and no business entity; they hold one
+or two `localStorage` keys each and nothing else. The sticker tool holds three
+channels and eight shared keys. The real axis is *opted into the shared folder*
+(`invoice-pro`, `bb-stock-costs`, `sticker`) versus *did not* (`label-editor`,
+`stand`, `carton`) — a line that runs **through** the design family, not around
+it. Second, **the coupling that does exist in these three is code, not data**: the
+same eight-slot preset-bar component is copied into four files under four
+distinct keys (`bblabel_pb`, `bbstand3_pb`, `bbcarton_pb`, `bbinv_pb`), crossing
+the business/design boundary, with the copies drifted in language, error
+reporting and export shape. Third, **`bb_presets` is a latent collision, not an
+active one** — LE is its only writer, but the name is generic, unversioned and
+sits in the shared `bb_*` namespace, and it is read and merged with no schema
+validation (`LE:1760`). Fourth, **the 40 layout degrees of freedom divide
+cleanly**: 27 MUST / 13 ARTIFACT, and the shape of the split is that *every*
+substrate dimension is a MUST while *every* free-positioning and per-element
+typography control is an ARTIFACT — the legacy set supports the frozen
+template-driven decision rather than contradicting it.
+
+**CF-22 is answered with an explicit verdict: overlapping-but-neither.** The
+label editor is not a strict subset of the sticker tool and not a distinct class
+of packaging output. It is a distinct **physical** output — a continuous
+five-segment cruciform wrap strip that no sticker-tool mode can express — sharing
+a substantially overlapping **content** model with the sticker tool's back label,
+on markedly weaker infrastructure. The verdict rests on eleven `AUDIT_STICKER.md`
+citations spot-checked against `legacy/balance-bites-sticker.html` under the
+bounded-verification clause; **eleven of eleven hold, none stale.** Four delta
+questions depend on label-v3 behaviour not recorded in `REPORT.md` §2.2 or
+`AUDIT_STICKER.md` §1.1/§1.2 and are marked unresolvable rather than reasoned out.
+
+**CF-49 answered per file: none of the three reads or writes `bb_color_presets`,
+`bb_active_color_preset_id` or `bb_active_theme`** — zero occurrences in all
+three, no field set, no id scheme, no theme engine of any kind. **The design
+family contributes no third `ColorPreset` field set.** In establishing this, an
+**artifact-versus-artifact conflict** surfaced and is recorded unresolved: CF-49
+as landed states `bb-stock-costs.html` carries **six** colours, while
+`AUDIT_STICKER.md` §C-3 states the sticker tool's set — `{id, name, bg, gold,
+txt, mut, row, tot, grand}`, **seven** colour fields — is an "identical field
+set" to `bb-stock-costs.html:1347-1350`. Both cannot hold as written. Reading
+`bb-stock-costs.html` is forbidden by the P-04 prompt, so no winner was chosen.
+The id divergence is separately confirmed and not in dispute: both business tools
+seed `cp_def1`–`cp_def4`; the sticker tool seeds `cp_def1`–`cp_def3` only.
+
+Evidence delivered for **CF-02** (complete site inventory — all 10 `innerHTML`
+assignments, 7 unescaped and user-derived, 3 constant; grep-confirmed that
+`document.write`, `insertAdjacentHTML`, `outerHTML`, `eval`, `new Function` and
+`srcdoc` have **zero** occurrences in all three files, so the 7 are the complete
+surface) and **CF-03** (complete site inventory — all 12 `catch` blocks: 3 truly
+empty, 3 swallow-and-substitute, 5 reporting, 1 log-only; the 3 empty ones are
+the same `_pbSav` function in three copies, and each is followed by an
+unconditional success toast). Part 7 records **50 numbered defects plus the 2
+markup defects**, and — new for this pass — an explicit §7.8 "NOT defects" list
+so a later reader does not mistake a decision for a bug. **No carry-forward was
+closed by this task**, per the prompt. P-04 verdict: PENDING.
+
+**Prompt defects: none.** P-04's STOP block correctly separates halt conditions
+from redact-and-continue conditions, which is what **CF-43** required and it
+closes on this emission. The **CF-40 count check passed**: three rows supplied
+(CF-44, CF-48, CF-49), three stated, ids matched exactly, with CF-44's gap
+declared void by design in the prompt itself. **This is the first CF-landing
+prompt in the sequence to execute with zero numbering or count defects**, which
+is CF-40's own stated closure condition.
+
 ## Active carry-forwards
 - [ ] CF-01 — Reinstate deferred Dev OS security/migration rule layer at P10
-- [ ] CF-02 — Unescaped innerHTML in all legacy tools; every ported renderer escapes
-- [ ] CF-03 — Legacy catch(e){} swallowing; ported paths surface errors
-- [ ] CF-04 — Older returns lack outAllocations; both shapes must render
+- [ ] CF-02 — Unescaped innerHTML in all legacy tools. Owner: FEATURE_INVENTORY.md
+      must-not-reproduce at P-07. Prior owner "every ported renderer" is void
+      framing — nothing is ported. Evidence captured in EXTRACT_STOCK_COSTS.md
+      Part 8.
+      **P-04 addendum — evidence now COMPLETE for the design family.** All 10
+      `innerHTML` assignments across the three design tools enumerated at
+      EXTRACT_DESIGN_TOOLS.md §7.1: **7 unescaped and user-derived** (LE:1702,
+      :1703, :2141; ST:699, :766; CA:380, :443) and 3 safe constant clears
+      (LE:2134, ST:766, CA:440). No escape helper, sanitiser or allow-list exists
+      in any of the three. `document.write`, `insertAdjacentHTML`, `outerHTML`,
+      `eval`, `new Function` and `srcdoc`: **zero occurrences in all three**, so
+      `innerHTML` is the complete sink surface. Reachability chain recorded: the
+      JSON import path validates `data.state` for presence only, never `data.name`,
+      and `data.name` is persisted and rendered as markup on every subsequent page
+      load. Running total across the three extractions: 32 (stock-costs) + 14
+      (invoice-pro) + 7 (design tools) = **53 unescaped sites**.
+- [ ] CF-03 — Legacy catch(e){} swallowing. Owner: FEATURE_INVENTORY.md
+      must-not-reproduce at P-07. Prior owner "every ported renderer" is void
+      framing — nothing is ported. Evidence captured in EXTRACT_STOCK_COSTS.md
+      Part 8.
+      **P-04 addendum — evidence now COMPLETE for the design family.** All 12
+      `catch` blocks across the three design tools enumerated at
+      EXTRACT_DESIGN_TOOLS.md §7.2: **3 truly empty** (LE:1981, ST:708, CA:398),
+      **3 swallow-and-substitute** (LE:1980, ST:707, CA:397), 5 reporting, 1
+      log-only (LE:1761-1763). The 3 empty ones are the identical `_pbSav`
+      function in three copies of the same preset-bar component, and each is
+      followed by an **unconditional success toast** — so a `localStorage` quota
+      failure is reported to the operator as `✓ تم حفظ` / `✓ Saved`. The 3
+      substitute ones are the identical `_pbLG`, which converts an unreadable slot
+      list into an empty one that the next write then makes permanent. Running
+      total: 7+2+11 (stock-costs) + 3+2+5 (invoice-pro) + 3+0+3 (design tools).
+- [ ] CF-04 — Older returns lack outAllocations; both shapes must render.
+      Evidence complete. P-03 R4 confirms EXTRACT_STOCK_COSTS.md Part 4 on every
+      point of fact, with two divergences and two completions. Owner: Gate 1 read,
+      then DOMAIN_MODEL.md at P-07.
+      **P-04 addendum — no design-tool bearing.** None of the three design tools
+      references returns, `outAllocations`, or any business entity. Confirmed by
+      exhaustive grep; see EXTRACT_DESIGN_TOOLS.md §8.2. The design family
+      contributes nothing to this row in either direction.
 - [ ] CF-05 — Print calibration unresolved until OD-5 signed
 - [ ] CF-11 — REPORT.md §3.3 "design tools are independent islands" is FALSIFIED
       for the sticker tool: legacy/balance-bites-sticker.html carries the shared
       folder path (:1138), bb_filestore_v1, showDirectoryPicker, bb_stickers,
-      BBLabelDB, bbbacklabel. Mechanism undocumented. Owner: Pass 1 §3.1/§3.2
-      documents it; Pass 3 rewrites §3.3; Pass 4 verifies.
+      BBLabelDB, bbbacklabel. Mechanism undocumented. Owner: **P-04 Part 8, closes
+      at Gate 1.** Prior owner (DELTA_RUN_01.md Passes 3 and 4) is void, so this
+      had no live owner.
+      **P-04 ANSWER — re-derived per file; the claim must NOT simply be inverted.**
+      LE, ST and CA each touch **no** shared folder, **no** File System Access API,
+      **no** IndexedDB, **no** `bb_filestore_v1` and **no** business entity.
+      Footprints in full: LE = `bb_presets` + `bblabel_pb`; ST = `bbstand3_pb`
+      alone; CA = `bbcarton_pb` alone. So three of the four design tools are
+      genuinely isolated and one is a full participant — the split is total on
+      both sides, with no middle case. What §3.3 should have said is written out
+      in six numbered points at EXTRACT_DESIGN_TOOLS.md §8.7; in short: **the set
+      is neither independent islands nor a coupled system, and the axis §3.3 chose
+      was wrong.** The real division is *tools that opted into the shared folder*
+      (invoice-pro, bb-stock-costs, sticker) versus *tools that did not*
+      (label-editor, stand, carton) — a line running **through** the design family.
+      Three further corrections: "no shared runtime data" was false in both
+      directions (a real channel exists AND it is defective — sticker-side writes
+      never reach disk); namespace occupation is not data sharing and needs its own
+      category (`bb_presets` at LE:1935 is a latent collision with one writer, no
+      schema and no validation on read at LE:1760); and the family's real coupling
+      is **code** — the same preset-bar component in four files under
+      `bblabel_pb` / `bbstand3_pb` / `bbcarton_pb` / `bbinv_pb`, crossing the very
+      boundary §3.3 treated as the axis of separation. Evidence complete; closes at
+      Gate 1.
 - [ ] CF-12 — REPORT.md §1 and inventory.json meta line counts are wrong by ~3,953
       lines (stock 5577→7084, invoice-pro 3498→4284, sticker 3701 unlisted;
       total 14529→~18482). Owner: reviewer, closes at Gate 1.
@@ -166,6 +325,22 @@ amended to require exactly this not happen.
       citations. `REPORT.md` §2.1 also **omits `bb_invoice_payments` and
       `bb_returns` from its `MANAGED` list** and mis-states invoice-pro as the
       returns/payments producer. Both are content errors, not drift.
+      **P-03 addendum, second part:** invoice-pro verified at 4,283 (`wc -l`),
+      4,284 displayed; REPORT.md §2.1's 3,498 falsified by 785 lines. Two of three
+      business figures authoritative. Closes at Gate 1 once P-04 supplies the three
+      design-tool counts.
+      **P-04 ANSWER — the three design-tool counts, and they are EXACT.**
+      `balance-bites-label-editor- latest.html` = 2,179 (`wc -l`) / **2,180**
+      displayed, against REPORT.md §2.4's 2,179 — **exact**.
+      `balance-bites-stand.html` = 773 (`wc -l`) / **774** displayed, against
+      REPORT.md §2.6's 773 — **exact**. `balance-bites-carton (2).html` = 458
+      (`wc -l`) / **459** displayed, against REPORT.md §2.5's 458 — **exact**.
+      **This overturns the working assumption.** REPORT.md is not uniformly stale;
+      it is stale *only* for the two files that kept growing after it was written,
+      and authoritative for the three that were frozen. Its citations into LE, ST
+      and CA can be used directly. **CF-12's evidence is complete** — all five
+      surviving tools now have a verified count (label-v3 is deleted and
+      unverifiable). Closes at Gate 1.
 - [x] CF-13 — CLOSED (P-01). RUNBOOK.md was uncommitted and carried stale/void
       steps contradicting current decisions (§1.1 backup, §1.3 PRIVATE +
       `master`, §2.4 backup diff). Superseded by `docs/method/B2S_PREPARE_PHASE.md`
@@ -257,6 +432,19 @@ amended to require exactly this not happen.
       CF-46, CF-47). **CF-44 is skipped and has no text anywhere in the prompt.**
       No CF-44 row was invented. The amendment is necessary but not sufficient:
       it fixed *where* the text goes without adding a count check.
+      **AMENDED a second time after P-03.** The first amendment fixed SUPPLY; the
+      fourth occurrence was an ARITHMETIC defect — a stated count of seven over a
+      list of six, with CF-44 skipped. A prompt landing CF rows must state the
+      count AND the explicit id list; the builder counts, compares, checks
+      contiguity or a declared gap, and HALTS on mismatch. Does not close until a
+      CF-landing prompt executes with zero numbering or count defects.
+      **P-04 RESULT — the closure condition is met, for the first time.** P-04
+      stated THREE rows and the explicit ids CF-44, CF-48, CF-49; supplied exactly
+      three; ids matched exactly; the gap at CF-44 was **declared void by design
+      inside the prompt** rather than left as a hole. Count check performed before
+      landing anything: rows supplied = 3, stated = 3, ids matched = YES. Zero
+      numbering or count defects. **Recommend closing at Gate 1** — P-04 cannot
+      close it itself, as this task closes no carry-forward.
 - [ ] CF-41 — B2S_PREPARE_PHASE.md §1's product-definition table gives the repo
       as github.com/Jovo-Jovi/b2s. The verified remote is
       github.com/Jovo-Jovi/B2S-BRAND-TO-SHELF, branch main, public. The repo
@@ -274,6 +462,15 @@ amended to require exactly this not happen.
       conditions under one heading, forcing the builder to resolve a reviewer
       defect mid-task. Corrected in P-03; must also be corrected in P-04.
       Owner: reviewer, closes on P-04 emission.
+      **P-04 RESULT — condition met.** P-04's STOP block presents "HALT — stop
+      work, report, do not proceed" and "REDACT AND CONTINUE — do not halt, this
+      is pre-authorised" as two separately headed lists. No halt condition was
+      triggered and the redact-and-continue path was exercised (negative result,
+      stated explicitly). **Recommend closing at Gate 1** — P-04 closes no
+      carry-forward itself.
+- [ ] CF-44 — VOID. Never issued. Reviewer numbering error at the P-02 verdict:
+      the number was skipped between CF-43 and CF-45, not lost. Reserved
+      permanently so no future task invents content for it. No owner, no action.
 - [ ] CF-45 — No tax, discount or freight calculation exists in
       bb-stock-costs.html. If invoice-pro also lacks them (P-03 R1),
       CALC_SPEC.md's money-side policy — tax basis, discount order, every money
@@ -290,10 +487,41 @@ amended to require exactly this not happen.
       So of CF-45's four named items, **discount now has an extraction backing
       and tax, freight and every rounding rule do not.** Discount order against
       tax remains unanswerable from legacy because only one operand ever existed.
+      **P-03 addendum, second part:** Confirmed and narrowed by P-03 R1/R2: no tax
+      and no freight anywhere in either business tool, and no money value rounded
+      anywhere before storage, comparison or aggregation. Discount is the sole
+      money policy with a legacy precedent — invoice-level, percent on subtotal,
+      unrounded, stored twice with the percent authoritative. CALC_SPEC.md's tax
+      basis, freight treatment and every money rounding rule are fully
+      owner-authored.
+      **P-04 addendum — geometry was the last place a rounding precedent could
+      exist, and it is nearly as bare.** Of the geometry calculations inventoried
+      at EXTRACT_DESIGN_TOOLS.md §3.4, only **four** state any rounding rule:
+      `Math.round` on the mm→px conversion (ST:462), `toFixed(2)` on the px→mm
+      conversion (ST:641-642), `toFixed(2)` on the sticker tool's exact-mode page
+      size (SK:2894-2901), and display-only `toFixed` in the conical-unwrap readout
+      that is **not applied to the returned values**. Everything else — the entire
+      conical unwrap, all seven shape-geometry expressions, every `@page` dimension
+      in ST, and 8 of 41 proportional derivations — is **"none stated in source"**.
+      Two further facts for CALC_SPEC.md: the two stated conversions are **not
+      inverses** (a 100 mm round trip returns 100.01 mm, from a 0.013% constant
+      mismatch plus an integer rounding step), and the family declares **four
+      different px↔real-unit constants** with no agreement (3.78, 3.7795, 37.795,
+      and "none exists" twice). **Conclusion: money, quantity AND geometry rounding
+      are all owner-authored. There is no legacy precedent anywhere.**
 - [ ] CF-46 — EXTRACT_STOCK_COSTS.md §C.4 lists ten findings awaiting
       accept/reject. None triaged. Owner: reviewer, Gate 1.
       **P-03 addendum:** EXTRACT_INVOICE_PRO.md §C.4 adds **fifteen** more, same
-      status. Combined untriaged total is 25.
+      status. Combined untriaged total is 25. Includes the unnavigable
+      `outAllocations` resale trail at invoice-pro:2515-2525 — `toCustomerId` and
+      `toInvoiceId` written by the producer, never read by the consumer.
+      **P-04 addendum — no new findings list was opened.** EXTRACT_DESIGN_TOOLS.md
+      deliberately has no §C.4. Its Part 7 carries 50 numbered defects plus 2
+      markup defects, all classified in place as defects rather than left as
+      untriaged findings, and §7.8 separately lists six behaviours that are
+      explicitly NOT defects so the reviewer is not asked to triage decisions as
+      bugs. **Untriaged total remains 25.** Part 7's 52 are owned by
+      FEATURE_INVENTORY.md at P-07, not by this row.
 - [ ] CF-47 — Costing is last-purchase-price-wins by unconditional overwrite
       (bb-stock-costs.html:2994-2999): one new purchase price retroactively
       restates COGS and profit for every closed month. Policy, not defect. B2S
@@ -307,6 +535,70 @@ amended to require exactly this not happen.
       opposite temporal policies.** The OD is therefore not "snapshot or live for
       cost" but "which of the two existing, contradictory policies becomes the
       rule for both sides."
+      **P-03 addendum, second part:** Sharpened by P-03: revenue is snapshotted at
+      sale while cost is live, so the two halves of margin already follow opposite
+      temporal policies. The OD is not "snapshot or live for cost" but which of two
+      existing contradictory policies governs both sides.
+      **P-04 addendum — the same temporal question exists on the packaging side,
+      unnoticed.** LE's preset-bar records embed a **deep clone of the entire
+      flavour library** (LE:1965-1975), so a saved Artwork is a snapshot; but LE's
+      Mechanism-A library in `bb_presets` is resolved **live** at page load and
+      merged over the built-ins with no validation (LE:1756-1760). The same content
+      therefore exists in two keys under two temporal policies inside one tool, and
+      loading a preset-bar slot silently replaces the live library with the
+      snapshot. Whatever rule the OD sets for cost has a direct analogue for
+      PackagingTemplate and its presets, and the legacy set is contradictory there
+      too. Recorded so the OD is scoped to both halves rather than re-litigated at
+      P-07.
+- [ ] CF-48 — The producer of bb_invoice_payments is unidentified. P-03
+      established invoice-pro as a strict consumer (Store.set is never called
+      with that key); P-02 reported no payments producer. Payments are Release 1
+      IN — full/partial/underpaid, cash/card/other, receipts. Gate 1 check: does
+      either extract name the writer? If neither does, the payment workflow has
+      zero legacy source and is fully owner-specified. Owner: reviewer, Gate 1;
+      then DOMAIN_MODEL.md at P-07.
+      **P-04 note — the design family is not the writer.** Zero occurrences of
+      `bb_invoice_payments` in any of the three design tools, and none of them
+      touches any business entity at all (EXTRACT_DESIGN_TOOLS.md §8.2). The
+      sticker tool's key list at AUDIT_STICKER.md §D-1 does not include it either.
+      **All six legacy tools are now accounted for and none is the producer**, so
+      the Gate 1 check can be answered without further extraction: the payment
+      workflow has zero legacy source and is fully owner-specified.
+- [ ] CF-49 — bb_color_presets is written by both business tools with
+      incompatible field sets: seven colours in invoice-pro versus six in
+      bb-stock-costs, sharing only `bg` and `gold`, under identical ids
+      cp_def1-cp_def4. Active collision on every theme save from either side.
+      AUDIT_STICKER.md §C-3 records ColorPreset as shared with the business
+      tools, so a third field set may exist. Owner: P-04 Part 8 supplies the
+      design-tool field set; then DOMAIN_MODEL.md at P-07 canonicalises
+      ColorRole / ColorValue.
+      **P-04 ANSWER — the design-tool field set, per file.**
+      `balance-bites-label-editor- latest.html`: does **not** read, does **not**
+      write. `balance-bites-stand.html`: does **not** read, does **not** write.
+      `balance-bites-carton (2).html`: does **not** read, does **not** write.
+      Zero occurrences of `bb_color_presets`, `bb_active_color_preset_id` or
+      `bb_active_theme` in all three; no field set, no id scheme, no theme engine.
+      All three expose raw colour pickers bound directly to render sites with no
+      named roles and no saveable palette — LE 5, ST 9+, CA 4 plus four named
+      styles — persisted only inside their own preset records.
+      **So no third field set exists in the design family.** The only design-side
+      participant is the sticker tool, and per AUDIT_STICKER.md §C-3 its set is
+      `{id, name, bg, gold, txt, mut, row, tot, grand}`.
+      **UNRESOLVED CONFLICT, recorded and not adjudicated.** That sticker set has
+      **seven** colour fields, yet §C-3 and §3.4 both state it is an "identical
+      field set" to `bb-stock-costs.html:1347-1350` — while this row states
+      bb-stock-costs carries **six**. Both cannot hold as written. Reading
+      bb-stock-costs.html is forbidden by the P-04 prompt and the bounded clause
+      permits opening the sticker tool only for the Part 2 verdict, so **no winner
+      was chosen and no field list was invented.** For reconciliation at Gate 1 by
+      a reader holding both extracts.
+      **The id divergence is confirmed and is not in dispute:** both business tools
+      seed `cp_def1`–`cp_def4`; the sticker tool seeds `cp_def1`–`cp_def3` only,
+      omitting the fourth ("Warm Ivory"). What turns on the choice — larger set,
+      smaller set, union, or intersection — is tabulated at
+      EXTRACT_DESIGN_TOOLS.md §8.6, together with the observation that `row`, `tot`
+      and `grand` are document-theme roles with no packaging meaning, so the
+      packaging half will use a subset whichever way it is canonicalised.
 
 ## Environment quirks (never re-discover)
 - Brave isolates IndexedDB per file:// origin. Legacy data is only visible from
@@ -335,6 +627,15 @@ amended to require exactly this not happen.
   `Write` ending in an HTML-comment sentinel, then successive `StrReplace` calls
   that swap the sentinel for `new content + sentinel`, with a final replace that
   drops it. Verify the sentinel is gone before committing.
+- Learned at P-04: a repo-wide grep glob such as `legacy/*.html` will match files
+  a task is explicitly scoped away from. Scope key-name and pattern searches to
+  the exact files in the task's read set, or expect to have to declare an
+  incidental out-of-scope match as a deviation. P-04 hit this once, on
+  `_PBK =`, which returned a line from `balance-bites-invoice-pro.html`.
+- Learned at P-04: `REPORT.md`'s line counts are **not** uniformly stale. They
+  are exact for the three design tools and wrong only for the two business tools,
+  which kept growing after the report was written. Do not apply a blanket
+  "re-derive everything" assumption — check per file, because the answer differs.
 
 ## Frozen decisions in force
 - Freeze point set 2026-07-29 (legacy/FREEZE.md, rewritten by P-01 — tools are
@@ -353,29 +654,44 @@ amended to require exactly this not happen.
   document; it blocks the build, not the freeze.
 
 ## Next action
-P-04, in a new conversation per the reviewer's own sequencing rule (one task per
-window). P-02 and P-03 are both complete and both awaiting reviewer verdict; do
-not treat either extraction's findings as accepted until those verdicts land.
+**GATE 1.** The extraction sequence is complete. P-02, P-03 and P-04 have now
+covered all five surviving legacy tools (label-v3 is permanently deleted and
+`REPORT.md` §2.2 remains its sole record). All three extractions are awaiting
+reviewer verdict; do not treat any of their findings as accepted until those
+verdicts land.
 
-Five things the P-04 opener should carry:
+**Gate 1 inherits eight decisions this sequence surfaced and could not make:**
 
-1. **The corrected STOP block.** CF-43 requires P-02's conflated halt /
-   redact-and-continue block to be replaced in P-04 exactly as it was in P-03.
-   CF-43 closes on P-04 emission, so omitting it re-opens it.
-2. **A CF count check.** CF-40 has now recurred four times, most recently inside
-   the very prompt that amended it (P-03 said "seven rows" and supplied six,
-   skipping CF-44). State the row count and the exact CF numbers, and supply
-   every one of them verbatim inside the fenced block.
-3. **CF-44's text, or an explicit statement that CF-44 does not exist.** The
-   number is currently a hole in the sequence with no wording anywhere.
-4. **A decision on `REPORT.md`.** Its `bb-stock-costs.html` and
-   `balance-bites-invoice-pro.html` citations are now both measured as
-   non-linearly drifted and its §2.1 carries three content errors (the omitted
-   `MANAGED` keys, the "data producer" mis-statement, and the 3,498 line count).
-   Both P-02 and P-03 were scoped to one new file and could not edit it. Decide
-   whether P-04 corrects it in place, a later task does, or it is marked VOID.
-5. **The `bb_stickers` / `bb_label_templates` link is P-04's alone.** P-03
-   searched `balance-bites-invoice-pro.html` and found **zero** occurrences of
-   either, so CF-11's remaining side rests entirely on the design tools.
-   `AUDIT_STICKER.md` §3.4's `templateKey` overload likewise has no
-   invoice-pro-side counterpart.
+1. **CF-49's field-set conflict.** CF-49 says `bb-stock-costs.html` carries six
+   `ColorPreset` colours; `AUDIT_STICKER.md` §C-3 says the sticker tool's
+   seven-colour set is identical to bb-stock-costs'. P-04 was forbidden from
+   reading bb-stock-costs to adjudicate. One of the two artifacts is wrong, and
+   whichever it is, `DOMAIN_MODEL.md` at P-07 cannot canonicalise `ColorRole`
+   until it is settled.
+2. **`REPORT.md`'s disposition, now with complete data.** Its counts are exact
+   for the three design tools and wrong for the two business tools (−1,506 and
+   −785, non-linearly). §2.1 additionally carries three content errors and §3.3's
+   "independent islands" conclusion is falsified in the six ways set out at
+   `EXTRACT_DESIGN_TOOLS.md` §8.7. No extraction task was scoped to edit it.
+   Decide: correct in place, correct at a later task, or mark VOID.
+3. **`AUDIT_STICKER.md:651` exposes the owner's OS account name verbatim** in a
+   public repo, inside a `SHARED_DATA_PATH` transcription. P-04 could write only
+   three files and this is not one of them. This is CF-14's exposure recurring in
+   a docs file rather than a legacy file, and it is remediable — unlike the git
+   history — because the file can simply be edited.
+4. **CF-40's closure.** Its stated condition — a CF-landing prompt executing with
+   zero numbering or count defects — was met by P-04 for the first time.
+5. **CF-43's closure.** Its stated condition — the corrected STOP block appearing
+   in P-04 — was met.
+6. **CF-11 and CF-12** both have complete evidence and both are marked as closing
+   at Gate 1.
+7. **CF-22** has an explicit verdict (overlapping-but-neither) and closes here.
+8. **CF-48 can be answered without further extraction.** All six legacy tools are
+   now accounted for and none writes `bb_invoice_payments`.
+
+**Then P-05 onward.** `EXTRACT_DESIGN_TOOLS.md` seeds `CONTENT_MODEL.md` (§3.2),
+`TEMPLATE_MODEL.md` (§3.1, §3.3), `PRINT_CONTRACT.md` (§3.4b, §3.5, §4),
+`BRAND_CONFIG.md` (§5) and `FEATURE_INVENTORY.md` (§7). Note for whoever authors
+`TEMPLATE_MODEL.md`: §3.3's 40 degrees of freedom carry a MUST/ARTIFACT judgement
+each, but **the judgements are the extractor's reading of the evidence, not a
+signed decision.** The template model itself is the reviewer's to design.

@@ -194,3 +194,96 @@ corrected premise with the correction stated rather than answered as written.
 Every done-when criterion met.
 
 Next: P-04. Verdict: PENDING.
+
+---
+
+## 2026-07-31 | Opus (heavyweight) | PREPARE Step 7 · P-04 — requirements extraction: the three remaining design tools
+
+Files: `docs/requirements/extracts/EXTRACT_DESIGN_TOOLS.md` (new),
+`SESSION_CONTEXT.md`, `DEVELOPMENT_JOURNAL.md`. Read-only on `legacy/`;
+`AUDIT_STICKER.md` and `REPORT.md` read, not modified; no business tool read.
+
+**Three verified line counts, all EXACT against `REPORT.md`.**
+`balance-bites-label-editor- latest.html` **2,180** displayed / 2,179 `wc -l` vs
+REPORT.md §2.4's 2,179. `balance-bites-stand.html` **774** / 773 vs §2.6's 773.
+`balance-bites-carton (2).html` **459** / 458 vs §2.5's 458. No HALT condition
+met. Read completely in **4 + 2 + 1 = 7 sequential chunks**; final chunks reached
+2180, 774 and 459, each `</html>`.
+
+**This overturns the working assumption and completes CF-12.** `REPORT.md` is
+not uniformly stale — it is stale only for the two business files that kept
+growing after it was written, and authoritative for the three design tools that
+were frozen. Its LE/ST/CA citations can be used directly. All five surviving
+tools now have a verified count.
+
+**No redaction required.** Zero credentials, keys, tokens, connection strings,
+OS account names, absolute local paths or buyer PII across all three files; the
+only URLs are Google Fonts links and a placeholder website string. Output greps
+clean: the sole `C:\` in the deliverable is the deliberately redacted
+`SHARED_DATA_PATH` structure carrying `<REDACTED>` in place of the account-name
+span, and the account name itself appears nowhere in the file.
+
+All eight Parts complete, plus Part 0 (provenance) and Part 9 (closing). Part 1:
+three tools with complete typed field lists on every stored record. Part 2:
+CF-22 answered — **overlapping-but-neither**, on eleven `AUDIT_STICKER.md`
+citations spot-checked against the sticker tool, **eleven of eleven holding**.
+Part 3: seven physical output types, 106 content slots, **40 degrees of freedom
+each carrying a justified MUST/ARTIFACT judgement (27/13)**, every geometry
+calculation with inputs, expression, units and an explicit rounding statement
+including "none stated in source", and five informal die-line surrogates against
+zero real die-lines. Part 4: 11 `@page` rules, **10 of 11 zero-margin**. Part 5:
+the configurable/hardcoded table plus 15 single-tenant assumptions. Part 6:
+**nothing rolled up at all** — 36 document-template pairs, 6 business-data pairs,
+5 fused literals, 18 English-only printed strings and all 50 Arabic-only UI
+chrome literals individually enumerated, exceeding the P-03 standard. Part 7: 50
+numbered defects plus 2 markup defects, and a new §7.8 listing six behaviours
+that are explicitly NOT defects. Part 8: CF-11 and CF-49 answered per file.
+
+**Four structural findings.** The design family does **not** divide the way
+`REPORT.md` §3.3 assumed — LE, ST and CA touch no shared folder, no
+`bb_filestore_v1` and no business entity, while the sticker tool has three
+channels and eight shared keys, so the real axis runs **through** the design
+family rather than around it. The coupling that does exist in these three is
+**code, not data**: one preset-bar component copied into four files under four
+distinct keys, crossing the business/design boundary. `bb_presets` is a **latent**
+collision — one writer, but a generic unversioned name in the shared namespace,
+merged on read with no validation. And the 40 degrees of freedom split so that
+**every substrate dimension is a MUST and every free-positioning and
+per-element-typography control is an ARTIFACT**, which supports the frozen
+template-driven decision rather than contradicting it.
+
+Carry-forward evidence delivered for CF-02 (complete inventory: all 10
+`innerHTML` sites, 7 unescaped; no other HTML sink exists in any of the three),
+CF-03 (complete inventory: all 12 `catch` sites, 3 empty, 3
+swallow-and-substitute), CF-11, CF-12, CF-22 and CF-49. **CF count check passed
+before landing anything: rows supplied = 3, stated = 3, ids CF-44/CF-48/CF-49
+matched = YES**, with CF-44's gap declared void by design in the prompt. Three
+rows landed verbatim; CF-02, CF-03, CF-04, CF-11, CF-12, CF-40, CF-45, CF-46 and
+CF-47 amended in place as instructed. **No carry-forward closed.** No new
+findings list opened — Part 7 classifies in place, so the untriaged total under
+CF-46 remains 25.
+
+Issues: **`docs/requirements/extracts/AUDIT_STICKER.md:651` transcribes
+`SHARED_DATA_PATH` verbatim including the owner's OS account name, in a public
+repo.** P-04 could write only three files and that is not one of them, so it is
+flagged for the reviewer rather than remediated — CF-14's exposure recurring in a
+docs file, and unlike git history it is trivially fixable. Second: **CF-49's
+field-set count conflicts with `AUDIT_STICKER.md` §C-3** — CF-49 says
+bb-stock-costs carries six `ColorPreset` colours, §C-3 says the sticker tool's
+seven-colour set is identical to bb-stock-costs'. Reading bb-stock-costs is
+forbidden by this prompt, so the conflict is recorded unresolved for Gate 1 and
+no winner was chosen. Two environment quirks recorded permanently: a repo-wide
+grep glob will match files the task is scoped away from (hit once, on `_PBK =`),
+and `REPORT.md`'s staleness must be checked per file rather than assumed.
+
+Deviations from the canonical prompt: **three, all declared in the report.** One,
+a `legacy/*.html` glob returned a single incidental line from
+`balance-bites-invoice-pro.html`; the file was not read, and the line is recorded
+in §8.5 because suppressing it would hide a finding that materially changes the
+coupling picture. Two, a marked **P-04 ANSWER** block was appended to CF-49,
+whose own text names P-04 Part 8 as the supplier of the design-tool field set —
+the verbatim row is intact above it. Three, two environment quirks were added to
+`SESSION_CONTEXT.md` under AGENTS.md §9, beyond the fields the prompt enumerated.
+Every done-when criterion met.
+
+Next: GATE 1. Verdict: PENDING.
