@@ -911,7 +911,7 @@ no Part of its own.
 | 1 | Rectangular back-label mode with `sW` / `sH` defaulting to 17 cm × 4.5 cm | `:736-737` | `id="sW" value="17" min="8" max="40" step=".5"`; `id="sH" value="4.5" min="2" max="12" step=".5"` | **HOLDS** |
 | 2 | Exactly three canvas mode buttons: back, top, circle | `:466-468` | `btnModeBack` → `setMode('back')`, `btnModeTop` → `setMode('top')`, `btnModeCircle` → `setMode('circle')` | **HOLDS** |
 | 3 | `DESIGN_SPECS` declares exactly three specs | `:1128-1132` | `circular`, `rect_top`, `taper_top`; each with `modes`, `tabs`, `defaultMode`, `isTapered`, `lockTaper` | **HOLDS** |
-| 4 | `bb_color_presets` seeds are seven-colour records under ids `cp_def1…` | `:1273-1275` | `{id:'cp_def1',name:'Dark Gold',bg,gold,txt,mut,row,tot,grand}` and `cp_def2`, `cp_def3` in the same shape | **HOLDS** |
+| 4 | `bb_color_presets` seeds are seven-colour records under ids `cp_def1…` | `:1273-1275` | `KEY='bb_color_presets'` (`:1271`); `DEFAULTS` = exactly three records, each `{id, name, bg, gold, txt, mut, row, tot, grand}`; ids `cp_def1`, `cp_def2`, `cp_def3` | **HOLDS on structure — see the name defect below** |
 | 5 | `calcTaper()` is the conical unwrap | `:2218-2263` | Function present; `PPC=37.795`; slant-height, apex-distance, arc-angle and bounding-box maths as described | **HOLDS** |
 | 6 | Four `@page` branches, one per page-size mode | `:2894-2901` | `a4`, `letter`, `a3`, else exact/ISO — all four emit `margin:0` | **HOLDS** |
 | 7 | A 0.6 cm safety buffer on the exact-size page | `:2899` | `var buffer = isIsoMode ? 0 : 0.6;` then `bw = pWidth + buffer` | **HOLDS** |
@@ -920,12 +920,34 @@ no Part of its own.
 | 10 | Nutrition Facts panel exists as its own tab | `:587-633` | `<div id="tab-nut">`, `📊 NUTRITION FACTS`, `nSrv`, `nCal`, per-macro enable checkboxes and DV% fields | **HOLDS** |
 | 11 | `buildQR()` renders a hardcoded 17 × 17 matrix, not an encoder | `:2278-2283` | A literal 17-row array of 17 binary cells, emitted as a CSS grid | **HOLDS** |
 
-**Eleven of eleven hold. No material citation is stale. `AUDIT_STICKER.md` is
-sound for this comparison and the verdict below proceeds on it.** No HALT
-condition arises.
+**Eleven of eleven hold on the substance the Part 2 verdict rests on. No
+material citation is stale, so no HALT condition arises** and the verdict below
+proceeds on `AUDIT_STICKER.md`.
+
+**One name-level defect found, in a citation the Part 2 verdict does not rest
+on.** Spot-check #4 confirms `AUDIT_STICKER.md` §C-3's *field set* exactly —
+`{id, name, bg, gold, txt, mut, row, tot, grand}`, three seeded records, ids
+`cp_def1`–`cp_def3`. But `AUDIT_STICKER.md` §3.4 additionally transcribes the
+three preset **names** as `cp_def1` "Balance Bites", `cp_def2` "Dark Mode",
+`cp_def3` "Ocean Blue". Read directly at `SK:1273-1275`, they are:
+
+| id | `AUDIT_STICKER.md` §3.4 claims | Actually at `SK:1273-1275` |
+|---|---|---|
+| `cp_def1` | "Balance Bites" | **`Dark Gold`** |
+| `cp_def2` | "Dark Mode" | **`Obsidian Blue`** |
+| `cp_def3` | "Ocean Blue" | **`Forest Night`** |
+
+**All three names are wrong.** This is not a halt condition — the Part 2 verdict
+turns on capability presence and absence, not on colour-preset names, and §C-3's
+structural claim holds exactly. It is recorded because it is load-bearing
+elsewhere: §3.4 uses those names to argue that `bb-stock-costs.html` seeds a
+fourth preset, "Warm Ivory", that the sticker tool lacks. **Since §3.4's
+sticker-side names are falsified on all three, its cross-tool name claim is
+unverified and §8.6 does not rely on it.** The id-count divergence — three seeded
+here against four there — is a separate claim and is untouched by this defect.
 
 Two of the eleven are load-bearing beyond Part 2: #4 supplies the CF-49
-comparison basis in §8.3, and #8 supplies the contrast that makes §8.2's answer
+comparison basis in §8.6, and #8 supplies the contrast that makes §8.2's answer
 possible.
 
 ### 2.2 The delta — every LE capability, against the sticker tool
@@ -3024,7 +3046,7 @@ Stated without resolution, per the prompt.
 | `invoice-pro.html` | **seven colours** | `cp_def1`–`cp_def4` | CF-49 as landed, from P-03 |
 | `bb-stock-costs.html` | **six colours** | `cp_def1`–`cp_def4` | CF-49 as landed, from P-02 |
 | Shared between the two | **`bg` and `gold` only** | identical ids | CF-49 as landed |
-| `balance-bites-sticker.html` | `{id, name, bg, gold, txt, mut, row, tot, grand}` — **seven colour fields** plus `id` and `name` | seeds **`cp_def1`–`cp_def3`** only: "Balance Bites", "Dark Mode", "Ocean Blue" | `AUDIT_STICKER.md` §C-3, citing `sticker:1273-1275`, `:1279` |
+| `balance-bites-sticker.html` | `{id, name, bg, gold, txt, mut, row, tot, grand}` — **seven colour fields** plus `id` and `name` | seeds **`cp_def1`–`cp_def3`** only: `Dark Gold`, `Obsidian Blue`, `Forest Night` | Field set from `AUDIT_STICKER.md` §C-3; **ids and names read directly at `SK:1271-1276`** under the §2.1 spot-check |
 | LE / ST / CA | **absent** | **absent** | this Part |
 
 **A conflict between two artifacts, recorded and not resolved.** CF-49 as landed
@@ -3041,14 +3063,23 @@ only for the Part 2 verdict, not for Part 8. **Recorded as a discrepancy between
 CF-49's text and `AUDIT_STICKER.md` §C-3, for reconciliation at Gate 1 by a
 reader who holds both extracts.** No winner chosen. No field list invented.
 
-**The id divergence is separately confirmed and is not in dispute.** Both business
-tools seed `cp_def1`–`cp_def4`; the sticker tool seeds `cp_def1`–`cp_def3` only,
-omitting the fourth. `AUDIT_STICKER.md` §3.4 records the consequence: the fourth
-preset is "Warm Ivory", it exists in `bb-stock-costs.html:1347-1350` and not in
-the sticker tool, both write the same key, both mirror it to the shared folder,
-and "whichever tool seeds first wins". If the operator is on Warm Ivory and the
-sticker tool's seeding path runs against an empty store,
+**The id-count divergence is separately confirmed and is not in dispute.** Both
+business tools seed `cp_def1`–`cp_def4` per CF-49; the sticker tool seeds
+`cp_def1`–`cp_def3` only, verified directly at `SK:1272-1276` — the `DEFAULTS`
+array has exactly three members. `AUDIT_STICKER.md` §3.4 records the consequence:
+both tools write the same key, both mirror it to the shared folder, and
+"whichever tool seeds first wins"; if the operator is on the fourth preset and
+the sticker tool's seeding path runs against an empty store,
 `bb_active_color_preset_id` dangles.
+
+**But §3.4's naming of that fourth preset must not be relied upon.** It calls the
+fourth "Warm Ivory" and names the sticker tool's three as "Balance Bites", "Dark
+Mode" and "Ocean Blue" — and §2.1 shows all three of those sticker-side names are
+falsified by direct read. A section that is wrong about the three names it could
+have checked is not authority for the one name it is the only record of.
+**Recorded: the fourth preset's identity is unverified.** The count divergence
+(three against four) stands on CF-49 plus a direct read; the name does not stand
+on anything this task could verify.
 
 #### What turns on the choice
 
@@ -3175,6 +3206,7 @@ Recorded so no later reader mistakes an absence for an oversight.
 | 2 | Whether `bb-stock-costs.html`'s `ColorPreset` carries six colour fields (CF-49 as landed) or seven (`AUDIT_STICKER.md` §C-3's identical-field-set claim) | Reading `bb-stock-costs.html` is forbidden by this prompt, and the bounded clause permits opening the sticker tool only for the Part 2 verdict. Recorded as an artifact-vs-artifact discrepancy at §8.6 for Gate 1. |
 | 3 | Which numeral system — Arabic-Indic or Western — a Tenant's Arabic artifact should use | LE uses both, in the same file, with nothing recording intent (§6.4). Owner-specified. |
 | 4 | Whether the conical unwrap in label-v3 differed from the sticker tool's | `REPORT.md` §2.2 records that label-v3 had "conical unwrap math" and gives no expression, inputs or constant. One live version, one unrecoverable version, no comparison possible (§3.4.a). |
+| 5 | The identity of the fourth `ColorPreset` seed that `bb-stock-costs.html` has and the sticker tool lacks | `AUDIT_STICKER.md` §3.4 calls it "Warm Ivory", but §2.1 falsifies all three of the sticker-side names in that same sentence by direct read, so it is not authority for the fourth. Reading `bb-stock-costs.html` is forbidden by this prompt. The **count** divergence is confirmed; the **name** is not. |
 
 ### 9.4 The one-sentence result
 

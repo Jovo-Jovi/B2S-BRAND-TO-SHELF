@@ -226,7 +226,9 @@ span, and the account name itself appears nowhere in the file.
 All eight Parts complete, plus Part 0 (provenance) and Part 9 (closing). Part 1:
 three tools with complete typed field lists on every stored record. Part 2:
 CF-22 answered — **overlapping-but-neither**, on eleven `AUDIT_STICKER.md`
-citations spot-checked against the sticker tool, **eleven of eleven holding**.
+citations spot-checked against the sticker tool, **eleven of eleven holding on
+the substance the verdict rests on**, with one name-level defect found in a
+citation the verdict does not rest on (below).
 Part 3: seven physical output types, 106 content slots, **40 degrees of freedom
 each carrying a justified MUST/ARTIFACT judgement (27/13)**, every geometry
 calculation with inputs, expression, units and an explicit rounding statement
@@ -272,7 +274,13 @@ field-set count conflicts with `AUDIT_STICKER.md` §C-3** — CF-49 says
 bb-stock-costs carries six `ColorPreset` colours, §C-3 says the sticker tool's
 seven-colour set is identical to bb-stock-costs'. Reading bb-stock-costs is
 forbidden by this prompt, so the conflict is recorded unresolved for Gate 1 and
-no winner was chosen. Two environment quirks recorded permanently: a repo-wide
+no winner was chosen. Third: **`AUDIT_STICKER.md` §3.4's three `ColorPreset` seed
+names are wrong on all three** — read directly at `sticker:1273-1275` they are
+`Dark Gold`, `Obsidian Blue`, `Forest Night`, not "Balance Bites", "Dark Mode",
+"Ocean Blue". §C-3's field set is correct; only §3.4's names are not. Not a Part
+2 halt (that verdict turns on capability, not preset names), but §3.4 is also the
+sole record of the fourth, sticker-absent preset's name, so that name is now
+treated as unverified. Two environment quirks recorded permanently: a repo-wide
 grep glob will match files the task is scoped away from (hit once, on `_PBK =`),
 and `REPORT.md`'s staleness must be checked per file rather than assumed.
 
@@ -284,6 +292,11 @@ coupling picture. Two, a marked **P-04 ANSWER** block was appended to CF-49,
 whose own text names P-04 Part 8 as the supplier of the design-tool field set —
 the verbatim row is intact above it. Three, two environment quirks were added to
 `SESSION_CONTEXT.md` under AGENTS.md §9, beyond the fields the prompt enumerated.
-Every done-when criterion met.
+Four, **a second commit was required.** After the first commit was pushed, a
+re-check of spot-check #4 falsified `AUDIT_STICKER.md` §3.4's three preset names,
+which the deliverable had transcribed as fact. Amending was forbidden by the
+prompt and the commit was already pushed, so the correction landed as a second
+commit against the same three files rather than leaving a known-false claim in a
+requirements-evidence artifact. Every done-when criterion met.
 
 Next: GATE 1. Verdict: PENDING.

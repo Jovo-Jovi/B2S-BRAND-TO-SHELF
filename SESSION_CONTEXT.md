@@ -205,9 +205,14 @@ five-segment cruciform wrap strip that no sticker-tool mode can express — shar
 a substantially overlapping **content** model with the sticker tool's back label,
 on markedly weaker infrastructure. The verdict rests on eleven `AUDIT_STICKER.md`
 citations spot-checked against `legacy/balance-bites-sticker.html` under the
-bounded-verification clause; **eleven of eleven hold, none stale.** Four delta
-questions depend on label-v3 behaviour not recorded in `REPORT.md` §2.2 or
-`AUDIT_STICKER.md` §1.1/§1.2 and are marked unresolvable rather than reasoned out.
+bounded-verification clause; **eleven of eleven hold on the substance the verdict
+rests on, so no HALT arose.** One name-level defect was found in a citation the
+verdict does **not** rest on and is recorded at §2.1: `AUDIT_STICKER.md` §3.4's
+three `ColorPreset` seed names are wrong on all three — the sticker tool seeds
+`Dark Gold`, `Obsidian Blue`, `Forest Night`, not "Balance Bites", "Dark Mode",
+"Ocean Blue". Four delta questions depend on label-v3 behaviour not recorded in
+`REPORT.md` §2.2 or `AUDIT_STICKER.md` §1.1/§1.2 and are marked unresolvable
+rather than reasoned out.
 
 **CF-49 answered per file: none of the three reads or writes `bb_color_presets`,
 `bb_active_color_preset_id` or `bb_active_theme`** — zero occurrences in all
@@ -592,13 +597,27 @@ is CF-40's own stated closure condition.
       permits opening the sticker tool only for the Part 2 verdict, so **no winner
       was chosen and no field list was invented.** For reconciliation at Gate 1 by
       a reader holding both extracts.
-      **The id divergence is confirmed and is not in dispute:** both business tools
-      seed `cp_def1`–`cp_def4`; the sticker tool seeds `cp_def1`–`cp_def3` only,
-      omitting the fourth ("Warm Ivory"). What turns on the choice — larger set,
-      smaller set, union, or intersection — is tabulated at
-      EXTRACT_DESIGN_TOOLS.md §8.6, together with the observation that `row`, `tot`
-      and `grand` are document-theme roles with no packaging meaning, so the
-      packaging half will use a subset whichever way it is canonicalised.
+      **The id-COUNT divergence is confirmed:** both business tools seed
+      `cp_def1`–`cp_def4`; the sticker tool seeds `cp_def1`–`cp_def3` only,
+      verified by direct read at `sticker:1272-1276` (the `DEFAULTS` array has
+      exactly three members).
+      **SECOND DEFECT FOUND IN AUDIT_STICKER.md — name-level, recorded not fixed.**
+      §3.4 transcribes the sticker tool's three seeds as `cp_def1` "Balance Bites",
+      `cp_def2` "Dark Mode", `cp_def3` "Ocean Blue". Read directly at
+      `sticker:1273-1275` they are **`Dark Gold`, `Obsidian Blue`, `Forest Night`**
+      — **all three names are wrong.** §C-3's *field set* claim holds exactly; only
+      §3.4's names are falsified. This is not a Part 2 halt condition (that verdict
+      turns on capability, not preset names) but it matters here: §3.4 is also the
+      sole source for the claim that the fourth, sticker-absent preset is "Warm
+      Ivory", and a section wrong about the three names it could have checked is
+      not authority for the one name it alone records. **The fourth preset's
+      identity is therefore UNVERIFIED.** Owner: whoever reconciles item 1 at Gate
+      1 should correct AUDIT_STICKER.md §3.4 at the same time.
+      What turns on the field-set choice — larger set, smaller set, union, or
+      intersection — is tabulated at EXTRACT_DESIGN_TOOLS.md §8.6, together with
+      the observation that `row`, `tot` and `grand` are document-theme roles with
+      no packaging meaning, so the packaging half will use a subset whichever way
+      it is canonicalised.
 
 ## Environment quirks (never re-discover)
 - Brave isolates IndexedDB per file:// origin. Legacy data is only visible from
@@ -679,6 +698,13 @@ verdicts land.
    three files and this is not one of them. This is CF-14's exposure recurring in
    a docs file rather than a legacy file, and it is remediable — unlike the git
    history — because the file can simply be edited.
+3b. **`AUDIT_STICKER.md` §3.4's `ColorPreset` names are wrong on all three.** The
+   sticker tool seeds `Dark Gold`, `Obsidian Blue`, `Forest Night`
+   (`sticker:1273-1275`, read directly), not "Balance Bites", "Dark Mode",
+   "Ocean Blue". §C-3's field set is correct; only §3.4's names are not. Fix
+   alongside item 1, and treat §3.4's "Warm Ivory" — its sole record of the
+   fourth, sticker-absent preset — as unverified until someone reads
+   `bb-stock-costs.html:1347-1350`.
 4. **CF-40's closure.** Its stated condition — a CF-landing prompt executing with
    zero numbering or count defects — was met by P-04 for the first time.
 5. **CF-43's closure.** Its stated condition — the corrected STOP block appearing
