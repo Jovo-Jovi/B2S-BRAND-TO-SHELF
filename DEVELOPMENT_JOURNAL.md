@@ -116,3 +116,81 @@ STOP-AND-FLAG was handled by redacting and continuing rather than halting,
 since the condition names redaction as the required action and halting would
 have discarded a completed read; and CF-41 was opened with no text because none
 was supplied.
+
+---
+
+## 2026-07-31 | Opus (heavyweight) | PREPARE Step 6 · P-03 — requirements extraction: balance-bites-invoice-pro.html
+
+Files: `docs/requirements/extracts/EXTRACT_INVOICE_PRO.md` (new),
+`SESSION_CONTEXT.md`, `DEVELOPMENT_JOURNAL.md`. Read-only on `legacy/`;
+`EXTRACT_STOCK_COSTS.md` read, not modified; no design tool read.
+
+**Verified line count: 4,283** (`wc -l`, 222,321 bytes, trailing byte confirmed
+`\n`), **4,284 as displayed**. Supports CF-12's 4,284; falsifies `REPORT.md`
+§2.1's 3,498 by 785 lines (−18.3%). No HALT condition met. Read completely in
+**11 sequential chunks**; the final chunk reached line 4283 (`</html>`).
+
+CORRECTION 2's non-linearity prediction confirmed: 34 `REPORT.md` §2.1 citations
+re-derived, drift running 0 → +38 → +111 → +140 → +390 → +652 → +735 → **+3035**.
+No offset repairs a citation. Three substantive §2.1 content errors also found:
+its `MANAGED` list omits `bb_invoice_payments` and `bb_returns`; it calls
+invoice-pro the returns/payments "data producer" when it is a strict consumer;
+and its Buyer and Invoice field lists each omit one field.
+
+**No redaction required.** No credential, key, token, connection string, OS
+account name or absolute local path; no buyer PII seeded in source. Only URLs
+are three identical Google Fonts links (`:7`, `:1886`, `:2155`). Output file
+greps clean — three `REDACTED` hits, all prose describing the sweep, zero spans.
+
+All ten Parts complete. Part 1: 11 entities with complete typed field lists, 12
+relationships, 9 duplicate-modelling findings, diagram, vocabulary with CF-28
+evidence. Part 2: **22 calculations**, each with an explicit rounding statement
+and the invariant-vs-policy split. Part 3: 16 workflows plus 6 named-but-absent,
+each with its abandonment states. Part 4: returns in full, both `outAllocations`
+shapes, three disposition variants, and the fourteen conditions a renderer must
+handle. Part 5 (Payments, replacing P-02's Batch): the entity is **one string
+read from a foreign file**; 15 requirements answered, 12 of them absent. Part 6:
+8 tables plus 11 tenancy findings. Part 7: satisfies CORRECTION 3 — every
+business-data and document-template literal individually enumerated, plus all
+validation messages and English-only strings; only Arabic-only UI chrome rolled
+up. Part 8: 26 defects plus 8 behaviours explicitly recorded as requirements.
+Part 9: 16 IDENTICAL, 13 DIVERGENT, 3 ONE-SIDED sets, with R1–R4 each answered.
+
+Four findings dominate. **(1)** Invoice-pro never writes `bb_returns` or
+`bb_invoice_payments` — it is a strict consumer, which corrects R4's premise.
+**(2)** The `outAllocations` consumer is identified at `:2515-2525`, closing a
+question P-02 left open; `toCustomerId`/`toInvoiceId` are written and never read.
+**(3)** `bb_color_presets` is written by **both** tools with incompatible field
+sets (7 colours vs 6, sharing only `bg` and `gold`) under identical ids — an
+active collision on every theme save. **(4)** Revenue is snapshotted at sale
+(`:1600`) while cost is live (`bb-stock-costs.html:2994-2999`), so the two halves
+of margin already follow opposite temporal policies; this sharpens CF-47.
+
+R1: no tax, no freight; discount exists and is fully specified. R2: no money
+rounded anywhere before storage — the only `Math.round` is a chart bar width.
+R3: no cost concept exists here at all. R4: answered on the corrected basis;
+P-02's Part 4 confirmed on every point of fact.
+
+Carry-forward evidence delivered for CF-02 (14 sites), CF-03 (12 sites), CF-04
+(both shapes + 14 renderer conditions) and CF-28 (the collision is **latent** —
+the Tenant has no noun in this tool, which is why it was never noticed). Six
+supplied rows landed verbatim (CF-41, CF-42, CF-43, CF-45, CF-46, CF-47); CF-12,
+CF-14 and CF-40 amended in place as instructed. **No carry-forward closed.**
+Fifteen new findings listed in the extract's §C.4, none opened as a
+carry-forward.
+
+Issues: **the prompt says "seven carry-forward rows" and supplies six — CF-44 is
+skipped and has no text anywhere.** No CF-44 row was invented. This is CF-40's
+**fourth** occurrence, inside the very prompt that amended CF-40 to prevent it;
+recorded as a P-03 addendum on that row. Also logged: git-bash invocation from
+PowerShell needs single-quoted `-c` with no `<`, no `$(...)` and no inner single
+quotes (four attempts burned), and the chunked-write-with-sentinel technique used
+to produce a ~3,900-line deliverable without context exhaustion. Both recorded as
+permanent environment quirks.
+
+Deviations from the canonical prompt: **one.** PART 9 R4 asserts invoice-pro is
+the returns data producer; the code shows the opposite, so R4 is answered on a
+corrected premise with the correction stated rather than answered as written.
+Every done-when criterion met.
+
+Next: P-04. Verdict: PENDING.
