@@ -47,7 +47,7 @@ Any release that cannot complete this loop has not validated the product.
 
 ## 2. Decision register
 
-All 56 decisions from the freeze surface. `SIGNED` = answered by you and binding. `PROPOSED` = my recommendation, needs your signature. `OPEN` = unanswered.
+62 decisions, all signed. None open.
 
 ### Group A — Product identity
 
@@ -92,6 +92,10 @@ All 56 decisions from the freeze surface. `SIGNED` = answered by you and binding
 | C13 | Purchase orders and supplier management: IN. | SIGNED |
 | C14 | Data retention, ownership, portability, deletion: yes. | SIGNED |
 | C15 | Audit trail: yes. | SIGNED |
+| C16 | Return's money effect: reduces the original `Invoice`, or a separate credit document. Raised in `VOCABULARY_DRAFT.md` §2.2 as OD-C16. | SIGNED — see DECISIONS.md |
+| C17 | Produced labels and stickers: `Component`, `ProductVariant`, or their own kind. Raised in `VOCABULARY_DRAFT.md` §2.2 as OD-C17. | SIGNED — see DECISIONS.md |
+| C18 | `Shipment` as a distinct entity vs. invoicing as the shipping event. Raised in `VOCABULARY_DRAFT.md` §2.2 as OD-C18. | SIGNED — see DECISIONS.md |
+| C19 | `PriceList` scope: in scope, and whether per-buyer, per-currency, or both. Raised in `VOCABULARY_DRAFT.md` §2.2 as OD-C19. | SIGNED — see DECISIONS.md |
 
 ### Group D — Brand & identity
 
@@ -106,23 +110,24 @@ All 56 decisions from the freeze surface. `SIGNED` = answered by you and binding
 | D7 | i18n contract: no literals; bilingual by rule. | SIGNED |
 | D8 | Customer uploads icons and images, all formats supported, size-constrained. | SIGNED |
 | D9 | Customer authors their own guidelines; optional templates offered. | SIGNED |
-| **D10** | **Brand identity is master-level with per-line inherit-or-override.** Same master/variant pattern as products. | **PROPOSED — my reading of your answer 2. Confirm.** |
+| **D10** | **Brand identity is master-level with per-line inherit-or-override, per field.** Same master/variant pattern as products. | SIGNED |
 
 ### Group E — Print & production
 
 | OD | Decision | Status |
 |---|---|---|
 | E1 | Print shop receives all variants: PNG, PDF, cutout, and others. | SIGNED |
-| E2 | Calibration approach: reviewer decides what is best. | DELEGATED |
+| E2 | **Calibration is a measured physical tolerance recorded at Step 15. Not an assumed value.** | SIGNED |
 | E3 | Bleed / trim / safe-area fully configurable, with library presets. | SIGNED |
 | E4 | Output colour space: customer-selectable. | SIGNED |
 | E5 | Die-lines: required and selectable. | SIGNED |
-| E6 | Imposition / gang-up: reviewer decides what is best. | DELEGATED |
+| E6 | **Imposition required, R2, labels and stickers only. R1 exports one PrintArtifact per Artwork. Sheet parameters specified in PRINT_PRODUCTION_SPEC.md at P-10.** | SIGNED |
 | E7 | Outputs customer-selectable, some or all. **Garment tickets added** for cloth brands; extensible to other brand categories. | SIGNED |
 | E8 | Tolerance customised per output type. | SIGNED |
 | E9 | Substrate / material: customer-selectable. | SIGNED |
 | E10 | Proofing and print sign-off record: yes. | SIGNED |
-| **E11** | **Print deliverable is a deterministically generated file, identical across platforms. The browser print dialog is a preview only, never the deliverable.** Forced by your answer 3 + H3. | **PROPOSED. Confirm.** |
+| **E11** | **BOTH paths. PrintArtifact (PDF/PNG/cutout) is the production deliverable and must be byte-identical across platforms. Browser print dialog is desk preview only, labelled as such, never the print-shop handoff.** Forced by your answer 3 + H3. | SIGNED |
+| E12 | Whether a `PrintJob` produces stock (printed stickers as inventory). Raised in `VOCABULARY_DRAFT.md` §2.2 as OD-E12. | SIGNED — see DECISIONS.md |
 
 ### Group F — Regulatory
 
@@ -148,19 +153,20 @@ All 56 decisions from the freeze surface. `SIGNED` = answered by you and binding
 | G7 | **Repo public now.** Pre-relaunch audit required (§10). Prevention, not later-removal (§9). | SIGNED |
 | G8 | Backup and restore policy: yes. | SIGNED |
 | G9 | Hosted on Vercel. | SIGNED |
-| **G10** | **Admin role sees account metadata, usage and billing — not tenant business data.** Support access to tenant data requires tenant consent and is logged. Future: subscription-gated feature flags. | **PROPOSED — answer 3 gave capability, not visibility. This is a promise to paying brands. Confirm.** |
-| **G11** | **Print masters and large assets live in tenant-isolated object storage, not in table rows.** Base64-in-rows is what broke the legacy tools. | **PROPOSED. Confirm.** |
+| **G10** | **Operator sees account metadata, usage and billing only. Never tenant business data.** Support access requires ConsentGrant and is logged. Future: subscription-gated feature flags. | SIGNED |
+| **G11** | **Print masters and large assets in tenant-isolated object storage, never table rows.** Base64-in-rows is what broke the legacy tools. | SIGNED |
+| G12 | Design Assistant scope: what it does, which release, which tier, and what tenant data it may read (closes CF-30). Raised in `VOCABULARY_DRAFT.md` §2.2 as OD-G12. | SIGNED — see DECISIONS.md |
 
 ### Group H — Quality & acceptance
 
 | OD | Decision | Status |
 |---|---|---|
-| H1 | Professional standard; reviewer defines. | DELEGATED |
+| H1 | **Professional standard defined by ACCEPTANCE.md, authored at P-11.** | SIGNED |
 | H2 | Accessibility: yes. | SIGNED |
 | H3 | All platforms supported — which forces E11. | SIGNED |
 | H4 | QR: upload or generate, derived from brand name, product brand type, product category, product batch. | SIGNED |
 | H5 | **Barcodes scannable, with one constraint: retail GTIN is ENTERED (GS1-allocated by the brand), never generated.** Generator produces Code 128 / Code 39 for internal and batch use, or EAN-13 on restricted-circulation prefixes (`02`, `04`, `20`–`29`), both labelled not-for-retail. | SIGNED (constrained) |
-| H6 | Gate evidence: reviewer defines per domain. | DELEGATED |
+| H6 | **Gate evidence: the four-standard acceptance model, §7.** | SIGNED |
 
 ---
 
