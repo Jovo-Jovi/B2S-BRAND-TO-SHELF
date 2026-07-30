@@ -1,3 +1,8 @@
+> **REQUIREMENTS EVIDENCE.** Extracted from a retiring tool. Records what the
+> tool did and what its owner expects. NOT a specification, NOT current truth,
+> NOT a parity target. Where this conflicts with a frozen document in
+> docs/product/, the frozen document wins.
+
 # Balance Bites — Template Audit Report
 
 > **Scope:** Static analysis only. No source files were modified. This report documents six single-file HTML business tools built for **Balance Bites** (an Egyptian healthy-snacks brand, bilingual AR/EN, gold + dark-brown identity) ahead of unifying them into one white-label web app.

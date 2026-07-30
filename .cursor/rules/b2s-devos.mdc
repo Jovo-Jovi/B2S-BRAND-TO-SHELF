@@ -1,9 +1,9 @@
 ---
-description: BB Dev OS — always-on operating rules for the Balance Bites unified app
+description: B2S Dev OS — always-on operating rules for B2S
 alwaysApply: true
 ---
 
-# BB Dev OS — always on
+# B2S Dev OS — always on
 
 ## Session opener
 Read SESSION_CONTEXT.md before any work. Restate: current phase, active

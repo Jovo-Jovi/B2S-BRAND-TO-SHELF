@@ -1,7 +1,7 @@
-# AGENTS.md — Balance Bites Unified App
+# AGENTS.md — B2S
 
 > Antigravity variant. Place at repo root. Always-on for every agent in this workspace.
-> The Cursor equivalent is `.cursor/rules/bb-devos.mdc` — identical rules, different activation syntax. Keep both in sync; changing one without the other is a defect.
+> The Cursor equivalent is `.cursor/rules/b2s-devos.mdc` — identical rules, different activation syntax. Keep both in sync; changing one without the other is a defect.
 
 ---
 

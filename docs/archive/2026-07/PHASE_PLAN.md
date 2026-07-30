@@ -1,3 +1,6 @@
+> **ARCHIVED 2026-07-30.** Written for a port that is no longer the project.
+> Retained for history. Not authoritative. Do not cite as current truth.
+
 # PHASE PLAN — Balance Bites Unified App
 
 > All six modules in one unified build. Full ceremony. Every phase: **ENTRY → TASKS → EXIT VERIFICATION → PARITY LEDGER → SIGN-OFF → HANDOFF.**

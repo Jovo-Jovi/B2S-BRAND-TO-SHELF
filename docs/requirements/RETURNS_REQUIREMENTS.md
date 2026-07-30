@@ -1,3 +1,8 @@
+> **REQUIREMENTS EVIDENCE.** Extracted from a retiring tool. Records what the
+> tool did and what its owner expects. NOT a specification, NOT current truth,
+> NOT a parity target. Where this conflicts with a frozen document in
+> docs/product/, the frozen document wins.
+
 # RETURNS ADDENDUM — owner's notes
 
 > **Status: owner-authored claim, not verified truth.** This is the description of the returns workflow as the owner built it. The delta audit (`DELTA_RUN_01.md` Pass 2) must verify every statement here against the actual code. **Where this document and the code disagree, the code wins** — and the audit must say so explicitly.

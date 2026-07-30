@@ -1,3 +1,8 @@
+> **REQUIREMENTS EVIDENCE.** Extracted from a retiring tool. Records what the
+> tool did and what its owner expects. NOT a specification, NOT current truth,
+> NOT a parity target. Where this conflicts with a frozen document in
+> docs/product/, the frozen document wins.
+
 # AUDIT — `legacy/balance-bites-sticker.html`
 
 **Pass:** DELTA_RUN_01 Pass 1 · **Date:** 2026-07-29 · **Model class:** HEAVYWEIGHT (Opus, extended reasoning)

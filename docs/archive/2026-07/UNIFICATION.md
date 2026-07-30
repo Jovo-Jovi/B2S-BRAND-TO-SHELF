@@ -1,3 +1,6 @@
+> **ARCHIVED 2026-07-30.** Written for a port that is no longer the project.
+> Retained for history. Not authoritative. Do not cite as current truth.
+
 # Balance Bites — Unification & Deployment Proposal (Phase 5)
 
 > How to merge six single-file HTML tools into ONE white-label web app, deployable on GitHub + Vercel, where **Balance Bites is just the first tenant/preset**.

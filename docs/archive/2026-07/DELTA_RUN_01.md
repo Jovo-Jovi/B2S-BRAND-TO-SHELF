@@ -1,3 +1,6 @@
+> **ARCHIVED 2026-07-30.** Written for a port that is no longer the project.
+> Retained for history. Not authoritative. Do not cite as current truth.
+
 # DELTA RUN 01 — ready to paste
 
 **This round's changes**

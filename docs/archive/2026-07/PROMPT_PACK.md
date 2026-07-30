@@ -1,3 +1,6 @@
+> **ARCHIVED 2026-07-30.** Written for a port that is no longer the project.
+> Retained for history. Not authoritative. Do not cite as current truth.
+
 # PROMPT PACK
 
 > Copy-paste prompts, in execution order. `[BUILDER]` runs in Antigravity/Cursor. `[REVIEWER]` runs in the Claude Project.

@@ -1,3 +1,6 @@
+> **ARCHIVED 2026-07-30.** Written for a port that is no longer the project.
+> Retained for history. Not authoritative. Do not cite as current truth.
+
 # Claude Project Instructions — paste this verbatim
 
 > Copy everything below the line into the Claude Project's custom instructions field.

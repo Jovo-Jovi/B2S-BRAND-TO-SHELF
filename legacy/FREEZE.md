@@ -1,7 +1,8 @@
-# FREEZE POINT
-Frozen: 2026-07-29. The port is built and parity-tested against these files.
-Any change to a legacy tool after this date requires a numbered delta audit
-and a signed OD amendment.
+# FREEZE POINT — RETIRING TOOLS
+Frozen 2026-07-29. These six tools are being RETIRED, not ported. No code
+from them will be reused and no output of them is a parity target. They are
+read-only requirements evidence for docs/requirements/extracts/.
+Do not modify, run, or delete any file in this directory.
 
 MISSING: balance-bites-label-v3.html — deleted permanently 2026-07-29, replaced by
 balance-bites-sticker.html. Its only surviving record is docs/REPORT.md §2.2.
