@@ -1,5 +1,5 @@
 # SESSION CONTEXT
-Updated: 2026-07-30 · By: agent · Phase: PREPARE Step 3 · Last task: P-01b · Verdict: pending
+Updated: 2026-07-30 · By: agent · Phase: PREPARE Step 3 · Last task: P-01c · Verdict: pending
 
 ## Where we are
 Greenfield pivot: parity against the six legacy HTML tools is void (OD B1
@@ -23,10 +23,22 @@ reverted so it parses as valid JSON again, with a new
 `docs/archive/2026-07/README.md` covering the whole directory instead;
 `B2S_PREPARE_PHASE.md` §2's decision register was updated — D10, E11, G10,
 G11 (PROPOSED) and E2, E6, H1, H6 (DELEGATED) are now SIGNED, and C16-C19,
-E12, G12 were added SIGNED. The register's opening line now reads "62
-decisions, all signed. None open." The untracked reconfiguration record
-landed at `docs/method/PROJECT_RECONFIG.md`. All four commits (three from
-P-01, one from P-01b) are pushed to `origin/main`.
+E12, G12 were added SIGNED, at that point with the opening line reading "62
+decisions" and placeholder Decision text ("SIGNED — see DECISIONS.md") on the
+six new rows. P-01b verdict: PASS, with the 56/62 header-vs-row-count
+mismatch logged as CF-38. P-01c closed CF-38: root cause was that the
+original "56" count summed Groups A-F only and omitted G and H (true
+pre-existing total was 73; 79 with the six vocabulary-pass rows). The
+register's opening line, the P-06 authoring prompt, and the Gate 3 checklist
+now all read 79, matching an independently recomputed row count of 79. §3
+("Still open") now reads "none" — its prior four items (D10, G10, E11,
+§5 sign-off) are all resolved elsewhere in the document. §5 (Release 1) is
+now headed "SIGNED 2026-07-30", with `CreditNote` added to the IN list and
+`Shipment` (R1 at data level, R2 UI) confirmed in the OUT-R2 list. The six
+C16-C19/E12/G12 placeholder cells now carry real decision text. §7 gained a
+stock-creation invariant naming the one write path into `StockLevel`. The
+untracked reconfiguration record landed at `docs/method/PROJECT_RECONFIG.md`.
+All commits through P-01c are pushed to `origin/main`.
 
 ## Active carry-forwards
 - [ ] CF-01 — Reinstate deferred Dev OS security/migration rule layer at P10
@@ -94,6 +106,14 @@ P-01, one from P-01b) are pushed to `origin/main`.
       `docs/archive/2026-07/README.md` added to cover the whole archive
       directory, explicitly noting `inventory.json` carries no inline banner.
       The six archived `.md` files keep their banners unchanged.
+- [x] CF-38 — CLOSED (P-01c). Raised by the P-01b reviewer verdict (recorded
+      there only as "CF-38 new", no description landed in this file until
+      now — inferred from context and closed in the same edit). The decision
+      register's own header undercounted its row count: "56" pre-P-01b and
+      "62" post-P-01b against an actual 73-row-then-79-row table. Root cause:
+      the original count summed Groups A-F only, omitting Groups G and H.
+      Fixed by correcting the header, the P-06 prompt, and the Gate 3
+      checklist to "79", independently verified against the actual row count.
 
 ## Environment quirks (never re-discover)
 - Brave isolates IndexedDB per file:// origin. Legacy data is only visible from
@@ -113,22 +133,18 @@ P-01, one from P-01b) are pushed to `origin/main`.
 ## Frozen decisions in force
 - Freeze point set 2026-07-29 (legacy/FREEZE.md, rewritten by P-01 — tools are
   RETIRING, not port targets).
-- Decision register in `docs/method/B2S_PREPARE_PHASE.md` §2: 62 decisions,
-  all SIGNED, none open (closed by P-01b / CF-36). D10, E11, G10, G11 (was
-  PROPOSED) and E2, E6, H1, H6 (was DELEGATED) are now SIGNED; C16-C19, E12,
-  G12 added. §3's "Still open — 4 items" section was NOT updated by P-01b
-  (out of its scope — "touch no other section") and now contradicts §2: three
-  of its four items (D10, G10, E11) are resolved. Flagged for the reviewer,
-  not silently fixed. OD-13 (repository visibility) is superseded: the repo
-  is now G7 SIGNED **public** by design, not a private/public toggle under
-  owner discretion.
-- Actual row count in `B2S_PREPARE_PHASE.md` §2 is 79 (73 pre-existing + 6
-  new from P-01b), not 62. The document's own pre-existing header claimed
-  "56" against an actual 73-row table before this session touched it — a
-  discrepancy that predates P-01b. P-01b's instructed replacement text ("62
-  decisions, all signed") was applied verbatim as directed; the header does
-  not describe the actual row count either before or after. Flagged for the
-  reviewer, not silently corrected.
+- Decision register in `docs/method/B2S_PREPARE_PHASE.md` §2: 79 decisions,
+  all SIGNED, none open (closed by P-01b / CF-36, header corrected by P-01c /
+  CF-38). D10, E11, G10, G11 (was PROPOSED) and E2, E6, H1, H6 (was DELEGATED)
+  are SIGNED; C16-C19, E12, G12 added SIGNED with real decision text (P-01c).
+  The header now reads "79 decisions, all signed. None open." — matches an
+  independently recomputed row count of 79. §3 now reads "Still open — none";
+  its prior four items (D10, G10, E11, §5 sign-off) are each resolved
+  elsewhere in the document. §5 (Release 1) is SIGNED 2026-07-30. OD-13
+  (repository visibility) is superseded: the repo is now G7 SIGNED **public**
+  by design, not a private/public toggle under owner discretion.
+- Still open: none. `CALC_SPEC.md` (Step 11) remains the only owner-authored
+  document; it blocks the build, not the freeze.
 
 ## Next action
-Reviewer verdict on P-01b, then P-02.
+Reviewer verdict on P-01c, then P-02.

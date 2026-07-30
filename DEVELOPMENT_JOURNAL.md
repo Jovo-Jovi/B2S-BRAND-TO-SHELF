@@ -36,3 +36,27 @@ other section touched). Landed the untracked project-reconfiguration record
 at docs/method/PROJECT_RECONFIG.md, content unchanged. All four commits
 (three P-01, one P-01b) pushed to origin/main; remote confirmed to contain
 docs/product/, docs/archive/, and docs/requirements/.
+
+2026-07-30 | Standard | PREPARE Step 3 / P-01c (CF-38 fix, OD text, close Sec.3) | docs/method/B2S_PREPARE_PHASE.md, SESSION_CONTEXT.md | CF-38 was referenced by the P-01b verdict only as "new", with no description ever landed in SESSION_CONTEXT.md — this task inferred its content from context (the header/row-count mismatch it exists to fix) and both added and closed it in the same edit | reviewer verdict on P-01c, then P-02
+
+Session summary: P-01b's reviewer verdict PASSED, closing CF-36 and CF-37 and
+logging CF-38 (the register header undercounting its own row count). P-01c
+closed CF-38: root cause confirmed as the original "56" count summing Groups
+A-F only and omitting G and H (true total 73 pre-existing, 79 with the six
+vocabulary-pass rows). Corrected the header, the P-06 authoring-prompt line,
+and the Gate 3 checklist to "79 ODs", independently recomputed via a regex
+count over the register's own rows (79, exact match — the task's stop
+condition was not triggered). Replaced Sec.3 "Still open — 4 items" with
+"Still open — none", since D10, G10 and E11 are now SIGNED per P-01b and the
+Release 1 scope is signed by this task. Set Sec.5's heading to "SIGNED
+2026-07-30", added CreditNote to the R1 IN list, and added Shipment (R1 at
+data level, R2 UI) to the OUT-R2 list, which previously omitted it entirely.
+Replaced all six C16-C19/E12/G12 placeholder Decision cells ("SIGNED — see
+DECISIONS.md") with the supplied resolution text. Added a stock-creation
+invariant to Sec.7 naming StockMovement as StockLevel's one write path. One
+deviation from the literal instruction: replacing Sec.3 "from its heading to
+the horizontal rule before Sec.4" removed that horizontal rule per the
+instruction's own boundary, and the supplied replacement text did not include
+a new one — Sec.3/Sec.4 now run together without the "---" separator every
+other section transition in this document uses. Flagged, not silently
+patched with an unrequested separator.

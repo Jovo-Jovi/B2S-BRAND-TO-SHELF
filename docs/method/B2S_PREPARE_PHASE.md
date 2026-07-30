@@ -47,7 +47,7 @@ Any release that cannot complete this loop has not validated the product.
 
 ## 2. Decision register
 
-62 decisions, all signed. None open.
+79 decisions, all signed. None open.
 
 ### Group A — Product identity
 
@@ -92,10 +92,10 @@ Any release that cannot complete this loop has not validated the product.
 | C13 | Purchase orders and supplier management: IN. | SIGNED |
 | C14 | Data retention, ownership, portability, deletion: yes. | SIGNED |
 | C15 | Audit trail: yes. | SIGNED |
-| C16 | Return's money effect: reduces the original `Invoice`, or a separate credit document. Raised in `VOCABULARY_DRAFT.md` §2.2 as OD-C16. | SIGNED — see DECISIONS.md |
-| C17 | Produced labels and stickers: `Component`, `ProductVariant`, or their own kind. Raised in `VOCABULARY_DRAFT.md` §2.2 as OD-C17. | SIGNED — see DECISIONS.md |
-| C18 | `Shipment` as a distinct entity vs. invoicing as the shipping event. Raised in `VOCABULARY_DRAFT.md` §2.2 as OD-C18. | SIGNED — see DECISIONS.md |
-| C19 | `PriceList` scope: in scope, and whether per-buyer, per-currency, or both. Raised in `VOCABULARY_DRAFT.md` §2.2 as OD-C19. | SIGNED — see DECISIONS.md |
+| C16 | A `Return`'s money effect creates a `CreditNote`. An issued `Invoice` is immutable. Outstanding = Invoice - Payments - CreditNotes. | SIGNED |
+| C17 | Printed labels and stickers are `Component` records of kind `packaging`, with an optional link to the `ArtworkVersion` that produced them. Not a new entity. | SIGNED |
+| C18 | `Shipment` is a distinct entity, R1 at data level. R1 auto-creates one per `Invoice`; standalone management is R2. | SIGNED |
+| C19 | `PriceList` in scope, R2. R1 is one price per `ProductVariant` in the tenant's base currency. | SIGNED |
 
 ### Group D — Brand & identity
 
@@ -127,7 +127,7 @@ Any release that cannot complete this loop has not validated the product.
 | E9 | Substrate / material: customer-selectable. | SIGNED |
 | E10 | Proofing and print sign-off record: yes. | SIGNED |
 | **E11** | **BOTH paths. PrintArtifact (PDF/PNG/cutout) is the production deliverable and must be byte-identical across platforms. Browser print dialog is desk preview only, labelled as such, never the print-shop handoff.** Forced by your answer 3 + H3. | SIGNED |
-| E12 | Whether a `PrintJob` produces stock (printed stickers as inventory). Raised in `VOCABULARY_DRAFT.md` §2.2 as OD-E12. | SIGNED — see DECISIONS.md |
+| E12 | A `PrintJob` produces a file, never stock. Physical output is recorded by a `ProductionRun` of kind `printing`, which references the `PrintJob` and generates the `StockMovement`. | SIGNED |
 
 ### Group F — Regulatory
 
@@ -155,7 +155,7 @@ Any release that cannot complete this loop has not validated the product.
 | G9 | Hosted on Vercel. | SIGNED |
 | **G10** | **Operator sees account metadata, usage and billing only. Never tenant business data.** Support access requires ConsentGrant and is logged. Future: subscription-gated feature flags. | SIGNED |
 | **G11** | **Print masters and large assets in tenant-isolated object storage, never table rows.** Base64-in-rows is what broke the legacy tools. | SIGNED |
-| G12 | Design Assistant scope: what it does, which release, which tier, and what tenant data it may read (closes CF-30). Raised in `VOCABULARY_DRAFT.md` §2.2 as OD-G12. | SIGNED — see DECISIONS.md |
+| G12 | Design Assistant: R3, paid tier. May read brand config, template metadata and product names only. Never buyer, invoice, payment or financial data. | SIGNED |
 
 ### Group H — Quality & acceptance
 
@@ -170,20 +170,15 @@ Any release that cannot complete this loop has not validated the product.
 
 ---
 
-## 3. Still open — 4 items
+## 3. Still open — none
 
-These block document authoring. Everything else can proceed.
+All 79 decisions are signed. D10, E11, G10 and G11 were signed 2026-07-30;
+E2, E6, H1 and H6 were reviewer-resolved the same day; C16-C19, E12 and G12
+were raised and resolved by the vocabulary pass. The Release 1 scope in §5
+is signed.
 
-| # | Question | Blocks |
-|---|---|---|
-| **1** | **Confirm D10** — brand identity master-level with per-line override? | `BRAND_CONFIG.md`, `DATA_MODEL.md` |
-| **2** | **Confirm G10** — what admin can see | `SECURITY_MODEL.md`, terms of service |
-| **3** | **Confirm E11** — generated file as deliverable, browser print as preview only | `PRINT_CONTRACT.md`, `PRINT_PRODUCTION_SPEC.md` |
-| **4** | **Sign the Release 1 scope in §5** | `SCOPE.md` |
-
-Plus, needed before Step 1: **search "B2S" in retail/packaging** — it is widely used for "Back to School." "Brand to Shelf" spelled out is clean.
-
----
+Nothing blocks document authoring. `CALC_SPEC.md` (Step 11) remains the only
+owner-authored document and it blocks the build, not the freeze.
 
 ## 4. Module map — reviewed
 
@@ -291,17 +286,17 @@ B2S | BRAND TO SHELF
 
 ---
 
-## 5. Release 1 — PROPOSED, needs signature
+## 5. Release 1 — SIGNED 2026-07-30
 
 `a6` as written makes all 14 modules blocking. R1 is the smallest set that completes the core loop in §1.
 
 **IN — Release 1**
 
-Onboarding wizard · Brand identity (master, one line) · Assets (two tiers) · Templates: Labels + Stickers · Print export: PDF + PNG with bleed/trim presets · Catalog: products master+variant, GTIN entry, QR generation · Inventory: stock in/out, single location · Sales: orders, buyers, invoices, payments (full/partial/underpaid, cash/card/other, receipts) · **Returns as stock movements** · Auth + roles + tenant isolation · CSV import: products, buyers · Settings: units, currency, tax on/off, locales · Admin: tenants, usage
+Onboarding wizard · Brand identity (master, one line) · Assets (two tiers) · Templates: Labels + Stickers · Print export: PDF + PNG with bleed/trim presets · Catalog: products master+variant, GTIN entry, QR generation · Inventory: stock in/out, single location · Sales: orders, buyers, invoices, payments (full/partial/underpaid, cash/card/other, receipts) · **Returns as stock movements** · `CreditNote` · Auth + roles + tenant isolation · CSV import: products, buyers · Settings: units, currency, tax on/off, locales · Admin: tenants, usage
 
 **OUT — Release 2**
 
-Boxes · Cups · Stands · Garment tickets · Multi-line brand overrides · Batches, lots, traceability · Production runs, recipes, BOM · Purchasing, suppliers, POs · Multi-location · Approvals · Costing · Analytics · Die-lines · Imposition · CMYK/Pantone depth
+Boxes · Cups · Stands · Garment tickets · Multi-line brand overrides · Batches, lots, traceability · Production runs, recipes, BOM · Purchasing, suppliers, POs · Multi-location · Approvals · Costing · Analytics · Die-lines · Imposition · CMYK/Pantone depth · `Shipment` (R1 at data level, R2 UI)
 
 **OUT — Release 3**
 
@@ -350,6 +345,11 @@ Replaces the void parity gate. Four standards, no evidence means FAIL.
 | **Print** | Measured physical tolerance in `PRINT_CONTRACT.md`, plus byte-identical generated output across platforms (E11). Legacy printouts are not a reference. |
 | **Features & entities** | Conformance to `FEATURE_INVENTORY.md` and `DOMAIN_MODEL.md`. |
 | **Tenant isolation** | Proof that tenant A cannot read tenant B, on every gate touching data access. **Not waivable by OD.** |
+
+**Invariant — no document creates stock. Only a confirmation event does.**
+PurchaseOrder -> GoodsReceipt -> stock · SalesOrder -> Shipment -> stock ·
+PrintJob -> ProductionRun -> stock · Return -> StockMovement + CreditNote.
+StockLevel is derived from StockMovement and has one write path.
 
 ---
 
@@ -953,7 +953,7 @@ Tier 0 committed. Author Tier 1.
 SESSION_CONTEXT.md: [paste]
 
 Author, in full:
-  1. docs/product/DECISIONS.md — all 56 ODs, each with the decision, the date,
+  1. docs/product/DECISIONS.md — all 79 ODs, each with the decision, the date,
      the rationale, and what it forecloses. Include the PROPOSED ones I have now
      signed. Add ODs for: Design Assistant scope (CF-30), Release 1 boundary,
      and the admin visibility promise (G10).
@@ -1170,7 +1170,7 @@ TASK:
 
 Reviewer verdict. Every item must hold:
 
-- [ ] All 56 ODs signed and dated in `DECISIONS.md`
+- [ ] All 79 ODs signed and dated in `DECISIONS.md`
 - [ ] `GLOSSARY.md` resolves every vocabulary collision, CF-28 included
 - [ ] `SCOPE.md` covers all 14 modules with release assignment; CF-29 closed
 - [ ] `DOMAIN_MODEL.md` resolves every DIVERGENT item from the extracts; C1 closed
