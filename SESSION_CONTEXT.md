@@ -1,5 +1,5 @@
 # SESSION CONTEXT
-Updated: 2026-07-30 · By: agent · Phase: PREPARE Step 3 · Last task: P-01c · Verdict: pending
+Updated: 2026-07-30 · By: agent · Phase: PREPARE Step 3 · Last task: P-01c · Verdict: PASS
 
 ## Where we are
 Greenfield pivot: parity against the six legacy HTML tools is void (OD B1
@@ -38,7 +38,11 @@ now headed "SIGNED 2026-07-30", with `CreditNote` added to the IN list and
 C16-C19/E12/G12 placeholder cells now carry real decision text. §7 gained a
 stock-creation invariant naming the one write path into `StockLevel`. The
 untracked reconfiguration record landed at `docs/method/PROJECT_RECONFIG.md`.
-All commits through P-01c are pushed to `origin/main`.
+All commits through P-01c are pushed to `origin/main`. P-01c verdict: PASS —
+"two flags, both correct, both mine" (the reviewer's own words), referring to
+this task's two self-reported deviations: the missing §3/§4 `---` separator,
+and CF-38's description having been inferred rather than pre-existing. Those
+two flags are logged as CF-39 and CF-40 below.
 
 ## Active carry-forwards
 - [ ] CF-01 — Reinstate deferred Dev OS security/migration rule layer at P10
@@ -114,6 +118,22 @@ All commits through P-01c are pushed to `origin/main`.
       the original count summed Groups A-F only, omitting Groups G and H.
       Fixed by correcting the header, the P-06 prompt, and the Gate 3
       checklist to "79", independently verified against the actual row count.
+- [ ] CF-39 — `B2S_PREPARE_PHASE.md` §3/§4 now run together with no `---`
+      separator. P-01c's instruction defined the replaced span as running
+      "from [§3's] heading to the horizontal rule before `## 4.`," and the
+      supplied replacement text had no trailing rule, so the separator was
+      removed rather than reinstated unrequested. Every other section
+      transition in the document keeps its `---`. Cosmetic only. Description
+      inferred from the P-01c report — the reviewer verdict logged this as
+      "CF-39 new" without landing wording here. Owner: reviewer, next light
+      edit to `B2S_PREPARE_PHASE.md`.
+- [ ] CF-40 — Session-tracking carry-forwards (CF-38, and now CF-39/CF-40
+      themselves) are sometimes announced by a reviewer verdict as "new"
+      without their descriptive text ever being supplied to the executing
+      task. Each has had to be inferred from context and landed after the
+      fact. Description inferred from the P-01c report — the reviewer
+      verdict logged this as "CF-40 new" without landing wording here.
+      Owner: reviewer, supply CF text alongside the "new" tag going forward.
 
 ## Environment quirks (never re-discover)
 - Brave isolates IndexedDB per file:// origin. Legacy data is only visible from
@@ -147,4 +167,7 @@ All commits through P-01c are pushed to `origin/main`.
   document; it blocks the build, not the freeze.
 
 ## Next action
-Reviewer verdict on P-01c, then P-02.
+P-02, in a new conversation per the reviewer's own sequencing rule (one task
+per window). The P-01c verdict named "P-02, in a new conversation — opener
+below" but no opener text followed it in that message. Not fabricated here;
+request the opener text before starting P-02.

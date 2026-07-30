@@ -60,3 +60,18 @@ instruction's own boundary, and the supplied replacement text did not include
 a new one — Sec.3/Sec.4 now run together without the "---" separator every
 other section transition in this document uses. Flagged, not silently
 patched with an unrequested separator.
+
+2026-07-30 | Standard | PREPARE Step 3 / record P-01c PASS verdict | SESSION_CONTEXT.md, DEVELOPMENT_JOURNAL.md | CF-39 and CF-40 were announced by the verdict only as "new", same gap as CF-38 before it — descriptions inferred from the verdict's own "two flags, both mine" line and this task's prior self-reported deviations, then landed; verdict named a "P-02 opener below" that was not actually present in the message, so P-02 was not started | request the P-02 opener text, then run P-02 in a new conversation
+
+Session summary: P-01c's reviewer verdict PASSED outright, with zero non-PASS
+classifications — the two items it flagged were credited as correct
+self-reporting by the executing task, not corrections against it. Logged
+CF-39 (missing Sec.3/Sec.4 "---" separator, a direct consequence of the
+literal replacement boundary the P-01c instruction specified) and CF-40 (a
+recurring pattern of reviewer verdicts announcing new CFs by number only,
+without descriptive text, requiring each to be inferred after the fact — as
+happened with CF-38 and now these two). No document edits were required by
+this task beyond the session-tracking files. The verdict's "Next prompt: P-02,
+in a new conversation — opener below" was not followed by any opener text in
+the message actually received, so P-02 was not started; this is recorded
+as a gap to raise with the user rather than assumed away.
