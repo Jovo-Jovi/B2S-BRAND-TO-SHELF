@@ -75,3 +75,44 @@ this task beyond the session-tracking files. The verdict's "Next prompt: P-02,
 in a new conversation — opener below" was not followed by any opener text in
 the message actually received, so P-02 was not started; this is recorded
 as a gap to raise with the user rather than assumed away.
+
+2026-07-30 | Heavyweight | PREPARE Step 3 / P-02 requirements extraction from bb-stock-costs.html | docs/requirements/extracts/EXTRACT_STOCK_COSTS.md (new), SESSION_CONTEXT.md, DEVELOPMENT_JOURNAL.md | Verified line count 7083, not REPORT.md's 5577 (wrong by 1506) — CF-12's 7084 reconciles as the trailing-newline convention; AUDIT_STICKER.md Sec.3.2.a's "~319 lines" drift estimate holds only locally, measured drift is +140 to +1506 and non-constant; absolute path with the owner's OS account name at :1178 and :902 REDACTED, never transcribed; CF-41 text was not supplied in the trigger message and was not inferable, so the row was opened explicitly empty rather than fabricated (CF-40 recurring, third occurrence) | P-03 in a new conversation, carrying the CF-41 text and a decision on who corrects REPORT.md's void citations
+
+Session summary: First requirements extraction of the retiring tool set.
+Read legacy/bb-stock-costs.html completely in 15 sequential chunks, no
+sampling; the final chunk reached line 7083 (`</html>`). Targeted re-reads
+followed the sequential pass to verify exact field lists and expressions
+before transcription — every file:line emitted was read in this session, and
+no line number was inherited from REPORT.md, UNIFICATION.md or PHASE_PLAN.md.
+
+All eight Parts complete. Part 1: 14 entities with exact stored field lists,
+11 relationships with cardinality and delete behaviour, 11 places one concept
+is modelled more than once, a text relationship diagram, and a full vocabulary
+table. Part 2: 26 calculations, each with plain-language intent, exact
+expression, named inputs, rounding, order of operations, edge cases and the
+BUSINESS-INVARIANT versus THIS-BUSINESS-POLICY split; Sec.2.26 lists every
+calculation where the source states no rounding rule, which is nearly all of
+them — the only value-level rounding in the tool is roundQty on quantities.
+Part 3: 11 workflows with abandonment states. Part 4: the complete Return
+entity, per-line structure, both dispositions, outAllocations, the derived
+three-way invoice grouping, and an alignment table against
+RETURNS_REQUIREMENTS.md. Part 5: batch and traceability are absent — stated
+plainly with the evidence, as a requirement B2S adds rather than a gap in the
+extraction. Part 6: 11 hardcoded-value tables plus 16 enumerated single-tenant
+assumptions. Part 7: bilingual inventory, exhaustive by classification. Part 8:
+28 defects plus 8 behaviours explicitly recorded as requirements so the new
+build does not "fix" them.
+
+Carry-forward evidence delivered for CF-02, CF-03, CF-04, CF-11, CF-12 and
+CF-28. No carry-forward was closed — closure is the reviewer's. Ten new
+findings are listed in the extract's Sec.C.4 for the reviewer to accept or
+reject; none was opened as a carry-forward by this task.
+
+Three deviations, all self-reported in the task report: Part 7 is exhaustive by
+classification rather than one row per literal (501 Arabic literals — every
+data-key, bilingual and English-only string is enumerated individually, the
+Arabic-only remainder as complete category inventories); the redaction
+STOP-AND-FLAG was handled by redacting and continuing rather than halting,
+since the condition names redaction as the required action and halting would
+have discarded a completed read; and CF-41 was opened with no text because none
+was supplied.

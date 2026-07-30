@@ -1,5 +1,5 @@
 # SESSION CONTEXT
-Updated: 2026-07-30 · By: agent · Phase: PREPARE Step 3 · Last task: P-01c · Verdict: PASS
+Updated: 2026-07-30 · By: agent · Phase: PREPARE Step 3 · Last task: P-02 · Verdict: PENDING
 
 ## Where we are
 Greenfield pivot: parity against the six legacy HTML tools is void (OD B1
@@ -43,6 +43,37 @@ All commits through P-01c are pushed to `origin/main`. P-01c verdict: PASS —
 this task's two self-reported deviations: the missing §3/§4 `---` separator,
 and CF-38's description having been inferred rather than pre-existing. Those
 two flags are logged as CF-39 and CF-40 below.
+
+P-02 performed the first requirements extraction of the retiring tool set:
+`legacy/bb-stock-costs.html` → `docs/requirements/extracts/EXTRACT_STOCK_COSTS.md`
+(new, REQUIREMENTS EVIDENCE banner copied verbatim from
+`docs/requirements/RETURNS_REQUIREMENTS.md`). Read completely in 15 sequential
+chunks; final chunk reached line 7083. **Verified line count 7083** — CF-12's
+7084 is correct under the trailing-newline display convention and reconciles;
+`REPORT.md` §2.3's 5577 is wrong by 1506 lines. `AUDIT_STICKER.md` §3.2.a's
+"~319 lines" drift estimate holds only locally: measured drift into this file
+ranges +140 to +1506 and is not constant, so every `bb-stock-costs.html`
+citation in `REPORT.md`, `UNIFICATION.md` and `PHASE_PLAN.md` needs
+re-derivation. All eight Parts complete; Part 7 is exhaustive by classification
+rather than line-by-line (501 Arabic literals across 779 lines — every
+data-key, bilingual and English-only literal enumerated individually, the
+Arabic-only remainder given as complete category inventories). Evidence
+delivered for CF-02 (32 unescaped-`innerHTML` sites; four escape functions exist
+with four different coverage sets, confined to the two print engines), CF-03
+(7 truly empty `catch`, 2 comment-only, 11 swallow-and-substitute), CF-04
+(three record shapes distinguished — with `outAllocations`, with an empty array,
+and with the key absent — plus a latent fourth for missing
+`items[].disposition`), CF-11 (the stock-costs side of the `bb_stickers` link:
+what it writes, reads and its seven assumptions; the sticker tool's side left to
+P-04), and CF-28 (15 `customer` occurrences, 2 Tenant sense, 13 Buyer sense).
+**Redaction applied:** `:1178` `SHARED_DATA_PATH` and the `:902` `file://`
+anchor embed the owner's OS account name; the path structure is recorded with
+the account name replaced by `<REDACTED>` and the verbatim value is not
+transcribed. No credential, key, token or connection string exists in the file;
+no real Buyer PII is embedded in source. Ten new findings are listed in the
+extract's §C.4 for the reviewer to accept or reject as carry-forwards — **none
+was opened as a carry-forward by this task, and no existing carry-forward was
+closed.** P-02 verdict: PENDING.
 
 ## Active carry-forwards
 - [ ] CF-01 — Reinstate deferred Dev OS security/migration rule layer at P10
@@ -134,6 +165,13 @@ two flags are logged as CF-39 and CF-40 below.
       fact. Description inferred from the P-01c report — the reviewer
       verdict logged this as "CF-40 new" without landing wording here.
       Owner: reviewer, supply CF text alongside the "new" tag going forward.
+- [ ] CF-41 — **TEXT NOT SUPPLIED.** The P-02 prompt instructed "Add CF-41 (text
+      supplied in the trigger message)", but the trigger message contained no
+      CF-41 text. Unlike CF-38/CF-39/CF-40, the wording was not inferable from
+      surrounding context either — there is no reviewer verdict or report to
+      infer it from, so nothing was fabricated. The row is opened as instructed
+      and left explicitly empty. **This is CF-40 recurring**, and is its third
+      occurrence. Owner: reviewer, supply the CF-41 text.
 
 ## Environment quirks (never re-discover)
 - Brave isolates IndexedDB per file:// origin. Legacy data is only visible from
@@ -167,7 +205,10 @@ two flags are logged as CF-39 and CF-40 below.
   document; it blocks the build, not the freeze.
 
 ## Next action
-P-02, in a new conversation per the reviewer's own sequencing rule (one task
-per window). The P-01c verdict named "P-02, in a new conversation — opener
-below" but no opener text followed it in that message. Not fabricated here;
-request the opener text before starting P-02.
+P-03, in a new conversation per the reviewer's own sequencing rule (one task
+per window). P-02 is complete and awaiting reviewer verdict; do not treat its
+findings as accepted until that verdict lands. Two things the P-03 opener should
+carry: the CF-41 text (still not supplied — see CF-41 above), and a decision on
+whether `REPORT.md`'s void `bb-stock-costs.html` citations are corrected in
+place or left for the reviewer, given P-02 measured the drift but was scoped to
+create exactly one new file and could not edit `REPORT.md`.
