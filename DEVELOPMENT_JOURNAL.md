@@ -22,3 +22,17 @@ created 23 stub files. The decision register in B2S_PREPARE_PHASE.md §2 holds
 PROPOSED pending the owner's confirmation of §3's open items; "56 signed ODs"
 in the P-01 prompt is therefore not yet exactly true of repo state and is
 recorded here as reported, not silently corrected.
+
+2026-07-30 | Standard | PREPARE Step 3 / P-01b (CF-36, CF-37 fixes) | docs/archive/2026-07/inventory.json, docs/archive/2026-07/README.md (new), docs/method/B2S_PREPARE_PHASE.md, docs/method/PROJECT_RECONFIG.md (new), SESSION_CONTEXT.md | register's own row count (79) still does not match its "62" header line even after this fix — pre-existing discrepancy, flagged not corrected; Sec.3 "Still open - 4 items" now contradicts the updated Sec.2 and was left untouched (out of P-01b's stated scope); six new OD rows (C16-C19, E12, G12) use the literal fallback "SIGNED — see DECISIONS.md" because the actual reviewer-verdict resolution text was not supplied to this task | reviewer verdict on P-01b, then P-02
+
+Session summary: P-01's reviewer verdict PASSED, closing CF-13, CF-25, CF-34,
+CF-35, and crediting the 21-vs-23 stub-count discrepancy to the amendment's
+own arithmetic rather than to execution. P-01b then closed CF-37 (reverted
+the banner on inventory.json so it parses as valid JSON again, added an
+archive-level README.md covering the directory instead) and CF-36 (signed
+D10, E11, G10, G11, E2, E6, H1, H6 and added C16-C19/E12/G12 to
+B2S_PREPARE_PHASE.md Sec.2, per the exact status changes specified — no
+other section touched). Landed the untracked project-reconfiguration record
+at docs/method/PROJECT_RECONFIG.md, content unchanged. All four commits
+(three P-01, one P-01b) pushed to origin/main; remote confirmed to contain
+docs/product/, docs/archive/, and docs/requirements/.
