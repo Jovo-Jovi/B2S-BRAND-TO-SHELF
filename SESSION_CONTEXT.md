@@ -1,5 +1,5 @@
 # SESSION CONTEXT
-Updated: 2026-07-31 · By: agent · Phase: PREPARE Step 7b complete · Last task: P-04b · Verdict: PENDING · Next action: GATE 1
+Updated: 2026-07-31 · By: agent · Phase: PREPARE Step 7c complete · Last task: P-04c · Verdict: PENDING · Next action: GATE 1
 
 ## Where we are
 Greenfield pivot: parity against the six legacy HTML tools is void (OD B1
@@ -369,6 +369,11 @@ is CF-40's own stated closure condition.
       figures used the displayed convention. Residual, no action: the sticker
       tool's count was never independently verified; AUDIT_STICKER.md is its
       record and no live document carries a wrong figure.
+      RESIDUAL CLOSED. balance-bites-sticker.html verified by reviewer direct read
+      at 3,700 (wc -l) / 3,701 displayed, matching REPORT.md §1 under the displayed
+      convention. bb-stock-costs.html re-verified at 7,083 and
+      balance-bites-invoice-pro.html at 4,283. Every legacy line count is now
+      independently confirmed. No residual.
 - [x] CF-13 — CLOSED (P-01). RUNBOOK.md was uncommitted and carried stale/void
       steps contradicting current decisions (§1.1 backup, §1.3 PRIVATE +
       `master`, §2.4 backup diff). Superseded by `docs/method/B2S_PREPARE_PHASE.md`
@@ -391,6 +396,10 @@ is CF-40's own stated closure condition.
       contradicts G7 SIGNED public-by-design, (c) rewrite history and redact
       legacy/, which violates the freeze, (d) move legacy/ out of the public
       repo. Owner unchanged: RISK_REGISTER.md at P-05, replacement OD at P-06.
+      The docs/ half is closed by CF-52. Three occurrences remain
+      under legacy/ — bb-stock-costs.html:902 and :1178,
+      balance-bites-sticker.html:1138 — which legacy/FREEZE.md forbids modifying.
+      The four-option OD at P-06 is unchanged.
 - [ ] CF-22 — Label-editor vs sticker-tool capability delta. Owner: P-04.
       ANSWERED by P-04 Part 2: overlapping-but-neither. The label editor is a
       distinct physical output — a continuous five-segment cruciform wrap strip
@@ -689,6 +698,25 @@ is CF-40's own stated closure condition.
       extraction required. The id count divergence (three seeds against four) is
       confirmed; the fourth preset's name is unverified per CF-50. Owner:
       reviewer at Gate 1, then DOMAIN_MODEL.md at P-07.
+      RESOLVED ON THE FACTS by reviewer direct read. There is NO
+      six-versus-seven field-set divergence. All three tools carry an identical
+      seven-value record {id, name, bg, gold, txt, mut, row, tot, grand}, verified
+      at sticker:1273-1275, bb-stock-costs:1346-1349, invoice-pro:1258. The 'six'
+      originated in EXTRACT_STOCK_COSTS.md:2542 ('6 hex values each'), which is
+      falsified; that same extract's §1.1.11 at :456-474 is correct and names all
+      four built-ins correctly — the extract contradicts itself internally.
+      AUDIT_STICKER.md §3.4's same-field-set claim is TRUE. The real divergences
+      are two: (1) seed count — sticker seeds 3, both business tools seed 4
+      including cp_def4 'Warm Ivory'; (2) cp_def1 carries an identical id AND an
+      identical name 'Dark Gold' while 6 of its 7 values differ — sticker
+      bg #060603, txt #e8dfc8, mut #7a6f58, row #0e0d0a, tot #0e0d0a,
+      grand #0e0d0a against business bg #0a0804, txt #e8e0cc, mut #6b5e3a,
+      row #12100a, tot #12100a, grand #1e1a0f; only gold #c9a84c matches.
+      cp_def2 and cp_def3 are byte-identical across all three. Whichever tool
+      seeds an empty store first silently defines 'Dark Gold' for the others.
+      Two follow-ons: EXTRACT_STOCK_COSTS.md:2542's count needs a Gate 1
+      annotation decision, and the canonicalisation of ColorRole / ColorValue
+      remains DOMAIN_MODEL.md at P-07.
 - [ ] CF-50 — AUDIT_STICKER.md §3.4 names the three bb_color_presets seeds
       "Balance Bites", "Dark Mode", "Ocean Blue". P-04's direct read gives
       `Dark Gold`, `Obsidian Blue`, `Forest Night` — all three falsified. §3.4
@@ -698,6 +726,9 @@ is CF-40's own stated closure condition.
       sticker tool, so an uncorrected false claim propagates into P-05 and P-07.
       Annotated by P-04b, never rewritten. Owner: Gate 1 — do not treat §3.4's
       naming claims as evidence; then P-07.
+      'Warm Ivory' is CONFIRMED correct at bb-stock-costs.html:1349,
+      not unverified. P-04b's annotation was corrected by P-04c. Only the three
+      sticker seed names were ever false. Second location annotated under CF-56.
 - [ ] CF-51 — Prompt-template defect: "one commit" combined with "do not amend
       or rewrite history" forbids any post-push correction, forcing a choice
       between two explicit instructions. P-04 hit this and correctly landed a
@@ -705,6 +736,59 @@ is CF-40's own stated closure condition.
       corrective follow-up commit is permitted, must be declared, and must carry
       a subject line stating what it corrects. Third template defect after CF-40
       and CF-43. Owner: reviewer, standing; applied from P-04b onward.
+- [ ] CF-52 — The owner's OS account name appears in mutable public files beyond
+      AUDIT_STICKER.md:651. Locations: REPORT.md:218 (two occurrences on one
+      line — a SHARED_DATA_PATH value and a file:/// cross-link),
+      docs/archive/2026-07/inventory.json:51 (sharedFolderPath) and :52
+      (crossLink). Redacted by P-04c. Three immutable occurrences remain under
+      legacy/ (bb-stock-costs.html:902 and :1178, balance-bites-sticker.html:1138)
+      and are covered by CF-14's OD. Owner: reviewer, closes on P-04c verdict.
+- [ ] CF-53 — docs/method/PROJECT_RECONFIG.md was byte-identical to
+      docs/method/CLAUDE_PROJECT_INSTRUCTIONS.md (same blob SHA). SESSION_CONTEXT
+      recorded P-01c as landing the reconfiguration record there; it landed a
+      copy of the instructions instead, so the record was never committed and its
+      content is unrecoverable. Replaced with a STATUS stub by P-04c rather than
+      invented or deleted. Owner: reviewer — decide at P-12 whether the record is
+      re-authored or the stub stands.
+- [ ] CF-54 — Stub count stated three ways: 22 in P-01's done-when, 20 in P-12's
+      prompt, 23 actual (21 under docs/product/, 2 under docs/method/). Same
+      defect class as CF-38's 56-versus-79. P-12 corrected and P-01 annotated
+      as-built by P-04c. Owner: reviewer, verify at Gate 3.
+- [ ] CF-55 — SESSION_CONTEXT.md is 58,233 bytes and grows every task, because
+      the full carry-forward ledger including all appended amendment text lives
+      inside the file that must be pasted at the start of every session. It is
+      now larger than DEV_OS.md and DEV_OS_REFERENCE.md combined. Proposed
+      remedy: move the ledger to docs/method/CARRY_FORWARDS.md; SESSION_CONTEXT.md
+      retains state, next action, environment quirks and open CF ids by
+      reference. Requires an AGENTS.md §0/§9 amendment, so it is NOT actioned by
+      P-04c. Owner: owner signature, then a dedicated task.
+- [ ] CF-56 — The falsified sticker preset names appear at two locations in
+      AUDIT_STICKER.md. P-04b annotated §3.4 (:994) only. The rows at :610-611
+      attribute the same names to `theme.presets.dark.*` and
+      `theme.presets.ocean.*` — an identifier that occurs zero times in the
+      source. Those lines are cp_def2 and cp_def3 inside ColorPresetMgr.DEFAULTS
+      under key bb_color_presets. Annotated by P-04c. Owner: reviewer, closes on
+      P-04c verdict.
+- [ ] CF-57 — Extraction density drifted across the three passes:
+      EXTRACT_STOCK_COSTS 174 KB from a 347 KB source (50%), EXTRACT_INVOICE_PRO
+      231 KB from 222 KB (104%), EXTRACT_DESIGN_TOOLS 228 KB from 197 KB (116%).
+      Two extracts are larger than the files they extract. Gate 1 check: is the
+      expansion added analysis (typed field lists, invariant-versus-policy
+      columns, spot-check tables) or transcription? Owner: reviewer, Gate 1.
+- [ ] CF-58 — tools/backup-browser-data.js serves the browser-data backup
+      workflow abandoned by owner decision 2026-07-29, with design-tool presets
+      accepted as potentially unrecoverable. Orphaned. Archived by P-04c to
+      docs/archive/2026-07/ rather than deleted. Owner: reviewer, closes on
+      P-04c verdict.
+- [ ] CF-59 — The reviewer surface can read the public repo directly
+      (api.github.com, raw.githubusercontent.com) and has begun doing so:
+      P-04b's verdict and the CF-49/CF-50/CF-56 resolutions were produced by
+      direct read, not from pasted reports. This changes the verification loop —
+      the reviewer now verifies against the artifact rather than against a
+      description of it, and can run exhaustiveness checks by grep. It does not
+      change write access or the builder's role. It needs a signed decision, and
+      a standing discipline that every verdict states what was fetched and which
+      commands were run. Owner: OD at P-06.
 
 ## Environment quirks (never re-discover)
 - Brave isolates IndexedDB per file:// origin. Legacy data is only visible from
@@ -742,6 +826,11 @@ is CF-40's own stated closure condition.
   are exact for the three design tools and wrong only for the two business tools,
   which kept growing after the report was written. Do not apply a blanket
   "re-derive everything" assumption — check per file, because the answer differs.
+- PowerShell rejects the heredoc commit form, and `git-bash -c` fails
+  non-interactively on `git commit -m` with EDITOR unset. Working path:
+  `git add` the paths, write the subject line to a temporary file, commit with
+  `git commit -F <tempfile>`, delete the temp file. Subject line comes out
+  byte-identical.
 
 ## Frozen decisions in force
 - Freeze point set 2026-07-29 (legacy/FREEZE.md, rewritten by P-01 — tools are

@@ -616,6 +616,15 @@ The theme system is genuinely token-driven at runtime — `SC` (`:1134`) holds t
 | `#0a0a0a`, `#e8dcc4`, `#1a1a1a` … — panel chrome throughout the `<style>` block | `tokens.chrome.*` | colour | `:9-289` (≈70 literals) |
 | Checkerboard grey for Isolated mode | `tokens.iso.checker` | colour | `:277` |
 
+> **CORRECTION — landed 2026-07-31 by P-04c, verified by reviewer direct read
+> of the source at `:1270-1280`.** The two rows above are wrong on both the
+> preset name and the storage path. The identifier `theme.presets.*` does not
+> occur anywhere in the source. Lines `:1274` and `:1275` are `cp_def2`
+> `Obsidian Blue` and `cp_def3` `Forest Night` inside `ColorPresetMgr.DEFAULTS`
+> (`:1270-1276`), under key `bb_color_presets` (`:1271`). This is the same
+> claim as §3.4, recorded here under an invented key path. Do not cite these
+> rows as evidence of a separate theming mechanism — there is none.
+
 The `getVals` fallbacks at `:2758-2759` are the notable ones: they are hardcoded **inside the value-resolution layer**, so they bypass `SC` and the theme engine entirely, and `#2e7d32` is a **green** — not a colour from any of the three seeded brand presets (`:1273-1275`). Any template whose state lacks `cLabel` renders green rather than brand brown. The batch-row literals at `:2931` will likewise not follow a theme change.
 
 ### E-3. Fonts
@@ -997,9 +1006,13 @@ REPORT.md §3.1 has **10 rows**; `docs/inventory.json`'s `duplicationMatrix` has
 > The three seed names given above are wrong. Read directly from the source,
 > they are `Dark Gold`, `Obsidian Blue` and `Forest Night`. The seven-colour
 > field structure and the `cp_def1`-`cp_def4` id scheme stated in §C-3 are
-> correct and unaffected. The fourth, sticker-absent preset name given in this
-> section is UNVERIFIED — §3.4 is its sole record and no direct read confirms
-> it. Do not cite this section's naming claims as evidence.
+> correct and unaffected. The fourth preset name given in this section, `Warm
+> Ivory`, is CONFIRMED correct by reviewer direct read at
+> `bb-stock-costs.html:1349`. The seed-count claim (three against four) and the
+> same-field-set claim are both correct: all three tools carry an identical
+> seven-value record `{id, name, bg, gold, txt, mut, row, tot, grand}`. Only
+> the three sticker seed names were ever wrong. Do not cite this section's
+> naming claims as evidence.
 
 | **Print approach** | §3.2's print-approach row must now record: label-v3's approach is unavailable for comparison (source gone; §2.2F records exact-cm `@page` + PPC only), and the sticker tool is single-DOM with px-sized content and a dynamically rewritten `@page` (`:2867-2868`, `:2894-2901`). PPC is duplicated 4× *within* this one file (`:2219`, `:2519`, `:2842`, `:2874`) — an intra-file inconsistency §3.2 has no row for |
 | **`templateKey` semantics** | Overloaded to mean either a `LabelTemplate.id` or a `Sticker.id` (`bb-stock-costs.html:2720`, `:6186`). §3.2 has no row for ambiguous foreign keys |

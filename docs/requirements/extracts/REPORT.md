@@ -215,7 +215,7 @@ Arabic UI is pervasive and hardcoded (accordion labels, toasts, confirms). Verba
 - `localStorage` keys (extra prefs): `bb_active_theme` (`:1350`), `bb_prep_lines` (`:2053`), `bb_prep_ing_view` (`:2070`), `bb_prep_prod_mode` (`:2085`), `bb_prep_print_mode` (`:2115`), `bb_inv_print_margins` (`:3524`), `bb_inv_print_preset_id` (`:3749`), `bb_print_fit_one` (`:4429`).
 - **IndexedDB:** database `bb_filestore_v1`, object store `h`, key `dir` stores the persisted directory handle (`:1021-1022`, `:1058`).
 - **File System Access API:** `showDirectoryPicker` (`:1057`), `getFileHandle`/`createWritable` write each key as `<key>.json` (`:1089-1093`); `loadAll` reads them back (`:1078-1087`).
-- **Shared folder (hardcoded):** `SHARED_DATA_PATH = 'C:\\Users\\Marco\\Desktop\\BALANCE BITES\\invoices customers\\saved data'` (`:1012`) — must match the folder Invoice Pro uses. Also a hardcoded `file:///C:/Users/Marco/Desktop/balance-bites-invoice-pro.html` cross-link (`:762`).
+- **Shared folder (hardcoded):** `SHARED_DATA_PATH = 'C:\\Users\\<REDACTED>\\Desktop\\BALANCE BITES\\invoices customers\\saved data'` (`:1012`) — must match the folder Invoice Pro uses. Also a hardcoded `file:///C:/Users/<REDACTED>/Desktop/balance-bites-invoice-pro.html` cross-link (`:762`).
 - **Store abstraction** (`:1127-1134`): `Store.get/set/remove` = localStorage JSON, and `set` also mirrors to the folder when connected.
 
 **E. Hardcoded values registry.** (BrandConfig key · wizard input · file:line)

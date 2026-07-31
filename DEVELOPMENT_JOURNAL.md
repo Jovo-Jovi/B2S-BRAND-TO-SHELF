@@ -348,3 +348,85 @@ decision or requirement substance was changed, only the four named mechanical
 corrections and the ledger text supplied verbatim.
 
 Next: GATE 1. Verdict: PENDING.
+
+---
+
+## 2026-07-31 | Sonnet (standard) | PREPARE Step 7c · P-04c — mechanical corrections, round two
+
+Files: `docs/requirements/extracts/REPORT.md`, `docs/archive/2026-07/inventory.json`,
+`docs/method/PROJECT_RECONFIG.md`, `docs/method/B2S_PREPARE_PHASE.md`,
+`docs/requirements/extracts/AUDIT_STICKER.md`, `docs/archive/2026-07/README.md`,
+`tools/backup-browser-data.js` -> `docs/archive/2026-07/backup-browser-data.js`,
+`SESSION_CONTEXT.md`, `DEVELOPMENT_JOURNAL.md`. No file under `legacy/` touched;
+no stub under `docs/product/` touched; no extract other than `REPORT.md` and
+`AUDIT_STICKER.md` touched.
+
+**CF-52: account-name redaction.** `REPORT.md:218`'s two occurrences (the
+`SHARED_DATA_PATH` value and the `file:///` cross-link) and
+`docs/archive/2026-07/inventory.json:51` (`sharedFolderPath`) and `:52`
+(`crossLink`) each had only the account-name segment replaced with
+`<REDACTED>`; every other character, including the two stale line citations
+on `REPORT.md:218`, was left untouched. `inventory.json` re-verified as valid
+JSON with a Python `json.load` parse after the edit. A repeat repo-wide
+case-insensitive search found exactly three remaining occurrences, all under
+`legacy/` (`bb-stock-costs.html:902` and `:1178`,
+`balance-bites-sticker.html:1138`) — none elsewhere.
+
+**CF-53: `PROJECT_RECONFIG.md` stub.** Confirmed byte-identical to
+`CLAUDE_PROJECT_INSTRUCTIONS.md` before editing (same git blob SHA, 16,465
+bytes each). Replaced the file's entire content with the supplied STATUS stub
+in the P-01 form, recording that the true reconfiguration record was never
+committed and this path instead received a duplicate of the instructions file.
+`CLAUDE_PROJECT_INSTRUCTIONS.md` itself was not touched.
+
+**CF-54: stub-count correction.** `B2S_PREPARE_PHASE.md` P-12 step 1 changed
+from "Every one of the 20 stubs must now be authored" to "Every one of the 23
+stubs must now be authored — 21 under docs/product/ and 2 under
+docs/method/"; nothing else in P-12 changed. P-01's prompt and done-when were
+left untouched as executed history; an `AS-BUILT` line was appended
+immediately after P-01's "Do NOT" block instead, in the Dev OS as-built form,
+recording the true 23-stub count. The Gate 3 checklist was checked and does
+not reference a stub count anywhere — no edit made there.
+
+**CF-56: second falsified-preset-name location.** `AUDIT_STICKER.md`'s
+`:610-611` table rows (attributing the sticker tool's seed names to
+`theme.presets.dark.*` / `theme.presets.ocean.*`) were left intact and
+visible; a correction blockquote was inserted immediately below the table
+identifying the true source lines (`cp_def2`/`cp_def3` inside
+`ColorPresetMgr.DEFAULTS`, key `bb_color_presets`) and noting the
+`theme.presets.*` identifier occurs nowhere in the source.
+
+**CF-50: superseded UNVERIFIED claim corrected.** The P-04b correction
+blockquote's sentence marking the fourth preset name ("Warm Ivory") as
+UNVERIFIED was replaced with the supplied text confirming it by direct read
+at `bb-stock-costs.html:1349`, since CF-49's resolution (landed in this same
+ledger update) independently confirmed it. No other sentence in that
+blockquote was touched; the original §3.4 row is still intact.
+
+**CF-58: orphaned tool archived.** `git mv tools/backup-browser-data.js
+docs/archive/2026-07/backup-browser-data.js` — history preserved, no banner
+added (executable JavaScript, same rationale as `inventory.json`). One line
+appended to `docs/archive/2026-07/README.md` recording the archival, the
+no-banner rationale, and the abandoned 2026-07-29 workflow it served. `tools/`
+is now empty; no `.gitkeep` created.
+
+**SESSION_CONTEXT.md ledger updated** after a count check performed before any
+edit (new rows supplied 8, stated 8, ids CF-52..CF-59 matched; amendments
+supplied 4, stated 4, ids CF-12/CF-14/CF-49/CF-50 matched; closures supplied
+0, stated 0 — no mismatch, no halt). Landed CF-52 through CF-59 as new rows
+verbatim. Amended CF-12 (residual line-count closure), CF-14 (docs/ half
+closed by CF-52), CF-49 (resolved on the facts — no six-versus-seven
+divergence) and CF-50 (Warm Ivory confirmed) in place with their supplied
+append text. Added the git-bash commit-workaround environment quirk. Header
+updated to phase = PREPARE Step 7c complete, last task = P-04c, verdict
+PENDING, next action = GATE 1; every other row carried forward unchanged,
+nothing closed.
+
+Issues: one self-corrected slip — an intermediate edit introduced inconsistent
+leading whitespace into the pre-existing CF-14 and CF-51 continuation lines
+while inserting new text nearby; caught before commit and fixed with a
+follow-up edit restoring the original six-space indentation, verified against
+`git diff`. No rule, decision or requirement substance was changed at any
+point.
+
+Next: GATE 1. Verdict: PENDING.

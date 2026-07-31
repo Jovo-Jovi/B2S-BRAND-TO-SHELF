@@ -605,6 +605,8 @@ TASK:
 - Do NOT: delete any file · modify legacy/*.html · rewrite the substance of any
   rule · author stub content · write application code · commit the line-ending
   diff with the moves · alter requirements-extract content beyond the banner
+▸ AS-BUILT: 23 stubs created, not 22 — 21 under docs/product/ and 2 under
+  docs/method/. Corrected in P-12 by P-04c. See CF-54.
 ```
 
 ---
@@ -1139,8 +1141,9 @@ no substance.
 
 TASK:
 1. Replace each stub in docs/product/ with the authored content supplied by the
-   reviewer. Every one of the 20 stubs must now be authored. Report any still
-   carrying a STATUS line.
+   reviewer. Every one of the 23 stubs must now be authored — 21 under
+   docs/product/ and 2 under docs/method/. Report any still carrying a STATUS
+   line.
 2. Author docs/method/EXTRACT_RUN.md and docs/method/FREEZE_CHECKLIST.md from
    the reviewer's supplied content.
 3. Rewrite AGENTS.md and the three .cursor/rules files to reference the frozen

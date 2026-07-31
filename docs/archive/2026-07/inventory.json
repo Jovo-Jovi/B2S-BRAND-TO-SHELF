@@ -48,8 +48,8 @@
         "localStoragePrefs": ["bb_active_theme","bb_prep_lines","bb_prep_ing_view","bb_prep_prod_mode","bb_prep_print_mode","bb_inv_print_margins","bb_inv_print_preset_id","bb_print_fit_one"],
         "indexedDB": { "db": "bb_filestore_v1", "store": "h", "key": "dir (directory handle)", "ref": "1021-1058" },
         "fileSystemAccess": { "picker": "1057", "writeKeyJson": "1089-1093", "loadAll": "1078-1087" },
-        "sharedFolderPath": { "value": "C:\\Users\\Marco\\Desktop\\BALANCE BITES\\invoices customers\\saved data", "ref": "1012" },
-        "crossLink": { "value": "file:///C:/Users/Marco/Desktop/balance-bites-invoice-pro.html", "ref": "762" }
+        "sharedFolderPath": { "value": "C:\\Users\\<REDACTED>\\Desktop\\BALANCE BITES\\invoices customers\\saved data", "ref": "1012" },
+        "crossLink": { "value": "file:///C:/Users/<REDACTED>/Desktop/balance-bites-invoice-pro.html", "ref": "762" }
       },
       "print": { "engines": ["new-window invoice reprint (3898)","hidden-iframe reports (4388-4424)"], "page": "A4 portrait", "marginsDefault": {"t":16,"r":14,"b":16,"l":14} },
       "externalDeps": ["Google Fonts"],
