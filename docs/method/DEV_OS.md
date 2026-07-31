@@ -93,32 +93,34 @@ Add a new guard the moment a new rule is born. Guards are cheap; re-litigating a
 
 ## 6. The memory guard
 
-**`SESSION_CONTEXT.md`** — running state, overwritten each session. Template:
+Four files. Two are read every session; two are read on demand.
 
-```markdown
-# SESSION CONTEXT
-Updated: <date> · By: <model> · Phase: <Pnn> · Last task: <T0n> · Verdict: <PASS|FAIL>
+**`SESSION_CONTEXT.md`** — running state. Short by design. Done-steps table,
+current phase and next action, open carry-forward **ids only**, frozen
+decisions in force. If a paragraph is growing here, it belongs in the
+journal or the ledger. Read every session.
 
-## Where we are
-<2–4 lines: what is built, what is next>
+**`docs/method/PRECEDENTS.md`** — binding procedural rulings (`PR-nn`) and
+environment quirks. Append-only. A procedural question decided once binds
+every later task. Read every session.
 
-## Active carry-forwards
-- [ ] CF-nn — <item> — owner: <phase/task>
+**`docs/method/CARRY_FORWARDS.md`** — the full carry-forward ledger, open
+and closed, with all amendment text. Rows are append-and-amend; a closed row
+keeps its text. Read when a task names a carry-forward, when landing or
+amending rows, or at a gate.
 
-## Environment quirks (never re-discover)
-- <e.g. "Brave blocks File System Access on file:// — legacy tools must be opened via a local server for data export">
-
-## Frozen decisions in force
-- OD-nn … · ADR-nnn …
-
-## Next action
-<the exact next task id>
-```
-
-**`DEVELOPMENT_JOURNAL.md`** — append-only. One line per session:
+**`DEVELOPMENT_JOURNAL.md`** — append-only history. One entry per session:
 `Date | Model | Phase/Task | Files touched | Issues | Next`
 
-Both updated at the end of **every** session, on every surface. Every session opens with: *"Read SESSION_CONTEXT.md, then execute T0n."*
+All four are updated at the end of **every** session, on every surface.
+Every session opens with: *"Read SESSION_CONTEXT.md and PRECEDENTS.md, then
+execute T0n."*
+
+> **Why the split.** `SESSION_CONTEXT.md` reached 64,723 bytes at P-04c —
+> larger than this document and `DEV_OS_REFERENCE.md` combined — because the
+> ledger and the running narrative both accumulated inside the file that must
+> be read at the start of every session. Monotonic growth in a mandatory-read
+> file is a defect in the memory guard itself. Signed 2026-07-31, CF-55.
 
 ---
 

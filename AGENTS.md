@@ -7,9 +7,21 @@
 
 ## 0. Session opener — mandatory
 
-Before any work, read `SESSION_CONTEXT.md`. Restate: current phase, active carry-forwards, this task's model class. If the selected model does not match the task's declared class, **stop and say so**.
+Before any work, read **both**:
+- `SESSION_CONTEXT.md` — state, done steps, open carry-forward ids, next action
+- `docs/method/PRECEDENTS.md` — binding procedural rulings and environment quirks
 
-`SESSION_CONTEXT.md` and committed code **outrank your memory and outrank this conversation**. If they conflict with anything you believe, the repo wins.
+Restate: current phase, this task's model class, and any precedent that
+governs it. If the selected model does not match the task's declared class,
+**stop and say so**.
+
+Open `docs/method/CARRY_FORWARDS.md` when your task names a carry-forward,
+when you are landing or amending rows, or at a gate. It holds the full
+ledger; `SESSION_CONTEXT.md` holds only the open ids.
+
+`SESSION_CONTEXT.md`, `docs/method/PRECEDENTS.md` and committed code
+**outrank your memory and outrank this conversation**. If they conflict
+with anything you believe, the repo wins.
 
 ---
 
@@ -97,13 +109,23 @@ If asked to do heavyweight work under a standard model, say so before starting.
 
 ## 9. Every session ends the same way
 
-Update `SESSION_CONTEXT.md` (running state, active carry-forwards, environment quirks learned, next action) and append one line to `DEVELOPMENT_JOURNAL.md`:
+Four files, in this order:
+
+1. `SESSION_CONTEXT.md` — append one row to the done-steps table; update
+   phase, last task, verdict and next action; update the open-id list.
+   Keep it short. Narrative belongs in the journal.
+2. `docs/method/CARRY_FORWARDS.md` — land, amend or close rows. Never close
+   one unless your task explicitly authorises it.
+3. `docs/method/PRECEDENTS.md` — add any new binding ruling or environment
+   quirk. Append only; never rewrite an existing entry.
+4. `DEVELOPMENT_JOURNAL.md` — append one line:
 
 ```
 Date | Model | Phase/Task | Files | Issues | Next
 ```
 
-An environment quirk discovered once is recorded permanently so it is never paid for twice.
+An environment quirk discovered once is recorded permanently so it is never
+paid for twice. A procedural ruling made once binds every later task.
 
 ---
 

@@ -430,3 +430,59 @@ follow-up edit restoring the original six-space indentation, verified against
 point.
 
 Next: GATE 1. Verdict: PENDING.
+
+---
+
+## 2026-07-31 | Sonnet (standard) | PREPARE Step 7d · P-04d — memory guard restructure
+
+Files: `SESSION_CONTEXT.md`, `docs/method/CARRY_FORWARDS.md` (new),
+`docs/method/PRECEDENTS.md` (new), `AGENTS.md`,
+`.cursor/rules/b2s-devos.mdc`, `docs/method/DEV_OS.md`,
+`DEVELOPMENT_JOURNAL.md`. Exactly the seven authorised paths touched; no file
+under `legacy/`, `docs/product/`, `docs/requirements/` or `docs/archive/`
+touched.
+
+**CF-55 actioned: the ledger was split out of `SESSION_CONTEXT.md`.** Counted
+44 carry-forward rows in the old "Active carry-forwards" section (34 open,
+10 closed) before any edit. Moved the entire section — every row, every
+continuation line, every appended amendment — verbatim into the new
+`docs/method/CARRY_FORWARDS.md`, extracted mechanically with `sed` and
+diffed byte-for-byte against the original span to avoid any transcription
+risk. Row count in the new file reconciled to 44 exactly; no row was
+reworded, reordered, renumbered or closed.
+
+**`docs/method/PRECEDENTS.md` created**, landing the eleven supplied
+procedural rulings (PR-01 through PR-11) verbatim, then moving the nine
+"Environment quirks" bullets out of `SESSION_CONTEXT.md` verbatim (diffed
+byte-for-byte, identical), then appending the two new supplied bullets on
+the `codeload.github.com` fallback read path and the `git add`
+missing-pathspec failure mode (PR-11).
+
+**`SESSION_CONTEXT.md` rewritten in full** per the supplied template: state,
+done-steps table, an open-carry-forward-ids-only list (34 lines, derived
+from `docs/method/CARRY_FORWARDS.md`'s 34 rows still marked `[ ]`, each
+line's owner taken from that row's own "Owner:" text where one exists), and
+frozen decisions in force, including this restructure's own sign-off. Byte
+size 64,723 → 6,202. Four of the 34 open rows (CF-01, CF-05, CF-27, CF-44)
+carry no explicit "Owner:" field in the source row; each is recorded here as
+"owner: none stated" rather than inventing one.
+
+**`AGENTS.md` §0 and §9 replaced in full** with the supplied text — §0 now
+names both `SESSION_CONTEXT.md` and `PRECEDENTS.md` as mandatory reads and
+`CARRY_FORWARDS.md` as an on-demand read; §9 now lists the four session-end
+files in order. No other section changed. `.cursor/rules/b2s-devos.mdc`
+mirrored to the same effect in its own compact style, YAML frontmatter
+untouched, no other rule in the file changed.
+
+**`docs/method/DEV_OS.md` §6 replaced in full**, from the "The memory guard"
+heading through the horizontal rule immediately before "## 7.", which is
+confirmed present after the edit — this is CF-39's failure mode from P-01c
+and it did not recur here.
+
+Issues: none. The row-count reconciliation in Task 1 passed on the first
+attempt; no HALT condition was triggered. No credential, key, token,
+account name, absolute local path or buyer PII was encountered in any of
+the seven files, so no REDACT-AND-CONTINUE action was needed either. Report
+hygiene grep run against the report text before submission, per PR-10.
+
+Next: GATE 1. Verdict: PENDING.

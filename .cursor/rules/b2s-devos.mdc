@@ -6,12 +6,17 @@ alwaysApply: true
 # B2S Dev OS — always on
 
 ## Session opener
-Read SESSION_CONTEXT.md before any work. Restate: current phase, active
-carry-forwards, this task's model class. If the selected model does not match
-the task's class, stop and say so.
+Read SESSION_CONTEXT.md and docs/method/PRECEDENTS.md before any work.
+Restate: current phase, this task's model class, and any precedent that
+governs it. If the selected model does not match the task's class, stop and
+say so.
 
-SESSION_CONTEXT.md and committed code outrank your memory and this
-conversation. If they conflict with what you believe, the repo wins.
+Open docs/method/CARRY_FORWARDS.md when your task names a carry-forward, when
+you are landing or amending rows, or at a gate. It holds the full ledger;
+SESSION_CONTEXT.md holds only the open ids.
+
+SESSION_CONTEXT.md, PRECEDENTS.md and committed code outrank your memory and
+this conversation. If they conflict with what you believe, the repo wins.
 
 ## One task per window
 Execute exactly one task per session. Do not batch. Do not "also fix while I'm
@@ -55,7 +60,11 @@ components/ui and components/shared belong to the design surface. Compose and
 wire; never restyle. Token-only styling. Gaps route back to design.
 
 ## Every session ends the same way
-Update SESSION_CONTEXT.md and append to DEVELOPMENT_JOURNAL.md:
+Four files, in order: (1) SESSION_CONTEXT.md — done-steps row, phase, last
+task, verdict, next action, open-id list; (2) docs/method/CARRY_FORWARDS.md —
+land/amend/close rows, never close without explicit authorisation; (3)
+docs/method/PRECEDENTS.md — append any new ruling or environment quirk, never
+rewrite an existing entry; (4) DEVELOPMENT_JOURNAL.md — append one line:
 Date | Model | Phase/Task | Files | Issues | Next
 
 ## Report honestly
