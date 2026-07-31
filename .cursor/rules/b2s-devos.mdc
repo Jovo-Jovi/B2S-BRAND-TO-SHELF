@@ -28,21 +28,27 @@ does not exist. Flag and stop.
 
 STOP and flag before: changing any entity in DATA_MODEL.md; changing
 BrandConfig; changing the print engine or any @page rule; adding a dependency;
-touching components/ui or components/shared; editing test/fixtures/golden.
+touching the shared component library; editing test/fixtures/golden.
 
-## Hard rules (CI enforces — do not suppress or work around)
+## Hard rules — principles now, enforcement at Gate 3
+Signed decisions, in force today. The enforcement mechanism for each — guard
+scripts, folder boundaries, libraries — is authored in ARCHITECTURE.md after
+Gate 3. Do not invent a folder path or a dependency to satisfy a rule here.
 - No hex colour, brand string, currency code, URL, phone, or Arabic UI literal
-  outside BrandConfig / i18n resources / CSS variables.
-- Nothing imports localStorage, indexedDB, or the File System Access API except
-  src/data/adapters/.
-- No CDN script/link at runtime. Fonts and libraries are bundled.
-- No window.print(), window.open for printing, or @page outside src/print/.
-- Every import, preset load, and BrandConfig write is zod-validated before it
-  reaches the store.
-- No user-derived value reaches innerHTML or dangerouslySetInnerHTML.
+  outside brand configuration, translation resources, or design tokens. (D6, D7)
+- Persistence is reached through one declared boundary, never touched directly
+  from feature code. (G11)
+- No runtime CDN dependency. Fonts and libraries are bundled. (E11 determinism)
+- Print output is produced by one engine. Nothing else emits page geometry.
+  (E11, CF-64)
+- Every import, brand-configuration write and inbound record is
+  schema-validated before it reaches storage. (C14, G6)
+- No user-derived value reaches an HTML-injection sink. (CF-02)
+- Every enumeration stores a language-neutral key; display text lives in
+  translation resources. (D6, D7, CF-65)
 
-If a guard blocks you, the guard is right. To change a rule, stop and flag for
-an ADR.
+Each becomes a CI guard the moment its mechanism is decided. If a rule blocks
+you, the rule is right — stop and flag for an ADR.
 
 ## This is a greenfield build that harvests requirements
 Six HTML tools are being RETIRED, not ported. No code is reused and no output of
@@ -88,8 +94,9 @@ size.
 Standard: UI wiring, forms, tests, land tasks, CRUD on specified entities.
 
 ## Design boundary
-components/ui and components/shared belong to the design surface. Compose and
-wire; never restyle. Token-only styling. Gaps route back to design.
+The shared component library belongs to the design surface; its location is
+fixed at Gate 3. Compose and wire; never restyle. Token-only styling. Gaps
+route back to design.
 
 ## Every session ends the same way
 Four files, in order: (1) SESSION_CONTEXT.md — done-steps row, phase, last

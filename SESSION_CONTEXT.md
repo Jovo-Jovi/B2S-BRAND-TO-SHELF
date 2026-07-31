@@ -1,6 +1,6 @@
 # SESSION CONTEXT
 Updated: 2026-08-01 · By: Opus · Phase: PREPARE — Gate 1 corrections landed ·
-Last task: P-02-FIX · Verdict: pending
+Last task: P-05-PRE · Verdict: pending
 
 ## Read these too
 - `docs/method/PRECEDENTS.md` — binding rulings and environment quirks.
@@ -34,7 +34,8 @@ its corrections are landed by P-02-FIX and await verdict.
 | P-04c | CF-52 redactions, CF-53/54/56/58, ledger | PASS | `9bfead2`, `e6024bc` |
 | P-04d | Memory guard restructure | pending | `e698b2a` |
 | P-04e | Sync committed project instructions to split memory guard | pending | `fdc890e` |
-| P-02-FIX | Gate 1: HF-1, CF-42, CF-63, AGENTS.md rewrite, ledger | pending | <this commit> |
+| P-02-FIX | Gate 1: HF-1, CF-42, CF-63, AGENTS.md rewrite, ledger | pending | `a95cfb3` |
+| P-05-PRE | Defer enforcement mechanism in rules files; land CF-73 to CF-75 | pending | <this commit> |
 
 ## Open carry-forwards — ids only
 Full text in `docs/method/CARRY_FORWARDS.md`.
@@ -56,7 +57,6 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
 - CF-33 — `docs/method/DEV_OS.md` §3 defines a parity gate that is void — owner: reviewer, before Gate 2
 - CF-39 — `B2S_PREPARE_PHASE.md` §3/§4 now run together with no `---` separator — owner: reviewer, next light edit to `B2S_PREPARE_PHASE.md`
 - CF-41 — `B2S_PREPARE_PHASE.md` §1's product-definition table gives the wrong repo URL — owner: the write task that lands CF-39 — P-12
-- CF-42 — EXTRACT_STOCK_COSTS.md Part 7 rolls up the Arabic-only remainder as category inventories — owner: reviewer, closes on the P-02-FIX verdict
 - CF-44 — VOID. Never issued; reviewer numbering error at the P-02 verdict — owner: none, no action
 - CF-45 — No tax, discount or freight calculation exists in bb-stock-costs.html — owner: Step 11
 - CF-46 — EXTRACT_STOCK_COSTS.md §C.4 lists ten findings awaiting accept/reject — owner: reviewer, Gate 1
@@ -70,9 +70,7 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
 - CF-56 — The falsified sticker preset names appear at two locations in AUDIT_STICKER.md — owner: reviewer, closes on P-04c verdict
 - CF-58 — `tools/backup-browser-data.js` serves the abandoned browser-data backup workflow — owner: reviewer, closes on P-04c verdict
 - CF-60 — Four open rows carry no explicit `Owner:` field (CF-01, CF-05, CF-27, CF-44) — owner: reviewer, before Gate 3
-- CF-61 — HF-1: EXTRACT_STOCK_COSTS.md §1.1.11 stated a fabricated field list for bb_color_presets — owner: closes on the P-02-FIX verdict
 - CF-62 — Payments have no legacy source; the stored shape is a binary flag — owner: CALC_SPEC.md and DOMAIN_MODEL.md
-- CF-63 — EXTRACT_DESIGN_TOOLS.md referenced a §C.4 that did not exist; three findings orphaned — owner: closes on the P-02-FIX verdict
 - CF-64 — `WRITE_KEYS` mirrors `bb_label_templates`, a key that tool only reads; overwrites the sticker catalogue — owner: DOMAIN_MODEL.md
 - CF-65 — Arabic display strings are used as stored primary keys — owner: DOMAIN_MODEL.md and DATA_MODEL.md
 - CF-66 — `Return.amount` carries two incompatible meanings depending on write path — owner: DOMAIN_MODEL.md
@@ -82,6 +80,9 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
 - CF-70 — Returns valued at list price against a discounted invoice total; net revenue overstated — owner: CALC_SPEC.md
 - CF-71 — A parse failure is indistinguishable from an empty collection, then saved over real data — owner: FEATURE_INVENTORY.md must-not-reproduce
 - CF-72 — REPORT.md citations into the two business tools need re-derivation before use — owner: annotate REPORT.md at P-05
+- CF-73 — bb-stock-costs.html:5645 ships a corrupted Arabic "full return" string on every printed report — owner: FEATURE_INVENTORY.md must-not-reproduce, UX_PRINCIPLES.md
+- CF-74 — Report engine has no resource bundle outside the invoice template; two strings re-declared eight times — owner: DOMAIN_MODEL.md and UX_PRINCIPLES.md
+- CF-75 — AGENTS.md and .cursor/rules/b2s-devos.mdc carried folder paths and a named library ahead of ARCHITECTURE.md; rewritten by P-05-PRE — owner: ARCHITECTURE.md, immediately after Gate 3
 
 ## Frozen decisions in force
 - Freeze point 2026-07-29 (`legacy/FREEZE.md`) — tools RETIRING, not port
@@ -94,4 +95,4 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
   the build, not the freeze.
 
 ## Next action
-P-05.
+P-05-LAND.

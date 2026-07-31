@@ -278,7 +278,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       *(Text supplied by the P-03 prompt and landed verbatim. This row was opened
       empty by P-02 because the P-02 trigger message omitted the text; it is now
       filled, not re-opened.)*
-- [ ] CF-42 — EXTRACT_STOCK_COSTS.md Part 7 gives the Arabic-only remainder of
+- [x] CF-42 — EXTRACT_STOCK_COSTS.md Part 7 gives the Arabic-only remainder of
       501 literals as category inventories rather than individual rows.
       Acceptable for UI chrome; not acceptable for literals classified as
       business data or document template. Gate 1 check: if those are rolled up,
@@ -295,6 +295,10 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       CF-42's standard names both: 'Business-data labels (Arabic only)' and
       'Document templates (Arabic only) — report engine'. Enumerated by
       P-02-FIX. Closes on that verdict.
+      **CF-42 — CLOSED (P-02-FIX).** §7.5.a enumerates 150 document-template
+      literals (:2893), §7.5.b enumerates 31 business-data labels (:3077), both
+      with file:line. Eight permitted rollups retained with pointers, not
+      deleted.
 - [x] CF-43 — The P-02 STOP block mixed halt conditions with redact-and-continue
       conditions under one heading, forcing the builder to resolve a reviewer
       defect mid-task. Corrected in P-03; must also be corrected in P-04.
@@ -598,7 +602,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       "No open carry-forward without a named owner" and a checklist cannot read
       prose. Normalise all four to explicit `Owner:` fields, inventing no owner —
       where none exists, write the reason. Owner: reviewer, before Gate 3.
-- [ ] CF-61 — HARD FAILURE at Gate 1. EXTRACT_STOCK_COSTS.md §1.1.11 stated a
+- [x] CF-61 — HARD FAILURE at Gate 1. EXTRACT_STOCK_COSTS.md §1.1.11 stated a
       fabricated typed field list for `bb_color_presets`: `bg, panel, ink, muted,
       gold, line`. Four names are wrong — `panel`, `ink` and `line` do not occur
       in the source at all, and `muted` is the wrong name for `mut`. The true
@@ -607,6 +611,8 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       "6 hex values each". Corrected by P-02-FIX. Four other entity blocks were
       spot-checked against source and are exact, so the defect is bounded, not
       systemic. Owner: closes on the P-02-FIX verdict.
+      **CF-61 — CLOSED (P-02-FIX).** §1.1.11 now states the seven-value record;
+      §6's row corrected to 7 hex values. Gate 1 hard failure cleared.
 - [ ] CF-62 — Payments have no legacy source. The stored shape is
       `{invoiceId: {status:'paid'|'pending', updatedAt}}` — a binary flag, no
       amount, no payment type, no partial state, no receipt. Release 1 requires
@@ -615,10 +621,12 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       declared/actual mismatch also exists: the doc comment at :3121 promises
       `paidDate`, the code writes `updatedAt`. Owner: CALC_SPEC.md and
       DOMAIN_MODEL.md.
-- [ ] CF-63 — EXTRACT_DESIGN_TOOLS.md references "§C.4" at :1073, :1240 and
+- [x] CF-63 — EXTRACT_DESIGN_TOOLS.md references "§C.4" at :1073, :1240 and
       :2015, each saying a finding is recorded there. No §C.4 heading exists in
       the file, so three findings have no destination. Recovered by P-02-FIX.
       Owner: closes on the P-02-FIX verdict.
+      **CF-63 — CLOSED (P-02-FIX).** §C.4 landed in EXTRACT_DESIGN_TOOLS.md at
+      :3221 with three recovered findings, each citing its referring line.
 - [ ] CF-64 — `WRITE_KEYS` in bb-stock-costs.html:1180 contains
       `bb_label_templates`, which that tool only ever reads (:6016). Mirroring
       therefore overwrites the sticker tool's template catalogue with whatever
@@ -639,7 +647,9 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       (EXTRACT_STOCK_COSTS §2.17, §8.7) — a behavioural cliff, not a gradual
       change. Owner: DOMAIN_MODEL.md; the stock-creation invariant in
       B2S_PREPARE_PHASE.md §7 already forecloses it, so this is confirmation
-      evidence. Owner: DOMAIN_MODEL.md.
+      evidence.
+      AMENDED (P-05-PRE). Removed a duplicated "Owner: DOMAIN_MODEL.md" that
+      appeared twice in this row. No other change.
 - [ ] CF-68 — Unmarked return dispositions default in OPPOSITE directions across
       the two retiring tools (EXTRACT_INVOICE_PRO F-9). The same legacy row
       yields two different stock and money outcomes depending on which tool reads
@@ -662,3 +672,22 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       UNIFICATION.md and PHASE_PLAN.md inherit the same stale numbers and are
       VOID, so no action there. Owner: annotate REPORT.md at P-05; never cite an
       unverified REPORT.md line number.
+- [ ] CF-73 — bb-stock-costs.html:5645 contains `مرtجع كامل` — a Latin `t`
+      where `ت` belongs. Every printed sales report containing a full return
+      has shipped corrupted text, invisibly, for the life of the tool. This is
+      the strongest evidence for OD-D6/D7: a translation resource makes this a
+      one-line fix and a grep-able defect class, while an inline literal makes
+      it undetectable. Owner: FEATURE_INVENTORY.md must-not-reproduce, and
+      UX_PRINCIPLES.md as the worked justification for the no-literals rule.
+- [ ] CF-74 — The report engine has no resource bundle outside the invoice
+      template. `الإجمالي` is re-declared at bb-stock-costs.html:5652, :5743,
+      :5746, :5798 and `المنتج` at :5651, :5712, :5757, :5782. Eight
+      declarations of two strings. Requirement: one resource key per string,
+      one declaration site. Owner: DOMAIN_MODEL.md and UX_PRINCIPLES.md.
+- [ ] CF-75 — AGENTS.md and .cursor/rules/b2s-devos.mdc carried folder paths
+      (`src/data/adapters/`, `src/print/`, `components/ui/`,
+      `components/shared/`) and a named library (`zod`) in always-on rules,
+      ahead of ARCHITECTURE.md. Rewritten by P-05-PRE to state principle and
+      defer mechanism. When Gate 3 closes, restore the enforcement column with
+      real guard names and paths. Owner: ARCHITECTURE.md, immediately after
+      Gate 3.

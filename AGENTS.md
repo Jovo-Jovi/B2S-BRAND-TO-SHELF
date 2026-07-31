@@ -42,23 +42,30 @@ Stop and flag before doing any of these, even if the task seems to imply them:
 - Changing `BrandConfig` (`BRAND_CONFIG.md`)
 - Changing the print engine or any `@page` rule (`PRINT_CONTRACT.md`)
 - Adding a dependency
-- Touching `components/ui/` or `components/shared/` (design surface territory)
+- Touching the shared component library (design surface territory)
 - Editing anything in `test/fixtures/golden/`
 
 ---
 
-## 3. Hard rules — CI enforces these, don't fight them
+## 3. Hard rules — principles now, enforcement at Gate 3
 
-| Rule | Guard |
+These are signed decisions and are in force today. The mechanism that enforces
+each one — guard scripts, folder boundaries, libraries — is authored in
+`ARCHITECTURE.md` after Gate 3. Do not invent a folder path or a dependency to
+satisfy a rule here.
+
+| Rule | Signed by |
 |---|---|
-| No hex colour, brand string, currency code, URL, phone, or Arabic UI literal outside `BrandConfig` / i18n resources / CSS variables | `check-no-hardcoded-brand` |
-| Nothing imports `localStorage`, `indexedDB`, or the File System Access API except `src/data/adapters/` | `check-no-direct-storage` |
-| No CDN `<script>`/`<link>` at runtime. Fonts and libraries are bundled | `check-no-runtime-cdn` |
-| No `window.print()`, `window.open` for printing, or `@page` outside `src/print/` | `check-print-containment` |
-| Every import, preset load, and BrandConfig write is zod-validated before it reaches the store | `check-zod-coverage` |
-| No user-derived value reaches `innerHTML` / `dangerouslySetInnerHTML` | lint + guard |
+| No hex colour, brand string, currency code, URL, phone, or Arabic UI literal outside brand configuration, translation resources, or design tokens | D6, D7 |
+| Persistence is reached through one declared boundary, never touched directly from feature code | G11 |
+| No runtime CDN dependency. Fonts and libraries are bundled | E11 determinism |
+| Print output is produced by one engine. Nothing else emits page geometry | E11, and CF-64's cross-tool overwrite |
+| Every import, brand-configuration write and inbound record is schema-validated before it reaches storage | C14, G6 |
+| No user-derived value reaches an HTML-injection sink | CF-02 |
+| Every enumeration stores a language-neutral key. Display text lives in translation resources | D6, D7, CF-65 |
 
-If a guard blocks you, **the guard is right**. Do not disable, suppress, or work around it. If you believe a rule is wrong, stop and flag it for an ADR.
+Each becomes a CI guard the moment its mechanism is decided. If a rule appears to
+block you, **the rule is right** — stop and flag for an ADR.
 
 ---
 
@@ -113,7 +120,7 @@ invoice total. Neither is a target. Both are decisions for `DOMAIN_MODEL.md` and
 Someone prints these files and cuts material to them. A 2 mm error costs money.
 
 - Real units only (mm/cm) in the print DOM. The dual-DOM pattern is mandatory: screen version scaled in px, print version in real units.
-- One px↔mm constant, from `src/print/`. Never redefine it locally.
+- One px↔mm constant, owned by the print engine. Never redefine it locally.
 - Never mark a print criterion done on screen evidence. It requires a measured, photographed printout.
 - Print gaps route back to the print engine. **Never patch print CSS inside a feature folder.**
 
@@ -121,7 +128,8 @@ Someone prints these files and cuts material to them. A 2 mm error costs money.
 
 ## 7. Design boundary
 
-`components/ui/` and `components/shared/` belong to the design surface. You **compose and wire** them; you never restyle them. Token-only styling. A visual gap is flagged back to design, never patched locally.
+The shared component library belongs to the design surface; its location is
+fixed at Gate 3. You **compose and wire** them; you never restyle them. Token-only styling. A visual gap is flagged back to design, never patched locally.
 
 ---
 

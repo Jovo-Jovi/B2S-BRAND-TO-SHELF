@@ -607,3 +607,36 @@ Ledger: 43 open, 14 closed, 57 total. `SESSION_CONTEXT.md`'s open-id list
 rebuilt from the ledger and verified equal id-for-id.
 
 Next: P-05. Verdict: PENDING.
+
+2026-08-01 | Standard | PREPARE / P-05-PRE (defer enforcement mechanism, CF-73..75) | AGENTS.md, .cursor/rules/b2s-devos.mdc, docs/method/CARRY_FORWARDS.md, SESSION_CONTEXT.md | §2's `components/ui`/`components/shared` bullet also carried a forbidden term in both files — not named in TASKS 1-3 but required by the done-when's zero-forbidden-term criterion, so fixed in the same style as TASK 3 and declared here as a deviation | P-05-LAND
+
+Session summary: count check (PR-04) passed before any edit — 3 closures
+(CF-42, CF-61, CF-63), 3 new (CF-73, CF-74, CF-75), 1 amendment (CF-67), all
+matching stated counts and id lists. AGENTS.md §3 replaced in full: the CI-guard
+table (`check-no-hardcoded-brand` etc.) is now a "signed-by" table (D6/D7, G11,
+E11, C14/G6, CF-02, CF-65) with enforcement deferred to `ARCHITECTURE.md` after
+Gate 3 — no guard name, folder path or library is invented. §6's px↔mm bullet
+now says "owned by the print engine" instead of naming `src/print/`. §7's first
+sentence now calls it "the shared component library" with its location "fixed
+at Gate 3" instead of naming `components/ui/`/`components/shared/`. Mirrored
+into `.cursor/rules/b2s-devos.mdc` in the file's existing compact-bullet style;
+frontmatter untouched. Deviation: §2's "Touching `components/ui/` or
+`components/shared/`" bullet in both files was not named by TASK 1-3 but still
+contained a forbidden term, so it was generalised to "Touching the shared
+component library" in both files, consistent with TASK 3's wording — this is
+CF-75's own subject matter (P-02-FIX's report had already flagged these two
+hits as out of reach under a stricter change-no-other-section clause). Grep for
+`src/`, `components/ui`, `components/shared`, `zod`, `Vite`, `IndexedDB`,
+`preset` (case-insensitive) returns zero matches in both files. CF-42, CF-61,
+CF-63 closed in the ledger (checkbox flipped to `[x]`, closure text appended
+inside each row, original claim never deleted — PR-07). CF-67 amended:
+duplicated "Owner: DOMAIN_MODEL.md" removed, nothing else in the row touched.
+CF-73 (corrupted Arabic "full return" string, bb-stock-costs.html:5645),
+CF-74 (report engine has no resource bundle; two strings re-declared eight
+times) and CF-75 (this task's own subject — folder paths and `zod` in
+always-on rules ahead of ARCHITECTURE.md) landed as new open rows.
+`SESSION_CONTEXT.md`'s open-id list rebuilt from the ledger: 43 before, 43
+after (3 closed out, 3 new in — net zero), verified id-for-id against the
+ledger. Ledger totals: open 43, closed 17, total 60. Done-steps table gained
+the P-02-FIX commit hash (`a95cfb3`, previously a placeholder) and a new
+P-05-PRE row. Next action set to P-05-LAND.
