@@ -486,3 +486,64 @@ the seven files, so no REDACT-AND-CONTINUE action was needed either. Report
 hygiene grep run against the report text before submission, per PR-10.
 
 Next: GATE 1. Verdict: PENDING.
+
+---
+
+## 2026-07-31 | Sonnet (standard) | PREPARE Step 7e · P-04e — sync committed project instructions
+
+Files: `docs/method/CLAUDE_PROJECT_INSTRUCTIONS.md`,
+`docs/method/CARRY_FORWARDS.md`, `DEVELOPMENT_JOURNAL.md`. Exactly the three
+authorised paths touched; `docs/method/PROJECT_RECONFIG.md` confirmed
+untouched and still the STATUS stub under CF-53; `SESSION_CONTEXT.md` not
+touched, per this task's scope.
+
+**Count check (PR-04) passed before any edit:** stated 2 closures (CF-55,
+CF-59) and 1 new row (CF-60); the prompt's own groups held exactly 2 and 1;
+ids matched exactly. No halt.
+
+**Task 1:** replaced `CLAUDE_PROJECT_INSTRUCTIONS.md`'s "## How to open every
+session" section (originally lines 145-150) with the reviewer-supplied
+repository-fetch text, ending immediately before "## Acceptance is a gate."
+One placement judgement made and declared, not silently absorbed: the
+reviewer-supplied block's trailing bullet ("You never emit a prompt that
+contradicts a precedent") is written in the "You never..." form of the
+"## What you never do" list, not in the prose form of the surrounding
+session-opener text, and appears with no heading transition of its own. Landed
+it at the end of "## What you never do" (Task 2's target) instead of inside
+the session-opener section, matching that list's existing bullet form as Task
+2 instructs, rather than transcribing it into a section it does not belong to.
+
+**Task 2:** the same bullet appended to the end of "## What you never do",
+verbatim, matching the list's existing `- **You never ...**` form.
+
+**Task 3:** §3.5 "Never upload as knowledge" — replaced only the clause
+"it changes every session and is pasted at the top of each conversation" and
+"the fresh paste" with text stating the reviewer fetches `SESSION_CONTEXT.md`
+directly from the repository per PR-09 and that uploading it as a knowledge
+file would guarantee a stale copy competing with the live one. No other
+sentence or word in §3.5 changed.
+
+**Task 4:** `docs/method/CARRY_FORWARDS.md` — count check (2 closures, 1 new
+row) passed before editing. Closed CF-55 and CF-59 with their supplied
+verbatim closing text appended below each original row (rows kept intact,
+marked `[x]`); landed CF-60 verbatim as a new row at the end of the ledger.
+CF-60 itself only *describes* normalising CF-01/CF-05/CF-27/CF-44 to explicit
+`Owner:` fields as a future reviewer task before Gate 3 — this task did not
+perform that normalisation, since Task 4 only authorised closing two rows and
+landing one.
+
+**Task 5 — reported, not actioned:** `SESSION_CONTEXT.md` was outside this
+task's writable set. Its open-carry-forward-id list is now stale by two rows
+(CF-55 and CF-59 both close here but still appear as open in
+`SESSION_CONTEXT.md`'s list). Updating it is named as the next task's first
+action.
+
+**PR-10 report hygiene grep run** against this report and the diff before
+submission — no OS account name, credential, key, or absolute local path
+found.
+
+Issues: none beyond the Task 1/Task 2 bullet-placement judgement above, which
+is declared rather than silently resolved. No history operation performed.
+
+Next: land `SESSION_CONTEXT.md`'s two stale open-id rows (CF-55, CF-59) as
+the first action, then GATE 1. Verdict: PENDING.

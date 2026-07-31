@@ -73,6 +73,10 @@ packs, document authorship, and phase sequencing.
 - **You never treat a `docs/requirements/` extract as current truth.**
 - **You never use "customer" unqualified.** It is `Tenant` or `Buyer`. The same
   applies to every term in `VOCABULARY_DRAFT.md` §1.15.
+- **You never emit a prompt that contradicts a precedent.** `docs/method/PRECEDENTS.md`
+  binds every prompt you write and every verdict you issue. If a precedent is
+  wrong, supersede it with a new one and say which it replaces — never silently
+  deviate.
 
 ## The project in one paragraph
 
@@ -144,9 +148,31 @@ amendment to §3 rather than citing it.
 
 ## How to open every session
 
-Ask for the current `SESSION_CONTEXT.md` before doing anything substantive. If it
-has not been pasted, request it. Do not reconstruct state from conversation
-history.
+The repository is your source of state. Fetch it. Do not ask for a paste and do
+not reconstruct state from conversation history.
+
+Read every session:
+- `SESSION_CONTEXT.md` — phase, done-steps table, open carry-forward ids, next action
+- `docs/method/PRECEDENTS.md` — binding procedural rulings (PR-nn) and environment quirks
+
+Read on demand:
+- `docs/method/CARRY_FORWARDS.md` — the full ledger. Open it whenever a task names
+  a carry-forward, whenever you land or amend rows, and at every gate.
+- `DEVELOPMENT_JOURNAL.md` — append-only narrative history.
+
+Fetch pattern — PR-09, signed 2026-07-31:
+
+    curl -sL -o r.tar.gz "https://codeload.github.com/Jovo-Jovi/B2S-BRAND-TO-SHELF/tar.gz/refs/heads/main" && tar xzf r.tar.gz
+
+`raw.githubusercontent.com` serves individual committed files. `api.github.com`
+rate-limits unauthenticated requests and will fail mid-verification — never
+depend on it.
+
+Every verdict states what you fetched and which commands you ran. A build report
+is still required: it carries intent, deviations and judgement that no diff shows.
+
+If the network is unavailable, say so plainly and ask for `SESSION_CONTEXT.md`
+and `docs/method/PRECEDENTS.md` to be pasted. Never proceed on memory.
 
 ## Acceptance is a gate
 
@@ -271,7 +297,7 @@ Leaving any of these in knowledge means the reviewer can cite a void document an
 
 ## 3.5 Never upload as knowledge
 
-`SESSION_CONTEXT.md` — it changes every session and is pasted at the top of each conversation. Uploading it guarantees a stale copy competing with the fresh paste, which is precisely the drift the authority rule exists to prevent.
+`SESSION_CONTEXT.md` — the reviewer fetches it directly from the repository per PR-09. Uploading it as a knowledge file would guarantee a stale copy competing with the live one, which is precisely the drift the authority rule exists to prevent.
 
 ## 3.6 The second rotation — after Gate 1
 

@@ -518,7 +518,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       prompt, 23 actual (21 under docs/product/, 2 under docs/method/). Same
       defect class as CF-38's 56-versus-79. P-12 corrected and P-01 annotated
       as-built by P-04c. Owner: reviewer, verify at Gate 3.
-- [ ] CF-55 — SESSION_CONTEXT.md is 58,233 bytes and grows every task, because
+- [x] CF-55 — SESSION_CONTEXT.md is 58,233 bytes and grows every task, because
       the full carry-forward ledger including all appended amendment text lives
       inside the file that must be pasted at the start of every session. It is
       now larger than DEV_OS.md and DEV_OS_REFERENCE.md combined. Proposed
@@ -526,6 +526,13 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       retains state, next action, environment quirks and open CF ids by
       reference. Requires an AGENTS.md §0/§9 amendment, so it is NOT actioned by
       P-04c. Owner: owner signature, then a dedicated task.
+      CF-55 — CLOSED (P-04d). Ledger moved to docs/method/CARRY_FORWARDS.md,
+      precedents and environment quirks to docs/method/PRECEDENTS.md.
+      SESSION_CONTEXT.md went from 64,723 to 6,202 bytes; mandatory per-session
+      reading from 64,723 to 13,885 across two files. 44 rows reconciled
+      exactly, none reworded, reordered, renumbered or closed by the move.
+      AGENTS.md §0/§9, .cursor/rules/b2s-devos.mdc and DEV_OS.md §6 amended to
+      match. Signed 2026-07-31.
 - [ ] CF-56 — The falsified sticker preset names appear at two locations in
       AUDIT_STICKER.md. P-04b annotated §3.4 (:994) only. The rows at :610-611
       attribute the same names to `theme.presets.dark.*` and
@@ -544,7 +551,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       accepted as potentially unrecoverable. Orphaned. Archived by P-04c to
       docs/archive/2026-07/ rather than deleted. Owner: reviewer, closes on
       P-04c verdict.
-- [ ] CF-59 — The reviewer surface can read the public repo directly
+- [x] CF-59 — The reviewer surface can read the public repo directly
       (api.github.com, raw.githubusercontent.com) and has begun doing so:
       P-04b's verdict and the CF-49/CF-50/CF-56 resolutions were produced by
       direct read, not from pasted reports. This changes the verification loop —
@@ -553,3 +560,15 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       change write access or the builder's role. It needs a signed decision, and
       a standing discipline that every verdict states what was fetched and which
       commands were run. Owner: OD at P-06.
+      CF-59 — CLOSED (P-04d). Reviewer direct repository read SIGNED 2026-07-31 and
+      landed as PR-09 in docs/method/PRECEDENTS.md, with the codeload fetch
+      pattern and the api.github.com rate-limit quirk recorded in §2. The
+      committed project instructions are synced by P-04e. Formal method OD to
+      be recorded in DECISIONS.md at P-06.
+- [ ] CF-60 — Four open rows carry no explicit `Owner:` field: CF-01, CF-05,
+      CF-27, CF-44. Not a substantive gap — CF-01's owner is P10 and CF-05's is
+      Step 15, both stated in prose rather than as a field; CF-27 is
+      noted-no-action; CF-44 is void by design. But the Gate 3 checklist requires
+      "No open carry-forward without a named owner" and a checklist cannot read
+      prose. Normalise all four to explicit `Owner:` fields, inventing no owner —
+      where none exists, write the reason. Owner: reviewer, before Gate 3.
