@@ -547,3 +547,63 @@ is declared rather than silently resolved. No history operation performed.
 
 Next: land `SESSION_CONTEXT.md`'s two stale open-id rows (CF-55, CF-59) as
 the first action, then GATE 1. Verdict: PENDING.
+
+---
+
+## 2026-08-01 | Opus (heavyweight) | PREPARE Gate 1 · P-02-FIX — Gate 1 corrections and rules-file rewrite
+
+**The session halted before its first edit and was resumed.** TASK 4 and TASK 5
+both referred to "reviewer-supplied text, supplied verbatim in this task's
+message", and neither payload was in the message. PR-04 forbids inventing text
+for a missing id, and TASK 5 ordered the count check before ANY edit, so the
+whole task was gated. Reported with the tree clean; the reviewer supplied both
+payloads plus three prompt corrections, and the run proceeded. This produced
+**PR-12 — a prompt is self-contained**, landed this session.
+
+Count check on the supplied ledger text: closures 2 (CF-48, CF-57), new 12
+(CF-61–CF-72, contiguous, CF-60 was the prior highest), amendments 3 (CF-42,
+CF-49, CF-12). All three groups matched their stated counts and id lists.
+
+**HF-1 confirmed by direct read.** `bb-stock-costs.html:1346-1350` carries
+`{id, name, bg, gold, txt, mut, row, tot, grand}` — seven hex values. The
+extract's §1.1.11 named six, four of them wrong in two different ways: `panel`,
+`ink` and `line` occur nowhere in the source, and `muted` is a wrong name for
+the real field `mut`. Corrected under PR-07: the original claim stays visible
+and the correction sits below it. §6's "6 hex values each" corrected to seven.
+
+**CF-42 was larger than the prompt described.** §7.5 rolls up TEN categories,
+not six. Eight stay rolled up; two required individual enumeration. §7.5.a now
+lists **150** document-template literals with file:line from
+`bb-stock-costs.html:4647-5960`, and §7.5.b lists **31** business-data labels
+from the specific disposition and label lines. The superseded rollups are
+annotated, not deleted. Two findings fell out: a character-level corruption at
+`:5645` where a Latin `t` sits inside `مرtجع كامل`, shipping broken text on
+every printed sales report with a full return; and the absence of any resource
+bundle outside the invoice template, with `الإجمالي` and `المنتج` each
+re-declared at four separate sites.
+
+**CF-63 recovered all three orphaned findings.** Every one of the three `§C.4`
+references pointed at an identifiable finding — none pointed at nothing — so
+§C.4 now exists in `EXTRACT_DESIGN_TOOLS.md` with F-1 through F-3.
+
+**AGENTS.md was actively misinstructing** and is rewritten across §2, §4, §5,
+§8 and the Stack block, mirrored into `.cursor/rules/b2s-devos.mdc` with its
+frontmatter preserved. The rules file is now clean of parity, `PARITY_MATRIX.md`,
+the migration importer and every stack name. AGENTS.md retains two hits that the
+prompt's own "change no other section" clause put out of reach — declared in the
+report rather than silently fixed.
+
+Files: `docs/requirements/extracts/EXTRACT_STOCK_COSTS.md`,
+`docs/requirements/extracts/EXTRACT_DESIGN_TOOLS.md`, `AGENTS.md`,
+`.cursor/rules/b2s-devos.mdc`, `SESSION_CONTEXT.md`,
+`docs/method/CARRY_FORWARDS.md`, `docs/method/PRECEDENTS.md`, this file.
+Nothing under `legacy/` or `docs/product/` was written.
+
+Issues: the initial halt, above. Two done-when criteria unmet on AGENTS.md,
+both blocked by the change-no-other-section clause. TASK 2's scope grew from one
+category to two on the reviewer's correction.
+
+Ledger: 43 open, 14 closed, 57 total. `SESSION_CONTEXT.md`'s open-id list
+rebuilt from the ledger and verified equal id-for-id.
+
+Next: P-05. Verdict: PENDING.

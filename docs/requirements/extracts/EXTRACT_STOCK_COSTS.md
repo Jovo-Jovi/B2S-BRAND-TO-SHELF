@@ -463,7 +463,17 @@ never invoked here; the other tool is assumed to drive it, across a
 |---|---|
 | `id` | string |
 | `name` | string (user-supplied) |
-| `bg`, `panel`, `ink`, `muted`, `gold`, `line` | hex colour strings |
+| `bg`, `gold`, `txt`, `mut`, `row`, `tot`, `grand` | hex colour strings — **seven** |
+
+> **CORRECTION — landed by P-02-FIX, HF-1 at Gate 1.** The field list
+> previously given here (`panel`, `ink`, `muted`, `line`) does not occur in
+> the source. Four names are wrong, in two different ways: `panel`, `ink` and
+> `line` do not appear anywhere in the source, and `muted` is the wrong name
+> for the field that does exist — it is `mut`. The true record is
+> `{id, name, bg, gold, txt, mut, row, tot,
+> grand}` — seven hex values — at `:1346-1350`, identical in shape to
+> `EXTRACT_INVOICE_PRO.md` §1.1.9 and to `balance-bites-sticker.html:1273-1275`.
+> The four built-in names given here are correct.
 
 Four built-ins are hardcoded in source: `Dark Gold`, `Obsidian Blue`,
 `Forest Night`, `Warm Ivory` (`:1347-1350`). Applied by injecting a stylesheet at
@@ -2539,7 +2549,7 @@ defines `BRAND`/`SUB` constants used by the report engine, but `:6`, `:464`,
 | `#c9a84c` | the gold accent — the brand's primary colour | BRAND | colour picker | `:19`, and as an `rgba` fallback at `:1663` |
 | `#7a6f58` | muted text | BRAND | colour picker | `:20` |
 | `rgba(201,168,76,…)` | the same gold, pre-decomposed to RGB at 3 sites | BRAND | derived | `:17`, `:18`, `:23` |
-| `Dark Gold`, `Obsidian Blue`, `Forest Night`, `Warm Ivory` | four built-in themes, 6 hex values each | BRAND | seeded preset list | `:1347-1350` |
+| `Dark Gold`, `Obsidian Blue`, `Forest Night`, `Warm Ivory` | four built-in themes, 7 hex values each (bg, gold, txt, mut, row, tot, grand) | BRAND | seeded preset list | `:1347-1350` |
 | `DEFAULT_C` = `{bg:'#0a0804', gold:'#c9a84c', txt:'#e8e0cc', mut:'#6b5e3a', row:'#12100a', tot:'#12100a', grand:'#1e1a0f'}` | invoice document palette | BRAND | 7 colour pickers | `:4658` |
 | `#7dab6e` / `#d4924a` / `#cc5555` / `#888` | profit-chart semantic colours, **inline in the markup string** | BRAND | semantic token set | `:5286-5289` |
 | `#cc5555` | the "expired" disposition colour | BRAND | semantic token | `:354` |
@@ -2854,6 +2864,10 @@ an otherwise fully Arabic navigation.
 `🔄 جزئي` (`:5635`); `⚠ بلا وصفة` (`:2109`, `:5931`); `✓ متوفر` /
 `⚠ ينقص <n> <unit>` (`:2463`); `دفعة: <n> وحدة · <n> مكون` (`:2362`, `:2947`).
 
+> **SUPERSEDED as the record — see §7.5.b.** This rollup stays visible as the
+> original claim (PR-07). CF-42 names this category as one of the two that must
+> be enumerated individually; §7.5.b is now the authoritative list.
+
 **Document templates (Arabic only) — report engine.**
 `تقرير قيمة المخزون الحالي` (`:5760`),
 `المتبقي = مشتريات − مباع · القيمة = max(0, المتبقي) × التكلفة` (`:5760`, and on
@@ -2866,10 +2880,248 @@ screen at `:642`), `تكلفة المواد والتغليف لكل منتج ح�
 `🛒 مشتريات`, `⚙ تشغيل`, `💸 مصروف`, `💵 وارد (مدفوع)`, `⏳ معلق`,
 `🔄 مرتجعات`, `📊 صافي الدورة` (`:5109-5116`).
 
+> **SUPERSEDED as the record — see §7.5.a.** This rollup stays visible as the
+> original claim (PR-07). It was also incomplete: it missed the whole of the
+> COGS, sales, profit, stock-value and prep/BOM report bodies. §7.5.a is now the
+> authoritative list.
+
 **Tooltips (Arabic only) — `title` attributes.** `تعديل` (`:2692`),
 `حذف` (`:2693`), `تصميم الملصق` (`:2778`),
 `عدّل واضغط Enter أو غيّر الحقل` (`:4416`),
 `عدّل كمية المنتج — يُخصم المواد والتغليف والملصقات` (`:4421`).
+
+### 7.5.a Document-template literals, individually enumerated (CF-42)
+
+**Line range read for this pass: `bb-stock-costs.html:4647-5960`** — MODULE 10b
+(invoice print template) through MODULE 12 (stock value view & report),
+inclusive of MODULE 11's money-cycle block and the COGS, sales, profit,
+stock-value and prep/BOM report builders. No other part of the file was re-read.
+
+Scope: every Arabic-only literal emitted into a printed document by the report
+engine — report titles, subtitles, section headings, table column headers,
+summary-stat labels, total-row labels, fixed cell text, and footers. The two
+on-screen report-surface literals the superseded rollup had classified as
+document templates are retained at the end so nothing it claimed is lost.
+
+Row form follows §7.3.a. Its constant `Languages` column is replaced by
+`Evidence`, because every row here is Arabic-only by definition of §7.5 and
+CF-42 requires file:line. `Classification` carries the sub-role instead.
+
+The three Arabic-only `DEFAULT_S` keys — `hQty`, `hPrice`, `hSub` — are **not**
+repeated here; §7.3.a already enumerates them individually.
+
+| Key | Value | Classification | Evidence |
+|---|---|---|---|
+| Invoice print | `اسم العميل` | meta label | `:4996` |
+| Invoice print | `رقم الفاتورة` | meta label | `:4997` |
+| Invoice print | `التاريخ` | meta label | `:4998` |
+| Invoice print | `التليفون` | meta label | `:4999` |
+| Invoice print | `تفاصيل الطلب` | section heading | `:5001` |
+| Money cycle | `دورة الأموال — إجمالي المصروف` | block heading | `:5106` |
+| Money cycle | `🛒 مشتريات` | line label | `:5109` |
+| Money cycle | `⚙ تشغيل` | line label | `:5110` |
+| Money cycle | `💸 مصروف` | line label | `:5111` |
+| Money cycle | `💵 وارد (مدفوع)` | line label | `:5113` |
+| Money cycle | `⏳ معلق` | line label | `:5114` |
+| Money cycle | `🔄 مرتجعات` | line label | `:5115` |
+| Money cycle | `📊 صافي الدورة` | line label | `:5116` |
+| All reports | `طُبع من نظام المخزون والتكاليف` | footer | `:5499` |
+| COGS report | `وحدة` | cell suffix (batch size) | `:5590` |
+| COGS report | `وصفات` | summary stat | `:5597` |
+| COGS report | `متوسط COGS` | summary stat | `:5598` |
+| COGS report | `مجموع COGS` | summary stat | `:5599` |
+| COGS report | `تكلفة الإنتاج لكل وحدة` | section heading | `:5600` |
+| COGS report | `المنتج / الوصفة` | column header | `:5601` |
+| COGS report | `حجم الدفعة` | column header | `:5601` |
+| COGS report | `COGS/وحدة` | column header | `:5601` |
+| COGS report | `سعر البيع` | column header | `:5601` |
+| COGS report | `هامش` | column header | `:5601` |
+| COGS report | `تقرير التكاليف · COGS` | report title | `:5604` |
+| COGS report | `تكلفة المواد والتغليف لكل منتج حسب الوصفة` | report subtitle | `:5604` |
+| Sales report | `فواتير مبيعات` | summary stat | `:5644` |
+| Sales report | `مرtجع كامل` | summary stat — **corrupted literal** | `:5645` |
+| Sales report | `صافي المبيعات` | summary stat | `:5646` |
+| Sales report | `صافي مدفوع` | summary stat | `:5647` |
+| Sales report | `صافي معلق` | summary stat | `:5648` |
+| Sales report | `مدفوعة / معلقة` | summary stat | `:5649` |
+| Sales report | `ملخص المنتجات (من الفواتير · بعد المرتجعات)` | section heading | `:5650` |
+| Sales report | `المنتج` | column header | `:5651` |
+| Sales report | `الكمية` | column header | `:5651` |
+| Sales report | `الإيراد` | column header | `:5651` |
+| Sales report | `مدفوع` | column header | `:5651` |
+| Sales report | `معلق` | column header | `:5651` |
+| Sales report | `الإجمالي` | total-row label | `:5652` |
+| Sales report | `قائمة الفواتير` | section heading | `:5653` |
+| Sales report | `التاريخ` | column header | `:5654` |
+| Sales report | `رقم الفاتورة` | column header | `:5654` |
+| Sales report | `العميل` | column header | `:5654` |
+| Sales report | `الحالة` | column header | `:5654` |
+| Sales report | `المبلغ` | column header | `:5654` |
+| Sales report | `تقرير المبيعات · الفواتير` | report title | `:5656` |
+| Sales report | `فاتورة مبيعات · صافي` | report subtitle | `:5656` |
+| Profit report | `إجمالي المبيعات` | summary stat | `:5703` |
+| Profit report | `تشغيل` | summary stat | `:5705` |
+| Profit report | `مرتجعات` | summary stat | `:5706` |
+| Profit report | `صافي الربح` | summary stat | `:5707` |
+| Profit report | `ربح نقدي` | summary stat | `:5708` |
+| Profit report | `أرباح شهرية` | section heading | `:5709` |
+| Profit report | `الشهر` | column header | `:5710` |
+| Profit report | `إيراد` | column header | `:5710` |
+| Profit report | `تشغيل` | column header | `:5710` |
+| Profit report | `مرتجعات` | column header | `:5710` |
+| Profit report | `صافي` | column header | `:5710` |
+| Profit report | `تفاصيل المنتجات` | section heading | `:5711` |
+| Profit report | `المنتج` | column header | `:5712` |
+| Profit report | `مباع` | column header | `:5712` |
+| Profit report | `إيراد` | column header | `:5712` |
+| Profit report | `مدفوع` | column header | `:5712` |
+| Profit report | `معلق` | column header | `:5712` |
+| Profit report | `مجمل الربح` | column header | `:5712` |
+| Profit report | `مرتجعات` | section heading | `:5714` |
+| Profit report | `التاريخ` | column header | `:5714` |
+| Profit report | `العميل` | column header | `:5714` |
+| Profit report | `الفاتورة` | column header | `:5714` |
+| Profit report | `السبب` | column header | `:5714` |
+| Profit report | `المبلغ` | column header | `:5714` |
+| Profit report | `تقرير الأرباح` | report title | `:5715` |
+| Profit report | `بعد COGS وتكاليف التشغيل والمرتجعات · مجمل` | report subtitle | `:5715` |
+| Stock value report | `منتجات جاهزة` | summary stat | `:5739` |
+| Stock value report | `مواد خام` | summary stat | `:5740` |
+| Stock value report | `تغليف` | summary stat | `:5741` |
+| Stock value report | `ملصقات` | summary stat | `:5742` |
+| Stock value report | `الإجمالي` | summary stat | `:5743` |
+| Stock value report | `ملخص حسب الفئة` | section heading | `:5744` |
+| Stock value report | `الفئة` | column header | `:5745` |
+| Stock value report | `أصناف` | column header | `:5745` |
+| Stock value report | `مشتريات` | column header | `:5745` |
+| Stock value report | `مباع` | column header | `:5745` |
+| Stock value report | `متبقي` | column header | `:5745` |
+| Stock value report | `قيمة EGP` | column header | `:5745` |
+| Stock value report | `الإجمالي` | total-row label | `:5746` |
+| Stock value report | `⚠ عجز (كميات سالبة)` | section heading | `:5749` |
+| Stock value report | `تفاصيل كل الأصناف` | section heading | `:5753` |
+| Stock value report | `الفئة` | column header | `:5754` |
+| Stock value report | `الصنف` | column header | `:5754` |
+| Stock value report | `الوحدة` | column header | `:5754` |
+| Stock value report | `مشتريات` | column header | `:5754` |
+| Stock value report | `مباع` | column header | `:5754` |
+| Stock value report | `متبقي` | column header | `:5754` |
+| Stock value report | `تكلفة/وحدة` | column header | `:5754` |
+| Stock value report | `القيمة` | column header | `:5754` |
+| Stock value report | `منتجات جاهزة (مُنتَج − مباع)` | section heading | `:5756` |
+| Stock value report | `المنتج` | column header | `:5757` |
+| Stock value report | `مُنتَج` | column header | `:5757` |
+| Stock value report | `مباع` | column header | `:5757` |
+| Stock value report | `في المخزون` | column header | `:5757` |
+| Stock value report | `COGS/وحدة` | column header | `:5757` |
+| Stock value report | `قيمة المخزون` | column header | `:5757` |
+| Stock value report | `فاتورة · بعد خصم المباع` | subtitle variant | `:5759` |
+| Stock value report | `اربط الفواتير` | subtitle variant | `:5759` |
+| Stock value report | `تقرير قيمة المخزون الحالي` | report title | `:5760` |
+| Stock value report | `المتبقي = مشتريات − مباع · القيمة = max(0, المتبقي) × التكلفة` | formula caption | `:5760` |
+| Prep / BOM report | `بعد خصم الجاهز` | mode label | `:5767` |
+| Prep / BOM report | `الكمية كاملة` | mode label | `:5767` |
+| Prep / BOM report | `مطلوب` | cell suffix | `:5771` |
+| Prep / BOM report | `جاهز` | cell suffix | `:5771` |
+| Prep / BOM report | `للإنتاج` | cell suffix | `:5771` |
+| Prep / BOM report | `مغطى` | cell text | `:5773` |
+| Prep / BOM report | `مطلوب` | summary stat | `:5777` |
+| Prep / BOM report | `للإنتاج` | summary stat | `:5778` |
+| Prep / BOM report | `تكلفة المكونات` | summary stat | `:5779` |
+| Prep / BOM report | `كافٍ` | summary stat value | `:5780` |
+| Prep / BOM report | `نقص` | summary stat value | `:5780` |
+| Prep / BOM report | `المخزون` | summary stat | `:5780` |
+| Prep / BOM report | `المنتجات` | section heading | `:5781` |
+| Prep / BOM report | `المنتج` | column header | `:5782` |
+| Prep / BOM report | `مطلوب` | column header | `:5782` |
+| Prep / BOM report | `جاهز` | column header | `:5782` |
+| Prep / BOM report | `للإنتاج` | column header | `:5782` |
+| Prep / BOM report | `دفعات` | column header | `:5782` |
+| Prep / BOM report | `المكونات` | column header | `:5782` |
+| Prep / BOM report | `متعدد` | cell text | `:5789` |
+| Prep / BOM report | `✓ متوفر` | cell status | `:5792`, `:5812` |
+| Prep / BOM report | `⚠ ينقص` | cell status | `:5792`, `:5812` |
+| Prep / BOM report | `مجموع المكونات (الكل)` | section heading | `:5796` |
+| Prep / BOM report | `المكون` | column header | `:5797`, `:5817` |
+| Prep / BOM report | `النوع` | column header | `:5797`, `:5817` |
+| Prep / BOM report | `لكل منتج` | column header | `:5797` |
+| Prep / BOM report | `المطلوب` | column header | `:5797`, `:5817` |
+| Prep / BOM report | `المخزون` | column header | `:5797`, `:5817` |
+| Prep / BOM report | `الحالة` | column header | `:5797`, `:5817` |
+| Prep / BOM report | `التكلفة` | column header | `:5797`, `:5817` |
+| Prep / BOM report | `الإجمالي` | total-row label | `:5798` |
+| Prep / BOM report | `منتج` | title fragment | `:5805` |
+| Prep / BOM report | `/دفعة` | title fragment | `:5805` |
+| Prep / BOM report | `مكونات` | section heading | `:5816` |
+| Prep / BOM report | `لكل وحدة` | column header | `:5817` |
+| Prep / BOM report | `المجموع` | total-row label | `:5818` |
+| Prep / BOM report | `مجموع + كل منتج` | subtitle variant | `:5823` |
+| Prep / BOM report | `كل منتج على حدة` | subtitle variant | `:5823` |
+| Prep / BOM report | `مجموع المكونات فقط` | subtitle variant | `:5823` |
+| Prep / BOM report | `قائمة التحضير · BOM` | report title | `:5824` |
+| Prep / BOM report | `حساب المكونات حسب الوصفة والدفعة` | report subtitle | `:5824` |
+| Report surface (screen) | `تاريخ التقرير:` | report date label | `:5867` |
+| Report surface (screen) | `⚠ عجز (كمية سالبة — لا تُحسب في القيمة):` | deficit caption — screen twin of `:5749` | `:5896` |
+
+**Finding — a corrupted Arabic literal ships in the sales report.** `:5645`
+reads `مرtجع كامل`: a Latin `t` (U+0074) sits inside the Arabic word where `ت`
+belongs. It renders as broken text on every printed sales report that has a
+full return. Not a translation defect — a character-level corruption in source.
+
+**Finding — the report engine has no resource bundle.** `DEFAULT_S` (`:4651-4657`)
+covers the invoice template only. Every literal above is inline at its point of
+use, and the same word is re-declared per report — `الإجمالي` at `:5652`,
+`:5743`, `:5746`, `:5798`; `المنتج` at `:5651`, `:5712`, `:5757`, `:5782`;
+`مباع` at `:5745`, `:5754`, `:5757`, `:5712`. B2S needs one keyed bundle.
+
+### 7.5.b Business-data labels, individually enumerated (CF-42)
+
+Same row form and same read scope caveat: these sit outside the report-engine
+region, so only the specific lines cited by the superseded rollup and their
+declaration sites were read — `:2011-2015`, `:2109`, `:2362`, `:2463`, `:2947`,
+`:3930-3931`, `:5167`, `:5366-5387`, `:5630-5639`, `:5931`. The file was not
+re-read in full.
+
+| Key | Value | Classification | Evidence |
+|---|---|---|---|
+| Op-cost category | `🏠 إيجار` | display label, keyed on `إيجار` | `:2011` |
+| Op-cost category | `💡 مرافق` | display label, keyed on `مرافق` | `:2011` |
+| Op-cost category | `👷 أجور` | display label, keyed on `أجور` | `:2011` |
+| Op-cost category | `🔧 صيانة` | display label, keyed on `صيانة` | `:2011` |
+| Op-cost category | `🚚 نقل` | display label, keyed on `نقل` | `:2011` |
+| Op-cost category | `📣 تسويق` | display label, keyed on `تسويق` | `:2011` |
+| Op-cost category | `💰 تعويض` | display label, keyed on `تعويض` | `:2011` |
+| Op-cost category | `📋 أخرى` | display label, keyed on `أخرى` | `:2011` |
+| Op-cost behaviour | `تعويض` | **stored value tested in code** | `:2015` |
+| Recipe status | `⚠ بلا وصفة` | derived status badge | `:2109`, `:5931` |
+| Recipe card | `دفعة: <n> وحدة · <n> مكون` | composed meta line | `:2362`, `:2947` |
+| Ingredient status | `✓ متوفر` | derived status | `:2463` |
+| Ingredient status | `⚠ ينقص <n> <unit>` | derived status | `:2463` |
+| Return disposition | `📦 مخزون` | option label, value `restock` | `:3930` |
+| Return disposition | `🗑 تالف` | option label, value `expired` | `:3931` |
+| Item type | `🌾 مادة خام` | derived type label | `:5167` |
+| Item type | `📦 تغليف` | derived type label | `:5167` |
+| Item type | `🏷 ملصق` | derived type label | `:5167` |
+| Stock category | `🌾 مواد خام` | **stored aggregation key** | `:5366`, `:5384` |
+| Stock category | `📦 تغليف` | **stored aggregation key** | `:5367`, `:5385` |
+| Stock category | `🏷 ملصقات` | **stored aggregation key** | `:5368`, `:5386` |
+| Stock category | `🍪 منتج جاهز` | **stored aggregation key** | `:5375`, `:5380`, `:5387` |
+| Stock category | `مواد خام` | display label | `:5384` |
+| Stock category | `تغليف` | display label | `:5385` |
+| Stock category | `ملصقات` | display label | `:5386` |
+| Stock category | `منتجات جاهزة` | display label | `:5387` |
+| Finished-goods unit | `قطعة` | hardcoded unit | `:5377`, `:5380` |
+| Payment status | `مدفوعة` | derived from `status==='paid'` | `:5630`, `:5635` |
+| Payment status | `معلقة` | derived from `status!=='paid'` | `:5630`, `:5635` |
+| Return status | `🔄 جزئي` | derived partial-return marker | `:5635` |
+| Return status | `↩️ مرتجع كامل` | derived full-return marker | `:5639` |
+
+**Finding — Arabic display strings are stored keys in two places here.** The
+op-cost `map` at `:2011` is keyed on the Arabic category name, and `:2015` tests
+`cat==='تعويض'` as a behavioural branch. The four stock categories at
+`:5384-5387` are used as object keys into `report.byCat` at `:5739-5742` and
+`:5860-5863`. Renaming or translating either set is a data migration. This is
+the concrete evidence behind CF-65.
 
 ## 7.6 English-only strings in an Arabic UI
 

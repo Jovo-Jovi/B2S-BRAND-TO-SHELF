@@ -3218,6 +3218,27 @@ an ARTIFACT, which is the same line the frozen template-driven decision draws.
 
 ---
 
+## C.4 Findings raised by this pass, for reviewer triage
+
+Not carry-forwards — this task may not open them. Listed so Gate 1 can.
+
+**Landed by P-02-FIX under CF-63.** Three passages in this file each stated that
+a finding was "recorded as an untriaged finding in §C.4", but no §C.4 was ever
+written, so all three had no destination. Each row below is recovered from the
+passage that referred to it and cites that passage's line. Nothing has been
+added that one of those three references did not already point at.
+
+| # | Finding |
+|---|---|
+| F-1 | **The label-v3 → sticker-tool mode transition is unexplained** (referred from `:1073`). `REPORT.md` §2.2 gives label-v3 **four** modes — rectangular, tapered cup, circular and **custom size**. The sticker tool has **three**, verified at `SK:466-468` and `SK:1128-1132`, and "custom size" is not among them. Both statements are evidenced. What the delta implies about the transition — deliberate removal, a capability never carried across, or a renaming — is not stated in either source, and §2.4 marks the provenance question unresolvable because the file is permanently deleted. |
+| F-2 | **"Custom size" has no counterpart anywhere in the surviving family** (referred from `:1240`, PT-8). The mode is absent not only from the sticker tool's three modes (`SK:466-468`, `SK:1128-1132`) but from LE, ST and CA as well. Distinct from F-1: F-1 is about what happened to it, F-2 is about the fact that no surviving tool supplies a parametric substitute, so a "custom size" requirement in B2S would have no extraction backing at all. |
+| F-3 | **The family supplies no bleed, trim or registration precedent** (referred from `:2015`). The entire bleed/trim/safety vocabulary across all three files is five numbers (§3.5): 0.6 cm, 0 cm, 8 mm, 1 cm, 0. There is no bleed value, no trim box and no crop mark anywhere. Against a ±0.2 mm print tolerance the legacy set therefore supplies **no precedent** — every bleed, trim and registration rule in `PRINT_CONTRACT.md` will be owner-authored with nothing to harvest. The print-side counterpart to CF-45's finding about money rounding. |
+
+---
+
 *End of `EXTRACT_DESIGN_TOOLS.md`. Read-only extraction; no legacy file was
 modified. Three files written this session, per the prompt: this file,
 `SESSION_CONTEXT.md`, `DEVELOPMENT_JOURNAL.md`.*
+
+*P-02-FIX addendum: §C.4 added under CF-63. No legacy file was read or modified
+by that pass; only the three referring passages in this file were re-read.*

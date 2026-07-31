@@ -35,7 +35,7 @@ Execute exactly **one task per fresh agent session**. Do not batch, do not "also
 
 ## 2. Never invent scope
 
-If it is not in `SCOPE.md`, `PARITY_MATRIX.md`, `MODULE_SPEC.md`, or a signed OD in `DECISIONS.md`, **it does not exist**. Flag it and stop; do not implement it "since it's small."
+If it is not in `SCOPE.md`, `MODULE_SPEC.md`, or a signed OD in `DECISIONS.md`, **it does not exist**. Flag it and stop; do not implement it "since it's small."
 
 Stop and flag before doing any of these, even if the task seems to imply them:
 - Changing any entity shape in `DATA_MODEL.md`
@@ -62,22 +62,49 @@ If a guard blocks you, **the guard is right**. Do not disable, suppress, or work
 
 ---
 
-## 4. This is a port, not a greenfield build
+## 4. This is a greenfield build that harvests requirements
 
-Six working HTML tools already produce output a real business depends on. Your job is to reproduce their behaviour exactly, then improve only where a signed decision says so.
+Six HTML tools are being RETIRED, not ported. No code from them is reused and
+**no output of them is a parity target** — OD B1 is CLOSED. They are read-only
+requirements evidence in `docs/requirements/`, and an extract there is never
+current truth.
 
-- **Money and quantity parity: exact. Zero drift.** Invoice totals, discounts, net-after-return, COGS per unit, stock value, ingredient usage, profit.
-- **Print parity: ±0.2 mm** on a physical printout.
-- When legacy behaviour looks wrong, **do not silently correct it.** Report it as a finding; it becomes a carry-forward or an OD.
-- Legacy source files are **read-only reference**. Never edit them.
+Acceptance is four standards, by domain. No evidence means FAIL.
+
+- **Money & quantity** — exact match against the signed worked examples in
+  `CALC_SPEC.md`. Zero drift. A rounding rule is stated per calculation. Legacy
+  numbers are not a reference: no tax, no freight and no money rounding exists
+  anywhere in the retiring tools.
+- **Print** — the measured physical tolerance in `PRINT_CONTRACT.md`, plus
+  byte-identical `PrintArtifact` output across platforms (OD-E11). Legacy
+  printouts are not a reference.
+- **Features & entities** — conformance to `FEATURE_INVENTORY.md` and
+  `DOMAIN_MODEL.md`.
+- **Tenant isolation** — proof that tenant A cannot read tenant B, on every gate
+  touching data access. **Not waivable by OD.**
+
+Legacy defects are requirements the new build must not reproduce (OD B3), listed
+in `FEATURE_INVENTORY.md`. Never edit a file under `legacy/`.
 
 ---
 
-## 5. Returns are the highest-risk logic in this codebase
+## 5. Returns are the highest-risk logic in this product
 
-Returns affect net revenue, COGS, product summary, ingredient usage, monthly profit, stock value, and print reports. Anything touching them is **heavyweight class**, full ceremony, with parity tests covering at minimum: a partial return, a full return, a calculator-logged return with `outAllocations`, and a legacy return without `outAllocations`.
+Returns affect net revenue, COGS, product summary, `Component` usage, monthly
+profit, `StockLevel`, and every report. Returns are `StockMovement` records with
+reason `return_restock` or `return_writeoff` (OD-C3), and their money effect is a
+`CreditNote` — an issued `Invoice` is immutable, and outstanding equals
+Invoice − Payments − CreditNotes (OD-C16).
 
-Never assume `outAllocations` exists. Returns logged before the Return Calculator do not have it.
+Anything touching returns is **heavyweight class**, full ceremony, with tests
+covering at minimum: a partial return, a full return, both dispositions, and both
+legacy `outAllocations` shapes.
+
+The extracts record two live divergences the new model must settle rather than
+inherit: unmarked dispositions default in opposite directions across the two
+retiring tools, and returns were valued at list price against a discounted
+invoice total. Neither is a target. Both are decisions for `DOMAIN_MODEL.md` and
+`CALC_SPEC.md`.
 
 ---
 
@@ -100,7 +127,7 @@ Someone prints these files and cuts material to them. A 2 mm error costs money.
 
 ## 8. Model class
 
-**Heavyweight** — architecture, storage layer, print engine, migration importer, returns/COGS/profit math, `BrandConfig` schema, all exit-verification and parity gates.
+**Heavyweight** — architecture · storage layer · print engine · document rendering · template engine · CSV importer · returns/COGS/profit math · `BrandConfig` schema · every exit-verification gate · **anything touching tenant isolation, regardless of size**.
 **Standard** — UI wiring, forms, tests, mechanical land tasks, CRUD on already-specified entities.
 
 If asked to do heavyweight work under a standard model, say so before starting.
@@ -139,6 +166,12 @@ Never put credentials in any chat or agent surface. A pasted credential is treat
 
 ## Stack
 
-Vite · React · TypeScript · zod · IndexedDB via an adapter · static deploy on Vercel.
+**Withheld until Gate 3.** Architecture, framework, layering and folder structure
+are deliberately undecided; they are authored in `ARCHITECTURE.md` and its ADRs
+after the prepare phase closes. Do not infer one, and do not add a dependency.
 
-**NOT used:** Next.js, SSR, any backend, any database (until P10), any runtime CDN, any CSS framework outside the token system, `localStorage` as a primary store.
+Three constraints are already fixed by signed decisions and are not open:
+PWA client with an online database on Supabase (G4) · hosted on Vercel (G9) ·
+per-tenant private data with database isolation (G3).
+
+If a task appears to require a stack decision, **stop and flag it**.

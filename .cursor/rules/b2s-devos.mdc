@@ -23,8 +23,8 @@ Execute exactly one task per session. Do not batch. Do not "also fix while I'm
 here." Do not continue into the next task.
 
 ## Never invent scope
-If it is not in SCOPE.md, PARITY_MATRIX.md, MODULE_SPEC.md, or a signed OD in
-DECISIONS.md, it does not exist. Flag and stop.
+If it is not in SCOPE.md, MODULE_SPEC.md, or a signed OD in DECISIONS.md, it
+does not exist. Flag and stop.
 
 STOP and flag before: changing any entity in DATA_MODEL.md; changing
 BrandConfig; changing the print engine or any @page rule; adding a dependency;
@@ -44,15 +44,47 @@ touching components/ui or components/shared; editing test/fixtures/golden.
 If a guard blocks you, the guard is right. To change a rule, stop and flag for
 an ADR.
 
-## This is a port, not a greenfield build
-Reproduce legacy behaviour exactly; improve only where a signed decision says
-so. Money and quantity parity is exact — zero drift. Print parity is ±0.2 mm on
-a physical printout. When legacy behaviour looks wrong, report it as a finding;
-never silently correct it. Legacy .html files are read-only reference.
+## This is a greenfield build that harvests requirements
+Six HTML tools are being RETIRED, not ported. No code is reused and no output of
+them is a target — OD B1 is CLOSED. They are read-only evidence in
+docs/requirements/, and an extract there is never current truth.
+
+Acceptance is four standards, by domain. No evidence means FAIL.
+- Money & quantity — exact match against the signed worked examples in
+  CALC_SPEC.md. Zero drift. A rounding rule is stated per calculation. Legacy
+  numbers are not a reference: no tax, no freight, no money rounding exists in
+  the retiring tools.
+- Print — the measured physical tolerance in PRINT_CONTRACT.md, plus
+  byte-identical PrintArtifact output across platforms (OD-E11). Legacy
+  printouts are not a reference.
+- Features & entities — conformance to FEATURE_INVENTORY.md and DOMAIN_MODEL.md.
+- Tenant isolation — proof that tenant A cannot read tenant B, on every gate
+  touching data access. Not waivable by OD.
+
+Legacy defects are requirements the new build must not reproduce (OD B3), listed
+in FEATURE_INVENTORY.md. Never edit a file under legacy/.
+
+## Returns are the highest-risk logic in this product
+Returns affect net revenue, COGS, product summary, Component usage, monthly
+profit, StockLevel, and every report. Returns are StockMovement records with
+reason return_restock or return_writeoff (OD-C3); their money effect is a
+CreditNote — an issued Invoice is immutable, and outstanding equals
+Invoice − Payments − CreditNotes (OD-C16).
+
+Anything touching returns is heavyweight, full ceremony, with tests covering at
+minimum: a partial return, a full return, both dispositions, and both legacy
+outAllocations shapes.
+
+Two live divergences must be settled, not inherited: unmarked dispositions
+default in opposite directions across the two retiring tools, and returns were
+valued at list price against a discounted invoice total. Neither is a target.
+Both are decisions for DOMAIN_MODEL.md and CALC_SPEC.md.
 
 ## Model class
-Heavyweight: architecture, storage layer, print engine, migration importer,
-returns/COGS/profit math, BrandConfig schema, all gates.
+Heavyweight: architecture · storage layer · print engine · document rendering ·
+template engine · CSV importer · returns/COGS/profit math · BrandConfig schema ·
+every exit-verification gate · anything touching tenant isolation, regardless of
+size.
 Standard: UI wiring, forms, tests, land tasks, CRUD on specified entities.
 
 ## Design boundary
@@ -73,6 +105,12 @@ could not meet, and carry-forwards discovered. Never put credentials in any
 chat surface.
 
 ## Stack
-Vite · React · TypeScript · zod · IndexedDB via adapter · static on Vercel.
-NOT used: Next.js, SSR, any backend, any database (until P10), runtime CDN,
-CSS frameworks outside the token system, localStorage as a primary store.
+Withheld until Gate 3. Architecture, framework, layering and folder structure
+are deliberately undecided; they are authored in ARCHITECTURE.md and its ADRs
+after the prepare phase closes. Do not infer one, and do not add a dependency.
+
+Three constraints are fixed by signed decisions and are not open: PWA client
+with an online database on Supabase (G4) · hosted on Vercel (G9) · per-tenant
+private data with database isolation (G3).
+
+If a task appears to require a stack decision, stop and flag it.

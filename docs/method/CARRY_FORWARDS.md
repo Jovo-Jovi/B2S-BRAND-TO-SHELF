@@ -138,6 +138,9 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       convention. bb-stock-costs.html re-verified at 7,083 and
       balance-bites-invoice-pro.html at 4,283. Every legacy line count is now
       independently confirmed. No residual.
+      Third drift profile recorded. invoice-pro citation drift in REPORT.md §2.1
+      is 0, +38, +111, +140, +390, +652, +735, +3035 — non-linear, like
+      stock-costs. See CF-72 for the owner of re-derivation.
 - [x] CF-13 — CLOSED (P-01). RUNBOOK.md was uncommitted and carried stale/void
       steps contradicting current decisions (§1.1 backup, §1.3 PRIVATE +
       `master`, §2.4 backup diff). Superseded by `docs/method/B2S_PREPARE_PHASE.md`
@@ -285,6 +288,13 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       P-04 exceeded it, enumerating all 50 Arabic-only UI chrome literals
       individually although a rollup was permitted. P-02 remains the only extract
       with a category rollup over 501 literals. Gate 1 check unchanged.
+      DECIDED at Gate 1. §7.5 carries TEN category rollups, not six. Eight stay
+      rolled up as permitted — navigation, table headers, status and empty
+      states, stat-card labels, validation messages, confirmation prompts,
+      success toasts, tooltips. TWO must be individually enumerated because
+      CF-42's standard names both: 'Business-data labels (Arabic only)' and
+      'Document templates (Arabic only) — report engine'. Enumerated by
+      P-02-FIX. Closes on that verdict.
 - [x] CF-43 — The P-02 STOP block mixed halt conditions with redact-and-continue
       conditions under one heading, forcing the builder to resolve a reviewer
       defect mid-task. Corrected in P-03; must also be corrected in P-04.
@@ -388,7 +398,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       PackagingTemplate and its presets, and the legacy set is contradictory there
       too. Recorded so the OD is scoped to both halves rather than re-litigated at
       P-07.
-- [ ] CF-48 — The producer of bb_invoice_payments is unidentified. P-03
+- [x] CF-48 — The producer of bb_invoice_payments is unidentified. P-03
       established invoice-pro as a strict consumer (Store.set is never called
       with that key); P-02 reported no payments producer. Payments are Release 1
       IN — full/partial/underpaid, cash/card/other, receipts. Gate 1 check: does
@@ -402,6 +412,11 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       **All six legacy tools are now accounted for and none is the producer**, so
       the Gate 1 check can be answered without further extraction: the payment
       workflow has zero legacy source and is fully owner-specified.
+      CF-48 — CLOSED (Gate 1). Producer identified: `PaymentMgr` at
+      bb-stock-costs.html:3123-3145, writing via Store.set. invoice-pro reads
+      only (:1967) and lists the key in MANAGED (:1064).
+      EXTRACT_STOCK_COSTS.md §1.1.9 already stated "this tool writes it" — the
+      P-03 report characterised P-02 as silent; the extract was not.
 - [ ] CF-49 — bb_color_presets is written by both business tools with
       incompatible field sets: seven colours in invoice-pro versus six in
       bb-stock-costs, sharing only `bg` and `gold`, under identical ids
@@ -481,6 +496,12 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       Two follow-ons: EXTRACT_STOCK_COSTS.md:2542's count needs a Gate 1
       annotation decision, and the canonicalisation of ColorRole / ColorValue
       remains DOMAIN_MODEL.md at P-07.
+      CORRECTED AGAIN at Gate 1. The earlier amendment stated
+      EXTRACT_STOCK_COSTS.md §1.1.11 was correct. Its four BUILT-IN NAMES are
+      correct; its FIELD LIST is fabricated — see CF-61. The seven-value record
+      and the two real divergences (sticker seeds 3 against 4; cp_def1 identical
+      in id and name but differing on 6 of 7 values) are unchanged and confirmed
+      against all three sources.
 - [ ] CF-50 — AUDIT_STICKER.md §3.4 names the three bb_color_presets seeds
       "Balance Bites", "Dark Mode", "Ocean Blue". P-04's direct read gives
       `Dark Gold`, `Obsidian Blue`, `Forest Night` — all three falsified. §3.4
@@ -540,12 +561,17 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       source. Those lines are cp_def2 and cp_def3 inside ColorPresetMgr.DEFAULTS
       under key bb_color_presets. Annotated by P-04c. Owner: reviewer, closes on
       P-04c verdict.
-- [ ] CF-57 — Extraction density drifted across the three passes:
+- [x] CF-57 — Extraction density drifted across the three passes:
       EXTRACT_STOCK_COSTS 174 KB from a 347 KB source (50%), EXTRACT_INVOICE_PRO
       231 KB from 222 KB (104%), EXTRACT_DESIGN_TOOLS 228 KB from 197 KB (116%).
       Two extracts are larger than the files they extract. Gate 1 check: is the
       expansion added analysis (typed field lists, invariant-versus-policy
       columns, spot-check tables) or transcription? Owner: reviewer, Gate 1.
+      CF-57 — CLOSED (Gate 1). Density drift is added analysis, not
+      transcription: 22 numbered calculations with invariant/policy blocks, a
+      16-item reconciliation, 40 justified degrees of freedom, an 11-row
+      spot-check table. EXTRACT_STOCK_COSTS at 50% is the low outlier,
+      consistent with HF-1 and CF-42 both landing in that file. No action.
 - [ ] CF-58 — tools/backup-browser-data.js serves the browser-data backup
       workflow abandoned by owner decision 2026-07-29, with design-tool presets
       accepted as potentially unrecoverable. Orphaned. Archived by P-04c to
@@ -572,3 +598,67 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       "No open carry-forward without a named owner" and a checklist cannot read
       prose. Normalise all four to explicit `Owner:` fields, inventing no owner —
       where none exists, write the reason. Owner: reviewer, before Gate 3.
+- [ ] CF-61 — HARD FAILURE at Gate 1. EXTRACT_STOCK_COSTS.md §1.1.11 stated a
+      fabricated typed field list for `bb_color_presets`: `bg, panel, ink, muted,
+      gold, line`. Four names are wrong — `panel`, `ink` and `line` do not occur
+      in the source at all, and `muted` is the wrong name for `mut`. The true
+      record is `{id, name, bg, gold, txt, mut, row, tot, grand}`, seven hex
+      values, at bb-stock-costs.html:1346-1350. §6 at :2542 compounded it with
+      "6 hex values each". Corrected by P-02-FIX. Four other entity blocks were
+      spot-checked against source and are exact, so the defect is bounded, not
+      systemic. Owner: closes on the P-02-FIX verdict.
+- [ ] CF-62 — Payments have no legacy source. The stored shape is
+      `{invoiceId: {status:'paid'|'pending', updatedAt}}` — a binary flag, no
+      amount, no payment type, no partial state, no receipt. Release 1 requires
+      full/partial/underpaid, cash/card/other and receipt attachment (OD-C12).
+      Every one of those is owner-specified with nothing to harvest. A
+      declared/actual mismatch also exists: the doc comment at :3121 promises
+      `paidDate`, the code writes `updatedAt`. Owner: CALC_SPEC.md and
+      DOMAIN_MODEL.md.
+- [ ] CF-63 — EXTRACT_DESIGN_TOOLS.md references "§C.4" at :1073, :1240 and
+      :2015, each saying a finding is recorded there. No §C.4 heading exists in
+      the file, so three findings have no destination. Recovered by P-02-FIX.
+      Owner: closes on the P-02-FIX verdict.
+- [ ] CF-64 — `WRITE_KEYS` in bb-stock-costs.html:1180 contains
+      `bb_label_templates`, which that tool only ever reads (:6016). Mirroring
+      therefore overwrites the sticker tool's template catalogue with whatever
+      the local store holds — including an empty array on a fresh profile. The
+      sharpest cross-tool destruction path in the family. Requirement: B2S needs
+      an explicit producer/consumer declaration per collection, enforced.
+      Owner: DOMAIN_MODEL.md.
+- [ ] CF-65 — Arabic display strings are used as stored primary keys in at least
+      two enumerations (EXTRACT_STOCK_COSTS §6.6, §7.4; EXTRACT_INVOICE_PRO
+      F-14). Translating the UI would become a data migration, which directly
+      contradicts OD-D6 and OD-D7. Requirement: every enumeration stores a
+      language-neutral key; display text lives in `TranslationEntry`.
+      Owner: DOMAIN_MODEL.md and DATA_MODEL.md.
+- [ ] CF-66 — `Return.amount` carries two incompatible meanings depending on
+      write path (EXTRACT_STOCK_COSTS §2.11, §4.6, §8.14). Owner: DOMAIN_MODEL.md.
+- [ ] CF-67 — The inventory ledger switches from production-derived to
+      invoice-derived consumption the moment one invoice exists
+      (EXTRACT_STOCK_COSTS §2.17, §8.7) — a behavioural cliff, not a gradual
+      change. Owner: DOMAIN_MODEL.md; the stock-creation invariant in
+      B2S_PREPARE_PHASE.md §7 already forecloses it, so this is confirmation
+      evidence. Owner: DOMAIN_MODEL.md.
+- [ ] CF-68 — Unmarked return dispositions default in OPPOSITE directions across
+      the two retiring tools (EXTRACT_INVOICE_PRO F-9). The same legacy row
+      yields two different stock and money outcomes depending on which tool reads
+      it. Owner: DOMAIN_MODEL.md and CALC_SPEC.md.
+- [ ] CF-69 — Invoice history is capped at 100 records with silent destruction
+      (EXTRACT_INVOICE_PRO F-10, §8.2). Every historical figure the owner has
+      seen is silently truncated. Owner: FEATURE_INVENTORY.md must-not-reproduce.
+- [ ] CF-70 — Returns are valued at list price against a discounted invoice total
+      (EXTRACT_INVOICE_PRO F-13, §2.9). Every net-revenue figure the business has
+      relied on is overstated by the discount on returned lines. The highest-value
+      money finding in the whole extraction. Owner: CALC_SPEC.md — it must state
+      the return valuation basis explicitly.
+- [ ] CF-71 — A parse failure is indistinguishable from an empty collection
+      (invoice-pro:1199), and the next save writes the empty result over real
+      data (EXTRACT_INVOICE_PRO F-15). Owner: FEATURE_INVENTORY.md
+      must-not-reproduce.
+- [ ] CF-72 — Every `bb-stock-costs.html` and `balance-bites-invoice-pro.html`
+      citation in REPORT.md needs re-derivation before use. Drift is non-linear
+      in both files: +140 to +1506 in stock-costs, 0 to +3035 in invoice-pro.
+      UNIFICATION.md and PHASE_PLAN.md inherit the same stale numbers and are
+      VOID, so no action there. Owner: annotate REPORT.md at P-05; never cite an
+      unverified REPORT.md line number.

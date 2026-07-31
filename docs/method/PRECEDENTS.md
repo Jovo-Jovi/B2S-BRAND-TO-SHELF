@@ -83,6 +83,13 @@ Calling `git add` with several paths where one no longer exists — after a
 `git show --stat HEAD` after every commit that spans a rename. Origin:
 P-04c, caught and corrected in-task.
 
+**PR-12 — A prompt is self-contained.**
+Every payload a prompt refers to sits inside the same fenced block. A phrase like
+"reviewer-supplied text, supplied in this task's message" is a defect, not a
+pointer — a fresh window sees only the fence. Origin: P-02-FIX halted at TASK 4
+and TASK 5 for exactly this, one task after CF-40 closed on the same failure
+class.
+
 ---
 
 ## 2. Environment quirks — never re-discover
@@ -133,3 +140,12 @@ P-04c, caught and corrected in-task.
   committed files.
 - `git add` with multiple pathspecs aborts entirely if any one path is
   missing — see PR-11.
+- PowerShell here is 5.1, where `&&` is not a valid statement separator. Chain
+  with `;`, or invoke git-bash directly. Combines with the existing commit quirk:
+  `git add` the paths, write the subject to a temp file, `git commit -F <file>`.
+- Refinement of the above, learned at P-02-FIX: `Set-Content -Encoding UTF8` in
+  PowerShell 5.1 writes a **BOM**, and `git commit -F` carries it into the
+  subject line, so the subject is no longer byte-exact. Write the message with
+  `[System.IO.File]::WriteAllText($path, $msg, (New-Object
+  System.Text.UTF8Encoding $false))` instead. Verify with
+  `git log -1 --format=%s` before pushing — the BOM is invisible in most output.

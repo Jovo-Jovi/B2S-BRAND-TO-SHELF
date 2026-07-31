@@ -1,6 +1,6 @@
 # SESSION CONTEXT
-Updated: 2026-07-31 · By: Sonnet · Phase: PREPARE Step 7d ·
-Last task: P-04d · Verdict: pending
+Updated: 2026-08-01 · By: Opus · Phase: PREPARE — Gate 1 corrections landed ·
+Last task: P-02-FIX · Verdict: pending
 
 ## Read these too
 - `docs/method/PRECEDENTS.md` — binding rulings and environment quirks.
@@ -16,8 +16,8 @@ Keep it short: if a paragraph is growing here, it belongs elsewhere.
 Greenfield. The six legacy HTML tools are retiring, not being ported;
 parity is void (B1 CLOSED). Requirements extraction is complete for all
 five read tools. The decision register holds 79 signed decisions, none
-open. All 23 document stubs await reviewer authorship. Next gate is
-GATE 1 — extraction verification.
+open. All 23 document stubs await reviewer authorship. GATE 1 has run:
+its corrections are landed by P-02-FIX and await verdict.
 
 ## Done steps
 
@@ -32,7 +32,9 @@ GATE 1 — extraction verification.
 | P-04 | Extract 3 design tools (2,179 / 773 / 458) | PASS | `e1e3124`, `136c2b6` |
 | P-04b | CF-39, CF-41, CF-14 redaction, CF-50 annotation | PASS | `d635fe4` |
 | P-04c | CF-52 redactions, CF-53/54/56/58, ledger | PASS | `9bfead2`, `e6024bc` |
-| P-04d | Memory guard restructure | pending | <this commit> |
+| P-04d | Memory guard restructure | pending | `e698b2a` |
+| P-04e | Sync committed project instructions to split memory guard | pending | `fdc890e` |
+| P-02-FIX | Gate 1: HF-1, CF-42, CF-63, AGENTS.md rewrite, ledger | pending | <this commit> |
 
 ## Open carry-forwards — ids only
 Full text in `docs/method/CARRY_FORWARDS.md`.
@@ -54,23 +56,32 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
 - CF-33 — `docs/method/DEV_OS.md` §3 defines a parity gate that is void — owner: reviewer, before Gate 2
 - CF-39 — `B2S_PREPARE_PHASE.md` §3/§4 now run together with no `---` separator — owner: reviewer, next light edit to `B2S_PREPARE_PHASE.md`
 - CF-41 — `B2S_PREPARE_PHASE.md` §1's product-definition table gives the wrong repo URL — owner: the write task that lands CF-39 — P-12
-- CF-42 — EXTRACT_STOCK_COSTS.md Part 7 rolls up the Arabic-only remainder as category inventories — owner: reviewer, Gate 1
+- CF-42 — EXTRACT_STOCK_COSTS.md Part 7 rolls up the Arabic-only remainder as category inventories — owner: reviewer, closes on the P-02-FIX verdict
 - CF-44 — VOID. Never issued; reviewer numbering error at the P-02 verdict — owner: none, no action
 - CF-45 — No tax, discount or freight calculation exists in bb-stock-costs.html — owner: Step 11
 - CF-46 — EXTRACT_STOCK_COSTS.md §C.4 lists ten findings awaiting accept/reject — owner: reviewer, Gate 1
 - CF-47 — Costing is last-purchase-price-wins by unconditional overwrite — owner: P-06, with the calculation at Step 11
-- CF-48 — The producer of bb_invoice_payments is unidentified — owner: reviewer, Gate 1; then DOMAIN_MODEL.md at P-07
 - CF-49 — bb_color_presets is written by both business tools with incompatible field sets — owner: reviewer at Gate 1, then DOMAIN_MODEL.md at P-07
 - CF-50 — AUDIT_STICKER.md §3.4 names the three bb_color_presets seeds wrong — owner: Gate 1, then P-07
 - CF-51 — Prompt-template defect: "one commit" collides with "do not amend or rewrite history" — owner: reviewer, standing
 - CF-52 — The owner's OS account name appears in mutable public files beyond AUDIT_STICKER.md:651 — owner: reviewer, closes on P-04c verdict
 - CF-53 — `docs/method/PROJECT_RECONFIG.md` was byte-identical to `CLAUDE_PROJECT_INSTRUCTIONS.md` — owner: reviewer, decide at P-12
 - CF-54 — Stub count stated three ways — owner: reviewer, verify at Gate 3
-- CF-55 — SESSION_CONTEXT.md grows every task because the full ledger lived inside it — owner: owner signature, then a dedicated task
 - CF-56 — The falsified sticker preset names appear at two locations in AUDIT_STICKER.md — owner: reviewer, closes on P-04c verdict
-- CF-57 — Extraction density drifted across the three passes — owner: reviewer, Gate 1
 - CF-58 — `tools/backup-browser-data.js` serves the abandoned browser-data backup workflow — owner: reviewer, closes on P-04c verdict
-- CF-59 — The reviewer surface can read the public repo directly — owner: OD at P-06
+- CF-60 — Four open rows carry no explicit `Owner:` field (CF-01, CF-05, CF-27, CF-44) — owner: reviewer, before Gate 3
+- CF-61 — HF-1: EXTRACT_STOCK_COSTS.md §1.1.11 stated a fabricated field list for bb_color_presets — owner: closes on the P-02-FIX verdict
+- CF-62 — Payments have no legacy source; the stored shape is a binary flag — owner: CALC_SPEC.md and DOMAIN_MODEL.md
+- CF-63 — EXTRACT_DESIGN_TOOLS.md referenced a §C.4 that did not exist; three findings orphaned — owner: closes on the P-02-FIX verdict
+- CF-64 — `WRITE_KEYS` mirrors `bb_label_templates`, a key that tool only reads; overwrites the sticker catalogue — owner: DOMAIN_MODEL.md
+- CF-65 — Arabic display strings are used as stored primary keys — owner: DOMAIN_MODEL.md and DATA_MODEL.md
+- CF-66 — `Return.amount` carries two incompatible meanings depending on write path — owner: DOMAIN_MODEL.md
+- CF-67 — Inventory ledger switches from production-derived to invoice-derived consumption at the first invoice — owner: DOMAIN_MODEL.md
+- CF-68 — Unmarked return dispositions default in opposite directions across the two retiring tools — owner: DOMAIN_MODEL.md and CALC_SPEC.md
+- CF-69 — Invoice history is capped at 100 records with silent destruction — owner: FEATURE_INVENTORY.md must-not-reproduce
+- CF-70 — Returns valued at list price against a discounted invoice total; net revenue overstated — owner: CALC_SPEC.md
+- CF-71 — A parse failure is indistinguishable from an empty collection, then saved over real data — owner: FEATURE_INVENTORY.md must-not-reproduce
+- CF-72 — REPORT.md citations into the two business tools need re-derivation before use — owner: annotate REPORT.md at P-05
 
 ## Frozen decisions in force
 - Freeze point 2026-07-29 (`legacy/FREEZE.md`) — tools RETIRING, not port
@@ -83,4 +94,4 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
   the build, not the freeze.
 
 ## Next action
-GATE 1 — extraction verification, run by the reviewer via direct repo read.
+P-05.
