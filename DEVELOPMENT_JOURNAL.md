@@ -834,3 +834,26 @@ itself inside the halted Task 6, so that repair was also deferred. No
 carry-forward was closed or amended in `CARRY_FORWARDS.md` this session.
 Reported to the user for a decision: treat CF-80/81/82 as pre-opened stubs to
 flesh out and close, or return to the reviewer for a corrected prompt.
+
+2026-08-02 | Standard | PREPARE / record P-08-PRE PASS verdict; log CF-83, CF-84 | SESSION_CONTEXT.md, docs/method/CARRY_FORWARDS.md, DEVELOPMENT_JOURNAL.md | none | a corrected carry-forward reconciliation task, then GATE 3
+
+Session summary: reviewer verdict PASS on P-08-PRE — Tasks 1-5 confirmed by
+independent re-derivation (80-row count, Gate 3 section text, CS-15 signed in
+all three places and R1-19, DEV_OS.md byte delta, and a broader CF-52 re-grep
+finding only the placeholder `<REDACTED>` in three path-shaped matches, zero
+real occurrences); Task 6's HALT graded as correct execution, not a failure,
+because its own stated premise was false and `SESSION_CONTEXT.md`'s 33 open
+ids already matched the ledger id-for-id; Tasks 7-9's dependent portions
+correctly skipped. Two new carry-forwards logged by the review, landed with
+exactly the text supplied, no elaboration added, consistent with the standing
+discipline against inventing carry-forward content (CF-40): CF-83 (reviewer
+state assertions are not stamped to a commit) and CF-84 (a verdict-logged
+carry-forward is opened as a stub, then re-opened as new by the next prompt —
+this session's own CF-80/81/82 collision, now generalised as the failure
+class it is). Both owned by future `PRECEDENTS.md` entries PR-18 and PR-19,
+not yet written, not this session's to author. `SESSION_CONTEXT.md` updated:
+header verdict HALT -> PASS, P-08-PRE's done-steps row verdict -> PASS, two
+new ids appended to the open list (33 -> 35), next action re-scoped to a
+corrected reconciliation task that lands CF-80/81/82 as the pre-opened stubs
+they are rather than re-verifying them as free. No carry-forward closed by
+this recording session; CF-80/81/82's disposition remains for that task.

@@ -857,3 +857,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       `PRECEDENTS.md`, PR-16.
 - [ ] CF-82 — 11 open rows name an owner that has already run. Owner: the
       pre-Gate-3 reconciliation task.
+- [ ] CF-83 — Reviewer state assertions are not stamped to a commit. Owner:
+      PRECEDENTS.md, PR-18.
+- [ ] CF-84 — A verdict-logged carry-forward is opened as a stub, then
+      re-opened as new by the next prompt. Owner: PRECEDENTS.md, PR-19.

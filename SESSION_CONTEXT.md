@@ -1,6 +1,7 @@
 # SESSION CONTEXT
 Updated: 2026-08-02 · By: Sonnet · Phase: PREPARE — Gate 3 blocked ·
-Last task: P-08-PRE · Verdict: HALT (Task 6 of 9 — see done-steps row)
+Last task: P-08-PRE · Verdict: PASS (Tasks 1-5 landed; Task 6 HALT itself
+graded correct execution; Tasks 7-9's dependent parts correctly skipped)
 
 ## Read these too
 - `docs/method/PRECEDENTS.md` — binding rulings and environment quirks.
@@ -34,8 +35,15 @@ stated premise — "highest existing id is CF-79" — is false. CF-80, CF-81 and
 CF-82 already exist in `CARRY_FORWARDS.md`, opened by the prior verdict-
 recording commit before this task began. This matches the prompt's own STOP
 CONDITION verbatim, so the ledger reconciliation, PR-16/PR-17, and the
-done-steps repair were not performed. Nothing in `CARRY_FORWARDS.md` or the
-open-id list below changed this session.
+done-steps repair were not performed.
+
+Reviewer verdict recorded: **PASS**, and the HALT itself is graded as correct
+execution, not a failure. Two new carry-forwards logged by the review:
+CF-83 (reviewer state assertions are not stamped to a commit) and CF-84
+(a verdict-logged carry-forward is opened as a stub, then re-opened as new by
+the next prompt — this session's own CF-80/81/82 collision, generalised).
+Neither CF-80/81/82's disposition nor Task 6's ledger reconciliation was
+resolved by the verdict — that remains the next task's work.
 
 ## Done steps
 
@@ -58,7 +66,7 @@ open-id list below changed this session.
 | P-06a-LAND | Land DOMAIN_MODEL (87 entities); repair 6 stale VOCABULARY_DRAFT refs in CLAUDE_PROJECT_INSTRUCTIONS.md | pending | <this commit> |
 | P-06b-LAND | Land TENANCY_MODEL and SECURITY_MODEL; CF-31 closed, CF-77 opened and closed, CF-53 amended | pending | <this commit> |
 | P-07-LAND | Land CALC_SPEC (25 rows, CS-01..CS-14 signed); CF-45/62/70 closed, CF-47 amended, CF-78/79 landed | PASS | `9079a2e` |
-| P-08-PRE | Tasks 1-5 done: OD-H7 signed (80 ODs); Gate 3 checklist amended to blocking set; CS-15 signed; CF-33 DEV_OS.md annotation; CF-52 grep zero hits. Tasks 6-9 HALTED — CF-80/81/82 already exist, contradicting Task 6's stated premise | HALT | `986c21c` |
+| P-08-PRE | Tasks 1-5 done: OD-H7 signed (80 ODs); Gate 3 checklist amended to blocking set; CS-15 signed; CF-33 DEV_OS.md annotation; CF-52 grep zero hits. Tasks 6-9 HALTED — CF-80/81/82 already exist, contradicting Task 6's stated premise | PASS | `986c21c` |
 
 ## Open carry-forwards — ids only
 Full text in `docs/method/CARRY_FORWARDS.md`.
@@ -96,6 +104,8 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
 - CF-80 — Done-steps table integrity — owner: the pre-Gate-3 reconciliation task
 - CF-81 — Copy-verification measurement is tool-dependent — owner: PRECEDENTS.md, PR-16
 - CF-82 — 11 open rows name an owner that has already run — owner: the pre-Gate-3 reconciliation task
+- CF-83 — Reviewer state assertions are not stamped to a commit — owner: PRECEDENTS.md, PR-18
+- CF-84 — A verdict-logged carry-forward is opened as a stub, then re-opened as new by the next prompt — owner: PRECEDENTS.md, PR-19
 
 ## Frozen decisions in force
 - Freeze point 2026-07-29 (`legacy/FREEZE.md`) — tools RETIRING, not port
@@ -121,9 +131,9 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
   `DECISIONS.md` now carries 80 signed ODs, verified by count.
 
 ## Next action
-Resolve the P-08-PRE Task 6 HALT (see done-steps row): CF-80, CF-81 and CF-82
-already exist in `CARRY_FORWARDS.md`, opened by the prior verdict-recording
-commit, so Task 6's "verify all three are free" premise does not hold.
-Needs a decision: treat them as pre-opened stubs to flesh out and close, or
-issue a corrected reconciliation prompt. Once resolved, GATE 3 on the
-blocking set — no other item is outstanding.
+A corrected carry-forward reconciliation task: land CF-80, CF-81 and CF-82 as
+the pre-opened stubs they are (append full claim/closure text, do not
+re-verify them as free), then the remaining status changes and owner
+amendments in the original P-08-PRE Task 6, plus PR-16 through PR-19 in
+`PRECEDENTS.md`. Once resolved, GATE 3 on the blocking set — no other item is
+outstanding.
