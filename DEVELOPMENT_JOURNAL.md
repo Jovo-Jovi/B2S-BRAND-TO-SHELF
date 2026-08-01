@@ -772,3 +772,26 @@ Rebuild verified id-for-id against the ledger's remaining `[ ]` rows. Header,
 "Where we are", done-steps row, two new frozen-decision bullets (CS-01
 through CS-14 signed / CS-15 open; the Gate 3 `CALC_SPEC.md` scope question
 unsigned) and next action all updated per the supplied text.
+
+2026-08-02 | Standard | PREPARE / record P-07-LAND PASS verdict; log CF-80, CF-81, CF-82 | SESSION_CONTEXT.md, docs/method/CARRY_FORWARDS.md, DEVELOPMENT_JOURNAL.md | none | GATE 3 on the blocking set, pending owner signature on CS-15 and on whether the Gate 3 CALC_SPEC.md item covers the R2 rows
+
+Session summary: reviewer verdict PASS on P-07-LAND, every ledger item
+confirmed independently — copy verification, all three PR-15 self-counts, the
+CF-79 four-point repair, the CF-78 clean-tree finding (reviewer notes git's
+own content hash as authoritative over either measurement), the six ledger
+operations, and the 30-open-id rebuild via symmetric-difference-empty against
+the ledger. Acceptance ledger and tenant-isolation check both N/A, as
+expected for a document-landing task. Three new carry-forwards logged by the
+review, landed with exactly the text supplied — id, one-line description and
+owner, no elaboration added, consistent with the standing discipline against
+inventing carry-forward content (CF-40): CF-80 (done-steps table integrity),
+CF-81 (copy-verification measurement is tool-dependent; owner names a future
+`PRECEDENTS.md` entry, PR-16, not yet written), CF-82 (11 open rows name an
+owner that has already run). All three owned by a future pre-Gate-3
+reconciliation task or a future precedent-landing task, not this session.
+`SESSION_CONTEXT.md` updated: header verdict pending → PASS, P-07-LAND's
+done-steps row verdict → PASS with commit `9079a2e` filled in, three new ids
+(CF-80, CF-81, CF-82) appended to the open list, 30 → 33. No hard failure; no
+carry-forward closed by this recording session.
+
+Next: GATE 3 on the blocking set. Verdict: PASS (P-07-LAND).

@@ -1,6 +1,6 @@
 # SESSION CONTEXT
-Updated: 2026-08-01 · By: Sonnet · Phase: PREPARE — blocking set complete ·
-Last task: P-07-LAND · Verdict: pending
+Updated: 2026-08-02 · By: Sonnet · Phase: PREPARE — blocking set complete ·
+Last task: P-07-LAND · Verdict: PASS
 
 ## Read these too
 - `docs/method/PRECEDENTS.md` — binding rulings and environment quirks.
@@ -42,7 +42,7 @@ module that needs it. Next is Gate 3 on the blocking set.
 | P-05-LAND | Land PRODUCT_BRIEF, GLOSSARY, SCOPE; promote DECISIONS; archive VOCABULARY_DRAFT | pending | <this commit> |
 | P-06a-LAND | Land DOMAIN_MODEL (87 entities); repair 6 stale VOCABULARY_DRAFT refs in CLAUDE_PROJECT_INSTRUCTIONS.md | pending | <this commit> |
 | P-06b-LAND | Land TENANCY_MODEL and SECURITY_MODEL; CF-31 closed, CF-77 opened and closed, CF-53 amended | pending | <this commit> |
-| P-07-LAND | Land CALC_SPEC (25 rows, CS-01..CS-14 signed); CF-45/62/70 closed, CF-47 amended, CF-78/79 landed | pending | <this commit> |
+| P-07-LAND | Land CALC_SPEC (25 rows, CS-01..CS-14 signed); CF-45/62/70 closed, CF-47 amended, CF-78/79 landed | PASS | `9079a2e` |
 
 ## Open carry-forwards — ids only
 Full text in `docs/method/CARRY_FORWARDS.md`.
@@ -77,6 +77,9 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
 - CF-73 — bb-stock-costs.html:5645 ships a corrupted Arabic "full return" string on every printed report — owner: FEATURE_INVENTORY.md must-not-reproduce, UX_PRINCIPLES.md
 - CF-74 — Report engine has no resource bundle outside the invoice template; two strings re-declared eight times — owner: DOMAIN_MODEL.md and UX_PRINCIPLES.md
 - CF-75 — AGENTS.md and .cursor/rules/b2s-devos.mdc carried folder paths and a named library ahead of ARCHITECTURE.md; rewritten by P-05-PRE — owner: ARCHITECTURE.md, immediately after Gate 3
+- CF-80 — Done-steps table integrity — owner: the pre-Gate-3 reconciliation task
+- CF-81 — Copy-verification measurement is tool-dependent — owner: PRECEDENTS.md, PR-16
+- CF-82 — 11 open rows name an owner that has already run — owner: the pre-Gate-3 reconciliation task
 
 ## Frozen decisions in force
 - Freeze point 2026-07-29 (`legacy/FREEZE.md`) — tools RETIRING, not port

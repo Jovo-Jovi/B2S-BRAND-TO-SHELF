@@ -851,3 +851,9 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       module names at :82, the human-activity sense of "design" at :95, and the
       signed feature name "Design Assistant" at :96. `SECURITY_MODEL.md` had
       zero hits.
+- [ ] CF-80 — Done-steps table integrity. Owner: the pre-Gate-3 reconciliation
+      task.
+- [ ] CF-81 — Copy-verification measurement is tool-dependent. Owner:
+      `PRECEDENTS.md`, PR-16.
+- [ ] CF-82 — 11 open rows name an owner that has already run. Owner: the
+      pre-Gate-3 reconciliation task.
