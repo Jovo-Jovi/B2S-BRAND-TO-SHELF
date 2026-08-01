@@ -2,7 +2,7 @@
 
 **Status:** AUTHORED. Tier 2, precedence slot 4.
 **Drafted:** 2026-08-01 by the reviewer surface, from the extracts.
-**Calculation choices CS-01 … CS-14 SIGNED 2026-08-01 by the owner. CS-15 open.**
+**Calculation choices CS-01 … CS-15 SIGNED 2026-08-01 by the owner.**
 
 **Closes:** CF-45, CF-62, CF-70. **Amends:** CF-47.
 **Depends on:** `GLOSSARY.md`, `DECISIONS.md`, `DOMAIN_MODEL.md`, `TENANCY_MODEL.md`.
@@ -42,9 +42,9 @@ white-label failure this platform exists to prevent.
 ## 1. Signed calculation choices
 
 Fifteen forks, each a tenant-policy choice that changes stored numbers
-permanently. **CS-01 through CS-14 signed 2026-08-01. CS-15 is open** — it was
-not on the list put to the owner, so the signature does not reach it. It affects
-one row and blocks nothing else. Choices are cited as `CS-nn`
+permanently. All fifteen signed 2026-08-01. CS-15 was signed separately,
+after the reviewer found it had been omitted from the list originally put to the
+owner. Choices are cited as `CS-nn`
 throughout §2–§6. They sit alongside the 79 ODs in `DECISIONS.md` rather than
 inside the register: an OD decides what the platform does, a CS decides what a
 number is.
@@ -205,19 +205,15 @@ Allocation at issue means a draft `SalesOrder` never consumes a number.
 tools carried **three disagreeing numbering implementations**
 (`EXTRACT_INVOICE_PRO.md` §2.12–§2.14), so nothing was inherited.
 
-**CS-15 · Return recognition period — OPEN. Not covered by the 2026-08-01
-signature, because the reviewer did not put it on the list.**
+**CS-15 · Return recognition period — the month of the `Return`.**
 
-When a `Return` lands in a different month from its `Invoice`, does the reduction
-in net revenue fall in the month of the `Invoice` or the month of the `Return`?
+A reduction in net revenue falls in the period the `Return` occurred in, not the
+period its `Invoice` was issued in. Each period reports what actually happened
+in it, and a closed month never moves.
 
-- (a) The month of the `Return`. Each period reports what actually happened in it;
-  a closed month never moves. *Reviewer recommendation.*
-- (b) The month of the `Invoice`. Each `Invoice` carries its own full history, but
-  a closed month restates whenever a late `Return` arrives — the same class of
-  failure as CF-47.
-
-Affects R1-19 only. Nothing else in this document depends on it.
+*Forecloses:* recognition at invoice date, under which a late `Return` restates
+a closed month — the same failure class as CF-47, which D4 and R1-05 exist to
+prevent on the pricing side.
 
 ---
 
@@ -549,8 +545,7 @@ Edge:       under R1-15's residual rule the arithmetic already produces
 Legacy source: EXTRACT_INVOICE_PRO.md §2.9 (C8) — "the most consequential
                expression in the file"
 Invariant:  revenue is what was sold less what came back
-Policy:     tax-exclusive basis; whether returns are recognised at return date
-            or invoice date (proposed: return date)
+Policy:     tax-exclusive basis; recognition in the month of the Return (CS-15)
 Expected:   290.02 − 81.90 = 208.12
 Rounding:   none; inputs are at stored precision
 Edge:       never clamped at zero. If returns exceed sales in a period the figure

@@ -3,7 +3,7 @@
 **Status:** AUTHORED. Tier 1, precedence slot 2.
 **Landed:** 2026-08-01 by P-05-LAND.
 
-The 79 signed operational decisions, promoted verbatim from
+The 80 signed operational decisions, promoted verbatim from
 `docs/method/B2S_PREPARE_PHASE.md` §2, which remains the record of where
 they were signed. **This file is now the authoritative copy.** Rows are
 byte-identical to the register as signed; no rationale has been added after
@@ -16,7 +16,7 @@ never edited in place.
 
 ## 2. Decision register
 
-79 decisions, all signed. None open.
+80 decisions, all signed. None open.
 
 ### Group A — Product identity
 
@@ -136,4 +136,34 @@ never edited in place.
 | H4 | QR: upload or generate, derived from brand name, product brand type, product category, product batch. | SIGNED |
 | H5 | **Barcodes scannable, with one constraint: retail GTIN is ENTERED (GS1-allocated by the brand), never generated.** Generator produces Code 128 / Code 39 for internal and batch use, or EAN-13 on restricted-circulation prefixes (`02`, `04`, `20`–`29`), both labelled not-for-retail. | SIGNED (constrained) |
 | H6 | **Gate evidence: the four-standard acceptance model, §7.** | SIGNED |
+| **H7** | **Gate 3 verifies the blocking set only: `PRODUCT_BRIEF`, `GLOSSARY`, `SCOPE`, `DECISIONS`, `DOMAIN_MODEL`, `TENANCY_MODEL`, `SECURITY_MODEL`, `CALC_SPEC`. Every other frozen document is authored just-in-time, one step ahead of the module that needs it, and is verified by that module's own gate. `CALC_SPEC.md`'s Gate 3 item covers its 25 Release 1 rows; the fourteen Release 2 rows in its §6 land as signed amendments.** | SIGNED 2026-08-01 |
+
+## 3. Decisions authored after the promotion
+
+### OD-H7 — Gate 3 scope
+
+**Decision.** Gate 3 verifies eight documents: `PRODUCT_BRIEF.md`,
+`GLOSSARY.md`, `SCOPE.md`, `DECISIONS.md`, `DOMAIN_MODEL.md`,
+`TENANCY_MODEL.md`, `SECURITY_MODEL.md`, `CALC_SPEC.md`. The thirteen remaining
+frozen documents are authored just-in-time, one step ahead of the module that
+needs them, and each carries the Gate 3 line item originally written for it,
+moved verbatim to its own module gate. `CALC_SPEC.md`'s Gate 3 item covers its
+25 Release 1 rows only.
+
+**Date.** Signed 2026-08-01.
+
+**Rationale.** The compression was already in force — it governed which
+documents were authored and in what order — but it lived in a reviewer
+configuration and never reached `B2S_PREPARE_PHASE.md`, which is the document a
+gate is run from. The committed checklist therefore demanded seven documents
+that the compression had deliberately deferred: `PRINT_CONTRACT`,
+`PRINT_PRODUCTION_SPEC`, `TEMPLATE_MODEL`, `IMPORT_SPEC`, `FEATURE_INVENTORY`,
+`RISK_REGISTER` and `ACCEPTANCE`. Over-preparation is its own failure mode; a
+document authored eight steps before the module that consumes it is rewritten by
+the time it is used.
+
+**Forecloses.** A gate that cannot pass, and the reverse failure — quietly
+running Gate 3 against a checklist known to be stale, which would make every
+later citation of "Gate 3 passed" untrue. It does not foreclose any verification:
+every deferred item survives, attached to the gate that can actually evidence it.
 

@@ -51,7 +51,7 @@ Any release that cannot complete this loop has not validated the product.
 > authoritative.** The rows below are retained as the record of where these
 > decisions were signed. Amend `DECISIONS.md`, never this copy.
 
-79 decisions, all signed. None open.
+80 decisions, all signed. None open.
 
 ### Group A — Product identity
 
@@ -176,10 +176,11 @@ Any release that cannot complete this loop has not validated the product.
 
 ## 3. Still open — none
 
-All 79 decisions are signed. D10, E11, G10 and G11 were signed 2026-07-30;
+All 80 decisions are signed. D10, E11, G10 and G11 were signed 2026-07-30;
 E2, E6, H1 and H6 were reviewer-resolved the same day; C16-C19, E12 and G12
 were raised and resolved by the vocabulary pass. The Release 1 scope in §5
-is signed.
+is signed. OD-H7 was signed 2026-08-01 and amends the Gate 3 checklist in
+this file.
 
 Nothing blocks document authoring. `CALC_SPEC.md` (Step 11) remains the only
 owner-authored document and it blocks the build, not the freeze.
@@ -1175,26 +1176,31 @@ TASK:
 
 ---
 
-## GATE 3 — PREPARE PHASE ENDS
+# GATE 3 — PREPARE PHASE ENDS
+
+**Amended by OD-H7, 2026-08-01.** Gate 3 verifies the **blocking set only**.
 
 Reviewer verdict. Every item must hold:
 
-- [ ] All 79 ODs signed and dated in `DECISIONS.md`
+- [ ] All 80 ODs signed and dated in `DECISIONS.md`
+- [ ] `PRODUCT_BRIEF.md` states purpose, tenancy model, core loop, acceptance event
 - [ ] `GLOSSARY.md` resolves every vocabulary collision, CF-28 included
 - [ ] `SCOPE.md` covers all 14 modules with release assignment; CF-29 closed
 - [ ] `DOMAIN_MODEL.md` resolves every DIVERGENT item from the extracts; C1 closed
-- [ ] **`CALC_SPEC.md` authored by you, with a rounding rule on every calculation**
+- [ ] `TENANCY_MODEL.md` states the hierarchy, the member and role model, and the isolation boundary
 - [ ] `SECURITY_MODEL.md` states the isolation guarantee in testable terms; CF-31 closed
-- [ ] `PRINT_CONTRACT.md` carries a measured physical tolerance, not an assumed one
-- [ ] `PRINT_PRODUCTION_SPEC.md` states the determinism requirement and its evidence
-- [ ] `TEMPLATE_MODEL.md` states what a brand may and may not change
-- [ ] `IMPORT_SPEC.md` has a CSV template per entity, derived from the frozen schema
-- [ ] `FEATURE_INVENTORY.md` carries the must-not-reproduce list
-- [ ] `RISK_REGISTER.md` has an owner on every risk
-- [ ] `ACCEPTANCE.md` states the evidence that closes each gate
-- [ ] No open carry-forward without a named owner
+- [ ] **`CALC_SPEC.md` carries a rounding rule on every one of its 25 Release 1 rows**
+- [ ] Every calculation choice CS-01 through CS-15 signed
+- [ ] No open carry-forward without a **reachable** owner — an owner that has already run is not an owner
 - [ ] GitHub protections on; `.gitattributes` committed; no secret in history
 
-**Only after Gate 3 passes:** `ARCHITECTURE.md`, ADRs, `MODULE_SPEC.md`, the stack, the layering, and the new phase plan.
+**Deferred by OD-H7**, each to the module gate that authors it, carrying its
+original Gate 3 item verbatim: `FEATURE_INVENTORY` · `RISK_REGISTER` ·
+`CONTENT_MODEL` · `REGULATORY` · `DATA_MODEL` · `BRAND_CONFIG` ·
+`TEMPLATE_MODEL` · `PRINT_CONTRACT` · `PRINT_PRODUCTION_SPEC` · `IMPORT_SPEC` ·
+`DOCUMENT_SPEC` · `UX_PRINCIPLES` · `ACCEPTANCE`.
+
+**Only after Gate 3 passes:** `ARCHITECTURE.md`, ADRs, `MODULE_SPEC.md`, the
+stack, the layering, and the new phase plan.
 
 Nothing before it.

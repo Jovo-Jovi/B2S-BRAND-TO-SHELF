@@ -795,3 +795,42 @@ done-steps row verdict → PASS with commit `9079a2e` filled in, three new ids
 carry-forward closed by this recording session.
 
 Next: GATE 3 on the blocking set. Verdict: PASS (P-07-LAND).
+
+2026-08-02 | Standard | PREPARE / P-08-PRE: sign OD-H7 and CS-15; amend Gate 3; HALT before carry-forward reconciliation | docs/product/DECISIONS.md, docs/method/B2S_PREPARE_PHASE.md, docs/product/CALC_SPEC.md, docs/method/DEV_OS.md, SESSION_CONTEXT.md | Task 6 HALTED — CF-80/81/82 already exist | resolve the Task 6 halt, then Gate 3
+
+Session summary: Tasks 1-5 of the P-08-PRE reconciliation prompt completed and
+self-verified. Task 1: OD-H7 landed in `DECISIONS.md`'s Group H table and in
+full in a new §3, register total 79 -> 80, verified by counting every `| A-H
+digit |` row programmatically (80). Task 2: `B2S_PREPARE_PHASE.md` §2 and §3
+updated to 80 with the OD-H7 sentence appended to §3; the `79` inside the P-06
+prompt body (:964) and `2,179 lines` (:825) deliberately left untouched, as
+instructed; the GATE 3 section replaced verbatim with the amended
+blocking-set-only checklist, deferring the other thirteen documents to their
+own module gates. Task 3: CS-15 signed in the header, §1 opening and its own
+block, and R1-19's Policy line updated; the PR-15 self-count re-run unchanged
+at 25 R1 headings / 15 CS headings / 8 identity rows. Task 4: a VOID blockquote
+inserted below `docs/method/DEV_OS.md` §3's heading, byte size 11,744 -> 12,076
+(+332 bytes), no other line touched. Task 5: a repo-wide case-insensitive grep
+for the owner's OS account name (`git grep -n -i` over tracked files) returned
+zero hits outside `legacy/`, where two files carry it under the FREEZE and are
+covered by CF-14 — consistent with a CF-52 closure, held pending Task 6.
+
+Task 6 HALTED at its first instruction. Task 6a's stated premise — "highest
+existing id is CF-79" — is false: `CARRY_FORWARDS.md`:854-859 already carries
+open one-line stub rows for CF-80, CF-81 and CF-82, landed by the prior
+verdict-recording commit (`a61359a`, before this session), and
+`SESSION_CONTEXT.md`'s own open-id list already named all three. This matches
+the prompt's own STOP CONDITION verbatim ("CF-80, CF-81 or CF-82 already
+exists"), so per standing practice (PR-04, PR-15: HALT on mismatch, do not
+resolve it, do not land a partial set) none of Task 6's 18 ledger operations
+were applied, `CARRY_FORWARDS.md` was not touched, Task 7's PR-16/PR-17 were
+not appended (both cite CF-80/CF-81 as their origin and read cleanest landed
+together with the ledger fix), and Task 8's owner-amendment and open-id-rebuild
+steps (8c) were not performed since they depend on Task 6. Task 8's remaining
+parts — header, done-steps row, frozen-decisions bullets, next action — were
+done for what is independently true this session; the four `<this commit>`
+shas and stale `pending` verdicts named by Task 8b belong to CF-80, which is
+itself inside the halted Task 6, so that repair was also deferred. No
+carry-forward was closed or amended in `CARRY_FORWARDS.md` this session.
+Reported to the user for a decision: treat CF-80/81/82 as pre-opened stubs to
+flesh out and close, or return to the reviewer for a corrected prompt.

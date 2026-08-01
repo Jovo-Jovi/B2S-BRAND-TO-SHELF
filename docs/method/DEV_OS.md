@@ -38,6 +38,12 @@ These BETK rules are real, but they guard a surface that does not exist yet. Imp
 
 ## 3. What is added — the parity gate
 
+> **VOID.** This section defines a parity gate against the six legacy tools.
+> Parity is dead: OD-B1 closed it and the four-standard acceptance model in
+> `B2S_PREPARE_PHASE.md` §7 replaced it. No legacy output is a target. Retained
+> for history; never cite as current truth. Every other section of this file
+> remains in force.
+
 **This is the most important adaptation.** BETK was greenfield; every acceptance criterion was invented. This project is a **port**: six working tools already produce correct output that a real business depends on. Therefore:
 
 > **Every module's exit verification includes a parity ledger: the new module, run on the same golden dataset, must reproduce the legacy tool's output.**
