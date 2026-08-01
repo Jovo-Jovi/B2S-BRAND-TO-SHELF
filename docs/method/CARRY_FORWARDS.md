@@ -196,7 +196,16 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       R3, paid tier, may read brand config, template metadata and product names
       only, never buyer, invoice, payment or financial data. Carried into
       SCOPE.md module 21 with that boundary stated.
-- [ ] CF-31 — RLS correctness is an ungated gate today. Owner: SECURITY_MODEL.md, P-08.
+- [x] CF-31 — RLS correctness is an ungated gate today. Owner: SECURITY_MODEL.md, P-08.
+      CF-31 — CLOSED (P-06b-LAND). The gate now has a document.
+      `SECURITY_MODEL.md` §4 states the tenant-isolation guarantee in testable
+      terms and names the evidence that closes it, so isolation is no longer a
+      standard asserted in the acceptance model with nothing behind it. The
+      original framing — "RLS correctness" — named a mechanism before there was
+      a document to state the guarantee in; §4 states it as a property of the
+      platform and its evidence, which is what a gate can be run against. Every
+      gate touching data access cites §4 from here. The standard remains
+      non-waivable by OD.
 - [ ] CF-32 — CSV import resequenced from void to post-DATA_MODEL feature. Owner:
       IMPORT_SPEC.md, P-10.
 - [ ] CF-33 — `docs/method/DEV_OS.md` §3 (renamed from `BB_DEV_OS.md` by P-01)
@@ -557,6 +566,20 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       content is unrecoverable. Replaced with a STATUS stub by P-04c rather than
       invented or deleted. Owner: reviewer — decide at P-12 whether the record is
       re-authored or the stub stands.
+      AMENDED (P-06b-LAND) — inventory only, nothing retired. Every file in the
+      working tree, tracked or untracked, that is or contains a copy of the
+      project instructions, enumerated at this commit:
+
+      | Path | Bytes | Tracked | First H1 line |
+      |---|---|---|---|
+      | `docs/method/CLAUDE_PROJECT_INSTRUCTIONS.md` | 17,212 | Tracked | `# B2S — CLAUDE PROJECT RECONFIGURATION` |
+      | `docs/archive/2026-07/CLAUDE_PROJECT_INSTRUCTIONS.md` | 4,599 | Tracked | `# Claude Project Instructions — paste this verbatim` |
+      | `docs/method/REVIEWER_CHAT_INSTRUCTIONS.MD` | 11,825 | Untracked | none — opens directly with instruction body text, no title line |
+
+      Three copies of one document is the CF-53 shape, and this row now carries
+      the evidence rather than the suspicion. The naming of the `docs/method/`
+      copy is confirmed by the owner before anything is retired or renamed.
+      Owner unchanged: reviewer, decide at P-12.
 - [ ] CF-54 — Stub count stated three ways: 22 in P-01's done-when, 20 in P-12's
       prompt, 23 actual (21 under docs/product/, 2 under docs/method/). Same
       defect class as CF-38's 56-versus-79. P-12 corrected and P-01 annotated
@@ -752,3 +775,21 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       catalog entities, PrintProfile is the print tier's name, and
       ReturnDisposition uses writeOff. No downstream document was drafted
       against the superseded draft vocabulary.
+- [x] CF-77 — `docs/method/CLAUDE_PROJECT_INSTRUCTIONS.md` §3.2 through §3.7
+      describe the knowledge-file set as a rotation plan in the future tense —
+      "add now", "keep for now, remove at Gate 1", "the second rotation — after
+      Gate 1", "resulting knowledge set". That plan has since been executed and
+      then diverged from. Gate 1 has passed and the attached set is now six
+      files: `docs/method/DEV_OS.md`, `docs/method/DEV_OS_REFERENCE.md`,
+      `AGENTS.md`, `docs/method/B2S_PREPARE_PHASE.md`,
+      `docs/product/GLOSSARY.md` and `docs/product/DOMAIN_MODEL.md`. That is
+      not the set §3.6 predicted, and `VOCABULARY_DRAFT.md` has been dropped
+      entirely. Six sections of the document that configures the reviewer
+      surface describe a state that no longer exists. Verified against the
+      reviewer surface's own attached set, 2026-08-01. Owner: P-06b-LAND.
+      CF-77 — CLOSED (P-06b-LAND). §3.2 through §3.7 replaced by a single
+      current-state §3.2 that states the set instead of scheduling it, and
+      carries forward §3.5's live rule — `SESSION_CONTEXT.md` is never attached
+      — as the "not attached, fetched instead" paragraph. §3.1 is left standing
+      as the historical removal record and is annotated as such. No rotation
+      plan survives in the file.

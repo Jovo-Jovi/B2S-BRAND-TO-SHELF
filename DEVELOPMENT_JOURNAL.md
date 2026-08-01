@@ -702,3 +702,36 @@ its own list before landing), bringing the precedent total to 15.
 `SESSION_CONTEXT.md`'s open-id list rebuilt from the ledger: 41 before, 34
 after (7 closed out, 0 new in), verified id-for-id; header, done-steps row and
 next action updated; next action set to P-06b.
+
+2026-08-01 | Standard | PREPARE / P-06b-LAND (land TENANCY_MODEL and SECURITY_MODEL; close CF-31, CF-77) | docs/product/TENANCY_MODEL.md, docs/product/SECURITY_MODEL.md, docs/method/CLAUDE_PROJECT_INSTRUCTIONS.md, docs/method/CARRY_FORWARDS.md, SESSION_CONTEXT.md, DEVELOPMENT_JOURNAL.md | none | CALC_SPEC.md (Step 11), owner-authored, last blocking document before Gate 3
+
+Session summary: `docs/product/TENANCY_MODEL.md` (9,981 bytes) and
+`docs/product/SECURITY_MODEL.md` (11,139 bytes) copied in full from the
+staging folder (PR-14), each verified byte-identical by SHA-256 against its
+source, neither containing `STATUS: not authored`, both valid UTF-8 with no
+BOM. PR-15 three-way count check run before landing: `DOMAIN_MODEL.md` §1's
+stated total (87) matched the sum of its own nine §2 tier subtotals
+(9+9+2+9+6+5+14+18+15 = 87), which matched `SECURITY_MODEL.md` §3 principle
+P5's "87 entities, 4 properties" — all three identical, no HALT.
+`SECURITY_MODEL.md` §4's heading, "## 4. What closes the gate — CF-31",
+confirmed as the tenant-isolation guarantee's closing section before citing it
+in the CF-31 closure text. `CARRY_FORWARDS.md` count check (PR-04) passed
+before editing: 3 rows touched (CF-31 closed, CF-53 amended and left open,
+CF-77 opened and closed as a new row), ids matched, CF-77 verified absent
+beforehand as the next free id after CF-76. The instruction-copy inventory
+(Task 5) found one file beyond the reviewer's three known candidates: an
+untracked `docs/method/REVIEWER_CHAT_INSTRUCTIONS.MD` (11,825 bytes) carrying
+its own variant of the reviewer instructions body, with no byte-identical
+match to any other candidate — the three actual copies (this file, the
+`docs/method/` original, and the `docs/archive/2026-07/` copy) are the "three
+copies of one document" CF-53's amendment names; `docs/method/PROJECT_RECONFIG.md`
+was re-confirmed as a stub, not a copy, and left untouched. CF-53's table was
+filled with the three copies and nothing was retired, renamed or deleted.
+`docs/method/CLAUDE_PROJECT_INSTRUCTIONS.md` §3.2 through §3.7 (lines 278-318
+of the pre-edit file, 17,809 bytes) removed and replaced with a single
+current-state §3.2 naming the six actually-attached files (post-edit: 17,212
+bytes); §3.1's closing paragraph annotated "Historical" per the supplied text.
+`SESSION_CONTEXT.md`'s open-id list rebuilt from the ledger: 34 before, 33
+after (1 closed out — CF-31; CF-77 opens and closes within this task and so
+never appears), verified id-for-id; header, "Where we are", done-steps row,
+frozen decisions and next action all updated per the supplied text verbatim.

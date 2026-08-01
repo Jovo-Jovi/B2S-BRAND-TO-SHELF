@@ -1,6 +1,6 @@
 # SESSION CONTEXT
-Updated: 2026-08-01 · By: Sonnet · Phase: PREPARE — DOMAIN_MODEL landed ·
-Last task: P-06a-LAND · Verdict: pending
+Updated: 2026-08-01 · By: Sonnet · Phase: PREPARE — blocking set, 7 of 8 landed ·
+Last task: P-06b-LAND · Verdict: pending
 
 ## Read these too
 - `docs/method/PRECEDENTS.md` — binding rulings and environment quirks.
@@ -13,17 +13,12 @@ This file carries state and open ids only. Narrative belongs in the journal.
 Keep it short: if a paragraph is growing here, it belongs elsewhere.
 
 ## Where we are
-Greenfield. The six legacy HTML tools are retiring, not being ported;
-parity is void (B1 CLOSED). Requirements extraction is complete for all
-five read tools. GATE 1 has run: its corrections are landed by P-02-FIX and
-await verdict. `PRODUCT_BRIEF.md`, `GLOSSARY.md` and `SCOPE.md` are now
-AUTHORED (Tier 0/1); `DECISIONS.md` now carries the 79 signed decisions,
-promoted verbatim from `B2S_PREPARE_PHASE.md` §2, which is annotated
-PROMOTED and retained as the signing record. `VOCABULARY_DRAFT.md` is
-archived to `docs/archive/2026-08/`, superseded by `GLOSSARY.md`.
-`DOMAIN_MODEL.md` is now AUTHORED (Tier 2, 87 entities across 9 tiers),
-landed by P-06a-LAND; its thirteen resolutions close CF-49, CF-64 through
-CF-68 and CF-76, and amend CF-70 and CF-74.
+Greenfield. Requirements extraction is complete for all five read tools and
+Gate 1 has run. Seven of the eight Gate 3 blocking documents are landed:
+`PRODUCT_BRIEF`, `GLOSSARY`, `SCOPE`, `DECISIONS`, `DOMAIN_MODEL` (87 entities,
+9 tiers), and now `TENANCY_MODEL` and `SECURITY_MODEL`. `CALC_SPEC.md` is the
+only one left and it is owner-authored. Every other frozen document is authored
+just-in-time, one step ahead of the module that needs it — not before Gate 3.
 
 ## Done steps
 
@@ -44,6 +39,7 @@ CF-68 and CF-76, and amend CF-70 and CF-74.
 | P-05-PRE | Defer enforcement mechanism in rules files; land CF-73 to CF-75 | pending | `445d1c9` |
 | P-05-LAND | Land PRODUCT_BRIEF, GLOSSARY, SCOPE; promote DECISIONS; archive VOCABULARY_DRAFT | pending | <this commit> |
 | P-06a-LAND | Land DOMAIN_MODEL (87 entities); repair 6 stale VOCABULARY_DRAFT refs in CLAUDE_PROJECT_INSTRUCTIONS.md | pending | <this commit> |
+| P-06b-LAND | Land TENANCY_MODEL and SECURITY_MODEL; CF-31 closed, CF-77 opened and closed, CF-53 amended | pending | <this commit> |
 
 ## Open carry-forwards — ids only
 Full text in `docs/method/CARRY_FORWARDS.md`.
@@ -57,7 +53,6 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
 - CF-14 — Public repo: owner's given name and local folder path are permanently in git history — owner: RISK_REGISTER.md at P-05, replacement OD at P-06
 - CF-22 — Label-editor vs sticker-tool capability delta — owner: P-04
 - CF-27 — Minor Pass 1 scope bleed — owner: none stated (no action)
-- CF-31 — RLS correctness is an ungated gate today — owner: SECURITY_MODEL.md, P-08
 - CF-32 — CSV import resequenced from void to post-DATA_MODEL feature — owner: IMPORT_SPEC.md, P-10
 - CF-33 — `docs/method/DEV_OS.md` §3 defines a parity gate that is void — owner: reviewer, before Gate 2
 - CF-39 — `B2S_PREPARE_PHASE.md` §3/§4 now run together with no `---` separator — owner: reviewer, next light edit to `B2S_PREPARE_PHASE.md`
@@ -96,6 +91,9 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
   P-05-LAND. `VOCABULARY_DRAFT.md` archived, superseded by `GLOSSARY.md`.
 - `CALC_SPEC.md` (Step 11) is the only remaining owner-authored document.
   It blocks the build, not the freeze.
+- `TENANCY_MODEL.md` and `SECURITY_MODEL.md` AUTHORED 2026-08-01 — P-06b-LAND.
+  CF-31 closed against `SECURITY_MODEL.md` §4.
 
 ## Next action
-P-06b (TENANCY_MODEL and SECURITY_MODEL).
+`CALC_SPEC.md` (Step 11) — owner-authored. The last blocking document before
+Gate 3. Nothing else in the blocking set is outstanding.

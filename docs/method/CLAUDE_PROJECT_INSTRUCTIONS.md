@@ -275,47 +275,36 @@ tenant-isolation gate, which is not waivable.
 
 Leaving any of these in knowledge means the reviewer can cite a void document and sound authoritative doing it.
 
-## 3.2 Add now — three files
+> **Historical.** This removal ran at the pivot and is retained as the record.
+> The current set is §3.2.
+
+## 3.2 The attached set — current state
+
+The knowledge set is **stated here, not rotated**. When it changes, this section
+is rewritten to the new state. No future-tense plan lives in this file: a plan
+that outlives its execution is what CF-77 was.
+
+**Attached — six files:**
 
 | File | Why |
 |---|---|
-| `B2S_PREPARE_PHASE.md` | The only sequencing document. Every prompt, gate and step lives here. |
-| `GLOSSARY.md` | Binding on every prompt emitted and every document authored. Referenced by all three extraction prompts. |
-| `AUDIT_STICKER.md` | The one completed extraction. Requirements evidence for the design half, and the source of CF-16 through CF-24. |
+| `docs/method/DEV_OS.md` | The adapted method. **§3 is void** — the Instructions override it (CF-33). |
+| `docs/method/DEV_OS_REFERENCE.md` | The full method reference. Unaffected by the pivot. |
+| `AGENTS.md` | The always-on builder rules every emitted prompt is written against. |
+| `docs/method/B2S_PREPARE_PHASE.md` | The sequencing document, and the signing record for the 79 decisions promoted to `DECISIONS.md`. |
+| `docs/product/GLOSSARY.md` | Tier 0. Binding on every prompt emitted and every document authored. |
+| `docs/product/DOMAIN_MODEL.md` | Tier 2. The entity set every later document is checked against. |
 
-## 3.3 Keep — three files
+**Dropped:** `VOCABULARY_DRAFT.md`, superseded by `GLOSSARY.md` and archived to
+`docs/archive/2026-08/`.
 
-| File | Why | Until |
-|---|---|---|
-| `DEV_OS.md` *(renamed from `BB_DEV_OS.md` by `P-01`)* | Surfaces, deferred rule layer, governance mechanics all still in force. **§3 void — the Instructions override it.** | amended, then re-upload |
-| `DEV_OS_REFERENCE.md` | The full method reference. Unaffected by the pivot. | indefinitely |
-| `RETURNS_REQUIREMENTS.md` *(renamed from `RETURNS_ADDENDUM.md` by `P-01`)* | Requirements source. Returns are R1 and it is the only description of them. | superseded by `EXTRACT_STOCK_COSTS.md` |
-
-## 3.4 Keep for now, remove at Gate 1 — one file
-
-| File | Why keep | Why remove later |
-|---|---|---|
-| `REPORT.md` | Sole surviving record of the deleted `label-v3` (§2.2), and the base audit of all six tools | The three extracts supersede it as evidence, and at 57 KB it crowds the knowledge budget |
-
-## 3.5 Never upload as knowledge
-
-`SESSION_CONTEXT.md` — the reviewer fetches it directly from the repository per PR-09. Uploading it as a knowledge file would guarantee a stale copy competing with the live one, which is precisely the drift the authority rule exists to prevent.
-
-## 3.6 The second rotation — after Gate 1
-
-| Action | File |
-|---|---|
-| Remove | `REPORT.md` · `RETURNS_REQUIREMENTS.md` |
-| Add | `EXTRACT_STOCK_COSTS.md` · `EXTRACT_INVOICE_PRO.md` · `EXTRACT_DESIGN_TOOLS.md` |
-| Keep | `AUDIT_STICKER.md` · `DEV_OS.md` · `DEV_OS_REFERENCE.md` · `B2S_PREPARE_PHASE.md` · `GLOSSARY.md` |
-
-## 3.7 Resulting knowledge set
-
-**Now — 7 files:** `B2S_PREPARE_PHASE.md` · `GLOSSARY.md` · `DEV_OS.md` · `DEV_OS_REFERENCE.md` · `AUDIT_STICKER.md` · `RETURNS_REQUIREMENTS.md` · `REPORT.md`
-
-**After Gate 1 — 8 files:** the five kept, plus the three extracts.
-
-Down from ten, and every one of them current.
+**Not attached — fetched instead.** `SESSION_CONTEXT.md`,
+`docs/method/PRECEDENTS.md`, `docs/method/CARRY_FORWARDS.md` and the three
+extracts under `docs/requirements/extracts/`. The reviewer reads the repository
+directly (PR-09), so an attached copy would be a stale competitor to the live
+file — precisely the drift the authority rule exists to prevent. Size is the
+second reason: the three extracts run to roughly 10,700 lines and would crowd
+out the documents that bind.
 
 ---
 
