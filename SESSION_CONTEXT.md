@@ -1,6 +1,6 @@
 # SESSION CONTEXT
-Updated: 2026-08-01 · By: Opus · Phase: PREPARE — Gate 1 corrections landed ·
-Last task: P-05-PRE · Verdict: pending
+Updated: 2026-08-01 · By: Opus · Phase: PREPARE — Tier 0/1 documents landed ·
+Last task: P-05-LAND · Verdict: pending
 
 ## Read these too
 - `docs/method/PRECEDENTS.md` — binding rulings and environment quirks.
@@ -15,9 +15,12 @@ Keep it short: if a paragraph is growing here, it belongs elsewhere.
 ## Where we are
 Greenfield. The six legacy HTML tools are retiring, not being ported;
 parity is void (B1 CLOSED). Requirements extraction is complete for all
-five read tools. The decision register holds 79 signed decisions, none
-open. All 23 document stubs await reviewer authorship. GATE 1 has run:
-its corrections are landed by P-02-FIX and await verdict.
+five read tools. GATE 1 has run: its corrections are landed by P-02-FIX and
+await verdict. `PRODUCT_BRIEF.md`, `GLOSSARY.md` and `SCOPE.md` are now
+AUTHORED (Tier 0/1); `DECISIONS.md` now carries the 79 signed decisions,
+promoted verbatim from `B2S_PREPARE_PHASE.md` §2, which is annotated
+PROMOTED and retained as the signing record. `VOCABULARY_DRAFT.md` is
+archived to `docs/archive/2026-08/`, superseded by `GLOSSARY.md`.
 
 ## Done steps
 
@@ -35,7 +38,8 @@ its corrections are landed by P-02-FIX and await verdict.
 | P-04d | Memory guard restructure | pending | `e698b2a` |
 | P-04e | Sync committed project instructions to split memory guard | pending | `fdc890e` |
 | P-02-FIX | Gate 1: HF-1, CF-42, CF-63, AGENTS.md rewrite, ledger | pending | `a95cfb3` |
-| P-05-PRE | Defer enforcement mechanism in rules files; land CF-73 to CF-75 | pending | <this commit> |
+| P-05-PRE | Defer enforcement mechanism in rules files; land CF-73 to CF-75 | pending | `445d1c9` |
+| P-05-LAND | Land PRODUCT_BRIEF, GLOSSARY, SCOPE; promote DECISIONS; archive VOCABULARY_DRAFT | pending | <this commit> |
 
 ## Open carry-forwards — ids only
 Full text in `docs/method/CARRY_FORWARDS.md`.
@@ -49,9 +53,6 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
 - CF-14 — Public repo: owner's given name and local folder path are permanently in git history — owner: RISK_REGISTER.md at P-05, replacement OD at P-06
 - CF-22 — Label-editor vs sticker-tool capability delta — owner: P-04
 - CF-27 — Minor Pass 1 scope bleed — owner: none stated (no action)
-- CF-28 — Terminology collision: "customer" means tenant and buyer — owner: GLOSSARY.md, P-05
-- CF-29 — 13 modules missing from the module map — owner: SCOPE.md, P-06
-- CF-30 — Design Assistant has no OD — owner: P-06
 - CF-31 — RLS correctness is an ungated gate today — owner: SECURITY_MODEL.md, P-08
 - CF-32 — CSV import resequenced from void to post-DATA_MODEL feature — owner: IMPORT_SPEC.md, P-10
 - CF-33 — `docs/method/DEV_OS.md` §3 defines a parity gate that is void — owner: reviewer, before Gate 2
@@ -83,16 +84,21 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
 - CF-73 — bb-stock-costs.html:5645 ships a corrupted Arabic "full return" string on every printed report — owner: FEATURE_INVENTORY.md must-not-reproduce, UX_PRINCIPLES.md
 - CF-74 — Report engine has no resource bundle outside the invoice template; two strings re-declared eight times — owner: DOMAIN_MODEL.md and UX_PRINCIPLES.md
 - CF-75 — AGENTS.md and .cursor/rules/b2s-devos.mdc carried folder paths and a named library ahead of ARCHITECTURE.md; rewritten by P-05-PRE — owner: ARCHITECTURE.md, immediately after Gate 3
+- CF-76 — GLOSSARY.md changed eight things against VOCABULARY_DRAFT.md, forced by extract evidence (collision 16, PrintProfile rename, BrandTheme, Recipe rename, material enforcement, MovementReason additions, ReturnDisposition writeOff rename, Arabic column) — owner: DOMAIN_MODEL.md at P-06
 
 ## Frozen decisions in force
 - Freeze point 2026-07-29 (`legacy/FREEZE.md`) — tools RETIRING, not port
   targets.
-- Decision register `docs/method/B2S_PREPARE_PHASE.md` §2: **79 decisions,
-  all SIGNED, none open.** §5 Release 1 SIGNED 2026-07-30.
+- Decision register: **79 decisions, all SIGNED, none open**, now
+  authoritative at `docs/product/DECISIONS.md` (promoted P-05-LAND from
+  `docs/method/B2S_PREPARE_PHASE.md` §2, which is annotated PROMOTED and
+  retained as the signing record). §5 Release 1 SIGNED 2026-07-30.
 - Reviewer direct repo read SIGNED 2026-07-31 — PR-09.
 - Memory guard restructure SIGNED 2026-07-31 — this file, CF-55.
-- `CALC_SPEC.md` (Step 11) is the only owner-authored document. It blocks
-  the build, not the freeze.
+- `PRODUCT_BRIEF.md`, `GLOSSARY.md`, `SCOPE.md` AUTHORED 2026-08-01 —
+  P-05-LAND. `VOCABULARY_DRAFT.md` archived, superseded by `GLOSSARY.md`.
+- `CALC_SPEC.md` (Step 11) is the only remaining owner-authored document.
+  It blocks the build, not the freeze.
 
 ## Next action
-P-05-LAND.
+P-06.

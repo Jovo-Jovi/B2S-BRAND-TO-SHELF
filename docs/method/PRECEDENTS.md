@@ -90,6 +90,13 @@ pointer — a fresh window sees only the fence. Origin: P-02-FIX halted at TASK 
 and TASK 5 for exactly this, one task after CF-40 closed on the same failure
 class.
 
+**PR-13 — A write task states its push, and its report proves the push.**
+Every write task's commit block states `Push to origin/main` explicitly, and the
+report states the remote comparison (`old..new main -> main`), not just local
+`git status`. A commit that is not on origin does not exist for verification: the
+reviewer reads origin, not the workspace. Origin: P-05-PRE landed correctly and
+was not pushed, because the prompt omitted the push line.
+
 ---
 
 ## 2. Environment quirks — never re-discover

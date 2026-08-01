@@ -178,10 +178,24 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       with the exact required content; `git add --renormalize .` verified to
       produce zero diff. No line-ending commit needed.
 - [ ] CF-27 — Minor Pass 1 scope bleed. Noted, no action.
-- [ ] CF-28 — Terminology collision: "customer" means tenant and buyer. Owner:
+- [x] CF-28 — Terminology collision: "customer" means tenant and buyer. Owner:
       GLOSSARY.md, P-05.
-- [ ] CF-29 — 13 modules missing from the module map. Owner: SCOPE.md, P-06.
-- [ ] CF-30 — Design Assistant has no OD. Owner: P-06.
+      CF-28 — CLOSED (P-05). GLOSSARY.md §2 resolves it on evidence: nine cited
+      sites in bb-stock-costs.html show `customers` meaning the TENANT in the
+      shared-folder path (:1178, :902) and the BUYER everywhere else (:1182,
+      :3264, :3265, :3276-3277, :3320, :3389, :3411). Resolved as `Tenant` and
+      `Buyer`; the word "customer" is retired entirely and appears on the §5
+      enforcement list.
+- [x] CF-29 — 13 modules missing from the module map. Owner: SCOPE.md, P-06.
+      CF-29 — CLOSED (P-05). SCOPE.md §1 carries all 22 modules plus the Operator
+      Console, each traced to at least one signed decision, each with a stated
+      boundary naming what it does NOT own, and each with an R1/R2/R3
+      assignment. §4 adds seven cross-cutting invariants binding every module.
+- [x] CF-30 — Design Assistant has no OD. Owner: P-06.
+      CF-30 — CLOSED (P-05). The Design Assistant OD exists and is signed as G12:
+      R3, paid tier, may read brand config, template metadata and product names
+      only, never buyer, invoice, payment or financial data. Carried into
+      SCOPE.md module 21 with that boundary stated.
 - [ ] CF-31 — RLS correctness is an ungated gate today. Owner: SECURITY_MODEL.md, P-08.
 - [ ] CF-32 — CSV import resequenced from void to post-DATA_MODEL feature. Owner:
       IMPORT_SPEC.md, P-10.
@@ -689,5 +703,17 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       `components/shared/`) and a named library (`zod`) in always-on rules,
       ahead of ARCHITECTURE.md. Rewritten by P-05-PRE to state principle and
       defer mechanism. When Gate 3 closes, restore the enforcement column with
-      real guard names and paths. Owner: ARCHITECTURE.md, immediately after
+      real guard names and paths.   Owner: ARCHITECTURE.md, immediately after
       Gate 3.
+- [ ] CF-76 — GLOSSARY.md changed eight things against VOCABULARY_DRAFT.md, each
+      forced by extract evidence: a sixteenth collision (`preset` names both a
+      colour theme and a print margin set); `PrintPreset` renamed `PrintProfile`
+      as its consequence; `BrandTheme` added as an entity the draft had no term
+      for; `BillOfMaterials` renamed `Recipe` because `وصفة` is the owner's word
+      and collides with nothing; `material` added to the enforcement list;
+      `MovementReason` gained `opening_balance` and `stocktake`, which existed
+      only as sentinel strings in a supplier text field; `ReturnDisposition`
+      value `expired` renamed `writeOff` because the identifier and its Arabic
+      label `تالف` (damaged) disagreed; and an Arabic column added throughout.
+      Any downstream document drafted against the draft's vocabulary must be
+      re-checked. Owner: DOMAIN_MODEL.md at P-06.

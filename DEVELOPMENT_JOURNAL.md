@@ -640,3 +640,38 @@ after (3 closed out, 3 new in — net zero), verified id-for-id against the
 ledger. Ledger totals: open 43, closed 17, total 60. Done-steps table gained
 the P-02-FIX commit hash (`a95cfb3`, previously a placeholder) and a new
 P-05-PRE row. Next action set to P-05-LAND.
+
+2026-08-01 | Standard | PREPARE / P-05-LAND (land PRODUCT_BRIEF, GLOSSARY, SCOPE; promote DECISIONS; archive VOCABULARY_DRAFT) | docs/product/PRODUCT_BRIEF.md, docs/product/GLOSSARY.md, docs/product/SCOPE.md, docs/product/DECISIONS.md, docs/archive/2026-08/VOCABULARY_DRAFT.md, docs/archive/2026-08/README.md, docs/method/B2S_PREPARE_PHASE.md, docs/method/CARRY_FORWARDS.md, docs/method/PRECEDENTS.md, SESSION_CONTEXT.md | The nine-path write list omitted docs/method/B2S_PREPARE_PHASE.md, which TASK 4c explicitly required editing (heading-only) to mark the register PROMOTED; treated as a prompt inconsistency, not scope invention, and edited per the explicit TASK 4c instruction — a tenth (eleventh with the journal) path was touched against a stated count of nine (ten with the journal) | P-06
+
+Session summary: three reviewer-authored documents supplied at repo root
+(`docs/PRODUCT_BRIEF.md`, `docs/GLOSSARY.md`, `docs/SCOPE.md`) copied
+verbatim over the three `docs/product/` stubs — byte-for-byte identical by
+`cmp`, none retaining "STATUS: not authored". `VOCABULARY_DRAFT.md` moved by
+`git mv` to `docs/archive/2026-08/` (rename detected, history intact),
+banner prepended, no other line touched; `docs/archive/2026-08/README.md`
+created. 28 remaining references to `VOCABULARY_DRAFT.md` found and reported
+by file:line across 9 distinct files (`docs/archive/2026-08/README.md`,
+the moved file itself, `docs/product/GLOSSARY.md`, the untracked
+`docs/GLOSSARY.md`, `DEVELOPMENT_JOURNAL.md`, `docs/method/CARRY_FORWARDS.md`,
+`docs/requirements/extracts/EXTRACT_DESIGN_TOOLS.md`,
+`docs/method/CLAUDE_PROJECT_INSTRUCTIONS.md`,
+`docs/requirements/extracts/EXTRACT_INVOICE_PRO.md`); none fixed, per TASK 3.
+The 79-row decision register at `B2S_PREPARE_PHASE.md` lines 48-170 (heading
+to the line before the `---` at :171, boundaries verified before extraction)
+was extracted mechanically with `sed -n '48,170p'`, never retyped, and
+assembled into `docs/product/DECISIONS.md` behind the specified header;
+`diff` against the current file's row span (post heading-edit) returned no
+difference, confirming the rows are identical apart from the two headers.
+`B2S_PREPARE_PHASE.md`'s heading alone changed to "## 2. Decision register —
+PROMOTED" plus the specified blockquote; all 79 rows below it untouched.
+`DECISIONS.md` row count verified at 79 by pattern grep. `CARRY_FORWARDS.md`
+count check (PR-04) passed before editing: 3 closures (CF-28, CF-29, CF-30),
+1 new (CF-76), 0 amendments, all ids matched against open rows. CF-28..30
+closed `[x]` with the supplied closure text appended, never replacing the
+original claim; CF-76 landed as a new open row. `PRECEDENTS.md` §1 gained
+PR-13 (a write task states its push, and its report proves it — origin:
+P-05-PRE landed correctly but was never pushed). `SESSION_CONTEXT.md`'s
+open-id list rebuilt from the ledger: 43 before, 41 after (3 closed out, 1
+new in), verified id-for-id; the P-05-PRE done-steps row's placeholder
+commit hash filled in as `445d1c9`, confirmed via `git log`; next action set
+to P-06.

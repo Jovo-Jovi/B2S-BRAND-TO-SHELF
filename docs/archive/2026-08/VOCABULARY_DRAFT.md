@@ -1,3 +1,8 @@
+> **ARCHIVED 2026-08-01.** Superseded by `docs/product/GLOSSARY.md`, which
+> resolves sixteen collisions against this file's fifteen and carries the
+> Arabic the extracts supplied. Retained for history. Not authoritative.
+> Do not cite as current truth.
+
 # B2S — VOCABULARY DRAFT + COMPLETE MODULE SET
 
 **Status:** PROVISIONAL. Authored 2026-07-30 by the reviewer surface.

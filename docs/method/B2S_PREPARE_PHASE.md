@@ -45,7 +45,11 @@ Any release that cannot complete this loop has not validated the product.
 
 ---
 
-## 2. Decision register
+## 2. Decision register — PROMOTED
+
+> **Promoted 2026-08-01 to `docs/product/DECISIONS.md`, which is now
+> authoritative.** The rows below are retained as the record of where these
+> decisions were signed. Amend `DECISIONS.md`, never this copy.
 
 79 decisions, all signed. None open.
 
