@@ -857,3 +857,42 @@ new ids appended to the open list (33 -> 35), next action re-scoped to a
 corrected reconciliation task that lands CF-80/81/82 as the pre-opened stubs
 they are rather than re-verifying them as free. No carry-forward closed by
 this recording session; CF-80/81/82's disposition remains for that task.
+
+2026-08-01 | Standard | PREPARE / P-08-PRE-FIX: close CF-80 to CF-82, reconcile 18 rows, land PR-16 to PR-19 | docs/method/CARRY_FORWARDS.md, docs/method/PRECEDENTS.md, SESSION_CONTEXT.md, DEVELOPMENT_JOURNAL.md | state-assertion drift (below) | GATE 3 verdict
+
+Session summary: resumed P-08-PRE's Tasks 6-9 with Task 6's premise corrected
+by the reviewer — CF-80, CF-81 and CF-82 are amend-and-close, not create,
+because commit a61359a had already opened them as one-line stubs before the
+original Task 6 ran, and the builder correctly halted on that contradiction.
+Re-verifying this prompt's own state assertions (stamped to commit d49d025)
+against actual HEAD (d8e2ce6) found a second instance of the exact drift this
+task's own PR-18/PR-19 describe: the reviewer's PASS verdict on P-08-PRE had,
+between d49d025 and d8e2ce6, already logged CF-83 and CF-84 as open stubs, so
+the true highest id was CF-84 (not CF-82) and the true open count was 35 (not
+33). Reported to the user, who confirmed proceeding with Task A's 18 ids
+unaffected and the open-id rebuild adjusted to actual reality. TASK A: 18
+ledger rows edited in `docs/method/CARRY_FORWARDS.md`, verified by count and
+by id-list diff — 3 amend-and-closed keeping their original stub line
+verbatim (CF-80, CF-81, CF-82), 4 status changes (CF-04 and CF-27 VOID, CF-33
+and CF-52 CLOSED), 11 owner amendments appended without touching claim text
+(CF-01, CF-05, CF-11, CF-14, CF-22, CF-44, CF-46, CF-50, CF-56, CF-58, CF-72).
+TASK B: PR-16 (verification measurements are commanded, not chosen), PR-17 (a
+prompt never hands the builder a value it cannot know), PR-18 (reviewer state
+assertions are stamped and re-verified) and PR-19 (a carry-forward named in a
+verdict is already open) appended to `docs/method/PRECEDENTS.md`. TASK C:
+`SESSION_CONTEXT.md` header set to Gate 3 ready / P-08-PRE-FIX / pending; the
+three remaining `<this commit>` done-steps rows repaired with real shas found
+by `git log --oneline --all` — P-05-LAND `4f176a9`, P-06a-LAND `6e98cf5`,
+P-06b-LAND `67fa868` (matching the prompt's own stated value) — verdicts set
+to PASS; P-04d, P-04e, P-02-FIX and P-05-PRE left `pending`, no verdict
+invented for any of them; a P-08-PRE-FIX done-steps row appended pending its
+own commit sha. Open-id list rebuilt as a delta: the seven closed/void ids
+deleted, the eleven owner amendments' text replaced after `— owner:` with
+nothing else touched, landing at 28 open ids (not the prompt's stated 26,
+per the state-assertion drift above) — verified identical, id-for-id, against
+the ledger's own open rows by diff. Frozen-decisions entry appended for
+PR-16 through PR-19; next action re-pointed at the GATE 3 verdict, no other
+item outstanding. The stale `## Where we are` narrative paragraph describing
+the Task 6 halt as unresolved was left untouched, as it falls outside Task C's
+enumerated C1-C5 edits; flagged in the report as a residual inconsistency for
+the next task or the reviewer to clear.

@@ -13,6 +13,8 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
 ---
 
 - [ ] CF-01 — Reinstate deferred Dev OS security/migration rule layer at P10
+      AMENDED (P-08-PRE-FIX) — owner: ARCHITECTURE.md, immediately after Gate 3
+      — the P10 it named does not exist in this plan
 - [ ] CF-02 — Unescaped innerHTML in all legacy tools. Owner: FEATURE_INVENTORY.md
       must-not-reproduce at P-07. Prior owner "every ported renderer" is void
       framing — nothing is ported. Evidence captured in EXTRACT_STOCK_COSTS.md
@@ -52,7 +54,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       catch(e){} site across the three design tools. Evidence now complete across
       all five read tools. Owner unchanged: FEATURE_INVENTORY.md must-not-reproduce
       at P-07.
-- [ ] CF-04 — Older returns lack outAllocations; both shapes must render.
+- [x] CF-04 — Older returns lack outAllocations; both shapes must render.
       Evidence complete. P-03 R4 confirms EXTRACT_STOCK_COSTS.md Part 4 on every
       point of fact, with two divergences and two completions. Owner: Gate 1 read,
       then DOMAIN_MODEL.md at P-07.
@@ -60,7 +62,14 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       references returns, `outAllocations`, or any business entity. Confirmed by
       exhaustive grep; see EXTRACT_DESIGN_TOOLS.md §8.2. The design family
       contributes nothing to this row in either direction.
+      CF-04 — VOID (P-08-PRE-FIX). The requirement was that both `outAllocations`
+      shapes must render, which mattered only to a port. No legacy return data
+      is imported: OD-B7 accepts total legacy data loss and OD-A5 excludes
+      legacy migration in favour of CSV import. `DOMAIN_MODEL.md` D6 replaces
+      the concept with `ReturnAllocation`. There is no second shape.
 - [ ] CF-05 — Print calibration unresolved until OD-5 signed
+      AMENDED (P-08-PRE-FIX) — owner: PRINT_CONTRACT.md, authored just-in-time
+      per OD-H7; the measurement is B2S_PREPARE_PHASE.md Step 15
 - [ ] CF-11 — REPORT.md §3.3 "design tools are independent islands" is FALSIFIED
       for the sticker tool: legacy/balance-bites-sticker.html carries the shared
       folder path (:1138), bb_filestore_v1, showDirectoryPicker, bb_stickers,
@@ -95,6 +104,8 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       not around it. Closes at Gate 1 on read. One element of §8.5 rests on an
       incidental glob hit from invoice-pro.html and is confirmed at Gate 1 against
       EXTRACT_INVOICE_PRO.md.
+      AMENDED (P-08-PRE-FIX) — owner: the REPORT.md annotation task, before
+      Gate 3
 - [x] CF-12 — REPORT.md §1 and inventory.json meta line counts are wrong by ~3,953
       lines (stock 5577→7084, invoice-pro 3498→4284, sticker 3701 unlisted;
       total 14529→~18482). Owner: reviewer, closes at Gate 1.
@@ -167,6 +178,8 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       under legacy/ — bb-stock-costs.html:902 and :1178,
       balance-bites-sticker.html:1138 — which legacy/FREEZE.md forbids modifying.
       The four-option OD at P-06 is unchanged.
+      AMENDED (P-08-PRE-FIX) — owner: RISK_REGISTER.md, authored just-in-time per
+      OD-H7; its gate is the pre-relaunch audit, B2S_PREPARE_PHASE.md §10
 - [ ] CF-22 — Label-editor vs sticker-tool capability delta. Owner: P-04.
       ANSWERED by P-04 Part 2: overlapping-but-neither. The label editor is a
       distinct physical output — a continuous five-segment cruciform wrap strip
@@ -174,10 +187,14 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       content model with the sticker tool's back label, on weaker infrastructure.
       Verdict rests on 11 of 11 AUDIT_STICKER.md citations spot-checked and
       holding. Closes at Gate 1 on read.
+      AMENDED (P-08-PRE-FIX) — owner: reviewer — verify closure against
+      EXTRACT_DESIGN_TOOLS.md Part 2 at the TEMPLATE_MODEL.md authoring
 - [x] CF-25 — CLOSED (confirmed by P-01). `.gitattributes` exists at repo root
       with the exact required content; `git add --renormalize .` verified to
       produce zero diff. No line-ending commit needed.
-- [ ] CF-27 — Minor Pass 1 scope bleed. Noted, no action.
+- [x] CF-27 — Minor Pass 1 scope bleed. Noted, no action.
+      CF-27 — VOID (P-08-PRE-FIX). Recorded as "no action" when raised,
+      against a Pass 1 that belonged to the port. Nothing depends on it.
 - [x] CF-28 — Terminology collision: "customer" means tenant and buyer. Owner:
       GLOSSARY.md, P-05.
       CF-28 — CLOSED (P-05). GLOSSARY.md §2 resolves it on evidence: nine cited
@@ -208,12 +225,15 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       non-waivable by OD.
 - [ ] CF-32 — CSV import resequenced from void to post-DATA_MODEL feature. Owner:
       IMPORT_SPEC.md, P-10.
-- [ ] CF-33 — `docs/method/DEV_OS.md` §3 (renamed from `BB_DEV_OS.md` by P-01)
+- [x] CF-33 — `docs/method/DEV_OS.md` §3 (renamed from `BB_DEV_OS.md` by P-01)
       defines a parity gate that is void, but P-01 explicitly changes no rule
       substance so the void gate is still live text in an in-force document.
       Overridden in the new `CLAUDE_PROJECT_INSTRUCTIONS.md` Instructions field;
       the file itself still needs amendment and re-upload. Owner: reviewer,
       before Gate 2.
+      CF-33 — CLOSED (P-08-PRE-FIX). `docs/method/DEV_OS.md` §3 carries a VOID
+      banner naming OD-B1 and the four-standard model that replaced it,
+      landed by P-08-PRE Task 4.
 - [x] CF-34 — CLOSED (reviewer verdict on P-01; P-01 amendment A6). The P-00
       report correctly flagged an unresolved conflict between the canonical
       P-01 "author no document content" restriction and AGENTS.md §0/§9's
@@ -337,6 +357,8 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
 - [ ] CF-44 — VOID. Never issued. Reviewer numbering error at the P-02 verdict:
       the number was skipped between CF-43 and CF-45, not lost. Reserved
       permanently so no future task invents content for it. No owner, no action.
+      AMENDED (P-08-PRE-FIX) — owner: none — void, retained as a numbering
+      record. Exempt from the reachable-owner test by its VOID status
 - [x] CF-45 — No tax, discount or freight calculation exists in
       bb-stock-costs.html. If invoice-pro also lacks them (P-03 R1),
       CALC_SPEC.md's money-side policy — tax basis, discount order, every money
@@ -405,6 +427,8 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       FEATURE_INVENTORY.md at P-07, not by this row.
       P-04 produced no §C.4-equivalent findings block; confirm at Gate 1. Count
       stands at 25 pending that confirmation.
+      AMENDED (P-08-PRE-FIX) — owner: reviewer — adjudicate the ten findings at
+      the FEATURE_INVENTORY.md authoring, which is where accepted findings land
 - [ ] CF-47 — Costing is last-purchase-price-wins by unconditional overwrite
       (bb-stock-costs.html:2994-2999): one new purchase price retroactively
       restates COGS and profit for every closed month. Policy, not defect. B2S
@@ -561,6 +585,8 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       'Warm Ivory' is CONFIRMED correct at bb-stock-costs.html:1349,
       not unverified. P-04b's annotation was corrected by P-04c. Only the three
       sticker seed names were ever false. Second location annotated under CF-56.
+      AMENDED (P-08-PRE-FIX) — owner: the AUDIT_STICKER.md annotation task,
+      before Gate 3
 - [ ] CF-51 — Prompt-template defect: "one commit" combined with "do not amend
       or rewrite history" forbids any post-push correction, forcing a choice
       between two explicit instructions. P-04 hit this and correctly landed a
@@ -568,13 +594,20 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       corrective follow-up commit is permitted, must be declared, and must carry
       a subject line stating what it corrects. Third template defect after CF-40
       and CF-43. Owner: reviewer, standing; applied from P-04b onward.
-- [ ] CF-52 — The owner's OS account name appears in mutable public files beyond
+- [x] CF-52 — The owner's OS account name appears in mutable public files beyond
       AUDIT_STICKER.md:651. Locations: REPORT.md:218 (two occurrences on one
       line — a SHARED_DATA_PATH value and a file:/// cross-link),
       docs/archive/2026-07/inventory.json:51 (sharedFolderPath) and :52
       (crossLink). Redacted by P-04c. Three immutable occurrences remain under
       legacy/ (bb-stock-costs.html:902 and :1178, balance-bites-sticker.html:1138)
       and are covered by CF-14's OD. Owner: reviewer, closes on P-04c verdict.
+      CF-52 — CLOSED (P-08-PRE-FIX). P-08-PRE Task 5's repo-wide grep returned
+      zero occurrences in any mutable current file, independently confirmed by
+      the reviewer with a broader pattern: three files carry the path shape and
+      in `docs/requirements/extracts/REPORT.md` and
+      `docs/archive/2026-07/inventory.json` the name segment is the literal
+      placeholder `<REDACTED>`. The remaining occurrence is inside `legacy/`,
+      which is frozen and covered by CF-14.
 - [ ] CF-53 — docs/method/PROJECT_RECONFIG.md was byte-identical to
       docs/method/CLAUDE_PROJECT_INSTRUCTIONS.md (same blob SHA). SESSION_CONTEXT
       recorded P-01c as landing the reconfiguration record there; it landed a
@@ -622,6 +655,8 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       source. Those lines are cp_def2 and cp_def3 inside ColorPresetMgr.DEFAULTS
       under key bb_color_presets. Annotated by P-04c. Owner: reviewer, closes on
       P-04c verdict.
+      AMENDED (P-08-PRE-FIX) — owner: the AUDIT_STICKER.md annotation task,
+      before Gate 3 — same task as CF-50
 - [x] CF-57 — Extraction density drifted across the three passes:
       EXTRACT_STOCK_COSTS 174 KB from a 347 KB source (50%), EXTRACT_INVOICE_PRO
       231 KB from 222 KB (104%), EXTRACT_DESIGN_TOOLS 228 KB from 197 KB (116%).
@@ -638,6 +673,8 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       accepted as potentially unrecoverable. Orphaned. Archived by P-04c to
       docs/archive/2026-07/ rather than deleted. Owner: reviewer, closes on
       P-04c verdict.
+      AMENDED (P-08-PRE-FIX) — owner: owner decision, retire or keep; landing at
+      the next repo-maintenance task
 - [x] CF-59 — The reviewer surface can read the public repo directly
       (api.github.com, raw.githubusercontent.com) and has begun doing so:
       P-04b's verdict and the CF-49/CF-50/CF-56 resolutions were produced by
@@ -768,6 +805,8 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       UNIFICATION.md and PHASE_PLAN.md inherit the same stale numbers and are
       VOID, so no action there. Owner: annotate REPORT.md at P-05; never cite an
       unverified REPORT.md line number.
+      AMENDED (P-08-PRE-FIX) — owner: the REPORT.md annotation task, before
+      Gate 3 — same task as CF-11
 - [ ] CF-73 — bb-stock-costs.html:5645 contains `مرtجع كامل` — a Latin `t`
       where `ت` belongs. Every printed sales report containing a full return
       has shipped corrupted text, invisibly, for the life of the tool. This is
@@ -851,12 +890,44 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       module names at :82, the human-activity sense of "design" at :95, and the
       signed feature name "Design Assistant" at :96. `SECURITY_MODEL.md` had
       zero hits.
-- [ ] CF-80 — Done-steps table integrity. Owner: the pre-Gate-3 reconciliation
+- [x] CF-80 — Done-steps table integrity. Owner: the pre-Gate-3 reconciliation
       task.
-- [ ] CF-81 — Copy-verification measurement is tool-dependent. Owner:
+      EXPANDED (P-08-PRE-FIX). The done-steps table in `SESSION_CONTEXT.md`
+      carried the literal string `<this commit>` in four consecutive rows —
+      P-05-LAND, P-06a-LAND, P-06b-LAND, P-07-LAND — because the reviewer's
+      prompt template supplied a value the builder cannot know: the sha does not
+      exist until after the commit. Eight rows also read `pending` in the Verdict
+      column, four for tasks the reviewer had since passed. The running record
+      degraded exactly where it is meant to be strongest. Same class as CF-51.
+      CF-80 — CLOSED (P-08-PRE-FIX). P-07-LAND was repaired by the verdict
+      recording at a61359a; the remaining three sha placeholders are replaced
+      with real short shas from `git log`, and their verdicts set to PASS. Rows
+      whose verdict the reviewer has not issued in a recoverable record are left
+      `pending` and named in the report — a verdict invented to tidy a table is
+      worse than a blank one. PR-17 prevents recurrence.
+- [x] CF-81 — Copy-verification measurement is tool-dependent. Owner:
       `PRECEDENTS.md`, PR-16.
-- [ ] CF-82 — 11 open rows name an owner that has already run. Owner: the
+      EXPANDED (P-08-PRE-FIX). During P-06b-LAND a builder reported 4,599 bytes
+      and a SHA-256 beginning 1F5D5F07 for
+      `docs/archive/2026-07/CLAUDE_PROJECT_INSTRUCTIONS.md`, against origin's
+      4,596 and C21A6FD5. At P-07-LAND `git status` reported the path clean, so
+      git's content hash matched origin and the earlier reading was wrong.
+      Task 1 of every land task proves a copy by exactly this measurement. A
+      method that has returned a false reading on an unchanged file can return a
+      true-looking reading on a corrupted one.
+      CF-81 — CLOSED (P-08-PRE-FIX) by PR-16, which names the exact commands and
+      makes git's own status authoritative over any external reading.
+- [x] CF-82 — 11 open rows name an owner that has already run. Owner: the
       pre-Gate-3 reconciliation task.
+      EXPANDED (P-08-PRE-FIX). Of 30 open rows at P-07-LAND, 11 named an owner
+      that had already run — CF-04, CF-11, CF-14, CF-22, CF-33, CF-46, CF-50,
+      CF-52, CF-56, CF-58, CF-72 — pointing at Gate 1, Gate 2, P-04, P-04c, P-05
+      or P-06. A further four named none at all (CF-60). Gate 3 requires every
+      open row to have an owner, and an owner that ran three steps ago does not
+      satisfy it.
+      CF-82 — CLOSED (P-08-PRE-FIX). All 15 reassigned to reachable owners; two
+      rows voided; CF-33 and CF-52 closed outright. The Gate 3 item now requires
+      a *reachable* owner, so the same drift fails the gate next time.
 - [ ] CF-83 — Reviewer state assertions are not stamped to a commit. Owner:
       PRECEDENTS.md, PR-18.
 - [ ] CF-84 — A verdict-logged carry-forward is opened as a stub, then

@@ -111,6 +111,42 @@ programmatically by the land task, not by eye. HALT on mismatch; do not correct
 it. Origin: CF-38's 56-versus-79, CF-54's 20/22/23, and DOMAIN_MODEL.md's
 58-versus-87, which the reviewer caught in its own draft.
 
+**PR-16 — Verification measurements are commanded, not chosen.**
+A task that proves a copy by byte size and SHA-256 runs the exact commands named
+in the prompt and reports their raw output. `(Get-Content).Length` counts
+characters, not bytes; `-Raw` normalises; hashing a string held in memory is not
+hashing the file. Use `(Get-Item <path>).Length` and
+`Get-FileHash -Algorithm SHA256 <path>`, or `wc -c` and `sha256sum` under
+git-bash. Where git tracks the file, `git status --porcelain <path>` outranks
+both — git's content hash is authoritative over any external reading. Origin:
+CF-78 and CF-81, a false byte-and-digest reading on an unmodified tracked file.
+
+**PR-17 — A prompt never hands the builder a value the builder cannot know.**
+The done-steps commit column and its verdict column are two such values: the sha
+does not exist until after the commit, and the verdict is the reviewer's and
+arrives later. A prompt supplying `<this commit>` as literal text gets it
+committed as literal text. Fill the commit column in a stated post-commit step
+using `git rev-parse --short HEAD`, and leave the verdict column to the next land
+task, which carries the reviewer's verdict for the previous one. Origin: CF-80.
+
+**PR-18 — Reviewer state assertions are stamped and re-verified.**
+Every factual claim a prompt makes about repo state — counts, highest ids, byte
+sizes, which rows exist, which files are stubs — is stamped with the commit the
+reviewer verified it at, and grouped where the builder reads it before acting.
+The builder re-verifies at execution and reports the actual value. A divergence
+is a HALT unless the prompt names it as expected. Origin: P-08-PRE, where the
+reviewer asserted CF-79 as the highest id from commit 9079a2e while a61359a had
+since opened CF-80 through CF-82 — the builder halted correctly on the reviewer's
+own drift.
+
+**PR-19 — A carry-forward named in a verdict is already open.**
+The step that records a reviewer verdict opens every carry-forward that verdict
+logged, as a one-line stub carrying the id and the owner. Every later prompt
+therefore **amends** that row — expanding the claim, then closing it — and never
+opens it. A prompt that instructs a builder to create an id a verdict has already
+logged will fire its own duplicate-id guard. Origin: CF-84, the direct cause of
+the P-08-PRE Task 6 halt.
+
 ---
 
 ## 2. Environment quirks — never re-discover
