@@ -1,6 +1,6 @@
 # SESSION CONTEXT
-Updated: 2026-08-01 · By: Opus · Phase: PREPARE — Tier 0/1 documents landed ·
-Last task: P-05-LAND · Verdict: pending
+Updated: 2026-08-01 · By: Sonnet · Phase: PREPARE — DOMAIN_MODEL landed ·
+Last task: P-06a-LAND · Verdict: pending
 
 ## Read these too
 - `docs/method/PRECEDENTS.md` — binding rulings and environment quirks.
@@ -21,6 +21,9 @@ AUTHORED (Tier 0/1); `DECISIONS.md` now carries the 79 signed decisions,
 promoted verbatim from `B2S_PREPARE_PHASE.md` §2, which is annotated
 PROMOTED and retained as the signing record. `VOCABULARY_DRAFT.md` is
 archived to `docs/archive/2026-08/`, superseded by `GLOSSARY.md`.
+`DOMAIN_MODEL.md` is now AUTHORED (Tier 2, 87 entities across 9 tiers),
+landed by P-06a-LAND; its thirteen resolutions close CF-49, CF-64 through
+CF-68 and CF-76, and amend CF-70 and CF-74.
 
 ## Done steps
 
@@ -40,6 +43,7 @@ archived to `docs/archive/2026-08/`, superseded by `GLOSSARY.md`.
 | P-02-FIX | Gate 1: HF-1, CF-42, CF-63, AGENTS.md rewrite, ledger | pending | `a95cfb3` |
 | P-05-PRE | Defer enforcement mechanism in rules files; land CF-73 to CF-75 | pending | `445d1c9` |
 | P-05-LAND | Land PRODUCT_BRIEF, GLOSSARY, SCOPE; promote DECISIONS; archive VOCABULARY_DRAFT | pending | <this commit> |
+| P-06a-LAND | Land DOMAIN_MODEL (87 entities); repair 6 stale VOCABULARY_DRAFT refs in CLAUDE_PROJECT_INSTRUCTIONS.md | pending | <this commit> |
 
 ## Open carry-forwards — ids only
 Full text in `docs/method/CARRY_FORWARDS.md`.
@@ -62,7 +66,6 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
 - CF-45 — No tax, discount or freight calculation exists in bb-stock-costs.html — owner: Step 11
 - CF-46 — EXTRACT_STOCK_COSTS.md §C.4 lists ten findings awaiting accept/reject — owner: reviewer, Gate 1
 - CF-47 — Costing is last-purchase-price-wins by unconditional overwrite — owner: P-06, with the calculation at Step 11
-- CF-49 — bb_color_presets is written by both business tools with incompatible field sets — owner: reviewer at Gate 1, then DOMAIN_MODEL.md at P-07
 - CF-50 — AUDIT_STICKER.md §3.4 names the three bb_color_presets seeds wrong — owner: Gate 1, then P-07
 - CF-51 — Prompt-template defect: "one commit" collides with "do not amend or rewrite history" — owner: reviewer, standing
 - CF-52 — The owner's OS account name appears in mutable public files beyond AUDIT_STICKER.md:651 — owner: reviewer, closes on P-04c verdict
@@ -72,11 +75,6 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
 - CF-58 — `tools/backup-browser-data.js` serves the abandoned browser-data backup workflow — owner: reviewer, closes on P-04c verdict
 - CF-60 — Four open rows carry no explicit `Owner:` field (CF-01, CF-05, CF-27, CF-44) — owner: reviewer, before Gate 3
 - CF-62 — Payments have no legacy source; the stored shape is a binary flag — owner: CALC_SPEC.md and DOMAIN_MODEL.md
-- CF-64 — `WRITE_KEYS` mirrors `bb_label_templates`, a key that tool only reads; overwrites the sticker catalogue — owner: DOMAIN_MODEL.md
-- CF-65 — Arabic display strings are used as stored primary keys — owner: DOMAIN_MODEL.md and DATA_MODEL.md
-- CF-66 — `Return.amount` carries two incompatible meanings depending on write path — owner: DOMAIN_MODEL.md
-- CF-67 — Inventory ledger switches from production-derived to invoice-derived consumption at the first invoice — owner: DOMAIN_MODEL.md
-- CF-68 — Unmarked return dispositions default in opposite directions across the two retiring tools — owner: DOMAIN_MODEL.md and CALC_SPEC.md
 - CF-69 — Invoice history is capped at 100 records with silent destruction — owner: FEATURE_INVENTORY.md must-not-reproduce
 - CF-70 — Returns valued at list price against a discounted invoice total; net revenue overstated — owner: CALC_SPEC.md
 - CF-71 — A parse failure is indistinguishable from an empty collection, then saved over real data — owner: FEATURE_INVENTORY.md must-not-reproduce
@@ -84,7 +82,6 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
 - CF-73 — bb-stock-costs.html:5645 ships a corrupted Arabic "full return" string on every printed report — owner: FEATURE_INVENTORY.md must-not-reproduce, UX_PRINCIPLES.md
 - CF-74 — Report engine has no resource bundle outside the invoice template; two strings re-declared eight times — owner: DOMAIN_MODEL.md and UX_PRINCIPLES.md
 - CF-75 — AGENTS.md and .cursor/rules/b2s-devos.mdc carried folder paths and a named library ahead of ARCHITECTURE.md; rewritten by P-05-PRE — owner: ARCHITECTURE.md, immediately after Gate 3
-- CF-76 — GLOSSARY.md changed eight things against VOCABULARY_DRAFT.md, forced by extract evidence (collision 16, PrintProfile rename, BrandTheme, Recipe rename, material enforcement, MovementReason additions, ReturnDisposition writeOff rename, Arabic column) — owner: DOMAIN_MODEL.md at P-06
 
 ## Frozen decisions in force
 - Freeze point 2026-07-29 (`legacy/FREEZE.md`) — tools RETIRING, not port
@@ -101,4 +98,4 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
   It blocks the build, not the freeze.
 
 ## Next action
-P-06.
+P-06b (TENANCY_MODEL and SECURITY_MODEL).

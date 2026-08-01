@@ -435,7 +435,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       only (:1967) and lists the key in MANAGED (:1064).
       EXTRACT_STOCK_COSTS.md §1.1.9 already stated "this tool writes it" — the
       P-03 report characterised P-02 as silent; the extract was not.
-- [ ] CF-49 — bb_color_presets is written by both business tools with
+- [x] CF-49 — bb_color_presets is written by both business tools with
       incompatible field sets: seven colours in invoice-pro versus six in
       bb-stock-costs, sharing only `bg` and `gold`, under identical ids
       cp_def1-cp_def4. Active collision on every theme save from either side.
@@ -520,6 +520,10 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       and the two real divergences (sticker seeds 3 against 4; cp_def1 identical
       in id and name but differing on 6 of 7 values) are unchanged and confirmed
       against all three sources.
+      CF-49 — CLOSED (P-06a). DOMAIN_MODEL.md D7: one BrandTheme entity with a
+      fixed, semantically named ColorRole set, one ColorValue per role. The
+      legacy collision — same key, same ids, same names, different values,
+      three writers, first-seeder-wins — is structurally impossible.
 - [ ] CF-50 — AUDIT_STICKER.md §3.4 names the three bb_color_presets seeds
       "Balance Bites", "Dark Mode", "Ocean Blue". P-04's direct read gives
       `Dark Gold`, `Obsidian Blue`, `Forest Night` — all three falsified. §3.4
@@ -641,22 +645,31 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       Owner: closes on the P-02-FIX verdict.
       **CF-63 — CLOSED (P-02-FIX).** §C.4 landed in EXTRACT_DESIGN_TOOLS.md at
       :3221 with three recovered findings, each citing its referring line.
-- [ ] CF-64 — `WRITE_KEYS` in bb-stock-costs.html:1180 contains
+- [x] CF-64 — `WRITE_KEYS` in bb-stock-costs.html:1180 contains
       `bb_label_templates`, which that tool only ever reads (:6016). Mirroring
       therefore overwrites the sticker tool's template catalogue with whatever
       the local store holds — including an empty array on a fresh profile. The
       sharpest cross-tool destruction path in the family. Requirement: B2S needs
       an explicit producer/consumer declaration per collection, enforced.
       Owner: DOMAIN_MODEL.md.
-- [ ] CF-65 — Arabic display strings are used as stored primary keys in at least
+      CF-64 — CLOSED (P-06a). DOMAIN_MODEL.md D1 and invariant 4: every collection
+      has exactly one owning module, single-writer, declared. All other modules
+      read through a declared interface and can never write.
+- [x] CF-65 — Arabic display strings are used as stored primary keys in at least
       two enumerations (EXTRACT_STOCK_COSTS §6.6, §7.4; EXTRACT_INVOICE_PRO
       F-14). Translating the UI would become a data migration, which directly
       contradicts OD-D6 and OD-D7. Requirement: every enumeration stores a
       language-neutral key; display text lives in `TranslationEntry`.
       Owner: DOMAIN_MODEL.md and DATA_MODEL.md.
-- [ ] CF-66 — `Return.amount` carries two incompatible meanings depending on
+      CF-65 — CLOSED (P-06a). DOMAIN_MODEL.md invariant 2: identity is a generated
+      key, never a natural key. No name, code or Arabic string is ever an
+      identifier or an enumeration value. Resolves D11 and D12 with it.
+- [x] CF-66 — `Return.amount` carries two incompatible meanings depending on
       write path (EXTRACT_STOCK_COSTS §2.11, §4.6, §8.14). Owner: DOMAIN_MODEL.md.
-- [ ] CF-67 — The inventory ledger switches from production-derived to
+      CF-66 — CLOSED (P-06a). DOMAIN_MODEL.md D2: ReturnLine carries two explicit
+      fields, returnedValue and writeOffValue, both always present. The single
+      path-dependent amount field is gone.
+- [x] CF-67 — The inventory ledger switches from production-derived to
       invoice-derived consumption the moment one invoice exists
       (EXTRACT_STOCK_COSTS §2.17, §8.7) — a behavioural cliff, not a gradual
       change. Owner: DOMAIN_MODEL.md; the stock-creation invariant in
@@ -664,10 +677,17 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       evidence.
       AMENDED (P-05-PRE). Removed a duplicated "Owner: DOMAIN_MODEL.md" that
       appeared twice in this row. No other change.
-- [ ] CF-68 — Unmarked return dispositions default in OPPOSITE directions across
+      CF-67 — CLOSED (P-06a). DOMAIN_MODEL.md §5.2 and §5.3: StockLevel is derived
+      from StockMovement with exactly one write path, and only four
+      confirmation events create stock. The production-derived versus
+      invoice-derived cliff has no mechanism to occur.
+- [x] CF-68 — Unmarked return dispositions default in OPPOSITE directions across
       the two retiring tools (EXTRACT_INVOICE_PRO F-9). The same legacy row
       yields two different stock and money outcomes depending on which tool reads
       it. Owner: DOMAIN_MODEL.md and CALC_SPEC.md.
+      CF-68 — CLOSED (P-06a). DOMAIN_MODEL.md D3: an unstated ReturnDisposition is
+      an error, not a default. Both legacy defaults are rejected; on import the
+      row fails with an ImportRowError naming the missing field.
 - [ ] CF-69 — Invoice history is capped at 100 records with silent destruction
       (EXTRACT_INVOICE_PRO F-10, §8.2). Every historical figure the owner has
       seen is silently truncated. Owner: FEATURE_INVENTORY.md must-not-reproduce.
@@ -676,6 +696,12 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       relied on is overstated by the discount on returned lines. The highest-value
       money finding in the whole extraction. Owner: CALC_SPEC.md — it must state
       the return valuation basis explicitly.
+      AMENDED (P-06a). DOMAIN_MODEL.md D13 supplies the structural half: discount
+      is allocated across InvoiceLine records at issue and stored per line, so
+      Invoice.total equals the sum of InvoiceLine.netValue exactly, and a
+      return values against the line's actual net value rather than list price.
+      The allocation method and its rounding-remainder rule remain
+      owner-authored. Owner: CALC_SPEC.md, now its highest-value row.
 - [ ] CF-71 — A parse failure is indistinguishable from an empty collection
       (invoice-pro:1199), and the next save writes the empty result over real
       data (EXTRACT_INVOICE_PRO F-15). Owner: FEATURE_INVENTORY.md
@@ -698,6 +724,10 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       :5746, :5798 and `المنتج` at :5651, :5712, :5757, :5782. Eight
       declarations of two strings. Requirement: one resource key per string,
       one declaration site. Owner: DOMAIN_MODEL.md and UX_PRINCIPLES.md.
+      AMENDED (P-06a). DOMAIN_MODEL.md invariant 2 settles the storage half — no
+      Arabic string is ever an identifier, and TranslationEntry is the only
+      home for display text. The single-declaration-site requirement remains.
+      Owner: UX_PRINCIPLES.md.
 - [ ] CF-75 — AGENTS.md and .cursor/rules/b2s-devos.mdc carried folder paths
       (`src/data/adapters/`, `src/print/`, `components/ui/`,
       `components/shared/`) and a named library (`zod`) in always-on rules,
@@ -705,7 +735,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       defer mechanism. When Gate 3 closes, restore the enforcement column with
       real guard names and paths.   Owner: ARCHITECTURE.md, immediately after
       Gate 3.
-- [ ] CF-76 — GLOSSARY.md changed eight things against VOCABULARY_DRAFT.md, each
+- [x] CF-76 — GLOSSARY.md changed eight things against VOCABULARY_DRAFT.md, each
       forced by extract evidence: a sixteenth collision (`preset` names both a
       colour theme and a print margin set); `PrintPreset` renamed `PrintProfile`
       as its consequence; `BrandTheme` added as an entity the draft had no term
@@ -717,3 +747,8 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       label `تالف` (damaged) disagreed; and an Arabic column added throughout.
       Any downstream document drafted against the draft's vocabulary must be
       re-checked. Owner: DOMAIN_MODEL.md at P-06.
+      CF-76 — CLOSED (P-06a). All eight GLOSSARY.md changes are carried into
+      DOMAIN_MODEL.md: BrandTheme is an entity (D7), Recipe and RecipeLine are
+      catalog entities, PrintProfile is the print tier's name, and
+      ReturnDisposition uses writeOff. No downstream document was drafted
+      against the superseded draft vocabulary.

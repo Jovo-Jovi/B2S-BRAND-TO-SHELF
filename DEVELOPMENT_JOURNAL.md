@@ -675,3 +675,30 @@ open-id list rebuilt from the ledger: 43 before, 41 after (3 closed out, 1
 new in), verified id-for-id; the P-05-PRE done-steps row's placeholder
 commit hash filled in as `445d1c9`, confirmed via `git log`; next action set
 to P-06.
+
+2026-08-01 | Standard | PREPARE / P-06a-LAND (land DOMAIN_MODEL; repair stale VOCABULARY_DRAFT refs) | docs/product/DOMAIN_MODEL.md, docs/method/CLAUDE_PROJECT_INSTRUCTIONS.md, docs/method/CARRY_FORWARDS.md, docs/method/PRECEDENTS.md, SESSION_CONTEXT.md, DEVELOPMENT_JOURNAL.md | none | P-06b (TENANCY_MODEL and SECURITY_MODEL)
+
+Session summary: `docs/product/DOMAIN_MODEL.md` replaced in full by
+`Copy-Item` from `~/Desktop/b2s-inbox/DOMAIN_MODEL.md` (staged outside the
+working tree per PR-14), verified byte-identical by SHA256 (both
+13,421 bytes) — `STATUS: not authored` confirmed gone. Entity-count
+verification run programmatically (PR-15) before landing: all nine tiers and
+the §1 total matched exactly — 9, 9, 2, 9, 6, 5, 14, 18, 15, total 87. No
+mismatch, so no HALT. `docs/method/CLAUDE_PROJECT_INSTRUCTIONS.md`'s six
+stale `VOCABULARY_DRAFT.md` references repaired: the false "occupies slot 1
+provisionally" sentence deleted (GLOSSARY.md already holds slot 1); "is
+binding" line re-pointed to `GLOSSARY.md`; the `§1.15` citation re-pointed to
+`GLOSSARY.md` §5; the three table/list references in Part 3 swapped to
+`GLOSSARY.md`; and `material`, `recipe`, `batch` added to the forbidden-word
+list with the Recipe/Batch PascalCase-only carve-out appended. Grep for
+`VOCABULARY_DRAFT` in that file returns zero. `CARRY_FORWARDS.md` count check
+(PR-04) passed before editing: 7 closures (CF-49, CF-64, CF-65, CF-66, CF-67,
+CF-68, CF-76), 0 new, 2 amendments (CF-70, CF-74), all ids matched against
+open rows. The seven closures were flipped to `[x]` with the supplied closure
+text appended, original claims never deleted (PR-07); CF-70 and CF-74
+amended in place, left open. `PRECEDENTS.md` §1 gained PR-14 (reviewer drafts
+stage outside the working tree) and PR-15 (a stated count is verified against
+its own list before landing), bringing the precedent total to 15.
+`SESSION_CONTEXT.md`'s open-id list rebuilt from the ledger: 41 before, 34
+after (7 closed out, 0 new in), verified id-for-id; header, done-steps row and
+next action updated; next action set to P-06b.

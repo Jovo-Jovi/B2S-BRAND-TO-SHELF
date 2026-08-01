@@ -97,6 +97,20 @@ report states the remote comparison (`old..new main -> main`), not just local
 reviewer reads origin, not the workspace. Origin: P-05-PRE landed correctly and
 was not pushed, because the prompt omitted the push line.
 
+**PR-14 — Reviewer drafts stage outside the working tree.**
+A reviewer-authored document is delivered to `~/Desktop/b2s-inbox/` and copied
+into the repository only by the land task, only to its final path. A draft placed
+inside the working tree becomes an untracked byte-identical duplicate of the
+committed file, which is the CF-53 failure in a new place. The staging folder is
+never committed and never referenced by an absolute path in a report.
+
+**PR-15 — A stated count is verified against its own list before landing.**
+Any document stating a total that its own contents enumerate — entity counts,
+decision counts, module counts, stub counts — has that total verified
+programmatically by the land task, not by eye. HALT on mismatch; do not correct
+it. Origin: CF-38's 56-versus-79, CF-54's 20/22/23, and DOMAIN_MODEL.md's
+58-versus-87, which the reviewer caught in its own draft.
+
 ---
 
 ## 2. Environment quirks — never re-discover

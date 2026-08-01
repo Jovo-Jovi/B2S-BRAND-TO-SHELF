@@ -72,7 +72,7 @@ packs, document authorship, and phase sequencing.
 - **You never accept a hardcoded brand, business, or locale value.**
 - **You never treat a `docs/requirements/` extract as current truth.**
 - **You never use "customer" unqualified.** It is `Tenant` or `Buyer`. The same
-  applies to every term in `VOCABULARY_DRAFT.md` §1.15.
+  applies to every term in `GLOSSARY.md` §5.
 - **You never emit a prompt that contradicts a precedent.** `docs/method/PRECEDENTS.md`
   binds every prompt you write and every verdict you issue. If a precedent is
   wrong, supersede it with a new one and say which it replaces — never silently
@@ -133,8 +133,6 @@ is not.
 
 Where two documents conflict, the earlier in this list wins, and you raise a
 formal amendment rather than reconciling silently.
-
-Until `GLOSSARY.md` exists, `VOCABULARY_DRAFT.md` occupies slot 1 provisionally.
 
 **Void documents.** These are archived and must never be cited as current truth,
 even if quoted to you: `PHASE_PLAN.md` (P02 and P06 void, parity gates void) ·
@@ -237,12 +235,16 @@ If the human requests a class that mismatches the task, say so before proceeding
 
 ## Vocabulary is enforced
 
-`VOCABULARY_DRAFT.md` (later `GLOSSARY.md`) is binding on every prompt you emit
+`GLOSSARY.md` is binding on every prompt you emit
 and every document you author. A bare ambiguous noun in a table name, type name,
 API path, or field name is a defect, not a style preference. The forbidden set:
 
     customer · user · admin · line · order · template · label · design · stock
     asset · lot · export · ingredient · studio · output · item · preset
+    material · recipe · batch
+
+`Recipe` and `Batch` are permitted as exact PascalCase entity names only;
+lowercase use as a field or bare noun is a defect.
 
 Each has a qualified replacement. B2S itself is "the platform," never "the
 product" — `Product` is a domain entity.
@@ -278,7 +280,7 @@ Leaving any of these in knowledge means the reviewer can cite a void document an
 | File | Why |
 |---|---|
 | `B2S_PREPARE_PHASE.md` | The only sequencing document. Every prompt, gate and step lives here. |
-| `VOCABULARY_DRAFT.md` | Binding on every prompt emitted and every document authored. Referenced by all three extraction prompts. |
+| `GLOSSARY.md` | Binding on every prompt emitted and every document authored. Referenced by all three extraction prompts. |
 | `AUDIT_STICKER.md` | The one completed extraction. Requirements evidence for the design half, and the source of CF-16 through CF-24. |
 
 ## 3.3 Keep — three files
@@ -305,11 +307,11 @@ Leaving any of these in knowledge means the reviewer can cite a void document an
 |---|---|
 | Remove | `REPORT.md` · `RETURNS_REQUIREMENTS.md` |
 | Add | `EXTRACT_STOCK_COSTS.md` · `EXTRACT_INVOICE_PRO.md` · `EXTRACT_DESIGN_TOOLS.md` |
-| Keep | `AUDIT_STICKER.md` · `DEV_OS.md` · `DEV_OS_REFERENCE.md` · `B2S_PREPARE_PHASE.md` · `VOCABULARY_DRAFT.md` |
+| Keep | `AUDIT_STICKER.md` · `DEV_OS.md` · `DEV_OS_REFERENCE.md` · `B2S_PREPARE_PHASE.md` · `GLOSSARY.md` |
 
 ## 3.7 Resulting knowledge set
 
-**Now — 7 files:** `B2S_PREPARE_PHASE.md` · `VOCABULARY_DRAFT.md` · `DEV_OS.md` · `DEV_OS_REFERENCE.md` · `AUDIT_STICKER.md` · `RETURNS_REQUIREMENTS.md` · `REPORT.md`
+**Now — 7 files:** `B2S_PREPARE_PHASE.md` · `GLOSSARY.md` · `DEV_OS.md` · `DEV_OS_REFERENCE.md` · `AUDIT_STICKER.md` · `RETURNS_REQUIREMENTS.md` · `REPORT.md`
 
 **After Gate 1 — 8 files:** the five kept, plus the three extracts.
 
