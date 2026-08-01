@@ -1,6 +1,6 @@
 # SESSION CONTEXT
-Updated: 2026-08-01 · By: Sonnet · Phase: PREPARE — blocking set, 7 of 8 landed ·
-Last task: P-06b-LAND · Verdict: pending
+Updated: 2026-08-01 · By: Sonnet · Phase: PREPARE — blocking set complete ·
+Last task: P-07-LAND · Verdict: pending
 
 ## Read these too
 - `docs/method/PRECEDENTS.md` — binding rulings and environment quirks.
@@ -13,12 +13,14 @@ This file carries state and open ids only. Narrative belongs in the journal.
 Keep it short: if a paragraph is growing here, it belongs elsewhere.
 
 ## Where we are
-Greenfield. Requirements extraction is complete for all five read tools and
-Gate 1 has run. Seven of the eight Gate 3 blocking documents are landed:
-`PRODUCT_BRIEF`, `GLOSSARY`, `SCOPE`, `DECISIONS`, `DOMAIN_MODEL` (87 entities,
-9 tiers), and now `TENANCY_MODEL` and `SECURITY_MODEL`. `CALC_SPEC.md` is the
-only one left and it is owner-authored. Every other frozen document is authored
-just-in-time, one step ahead of the module that needs it — not before Gate 3.
+Greenfield. All eight Gate 3 blocking documents are landed: `PRODUCT_BRIEF`,
+`GLOSSARY`, `SCOPE`, `DECISIONS`, `DOMAIN_MODEL`, `TENANCY_MODEL`,
+`SECURITY_MODEL` and `CALC_SPEC`. `CALC_SPEC.md` carries 25 Release 1
+calculation rows, 15 signed calculation choices (CS-15 open), and 8 assertable
+identities; eleven of the 25 rows cite no legacy source at all, because tax,
+freight, money rounding and real payments never existed in the retiring tools.
+Every other frozen document is authored just-in-time, one step ahead of the
+module that needs it. Next is Gate 3 on the blocking set.
 
 ## Done steps
 
@@ -40,6 +42,7 @@ just-in-time, one step ahead of the module that needs it — not before Gate 3.
 | P-05-LAND | Land PRODUCT_BRIEF, GLOSSARY, SCOPE; promote DECISIONS; archive VOCABULARY_DRAFT | pending | <this commit> |
 | P-06a-LAND | Land DOMAIN_MODEL (87 entities); repair 6 stale VOCABULARY_DRAFT refs in CLAUDE_PROJECT_INSTRUCTIONS.md | pending | <this commit> |
 | P-06b-LAND | Land TENANCY_MODEL and SECURITY_MODEL; CF-31 closed, CF-77 opened and closed, CF-53 amended | pending | <this commit> |
+| P-07-LAND | Land CALC_SPEC (25 rows, CS-01..CS-14 signed); CF-45/62/70 closed, CF-47 amended, CF-78/79 landed | pending | <this commit> |
 
 ## Open carry-forwards — ids only
 Full text in `docs/method/CARRY_FORWARDS.md`.
@@ -58,9 +61,8 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
 - CF-39 — `B2S_PREPARE_PHASE.md` §3/§4 now run together with no `---` separator — owner: reviewer, next light edit to `B2S_PREPARE_PHASE.md`
 - CF-41 — `B2S_PREPARE_PHASE.md` §1's product-definition table gives the wrong repo URL — owner: the write task that lands CF-39 — P-12
 - CF-44 — VOID. Never issued; reviewer numbering error at the P-02 verdict — owner: none, no action
-- CF-45 — No tax, discount or freight calculation exists in bb-stock-costs.html — owner: Step 11
 - CF-46 — EXTRACT_STOCK_COSTS.md §C.4 lists ten findings awaiting accept/reject — owner: reviewer, Gate 1
-- CF-47 — Costing is last-purchase-price-wins by unconditional overwrite — owner: P-06, with the calculation at Step 11
+- CF-47 — Costing is last-purchase-price-wins by unconditional overwrite — owner: the R2 amendment to CALC_SPEC.md
 - CF-50 — AUDIT_STICKER.md §3.4 names the three bb_color_presets seeds wrong — owner: Gate 1, then P-07
 - CF-51 — Prompt-template defect: "one commit" collides with "do not amend or rewrite history" — owner: reviewer, standing
 - CF-52 — The owner's OS account name appears in mutable public files beyond AUDIT_STICKER.md:651 — owner: reviewer, closes on P-04c verdict
@@ -69,9 +71,7 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
 - CF-56 — The falsified sticker preset names appear at two locations in AUDIT_STICKER.md — owner: reviewer, closes on P-04c verdict
 - CF-58 — `tools/backup-browser-data.js` serves the abandoned browser-data backup workflow — owner: reviewer, closes on P-04c verdict
 - CF-60 — Four open rows carry no explicit `Owner:` field (CF-01, CF-05, CF-27, CF-44) — owner: reviewer, before Gate 3
-- CF-62 — Payments have no legacy source; the stored shape is a binary flag — owner: CALC_SPEC.md and DOMAIN_MODEL.md
 - CF-69 — Invoice history is capped at 100 records with silent destruction — owner: FEATURE_INVENTORY.md must-not-reproduce
-- CF-70 — Returns valued at list price against a discounted invoice total; net revenue overstated — owner: CALC_SPEC.md
 - CF-71 — A parse failure is indistinguishable from an empty collection, then saved over real data — owner: FEATURE_INVENTORY.md must-not-reproduce
 - CF-72 — REPORT.md citations into the two business tools need re-derivation before use — owner: annotate REPORT.md at P-05
 - CF-73 — bb-stock-costs.html:5645 ships a corrupted Arabic "full return" string on every printed report — owner: FEATURE_INVENTORY.md must-not-reproduce, UX_PRINCIPLES.md
@@ -89,11 +89,16 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
 - Memory guard restructure SIGNED 2026-07-31 — this file, CF-55.
 - `PRODUCT_BRIEF.md`, `GLOSSARY.md`, `SCOPE.md` AUTHORED 2026-08-01 —
   P-05-LAND. `VOCABULARY_DRAFT.md` archived, superseded by `GLOSSARY.md`.
-- `CALC_SPEC.md` (Step 11) is the only remaining owner-authored document.
-  It blocks the build, not the freeze.
 - `TENANCY_MODEL.md` and `SECURITY_MODEL.md` AUTHORED 2026-08-01 — P-06b-LAND.
   CF-31 closed against `SECURITY_MODEL.md` §4.
+- `CALC_SPEC.md` AUTHORED 2026-08-01 — P-07-LAND. Calculation choices CS-01
+  through CS-14 SIGNED 2026-08-01 by the owner. CS-15 (return recognition
+  period) is OPEN and affects R1-19 only.
+- Gate 3's `CALC_SPEC.md` checklist item still reads as written in
+  `B2S_PREPARE_PHASE.md`. Whether it covers the fourteen R2 rows in
+  `CALC_SPEC.md` §6 or only the 25 R1 rows is UNSIGNED and must be resolved
+  before the Gate 3 verdict.
 
 ## Next action
-`CALC_SPEC.md` (Step 11) — owner-authored. The last blocking document before
-Gate 3. Nothing else in the blocking set is outstanding.
+GATE 3 on the blocking set. Two items must be resolved first, both owner
+signatures: CS-15, and whether Gate 3's `CALC_SPEC.md` item covers R2 rows.

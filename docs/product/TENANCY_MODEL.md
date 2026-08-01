@@ -45,7 +45,7 @@ Everything below the boundary is tenant-scoped without exception:
 |---|---|
 | Every business entity | `Product`, `Buyer`, `Invoice`, `StockMovement`, `Batch`, `Supplier` |
 | Every brand entity | `Brand`, `BrandProfile`, `BrandTheme`, `LogoVariant` |
-| Every asset | `MediaAsset`, `AssetRendition`, and its stored object |
+| Every `MediaAsset` | its `AssetRendition` records and the stored object behind each |
 | Every configuration | `TaxRule`, `Currency`, `UnitOfMeasure`, `Locale` selection, `RegulatoryProfile` |
 | Every derived record | `StockLevel`, `CostRecord`, `TraceLink` |
 | Every audit record | `ActivityEvent`, `ImportRun`, `BackupSnapshot` |
@@ -107,12 +107,12 @@ and they are **not** security boundaries — a `Manager` sees every `BrandLine`.
 | Scoped to | Entities | Note |
 |---|---|---|
 | `Brand` | `BrandProfile`, `BrandLine`, `BrandGuideline` | One `Brand` per tenant, so brand scope and tenant scope coincide today |
-| `BrandLine` | Optional `BrandProfile` override per field (OD-D10) | R2. R1 ships one line |
+| `BrandLine` | Optional `BrandProfile` override per field (OD-D10) | R2. R1 ships one `BrandLine` |
 | `BrandProfile` | `BrandTheme`, `LogoVariant`, `ColorValue`, `Typeface` | Versioned, archived, never deleted (OD-D5) |
 | `Location` | `StockLevel`, and every `StockMovement` | R1 ships one location (OD-C6) |
 | `Currency` | `PriceList`, and every stored money value's interpretation | Tenant base currency in R1 (OD-C9, OD-C19) |
 
-**`Invoice` numbering is scoped per account then line** (OD-C11). Two tenants may
+**`Invoice` numbering is scoped per `Tenant` then `BrandLine`** (OD-C11). Two tenants may
 hold the same invoice number; within a tenant it is unique per `BrandLine`
 sequence. Numbering is never global, and a number is never reused.
 
@@ -174,7 +174,7 @@ What this fixes as a requirement, not an aspiration:
 
 - Every query carries a tenant predicate, so no query's cost grows with the
   number of *other* tenants.
-- Asset storage is tenant-isolated (OD-G11) — print masters and large binaries
+- `MediaAsset` storage is tenant-isolated (OD-G11) — print masters and large binaries
   live in object storage, never in table rows. Base64-in-rows is what broke the
   retiring tools.
 - A tenant with 50,000 `StockMovement` records must not degrade a tenant with 50.

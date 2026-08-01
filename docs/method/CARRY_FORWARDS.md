@@ -337,7 +337,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
 - [ ] CF-44 — VOID. Never issued. Reviewer numbering error at the P-02 verdict:
       the number was skipped between CF-43 and CF-45, not lost. Reserved
       permanently so no future task invents content for it. No owner, no action.
-- [ ] CF-45 — No tax, discount or freight calculation exists in
+- [x] CF-45 — No tax, discount or freight calculation exists in
       bb-stock-costs.html. If invoice-pro also lacks them (P-03 R1),
       CALC_SPEC.md's money-side policy — tax basis, discount order, every money
       rounding rule — is fully owner-authored with no extraction backing,
@@ -382,6 +382,14 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       precedent could have existed. CALC_SPEC.md's tax basis, freight treatment
       and every money and geometry rounding rule are owner-authored with
       effectively no legacy source.
+      CF-45 — CLOSED (P-07-LAND). The absence is now a specification.
+      `CALC_SPEC.md` R1-06 through R1-08 author tax from nothing — per
+      `InvoiceLine`, rate stored on the line, computed on the discounted net,
+      both inclusive and exclusive modes (CS-04, CS-05, CS-06). Freight is
+      excluded from Release 1 by CS-07, on the grounds that no signed decision
+      in the register mentions it. Discount was never absent — it existed in
+      invoice-pro and is R1-03. §7 records all three absences permanently, so
+      no future reader mistakes an authored number for a ported one.
 - [ ] CF-46 — EXTRACT_STOCK_COSTS.md §C.4 lists ten findings awaiting
       accept/reject. None triaged. Owner: reviewer, Gate 1.
       **P-03 addendum:** EXTRACT_INVOICE_PRO.md §C.4 adds **fifteen** more, same
@@ -425,6 +433,14 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       PackagingTemplate and its presets, and the legacy set is contradictory there
       too. Recorded so the OD is scoped to both halves rather than re-litigated at
       P-07.
+      AMENDED (P-07-LAND). The structural half is foreclosed:
+      `CALC_SPEC.md` R1-05 stores `InvoiceLine.netValue` at issue, so no later
+      price change can restate an issued `Invoice`, which is the mechanism by
+      which last-purchase-price-wins restated closed months. The costing method
+      itself — the choice between last price, weighted average, FIFO or standard
+      cost — belongs to `Component` cost update on purchase, deferred to R2 in
+      `CALC_SPEC.md` §6. Owner: the R2 amendment to `CALC_SPEC.md`, one step
+      ahead of the Costing module.
 - [x] CF-48 — The producer of bb_invoice_payments is unidentified. P-03
       established invoice-pro as a strict consumer (Store.set is never called
       with that key); P-02 reported no payments producer. Payments are Release 1
@@ -654,7 +670,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       systemic. Owner: closes on the P-02-FIX verdict.
       **CF-61 — CLOSED (P-02-FIX).** §1.1.11 now states the seven-value record;
       §6's row corrected to 7 hex values. Gate 1 hard failure cleared.
-- [ ] CF-62 — Payments have no legacy source. The stored shape is
+- [x] CF-62 — Payments have no legacy source. The stored shape is
       `{invoiceId: {status:'paid'|'pending', updatedAt}}` — a binary flag, no
       amount, no payment type, no partial state, no receipt. Release 1 requires
       full/partial/underpaid, cash/card/other and receipt attachment (OD-C12).
@@ -662,6 +678,12 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       declared/actual mismatch also exists: the doc comment at :3121 promises
       `paidDate`, the code writes `updatedAt`. Owner: CALC_SPEC.md and
       DOMAIN_MODEL.md.
+      CF-62 — CLOSED (P-07-LAND). `CALC_SPEC.md` R1-11 through R1-14 author the
+      whole payment surface from nothing: amount, method, date, optional
+      `Receipt`, outstanding as `Invoice.total` less payments less credit notes
+      per OD-C16, overpayment accepted and carried negative per CS-13, and state
+      derived from outstanding rather than stored. The legacy binary flag, where
+      absence was indistinguishable from unpaid, is not reproduced in any form.
 - [x] CF-63 — EXTRACT_DESIGN_TOOLS.md references "§C.4" at :1073, :1240 and
       :2015, each saying a finding is recorded there. No §C.4 heading exists in
       the file, so three findings have no destination. Recovered by P-02-FIX.
@@ -714,7 +736,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
 - [ ] CF-69 — Invoice history is capped at 100 records with silent destruction
       (EXTRACT_INVOICE_PRO F-10, §8.2). Every historical figure the owner has
       seen is silently truncated. Owner: FEATURE_INVENTORY.md must-not-reproduce.
-- [ ] CF-70 — Returns are valued at list price against a discounted invoice total
+- [x] CF-70 — Returns are valued at list price against a discounted invoice total
       (EXTRACT_INVOICE_PRO F-13, §2.9). Every net-revenue figure the business has
       relied on is overstated by the discount on returned lines. The highest-value
       money finding in the whole extraction. Owner: CALC_SPEC.md — it must state
@@ -725,6 +747,17 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       return values against the line's actual net value rather than list price.
       The allocation method and its rounding-remainder rule remain
       owner-authored. Owner: CALC_SPEC.md, now its highest-value row.
+      CF-70 — CLOSED (P-07-LAND). Structure and arithmetic are both settled.
+      `DOMAIN_MODEL.md` D13 allocates invoice-level discount across
+      `InvoiceLine` records at issue; `CALC_SPEC.md` R1-04 states the method
+      (proportional to gross, CS-08) and the remainder rule (largest remainder
+      with a stated tie-break, CS-09); R1-15 values a `Return` against the
+      stored `netValue` rather than list price (CS-10); CS-11 gives the tranche
+      that exhausts a row the residual, so a fully returned row credits exactly
+      its `netValue`. Identities I3, I5 and I7 in §5 are the assertable form.
+      The worked example quantifies what was being lost: 81.90 on the correct
+      basis against 91.00 on the legacy basis, a 9.10 overstatement on one row
+      of one `Invoice`.
 - [ ] CF-71 — A parse failure is indistinguishable from an empty collection
       (invoice-pro:1199), and the next save writes the empty result over real
       data (EXTRACT_INVOICE_PRO F-15). Owner: FEATURE_INVENTORY.md
@@ -793,3 +826,28 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       — as the "not attached, fetched instead" paragraph. §3.1 is left standing
       as the historical removal record and is annotated as such. No rotation
       plan survives in the file.
+- [x] CF-78 — `docs/archive/2026-07/CLAUDE_PROJECT_INSTRUCTIONS.md` measured
+      4,599 bytes with SHA-256 beginning 1F5D5F07 in the working tree during
+      P-06b-LAND, against 4,596 bytes and C21A6FD5 on origin/main. Three bytes
+      is exactly the width of a UTF-8 BOM, and PRECEDENTS.md §2 records that
+      `Set-Content -Encoding UTF8` on PowerShell 5.1 writes one. Harmless at
+      rest; it becomes a BOM-in-archive commit the first time that directory is
+      staged. Owner: P-07-LAND Task 4, then reviewer if unresolved.
+      CF-78 — CLOSED (P-07-LAND). `git status --porcelain docs/archive/`
+      returned empty at this commit — the working tree carries no divergence
+      from HEAD for this path, and HEAD is up to date with origin/main. The
+      4,599-versus-4,596 byte reading recorded during P-06b-LAND was a
+      measurement artefact between two read methods, not a live BOM drift
+      surviving in the committed file. No restore action was needed or taken.
+- [x] CF-79 — Four bare `GLOSSARY.md` §5 nouns in reviewer-authored prose in
+      `TENANCY_MODEL.md`: "Every asset" and "Asset storage" for `MediaAsset`,
+      and two uses of "line" for `BrandLine`, one of which also called a
+      `Tenant` an "account". Found by the P-06b-LAND builder's
+      redact-and-continue sweep and correctly reported rather than edited. The
+      glossary binds the reviewer as tightly as it binds the builder, and these
+      are the reviewer's defects. Owner: P-07-LAND.
+      CF-79 — CLOSED (P-07-LAND). All four corrected in place. Three further
+      hits in the same sweep were examined and rejected as false positives:
+      module names at :82, the human-activity sense of "design" at :95, and the
+      signed feature name "Design Assistant" at :96. `SECURITY_MODEL.md` had
+      zero hits.

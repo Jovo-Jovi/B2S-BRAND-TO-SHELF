@@ -735,3 +735,40 @@ bytes); §3.1's closing paragraph annotated "Historical" per the supplied text.
 after (1 closed out — CF-31; CF-77 opens and closes within this task and so
 never appears), verified id-for-id; header, "Where we are", done-steps row,
 frozen decisions and next action all updated per the supplied text verbatim.
+
+2026-08-01 | Standard | PREPARE / P-07-LAND (land CALC_SPEC; close CF-45, CF-62, CF-70, CF-79) | docs/product/CALC_SPEC.md, docs/product/TENANCY_MODEL.md, docs/method/CARRY_FORWARDS.md, SESSION_CONTEXT.md, DEVELOPMENT_JOURNAL.md | none | GATE 3 on the blocking set, pending owner signature on CS-15 and on whether the Gate 3 CALC_SPEC.md item covers the R2 rows
+
+Session summary: `docs/product/CALC_SPEC.md` (28,696 bytes) copied in full
+from the staging folder (PR-14), verified byte-identical by SHA-256 against
+its source (`72DE09C5...404F3` both sides), not containing
+`STATUS: not authored`, valid UTF-8 with no BOM. PR-15 self-count check run
+programmatically before landing, all three passing: §4's 25 Release 1 rows
+counted by `### R1-nn — ` heading match, contiguous R1-01 through R1-25;
+§1's fifteen forks counted by `**CS-nn · ` heading match, contiguous CS-01
+through CS-15 (CS-01–CS-14 signed, CS-15 open); §5's eight identities
+counted by `| Innn |` row match, contiguous I1 through I8. No mismatch, no
+HALT. CF-79 repair applied to `docs/product/TENANCY_MODEL.md`: four bare
+`GLOSSARY.md` §5 nouns in reviewer-authored prose corrected in place — "Every
+asset" and "Asset storage" re-pointed to `MediaAsset`, and two uses of "line"
+(one of which also called a `Tenant` an "account") re-pointed to `BrandLine`
+— each old string found exactly once before editing, nothing else touched;
+byte size 9,981 → 10,019. Three prior false positives (module names at :82,
+the human-activity sense of "design" at :95, the signed feature name "Design
+Assistant" at :96) confirmed still present and untouched. CF-78 working-tree
+check: `git status --porcelain docs/archive/` returned empty — the path is
+clean, HEAD matches origin/main, and the 4,599-versus-4,596-byte reading from
+P-06b-LAND is recorded as a measurement artefact rather than a live
+divergence; no restore action was needed. `CARRY_FORWARDS.md` count check
+(PR-04) passed before editing: 6 rows touched — CF-45, CF-62 and CF-70 closed
+`[x]` with supplied closure text appended (PR-07, originals intact); CF-47
+amended and left open; CF-78 and CF-79 landed as new rows, both closed in
+this same task, verified as the next two free ids after CF-77. `CF-79` also
+flipped `[x]` on landing, since it opens and closes within this task. Since
+CF-78 closed here rather than remaining open, `SESSION_CONTEXT.md`'s
+open-id list rebuilds from 33 to **30**, not the 31 a mid-open CF-78 would
+have produced — CF-45, CF-62 and CF-70 removed, CF-78 never added (it opens
+and closes within this task, matching CF-77's own pattern at P-06b-LAND).
+Rebuild verified id-for-id against the ledger's remaining `[ ]` rows. Header,
+"Where we are", done-steps row, two new frozen-decision bullets (CS-01
+through CS-14 signed / CS-15 open; the Gate 3 `CALC_SPEC.md` scope question
+unsigned) and next action all updated per the supplied text.
