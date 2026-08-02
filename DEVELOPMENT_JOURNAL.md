@@ -1121,10 +1121,16 @@ tenants**. The reinstatement trigger is a row count, not a judgement. The existi
 **The schema, and what the live catalog says about it.** `supabase/schema.sql`
 (19,654 bytes) implements `DATA_MODEL.md` §1 to §4, then is split verbatim in source
 order into seven migrations — extensions and enums, tables, indexes, helper
-functions, the active-owner trigger, RLS with its policies, grants — verified by
-reconstructing the concatenation byte-for-byte against the source. Applied through
-the CLI; the remote ledger lists exactly the seven committed filenames, no more and
-no fewer. Read back from `pg_class`, `pg_policy` and `pg_policies` rather than from
+functions, the active-owner trigger, RLS with its policies, grants. Stated exactly,
+because the loose version of this claim is the CF-86 trap: `schema.sql` carries seven
+`-- ===== migration:` markers and `supabase/migrations/` holds seven files, and from
+the first marker onward the concatenation of all seven is byte-identical to the
+source — 18,496 characters on both sides, compared with a case-sensitive equality,
+not a length check. What the migrations do *not* carry is `schema.sql`'s 19-line,
+1,036-character provenance header, which documents the source and is not a statement.
+Applied through the CLI; `supabase_migrations.schema_migrations` lists versions
+`20260802120001` through `20260802120007` with names matching the seven committed
+filenames one for one, no more and no fewer. Read back from `pg_class`, `pg_policy` and `pg_policies` rather than from
 the file, which is the distinction the task exists to make:
 
 | Table | RLS | Policies | Commands, and `WITH CHECK` where one can exist |
