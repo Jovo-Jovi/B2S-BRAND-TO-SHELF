@@ -1170,3 +1170,23 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       a new finding as a row. Owner: the owner, to authorise a dependency-bump
       task; at the latest the Phase 01 exit gate, since the alerts predate this
       branch and will not clear themselves.
+- [ ] CF-99 — A pull request exists on `phase/01-foundation` that the task
+      forbade, and it is not the builder's. P01-T02's done-when says "No pull
+      request — T03 runs the isolation proof on this branch first, and the phase
+      gate follows it." No `gh pr create` was issued by this task. PR #2, base
+      `main` from `phase/01-foundation`, was opened by the `Jovo-Jovi` account at
+      2026-08-02T11:54:45Z, four minutes after the deliverable push at 11:50:44Z,
+      with the commit subject truncated to an ellipsis as its title and body — the
+      signature of GitHub's "Compare & pull request" banner rather than of a
+      deliberate authoring. It is left open and untouched: closing it would revert
+      an owner action on the owner's own repository, and the builder does not do
+      that unilaterally. **The risk is merging it.** Doing so before T03 puts the
+      tenancy schema and every data-access path on `main` before anything has
+      proven that tenant A cannot read tenant B, which is the one acceptance
+      standard `AGENTS.md` §4 marks not waivable by OD. It would also carry a red
+      pipeline onto `main`, since `ci` fails at `types-drift` until CF-95's secrets
+      are set, and it would pre-empt `BRANCHING.md` §3's one consolidated PR per
+      phase at the exit gate — the §3.1 foundation exception covered the toolchain
+      task only and explicitly does not cover schema or data access. Owner: the
+      owner, to leave it open until T03 and the phase gate have both passed, or to
+      close it and re-open at the gate.

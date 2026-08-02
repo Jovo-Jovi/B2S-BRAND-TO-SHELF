@@ -105,6 +105,7 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
 - CF-96 — `docs/method/REVIEWER_CHAT_INSTRUCTIONS.md` sits untracked in the working tree against PR-14 — owner: the owner, to land it or remove it
 - CF-97 — The credential scanner fired on `process.env.SUPABASE_SERVICE_ROLE_KEY`, the safe form ADR-005 requires; the value side now rejects an environment indirection — owner: reviewer, to ratify the narrowing or reject it
 - CF-98 — Four open Dependabot alerts on the default branch (3 high, 1 moderate; `postcss` ×3 and `sharp`, both transitive through Next.js), unrecorded since G3-CLOSE enabled alerts — owner: the owner, to authorise a dependency-bump task; at the latest the Phase 01 exit gate
+- CF-99 — PR #2 (`main` ← `phase/01-foundation`) exists although P01-T02 forbade a pull request; opened by the owner's account, not the builder, and left untouched. Merging it before T03 lands the tenancy schema on `main` with tenant isolation unproven — owner: the owner, to leave it open until T03 and the phase gate pass, or close and re-open at the gate
 
 ## Frozen decisions in force
 - Freeze point 2026-07-29 (`legacy/FREEZE.md`) — tools RETIRING, not port
@@ -166,3 +167,8 @@ prefix and are torn down by the task that seeds them (ADR-012).
 Two owner actions block the phase gate, both in CF-95: authorise the Vercel GitHub
 App on the repository, and set `SUPABASE_ACCESS_TOKEN` and `SUPABASE_PROJECT_ID`
 as repository secrets. `types-drift` fails on every run until then, by design.
+
+**Do not merge PR #2 yet (CF-99).** It exists although this task forbade opening one
+and was not opened by the builder. Merging before T03 puts the tenancy schema and
+every data-access path on `main` with tenant isolation unproven, which is the one
+standard `AGENTS.md` §4 marks not waivable by OD.

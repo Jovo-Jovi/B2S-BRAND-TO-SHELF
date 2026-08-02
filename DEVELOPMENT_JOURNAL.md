@@ -1223,3 +1223,18 @@ when the secret is absent instead of skipping into a green tick. It also means `
 stays red on every push to this branch until the owner sets both secrets, T03's push
 included, and that `build` is not exercised in CI until then although it passes
 locally. Recorded on CF-95 rather than left for the reviewer to rediscover.
+
+**A pull request exists that this task forbade, and it is not the builder's.** The
+done-when is explicit — "No pull request — T03 runs the isolation proof on this branch
+first" — and no `gh pr create` was issued here. PR #2, `main` ← `phase/01-foundation`,
+was opened by the `Jovo-Jovi` account at 11:54:45Z, four minutes after the deliverable
+push at 11:50:44Z, its title the commit subject truncated to an ellipsis and its body
+the remainder: GitHub's "Compare & pull request" banner rather than deliberate
+authoring. Left open and untouched, because closing it would revert an owner action on
+the owner's own repository and that is not the builder's call. Flagged loudly instead,
+as CF-99 and in `SESSION_CONTEXT.md`'s next action, because the risk is not that it
+exists but that it merges: the tenancy schema and every data-access path would reach
+`main` with tenant isolation unproven, which `AGENTS.md` §4 marks not waivable by OD,
+carrying a red pipeline with it and pre-empting `BRANCHING.md` §3's one consolidated
+PR per phase. The §3.1 exception this task landed covers the toolchain task only and
+says so.
