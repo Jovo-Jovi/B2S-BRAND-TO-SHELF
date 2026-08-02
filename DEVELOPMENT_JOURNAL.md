@@ -1086,8 +1086,12 @@ secret yet. Locally, every step the workflow runs was executed directly and
 passed: `npm run lint` (0 errors, 1 pre-existing warning
 in `docs/archive/2026-07/backup-browser-data.js`, out of this task's scope),
 `npm run typecheck`, `npm test` (2/2), the three guards, `npm run build`
-(Turbopack, static `/en` and `/ar`, proxy compiled). Pushed to trigger the
-actual pipeline; per-job conclusions are in the task report, not repeated here.
+(Turbopack, static `/en` and `/ar`, proxy compiled). Pushed commit `085a862`
+to `origin/phase/01-foundation` (1 ahead / 0 behind `main`), which triggered
+both workflows: `docs-integrity` — job `integrity` **success**; `ci` — `install`
+**success**, `lint` **success** (same pre-existing warning, no error), `typecheck`
+**success**, `unit` **success**, `guards` **success** (all three checks passed
+in-pipeline), `build` **success**. Six jobs, six successes, nothing skipped.
 
 CF-89 landed and closed in the same edit, per PR-19: `check_credentials.py`'s
 shape-assertion rewrite (JWT pattern, connection-string pattern, PEM header,
