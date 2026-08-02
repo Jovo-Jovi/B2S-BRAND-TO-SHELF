@@ -1,6 +1,6 @@
 # SESSION CONTEXT
-Updated: 2026-08-01 · By: Sonnet · Phase: BUILD — P01 Foundation, entry ·
-Last task: P-09-LAND-FIX2 · Verdict: pending
+Updated: 2026-08-02 · By: Sonnet · Phase: BUILD — P01 Foundation, in progress ·
+Last task: P01-T01 · Verdict: pending
 
 ## Read these too
 - `docs/method/PRECEDENTS.md` — binding rulings and environment quirks.
@@ -19,9 +19,11 @@ append-only ADRs, signed by the owner — Next.js App Router on Vercel, Supabase
 Postgres, row-level tenancy with default-deny RLS as the authorization boundary,
 the privileged client physically quarantined, exact-decimal money end to end.
 `BUILD_PHASES.md` sequences eight phases delivering Release 1; one branch per
-phase per `BRANCHING.md`. Next is P01 Foundation — no features: application
-shell, `DATA_MODEL.md` authored just-in-time, the tenancy-spine schema with RLS
-on every table, generated types, and the nine CI guards.
+phase per `BRANCHING.md`. P01 Foundation is in progress on `phase/01-foundation`
+— no features: application shell, `DATA_MODEL.md` authored just-in-time, the
+tenancy-spine schema with RLS on every table, generated types, and the nine CI
+guards. P01-T01 landed the shell and three of the nine guards; the schema,
+Supabase projects and the remaining six guards are still open.
 
 ## Done steps
 
@@ -49,6 +51,7 @@ on every table, generated types, and the nine CI guards.
 | G3-FIX | Gate 3 HARD FAIL closed: 15 missing Rounding lines in CALC_SPEC; module count 14→22 in the Gate 3 checklist; PR-20 ceremony budget | pending | `e6aebf4` |
 | G3-CLOSE | Secret scanning, push protection, force-push block and Dependabot enabled and verified; CF-85 closed; PR-21; BRANCHING.md | pending | `2d05635` |
 | P-09-LAND-FIX2 | Land ARCHITECTURE, ADR (11 entries), BUILD_PHASES; supersede the prepare runbook; docs-integrity workflow; CF-86, CF-87, CF-88; PR-22, PR-23; open phase/01-foundation | pending | `3918cf4` |
+| P01-T01 | Entry checklist (CF-86 closed); Next.js App Router skeleton, locale shell, token stylesheet, message catalogs; ci.yml with 3 guards; CF-89 landed and closed | pending | `085a862` |
 
 > Commit column: a backticked sha, or `—` where no single commit tracks the step
 > (P-00 through P-01c predate the one-task-one-commit convention). The most
@@ -85,7 +88,6 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
 - CF-75 — AGENTS.md and .cursor/rules/b2s-devos.mdc carried folder paths and a named library ahead of ARCHITECTURE.md; rewritten by P-05-PRE — owner: ARCHITECTURE.md, immediately after Gate 3
 - CF-83 — Reviewer state assertions are not stamped to a commit — owner: PRECEDENTS.md, PR-18
 - CF-84 — A verdict-logged carry-forward is opened as a stub, then re-opened as new by the next prompt — owner: PRECEDENTS.md, PR-19
-- CF-86 — Secret-scanning history backfill was outstanding at G3-CLOSE; the `[]` reading meant "not finished", not "clean" — owner: the P01 entry checklist, before any Supabase project is created and a real key exists
 
 ## Frozen decisions in force
 - Freeze point 2026-07-29 (`legacy/FREEZE.md`) — tools RETIRING, not port
@@ -123,6 +125,13 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
   `B2S_PREPARE_PHASE.md` is superseded as a plan; its §9 and §10 remain in force.
 
 ## Next action
-P01-T01 — reviewer emits the Foundation entry task. First item on the P01 entry
-checklist is CF-86: re-read the secret-scanning alerts endpoint and confirm the
-historical backfill has completed, before any Supabase project is created.
+P01-T01 done: entry checklist cleared, CF-86 closed, application skeleton
+(Next.js App Router, TypeScript strict, zod unused-for-now, locale shell,
+token stylesheet, message catalogs, one smoke test) and ci.yml (install →
+lint → typecheck → unit → guards → build) landed on `phase/01-foundation` and
+pushed. Three guards live (`check-no-runtime-cdn`, `check-no-hardcoded-literals`,
+`check-service-import`); six remain, each owned by the phase that lands its
+target per `ARCHITECTURE.md` §6. Reviewer emits P01-T02 next: `DATA_MODEL.md`
+authored just-in-time, `MODULE_SPEC.md` with the folder tree, the Supabase
+staging and production projects, the tenancy-spine schema with RLS on every
+table, generated types and the drift job, and the RLS test harness.

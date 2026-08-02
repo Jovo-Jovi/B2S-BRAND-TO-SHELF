@@ -2,3 +2,14 @@ node_modules/
 dist/
 .env*
 .DS_Store
+
+# next.js
+/.next/
+/out/
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# vitest / coverage
+/coverage/
