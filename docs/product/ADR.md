@@ -6,6 +6,7 @@ superseded marker. Numbering collisions are tracked as carry-forwards, never
 quietly renumbered.
 
 **ADR-001 to ADR-011 signed by the owner, 2026-08-01**, immediately after Gate 3.
+**ADR-012 signed by the owner, 2026-08-02**, at the P01 foundation task.
 
 ---
 
@@ -199,3 +200,38 @@ tolerance, which is the Money and quantity acceptance standard.
 
 **Forecloses.** A float anywhere in the money path, which would make every one of
 those identities fail intermittently and unreproducibly.
+
+---
+
+## ADR-012 — One Supabase environment until the first real tenant
+
+**Supersedes the two-environment clause of ADR-006.** ADR-006 otherwise stands
+in full: one authoritative SQL source, migrations split verbatim in source order,
+one applier per environment.
+
+**Decision.** B2S runs a single Supabase project, named for production. Types are
+generated from it, migrations are applied to it, and the isolation suite runs
+against it.
+
+**Context.** The organisation's plan allows two active projects and both slots
+are held. The choice was one project or none. Naming the survivor production is
+the reversible direction: adding staging later costs nothing, while promoting a
+staging project to production costs a data migration.
+
+**Consequences.** There is no environment in which to rehearse a destructive
+migration, and no environment in which the isolation suite may seed and tear down
+without care. Neither matters while the project holds no real tenant. Both matter
+immediately once it does.
+
+**Reinstatement trigger, and it is not a preference.** The isolation suite may
+run against this project **only while it holds zero real tenants.** Before the
+first real tenant is onboarded, a staging project is created and this ADR is
+superseded. The trigger is a row count, not a judgement.
+
+**Compensating controls, in force from now.** Synthetic test tenants carry a
+reserved slug prefix and are torn down by the same task that seeds them. Once any
+non-synthetic tenant exists, no migration is applied without the schema diff
+reviewed and a backup snapshot taken first.
+
+**Forecloses.** Treating one project as two by convention, which is how a
+migration meant for staging reaches real data.

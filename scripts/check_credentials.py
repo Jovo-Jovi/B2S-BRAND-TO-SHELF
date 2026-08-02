@@ -18,9 +18,19 @@ FAIL = False
 # appear in code — a bare-word match cannot tell that prose from a leak.
 # Matching only "keyword, then an assignment, then a long token" catches the
 # actual shape a leaked value takes and leaves the policy prose alone.
+#
+# The assignment pattern excludes an environment indirection on the value side.
+# Reading the key from the environment is the prescribed safe form (ADR-005), and
+# `serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY` is a 37-character token
+# by shape while carrying no secret. Without the exclusion the guard fails on the
+# one construction the architecture requires, and a permanently red guard is read
+# by nobody. A quoted value is still matched: the exclusion sits before the
+# optional quote, so only a bare env read is let through.
 PATTERNS = {
     "Supabase privileged-role key assignment": re.compile(
-        r"service[_-]?role(?:[_-]?key)?[\"']?\s*[:=]\s*[\"']?[A-Za-z0-9._+/=-]{20,}",
+        r"service[_-]?role(?:[_-]?key)?[\"']?\s*[:=]\s*"
+        r"(?!process\.env|import\.meta\.env|Deno\.env|os\.environ|os\.getenv)"
+        r"[\"']?[A-Za-z0-9._+/=-]{20,}",
         re.I,
     ),
     "Supabase connection string": re.compile(

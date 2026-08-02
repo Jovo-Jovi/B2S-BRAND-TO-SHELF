@@ -105,6 +105,13 @@ defect.
 | Staging | The Supabase project that types are generated from and that RLS tests run against |
 | Production | Applied to under review, per `BRANCHING.md` |
 
+> **Amended by ADR-012.** Production is the only environment that exists. Types
+> are generated from it, migrations are applied to it, and the isolation suite
+> runs against it. The Local row's staging pointer and the Staging row are
+> dormant until ADR-012's reinstatement trigger fires — a staging project is
+> created before the first real tenant is onboarded, and the trigger is a row
+> count, not a judgement.
+
 `service_role` exists only in Vercel environment variables, per environment. Never
 in the repository, never in a client bundle, never in a migration file (OD-G7 §9).
 
@@ -135,6 +142,10 @@ Jobs run sequentially and block: install → lint → typecheck → unit → gua
 types-drift → build. The RLS suite runs against staging and is required on any
 pull request touching schema.
 
+> **Amended by ADR-012.** Staging does not exist, so the RLS suite runs against
+> production — permitted only while it holds zero real tenants, which is CF-92's
+> reinstatement trigger. Everything else in this section stands.
+
 **A guard that blocks you is right.** It is superseded by an ADR, never disabled.
 
 ---
@@ -150,6 +161,9 @@ pull request touching schema.
 | `IMPORT_SPEC.md` | Phase 07 |
 | `FEATURE_INVENTORY.md`, `RISK_REGISTER.md`, `ACCEPTANCE.md` | Phase 08 |
 | `MODULE_SPEC.md` | Phase 01, with the folder tree it indexes |
+| `UX_PRINCIPLES.md` | Between Phase 01 and Phase 03, before the design catalog |
+| `DOCUMENT_SPEC.md` | Phase 05, with the first business document rendered |
+| `REGULATORY.md` | Phase 06, with the packaging content it constrains |
 
 Each carries the Gate 3 line item written for it, moved verbatim under OD-H7.
 

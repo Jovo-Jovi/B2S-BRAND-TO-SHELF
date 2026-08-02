@@ -1012,3 +1012,136 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       JSON-, JWT- and PEM-shaped fakes with the benign sentences left untouched.
       Landed late: the finding was resolved in P-09-LAND-FIX2 but the row was not
       written, and the omission was not reported as a deviation.
+- [x] CF-90 — `ARCHITECTURE.md` §7 gave arrival points for ten deferred documents
+      and omitted three: `UX_PRINCIPLES.md`, `DOCUMENT_SPEC.md` and
+      `REGULATORY.md`. OD-H7's premise is that every deferred document carries
+      its Gate 3 item to a named later gate; three had nowhere to arrive and would
+      never have been written. Owner: reviewer.
+      CF-90 — CLOSED (P01-T02-RESUME). Three rows added to §7.
+      Builder annotation, P01-T02-RESUME, 2026-08-02, per PR-07 — the claim text
+      above is landed verbatim as supplied and is left intact. Its count is off by
+      one: §7 named **eleven** documents across seven rows before this amendment
+      (`DATA_MODEL`, `BRAND_CONFIG`, `CONTENT_MODEL`, `TEMPLATE_MODEL`,
+      `PRINT_CONTRACT`, `PRINT_PRODUCTION_SPEC`, `IMPORT_SPEC`,
+      `FEATURE_INVENTORY`, `RISK_REGISTER`, `ACCEPTANCE`, `MODULE_SPEC`), not ten.
+      Verified by enumerating the table at `04a503b`. The substance of the finding
+      — three documents with no arrival point — is correct and was verified
+      independently: all three exist as stubs under `docs/product/`.
+- [x] CF-91 — PR-19 states that the step recording a reviewer verdict opens every
+      carry-forward that verdict logged. When the owner merges and proceeds
+      directly, no recording step runs, and those rows are never opened — CF-90
+      was logged in the P01-T01 verdict and did not exist when the next task tried
+      to close it. The builder correctly refused to invent text for an unbacked
+      id. Owner: reviewer.
+      CF-91 — CLOSED (P01-T02-RESUME) by PR-24.
+- [ ] CF-92 — ADR-012 runs B2S on a single Supabase environment. Its reinstatement
+      trigger is a row count: the isolation suite may run against production only
+      while it holds zero real tenants, and a staging project is created before
+      the first real tenant is onboarded. Owner: the task that onboards the first
+      non-synthetic tenant, and the Phase 02 exit gate, which must assert the row
+      count rather than assume it.
+- [ ] CF-93 — Seven specification gaps in `DATA_MODEL.md`'s Platform tier, found by
+      building it at P01-T02-RESUME. None was resolved by invention: each was
+      implemented on the narrowest reading available and is recorded here for the
+      tier amendment. Owner: reviewer, at the next `DATA_MODEL.md` amendment.
+      (1) §3's lead sentence says "Seven tables for Release 1" while §3 enumerates
+      six — 3.1 `tenant`, 3.2 `member`, 3.3 `membership`, 3.4 `operator`, 3.5
+      `consent_grant`, 3.6 `activity_event` — with 3.7 `role` stated to be a
+      Postgres enum and explicitly "not a table". Seven is the count of Release 1
+      Platform *entities*; six is the table count, and §3.7 records the divergence
+      as deliberate. Built as six tables and one enum. Both the P01-T02 prompt and
+      its resumption inherited "seven tables", so that done-when clause could not
+      be met as worded.
+      (2) §2 tabulates two helper functions. A third is structurally required:
+      §3.3 restricts `membership` INSERT and UPDATE to owners, and a policy on
+      `membership` cannot read `membership` — PostgreSQL raises "infinite
+      recursion detected in policy for relation membership". Built as
+      `is_current_tenant_owner()`, `security definer` and `stable` like the other
+      two. Mechanism for an explicitly stated policy rather than a new rule, but
+      §2's table does not list it and the stated count of two is now wrong.
+      (3) `current_tenant_id()` is specified as "the `tenant_id` of the calling
+      identity's active `membership`", while §3.2 permits a person to hold
+      memberships in several tenants and `TENANCY_MODEL.md` §2 binds a session to
+      exactly one membership at a time. No storage for that binding is specified
+      and no rule is given for choosing among several. Built to return null when
+      the caller holds more than one active membership, so the ambiguous case
+      denies rather than silently serving the wrong tenant's rows. A
+      session-to-membership binding must be specified before any member may hold
+      two active memberships, or that member will be locked out by design.
+      (4) `TENANCY_MODEL.md` §3 rule 1 says "Every `Tenant` has exactly one
+      `Owner` at all times"; §3.3 says "At least one `active` `owner` per tenant".
+      These are different constraints, and `TENANCY_MODEL.md` holds the higher
+      precedence slot. Built as "at least one", per §3.3 and per the prompt's
+      explicit instruction. The divergence is unsettled and the trigger will need
+      replacing if "exactly one" wins.
+      (5) §1.4 makes provenance universal — "every table, without exception" —
+      and the column lists in §3.4 `operator` and §3.6 `activity_event` both omit
+      it, with `granted_at`/`granted_by` and `occurred_at` standing in its place.
+      §3.5 `consent_grant` carries provenance but deliberately no `archived_at`.
+      Built to the per-table column lists, on the reading that the specific
+      statement governs the general one and that adding a column is the error the
+      prompt forbids outright.
+      (6) §1.4 specifies `updated_at timestamptz not null default now()` and no
+      maintenance trigger. Without one the column never changes after insert.
+      Built exactly as specified, so `updated_at` is inert on all six tables
+      today.
+      (7) §5 rule 3 — "every tenant-scoped policy carries `WITH CHECK`, not only
+      `USING`" — cannot hold literally for a read policy. PostgreSQL rejects
+      `with check` on a `for select` policy, because a select produces no candidate
+      row to check. Two shapes satisfy the intent: one `for all` policy per table
+      carrying both clauses, or per-command policies where every clause that can
+      legally exist does. `for all` was rejected because it covers DELETE, and §3.6
+      requires `activity_event` to carry no DELETE policy at all — the absence is
+      the immutability. Built as per-command policies: all six INSERT and UPDATE
+      policies carry `WITH CHECK`, and the ten SELECT policies carry `USING` alone
+      because no other form is legal. Counted from the live catalog, 16 policies in
+      total. Rule 3 needs restating as "every policy with a write side", or it fails
+      a literal reading against a correct schema.
+- [ ] CF-94 — `check-no-runtime-cdn` and `check-no-hardcoded-literals` scan `app/`
+      and `proxy.ts` only, which was the whole of the application source when
+      P01-T01 authored them. `lib/` exists as of P01-T02-RESUME and is not
+      scanned; `features/` and `components/` will not be either when they arrive.
+      A hex colour or an external `<script>` under `lib/` passes both guards
+      today. The two guards landed at P01-T02-RESUME — `check-service-import` and
+      `check-data-boundary` — already scan the wider root set and name the roots
+      that do not yet exist in their own output. Owner: the next task that touches
+      either guard, at the latest the Phase 02 entry checklist.
+- [ ] CF-95 — The deployment and drift pipeline is wired but not live, and both
+      remaining steps are owner actions rather than builder work.
+      (1) `vercel git connect` failed against the repository: the Vercel GitHub
+      App is not authorised on it, so the project exists and is linked locally but
+      no push deploys anything.
+      (2) The `types-drift` job requires repository secrets
+      `SUPABASE_ACCESS_TOKEN` and `SUPABASE_PROJECT_ID`. `gh secret list` returned
+      empty, so the job fails on every run until both are set. That red is the
+      specified behaviour of the job, not a defect in it — a job that skipped
+      instead would be the defect ARCHITECTURE.md §5 names. The access token must
+      be minted by the owner; it is a credential and was never requested here.
+      Owner: the owner, before the Phase 01 exit gate.
+- [ ] CF-96 — `docs/method/REVIEWER_CHAT_INSTRUCTIONS.md` sits untracked in the
+      working tree. PR-14 requires a reviewer-authored document to stage outside
+      the working tree and to enter the repository only by a land task, to its
+      final path; an untracked draft inside the tree is the CF-53 duplication risk
+      in a new place. It is not byte-identical to
+      `docs/method/CLAUDE_PROJECT_INSTRUCTIONS.md`, so it is a distinct document
+      rather than a copy of a committed one. P01-T02-RESUME did not touch it: no
+      prompt has authorised landing it and it is outside the task's scope. Owner:
+      the owner, to land it or remove it.
+- [ ] CF-97 — The credential scanner failed on the one construction ADR-005
+      requires. `check_credentials.py`'s assignment pattern matched
+      `serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY` in
+      `lib/supabase/server-only/service.ts`: an environment-variable name is a
+      37-character token by shape, so reading the key from the environment — the
+      prescribed safe form — looks identical to assigning one. No secret was
+      present. Fourth instance of the CF-87 / CF-88 / CF-89 class, a text rule that
+      cannot separate a leak from the documentation or the safe handling of one,
+      and the first to fire on code rather than prose. Repaired in place rather
+      than halted, because the shape rule is right and only its value side was
+      wrong: the pattern now rejects `process.env`, `import.meta.env`, `Deno.env`,
+      `os.environ` and `os.getenv` on the value side and is otherwise unchanged.
+      The exclusion sits before the optional quote, so a quoted value is still
+      matched. Re-proven by a synthetic self-test — bare, quoted and JSON-shaped
+      fakes all still fail, the benign policy sentence still passes — and the
+      fixture deleted. The rejected alternative was renaming the variable, which
+      leaves the false positive live for the next legitimate reader of that
+      environment name. Owner: reviewer, to ratify the narrowing or reject it.

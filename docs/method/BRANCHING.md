@@ -33,6 +33,14 @@ no required status check blocking the merge — CI reports, the owner decides.
 A signed mid-phase amendment gets its own branch and its own consolidated PR,
 on the same terms.
 
+## 3.1 Foundation exception
+
+The task establishing the toolchain and the pipeline may merge on its own,
+because every later branch is cut from it and a pipeline living only on a branch
+guards nothing. It carries no features, no schema and no data access, so the
+phase gate has nothing to test that the branch does not already show. Every other
+task follows §3. Signed by the owner, 2026-08-01.
+
 ## 4. Deletion requires verified containment
 
 A phase branch is deleted only after

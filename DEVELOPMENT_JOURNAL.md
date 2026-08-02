@@ -1098,3 +1098,102 @@ shape-assertion rewrite (JWT pattern, connection-string pattern, PEM header,
 keyword-beside-a-long-token) was already the code on this branch as of
 `3918cf4` — the fix shipped in P-09-LAND-FIX2 but its ledger row was never
 written. This task supplies the row this task did not create the fix for.
+
+---
+
+2026-08-02 | Opus (heavyweight) | BUILD P01-T02: one Supabase environment (ADR-012), Platform-tier schema with RLS, three clients, generated types, two guards proven | docs/product/DATA_MODEL.md, docs/product/MODULE_SPEC.md, docs/product/ADR.md, docs/product/ARCHITECTURE.md, docs/method/BRANCHING.md, supabase/schema.sql, supabase/config.toml, supabase/.gitignore, supabase/migrations/ (7 files), lib/supabase/client.ts, lib/supabase/server.ts, lib/supabase/server-only/service.ts, types/database.ts, scripts/check-service-import.mjs, scripts/check-data-boundary.mjs, scripts/check_credentials.py, .github/workflows/ci.yml, package.json, package-lock.json, .gitignore, docs/method/CARRY_FORWARDS.md, docs/method/PRECEDENTS.md, SESSION_CONTEXT.md | HALTED on Task B as instructed — the organisation's plan allows two active projects and both slots were held, so two could not be created and one treated as both is what the prompt forbade. The owner resumed with ADR-012, a single environment. Six findings opened rather than fixed silently (CF-92 to CF-97), one of them a credential-scanner false positive on the exact form ADR-005 requires | T03: the isolation suite against the live project, on this branch, before the phase gate
+
+**The halt, and what replaced two environments.** Task B asked for a staging and
+a production project. Creating the second failed on the organisation's active-project
+limit: two slots, both already held. The prompt's stop condition was explicit —
+"do not create a single project and treat it as both" — so the task halted with the
+owner action named. The owner's resumption signed **ADR-012**: one project, named
+`b2s-production`, in **eu-central-2**, Postgres 17.6. Naming the survivor production
+is the reversible direction, because adding staging later costs nothing while
+promoting staging to production costs a data migration. ADR-012 supersedes only
+ADR-006's two-environment clause; one authoritative SQL source and verbatim
+migration splitting stand unchanged. The honest cost is recorded in the ADR and in
+CF-92: there is no environment in which to rehearse a destructive migration, and
+the isolation suite may run against production **only while it holds zero real
+tenants**. The reinstatement trigger is a row count, not a judgement. The existing
+`b2s-staging` project was renamed rather than replaced, so no data moved.
+
+**The schema, and what the live catalog says about it.** `supabase/schema.sql`
+(19,654 bytes) implements `DATA_MODEL.md` §1 to §4, then is split verbatim in source
+order into seven migrations — extensions and enums, tables, indexes, helper
+functions, the active-owner trigger, RLS with its policies, grants — verified by
+reconstructing the concatenation byte-for-byte against the source. Applied through
+the CLI; the remote ledger lists exactly the seven committed filenames, no more and
+no fewer. Read back from `pg_class`, `pg_policy` and `pg_policies` rather than from
+the file, which is the distinction the task exists to make:
+
+| Table | RLS | Policies | Commands, and `WITH CHECK` where one can exist |
+|---|---|---|---|
+| `tenant` | on | 2 | SELECT own, SELECT operator |
+| `member` | on | 3 | SELECT self, SELECT colleague, UPDATE self **with check** |
+| `membership` | on | 3 | SELECT tenant, INSERT owner **with check**, UPDATE owner **with check** |
+| `operator` | on | 1 | SELECT operator only — no INSERT, UPDATE or DELETE policy at all |
+| `consent_grant` | on | 4 | SELECT owner, SELECT operator, INSERT owner **with check**, UPDATE revoke **with check** |
+| `activity_event` | on | 3 | SELECT tenant, SELECT operator, INSERT **with check** — no UPDATE, no DELETE |
+
+Sixteen policies over six tables, zero tables with RLS on and no policy. All six
+policies with a write side carry `WITH CHECK`; the ten read policies carry `USING`
+alone because PostgreSQL rejects `with check` on a `for select` policy — a select
+produces no candidate row to check. The alternative that satisfies §5 rule 3
+literally is one `for all` policy per table, and it was rejected because `for all`
+covers DELETE and §3.6 requires `activity_event` to carry no DELETE policy at all.
+That absence *is* the immutability, so the rule's wording gives way, not the schema.
+Recorded as CF-93 item 7.
+
+**`membership.role` is unwritable by grant, not by trust.** The catalog shows
+`authenticated` holding INSERT and SELECT on `membership.role` and **no UPDATE**;
+UPDATE exists only on `accepted_at`, `archived_at` and `status`. A policy that
+inspected the caller's intent would have been the wrong mechanism. This only works
+because the migration first revokes everything: a Supabase project grants `anon` and
+`authenticated` broad table privileges by default privilege, so a new table arrives
+with table-wide UPDATE already granted and a column-scoped grant on top of it is
+decoration. `anon` now holds nothing at all. Recorded in `PRECEDENTS.md`, because
+every later migration that adds a table must repeat the revoke.
+
+**Three helper functions where §2 specified two.** `current_tenant_id()` and
+`is_operator()` are as specified. `is_current_tenant_owner()` is structurally
+required and not invented scope: §3.3 restricts `membership` writes to owners, and a
+policy on `membership` cannot read `membership` without PostgreSQL raising "infinite
+recursion detected in policy for relation membership". All three are `security
+definer` and `stable`; the trigger function is `security definer` and volatile.
+Five §4 indexes live, each mapped to its stated reason, plus six primary keys, two
+unique keys and the §3.3 partial unique index on live memberships.
+
+**Clients, types, guards.** `lib/supabase/` holds the three constructions:
+`client.ts` and `server.ts` act as the member and carry the publishable key,
+`server-only/service.ts` is the sole construction of the privileged client and
+imports `server-only` so a client-bundle reach fails at compile time. `types/database.ts`
+(15,024 bytes) is generated from the live project and hand-edited never. Both new
+guards were proven by injecting a violation into `app/[locale]/page.tsx` and
+reverting it with `git checkout --`: `check-service-import` exited 1 on
+`FAIL: import of the privileged client quarantine at app\[locale]\page.tsx:24`, then
+OK over 3 files under `[app]`; `check-data-boundary` exited 1 on
+`FAIL: Supabase client constructed outside lib\supabase`, then OK over 8 files under
+`[app, lib, __tests__, proxy.ts]` with all 3 import sites inside the boundary. Both
+name the roots that do not exist yet rather than passing silently over them, and both
+fail if their own target directory disappears (PR-21). `types-drift` regenerates from
+the live schema and diffs; its first step fails loudly and by name when either secret
+is absent, which is its current state and its specified behaviour, not a defect.
+
+**Deviations and gaps, stated rather than smoothed.** The prompt's "seven Platform-tier
+tables" cannot be built: §3 enumerates six tables and states that `role` is an enum
+and explicitly not a table. Built as six and one, with the divergence and five other
+specification gaps recorded as CF-93 — none resolved by invention, each implemented on
+the narrowest available reading. `check_credentials.py` failed on
+`serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY`, because an environment-variable
+name is a 37-character token by shape; the value side now rejects an environment
+indirection and the fix was re-proven against bare, quoted and JSON-shaped fakes before
+the fixture was deleted (CF-97). It is the fourth instance of the CF-87/88/89 class and
+the first to fire on code rather than prose. Two owner actions remain before the phase
+gate, both in CF-95: the Vercel GitHub App is unauthorised on the repository, so the
+linked project deploys nothing, and neither drift secret is set. `ARCHITECTURE.md` §6's
+"the RLS suite runs against staging" is annotated rather than rewritten, since staging
+no longer exists. Locally green before commit: lint 0 errors (1 pre-existing warning in
+`docs/archive/`), typecheck clean, 2/2 tests, four guards OK, build emitting `/en` and
+`/ar`, and all four `docs-integrity` checks passing with 34 open ids reconciling
+id-for-id.

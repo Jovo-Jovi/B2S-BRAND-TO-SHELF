@@ -191,6 +191,15 @@ wearing the grammar of a fact, and the builder pays for it in a halt. Where a
 mechanised check for the property exists, the reviewer cites its output instead
 of asserting. Origin: CF-88, and CF-83 before it.
 
+**PR-24 — A prompt supplies the full text of every carry-forward it names, and
+says open-or-amend rather than close.**
+PR-19 assumes a verdict-recording step always runs. It does not when the owner
+merges and proceeds directly, so a row logged in a verdict may not exist when the
+next task reaches for it. Every prompt therefore carries the complete claim text
+for each id it touches and instructs the builder to open it if absent and amend
+it if present, reporting which. A builder must never be asked to close a row it
+cannot find, and must never invent text to fill one. Origin: CF-91.
+
 ---
 
 ## 2. Environment quirks — never re-discover
@@ -268,3 +277,45 @@ of asserting. Origin: CF-88, and CF-83 before it.
   unrelated directory instead of failing. Pass `working_directory` explicitly
   on every Shell call that must run in the repository rather than relying on a
   prior `cd`.
+- Learned at P01-T02: `supabase link` and `supabase db push` need **no database
+  password**. The CLI provisions a temporary login role through the Management
+  API using the access token, printing "Initialising login role...". Only
+  `supabase login` (or `SUPABASE_ACCESS_TOKEN`) is required, so a schema apply
+  never needs the owner to reset the database password. The CLI is not installed
+  globally here; `npx supabase@latest` works and reports 2.111.0.
+- Learned at P01-T02: `supabase db push` prints `Warning: failed to cache
+  migrations catalog: ... failed to run docker. Docker Desktop is a
+  prerequisite`. It is a **local cache** warning only. Every migration applied
+  and the remote ledger was correct. Docker is not needed to push to a remote
+  project; do not install it in response to this line.
+- Learned at P01-T02: `vercel link` rewrites two files without asking. It appends
+  `VERCEL_OIDC_TOKEN` to `.env.local`, and appends `.vercel` **and a duplicate
+  `.env*`** to `.gitignore` even when `.env*` is already matched. Run
+  `git diff -- .gitignore` immediately after linking and tidy the duplicate.
+- Learned at P01-T02: `vercel whoami` with no stored credentials does **not**
+  report "not authenticated". It starts a device-login flow, and that flow can
+  complete silently against an existing browser session — so a read-only probe
+  for authentication state authenticated the machine as a side effect. Probe for
+  credentials with something that cannot mutate state, or expect the login.
+- Learned at P01-T02: Next.js inlines `NEXT_PUBLIC_*` into the client bundle only
+  for **literal** member access. `process.env[name]` with a computed key is
+  `undefined` in the browser, so a tidy `requiredEnv("NAME")` helper silently
+  breaks the browser client while typechecking and building cleanly.
+- Learned at P01-T02: write `supabase gen types` output with
+  `[System.IO.File]::WriteAllText(..., UTF8Encoding $false)`. PowerShell 5.1's
+  `>` redirection produces UTF-16 and `Out-File -Encoding utf8` produces a BOM;
+  either makes the committed types differ from a Linux CI regeneration on every
+  run, which the `types-drift` job would report as permanent, unfixable drift.
+- Learned at P01-T02: a Supabase project grants `anon` and `authenticated` broad
+  table privileges by **default privilege**, so a newly created table arrives
+  with table-wide UPDATE already granted. Column-scoped grants are therefore
+  decoration unless the migration first issues
+  `revoke all on all tables in schema public from anon, authenticated`. Every
+  later migration that adds a table repeats the revoke, or the grant set silently
+  widens and a policy that looked safe in isolation stops being safe.
+- Learned at P01-T02: the four `docs-integrity` checks run as `python3`, which is
+  correct on the ubuntu runner and **fails on this machine** — Windows ships a
+  `python3` App Execution Alias that prints "Python was not found; run without
+  arguments to install from the Microsoft Store" and exits 9009 without running
+  anything. `python` resolves to 3.13.1 here. Run the guards locally as `python
+  scripts/<name>.py`; do not change the workflow to match the local shell.
