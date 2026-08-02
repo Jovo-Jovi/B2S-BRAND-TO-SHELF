@@ -1101,7 +1101,7 @@ written. This task supplies the row this task did not create the fix for.
 
 ---
 
-2026-08-02 | Opus (heavyweight) | BUILD P01-T02: one Supabase environment (ADR-012), Platform-tier schema with RLS, three clients, generated types, two guards proven | docs/product/DATA_MODEL.md, docs/product/MODULE_SPEC.md, docs/product/ADR.md, docs/product/ARCHITECTURE.md, docs/method/BRANCHING.md, supabase/schema.sql, supabase/config.toml, supabase/.gitignore, supabase/migrations/ (7 files), lib/supabase/client.ts, lib/supabase/server.ts, lib/supabase/server-only/service.ts, types/database.ts, scripts/check-service-import.mjs, scripts/check-data-boundary.mjs, scripts/check_credentials.py, .github/workflows/ci.yml, package.json, package-lock.json, .gitignore, docs/method/CARRY_FORWARDS.md, docs/method/PRECEDENTS.md, SESSION_CONTEXT.md | HALTED on Task B as instructed — the organisation's plan allows two active projects and both slots were held, so two could not be created and one treated as both is what the prompt forbade. The owner resumed with ADR-012, a single environment. Six findings opened rather than fixed silently (CF-92 to CF-97), one of them a credential-scanner false positive on the exact form ADR-005 requires | T03: the isolation suite against the live project, on this branch, before the phase gate
+2026-08-02 | Opus (heavyweight) | BUILD P01-T02: one Supabase environment (ADR-012), Platform-tier schema with RLS, three clients, generated types, two guards proven | docs/product/DATA_MODEL.md, docs/product/MODULE_SPEC.md, docs/product/ADR.md, docs/product/ARCHITECTURE.md, docs/method/BRANCHING.md, supabase/schema.sql, supabase/config.toml, supabase/.gitignore, supabase/migrations/ (7 files), lib/supabase/client.ts, lib/supabase/server.ts, lib/supabase/server-only/service.ts, types/database.ts, scripts/check-service-import.mjs, scripts/check-data-boundary.mjs, scripts/check_credentials.py, .github/workflows/ci.yml, package.json, package-lock.json, .gitignore, docs/method/CARRY_FORWARDS.md, docs/method/PRECEDENTS.md, SESSION_CONTEXT.md | HALTED on Task B as instructed — the organisation's plan allows two active projects and both slots were held, so two could not be created and one treated as both is what the prompt forbade. The owner resumed with ADR-012, a single environment. Seven findings opened rather than fixed silently (CF-92 to CF-98), one a credential-scanner false positive on the exact form ADR-005 requires, one four unrecorded Dependabot alerts the push surfaced | T03: the isolation suite against the live project, on this branch, before the phase gate
 
 **The halt, and what replaced two environments.** Task B asked for a staging and
 a production project. Creating the second failed on the organisation's active-project
@@ -1197,3 +1197,23 @@ no longer exists. Locally green before commit: lint 0 errors (1 pre-existing war
 `docs/archive/`), typecheck clean, 2/2 tests, four guards OK, build emitting `/en` and
 `/ar`, and all four `docs-integrity` checks passing with 34 open ids reconciling
 id-for-id.
+
+**The push surfaced a fifth finding.** `23a6929..f29c0d9` was accepted — push
+protection did not reject it, which is the only evidence that matters for "no
+credential in the commit" — but the remote's response carried four open Dependabot
+alerts on the default branch: `postcss` three times and `sharp` once, 3 high and 1
+moderate, all transitive through Next.js and declared in no `package.json`. They have
+been open since G3-CLOSE enabled alerts and were never recorded. Bumping them is a
+dependency change, which AGENTS.md requires flagging rather than doing, so they are
+CF-98 and the ledger closes at 35 open ids.
+
+**Both workflows concluded, and the red is the specification.** `docs-integrity` —
+job `integrity` **success**. `ci` — `install` **success**, `lint` **success** (same
+pre-existing archive warning), `typecheck` **success**, `unit` **success**, `guards`
+**success** with all four guard steps green in-pipeline, `types-drift` **failure** at
+its first step `Require the drift secrets`, and `build` **skipped** as the
+consequence of that failure. This is D4 working: the job fails loudly and by name
+when the secret is absent instead of skipping into a green tick. It also means `ci`
+stays red on every push to this branch until the owner sets both secrets, T03's push
+included, and that `build` is not exercised in CI until then although it passes
+locally. Recorded on CF-95 rather than left for the reviewer to rediscover.

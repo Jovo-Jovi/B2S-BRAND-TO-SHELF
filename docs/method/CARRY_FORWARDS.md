@@ -1118,6 +1118,16 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       instead would be the defect ARCHITECTURE.md §5 names. The access token must
       be minted by the owner; it is a credential and was never requested here.
       Owner: the owner, before the Phase 01 exit gate.
+      OBSERVED (P01-T02, commit `f29c0d9`). The behaviour is confirmed in the
+      pipeline rather than only in the YAML: `docs-integrity` concluded **success**;
+      `ci` concluded **failure**, with `install`, `lint`, `typecheck`, `unit` and
+      `guards` all success — all four guard steps green in-pipeline — `types-drift`
+      failing at its first step, `Require the drift secrets`, and `build`
+      **skipped** as its consequence. Two consequences the reviewer should hold
+      deliberately rather than discover: `ci` is red on every push to this branch
+      until the secrets are set, T03's included, and `build` is not exercised in CI
+      while that is true, though it passes locally. Both follow from D4's explicit
+      choice of a loud failure over a silent skip.
 - [ ] CF-96 — `docs/method/REVIEWER_CHAT_INSTRUCTIONS.md` sits untracked in the
       working tree. PR-14 requires a reviewer-authored document to stage outside
       the working tree and to enter the repository only by a land task, to its
@@ -1145,3 +1155,18 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       fixture deleted. The rejected alternative was renaming the variable, which
       leaves the false positive live for the next legitimate reader of that
       environment name. Owner: reviewer, to ratify the narrowing or reject it.
+- [ ] CF-98 — Four open Dependabot alerts on the default branch, unrecorded since
+      alerts were enabled at G3-CLOSE and surfaced by the P01-T02 push, which
+      printed them on the remote's response. All four are transitive runtime
+      dependencies resolved in `package-lock.json` and declared in no
+      `package.json`: `postcss` three times — path traversal via
+      `sourceMappingURL` disclosing arbitrary `.map` files (high, first patched
+      8.5.18), arbitrary file read by the same route (high, 8.5.12), and XSS via an
+      unescaped `</style>` in stringify output (medium, 8.5.10) — and `sharp` once,
+      inheriting four libvips CVEs (high, 0.35.0). Both reach the tree through
+      Next.js. Not fixed here: a version bump is a dependency change, AGENTS.md
+      requires stopping and flagging before one, and this task authorises no
+      dependency work. Recorded rather than acted on, per the instruction to report
+      a new finding as a row. Owner: the owner, to authorise a dependency-bump
+      task; at the latest the Phase 01 exit gate, since the alerts predate this
+      branch and will not clear themselves.
