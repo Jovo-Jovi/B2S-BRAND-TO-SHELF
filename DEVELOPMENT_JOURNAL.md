@@ -1011,3 +1011,86 @@ full: header, `Where we are`, the new done-steps row with its commit column left
 for the post-commit fill (PR-17), a legend declaring the em-dash as a well-formed
 value, open-id count to 29 (CF-86 added, reconciled id-for-id against the
 ledger), frozen decisions, next action pointed at P01-T01 with CF-86 first.
+
+2026-08-02 | Sonnet (standard) | BUILD P01-T01: entry checklist (CF-86 closed); Next.js App Router skeleton, locale shell, ci.yml with 3 guards | package.json, tsconfig.json, next.config.ts, eslint.config.mjs, proxy.ts, vitest.config.mts, app/[locale]/layout.tsx, app/[locale]/page.tsx, app/[locale]/dictionaries.ts, app/[locale]/dictionaries/en.json, app/[locale]/dictionaries/ar.json, app/globals.css, __tests__/shell.test.tsx, .github/workflows/ci.yml, scripts/check-no-runtime-cdn.mjs, scripts/check-no-hardcoded-literals.mjs, scripts/check-service-import.mjs, .gitignore, docs/method/CARRY_FORWARDS.md, docs/method/PRECEDENTS.md, SESSION_CONTEXT.md | none | P01-T02: DATA_MODEL.md, MODULE_SPEC.md, Supabase staging/production, tenancy-spine schema with RLS, generated types + drift job, remaining six guards, RLS test harness
+
+Session summary: Task A1 re-read
+`repos/Jovo-Jovi/B2S-BRAND-TO-SHELF/secret-scanning/alerts` (open and
+`state=resolved`) — both `[]` — against `security_and_analysis.secret_scanning
+.status: "enabled"` and `secret_scanning_push_protection.status: "enabled"`.
+A definite zero, scanning fully enabled: closes CF-86, superseding the
+G3-CLOSE reading taken seconds after enablement, before the historical
+backfill had concluded. The other three state assertions re-verified exactly:
+ledger 29 open / 44 closed / highest CF-88; `SESSION_CONTEXT.md`'s 29 open ids
+reconciled id-for-id; `phase/01-foundation` 0 ahead / 0 behind `main`; no
+`package.json`, `node_modules` or `app/` anywhere pre-task; exactly one
+workflow (`docs-integrity.yml`) and four `scripts/` checks pre-task. All four
+docs-integrity checks re-ran clean on the branch. `.gitignore` already covered
+`.env*` and `node_modules/`; no A3 change needed.
+
+Framework: Next.js 16.2.12, App Router, TypeScript 5.9.3 strict, React
+19.2.8, zod 4.4.3 (unused), eslint-config-next 16.2.12, vitest 4.1.10 as the
+test runner — no other dependency added. Next.js 16 deprecated `middleware.ts`
+in favour of `proxy.ts` (identical semantics, network-boundary file renamed);
+`proxy.ts` is what actually lands, named as a deviation from the prompt's
+literal word "middleware" since the framework itself moved the convention out
+from under it mid-cycle. Locale routing and message catalogs follow Next's own
+documented (non-library) i18n guide verbatim: `app/[locale]/layout.tsx` is the
+root layout (no `app/layout.tsx` — every route is under `[locale]`, so nothing
+else is required by the framework), `app/[locale]/dictionaries.ts` plus
+`app/[locale]/dictionaries/{en,ar}.json` are the catalogs, `proxy.ts` detects
+locale from `Accept-Language` (hand-rolled, no library) and 307-redirects `/`
+to `/en` or `/ar` before route resolution — verified live: `curl` against a
+built `next start` shows `Location: /ar` for `Accept-Language: ar`, `/en` for
+`en` and for no header at all (default). The built `en.html`/`ar.html` carry
+`<html lang="en" dir="ltr">` / `<html lang="ar" dir="rtl">` and every visible
+string (`title`, `h1`, `p`) sources from the dictionary — zero literals in the
+component tree. `app/globals.css` holds ten CSS custom properties (spacing,
+radius, font-size, line-height) and no rule consumes one. The smoke test calls
+the async layout function directly and renders the result with
+`react-dom/server`'s `renderToStaticMarkup` rather than `@testing-library/react`
++ jsdom, both because Next's own Vitest guide states RTL cannot render async
+Server Components today and because it avoids three dependencies beyond the
+allowed set; Vite's esbuild transform picks up `tsconfig.json`'s
+`"jsx": "react-jsx"` automatically, so no `@vitejs/plugin-react` was needed
+either. `vitest.config.mts` (not `.ts`) avoids an ESM/CJS config-loader warning
+without touching `package.json`'s module type.
+
+Three guards landed under `scripts/` as dependency-free Node ESM, each proven
+by introducing the exact violation the guard names, confirming the failure,
+then reverting: `check-no-runtime-cdn` (external `<script>`/`<link>` — failed
+on a `cdn.example.com` tag, reverted), `check-no-hardcoded-literals` (hex
+colour / Arabic literal / URL / phone-shaped digits / currency-beside-amount,
+scanning `app/` and `proxy.ts`, exempting `dictionaries/` — failed on
+`#ff0000`, reverted), `check-service-import` (ADR-005's quarantine at
+`server-only/`, which ARCHITECTURE.md §4 names and which this task creates no
+target for, so it passes vacuously by construction rather than by omission,
+per PR-21 — failed on a fabricated `../../server-only/client` import,
+reverted). Six guards remain outstanding, each owned by the phase that lands
+its target: `check-data-boundary` (P01, with the schema and its access
+boundary), `types-drift` (P01, with generated types), `check-zod-coverage`
+(P02, at the first real mutation boundary — provisioning), `check-enum-keys`
+(P02, at the first enumeration — `Role`/`MovementReason`-shaped values),
+`check-print-containment` (P06, with the print engine), and the
+HTML-injection-sink lint rule (P06, where tenant-authored content first
+becomes rendered markup — the template/print surface, not the P01 shell,
+which has no such sink).
+
+`.github/workflows/ci.yml` lands `install → lint → typecheck → unit → guards →
+build` as sequential `needs`-chained jobs, each restoring `node_modules` from
+an `actions/cache@v6` entry keyed on `package-lock.json`'s hash with
+`fail-on-cache-miss: true` on every job but `install` — a cache miss fails the
+job outright rather than silently proceeding with no dependencies installed,
+satisfying "no job skips silently." No job in this workflow depends on a
+secret yet. Locally, every step the workflow runs was executed directly and
+passed: `npm run lint` (0 errors, 1 pre-existing warning
+in `docs/archive/2026-07/backup-browser-data.js`, out of this task's scope),
+`npm run typecheck`, `npm test` (2/2), the three guards, `npm run build`
+(Turbopack, static `/en` and `/ar`, proxy compiled). Pushed to trigger the
+actual pipeline; per-job conclusions are in the task report, not repeated here.
+
+CF-89 landed and closed in the same edit, per PR-19: `check_credentials.py`'s
+shape-assertion rewrite (JWT pattern, connection-string pattern, PEM header,
+keyword-beside-a-long-token) was already the code on this branch as of
+`3918cf4` — the fix shipped in P-09-LAND-FIX2 but its ledger row was never
+written. This task supplies the row this task did not create the fix for.

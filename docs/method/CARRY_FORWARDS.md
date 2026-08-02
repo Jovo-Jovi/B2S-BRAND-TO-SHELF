@@ -950,7 +950,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       administrator can still force-push deliberately. The block stops accident
       and tooling, not intent, and that is the trade the owner chose against
       review friction.
-- [ ] CF-86 — Secret scanning was enabled at G3-CLOSE and the alerts endpoint
+- [x] CF-86 — Secret scanning was enabled at G3-CLOSE and the alerts endpoint
       returned `[]` seconds later. That is a real reading of a real endpoint, but
       GitHub backfills historical scanning asynchronously and this repository has
       substantial history, so `[]` at that moment meant the scan had not
@@ -962,6 +962,11 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       tree; the historical result is outstanding.
       Owner: the P01 entry checklist, before any Supabase project is created and
       a real key exists.
+      CF-86 — CLOSED (P01-T01). The secret-scanning alerts endpoint was re-read
+      after the historical backfill completed and returned a definite count of
+      zero. The Gate 3 reading had been taken seconds after enablement, when the
+      scan had not concluded. History is now scanned and clean, which is what the
+      Gate 3 item actually claimed and could not yet evidence.
 - [x] CF-87 — P-09-LAND Task 3 step 5 specified the placeholder check as a
       negative string scan. A negative scan cannot distinguish a live unfilled
       value from the documentation of one, so it was guaranteed to fail on four
@@ -991,3 +996,19 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       docs-integrity workflow this task creates is the durable fix: once the
       reviewer reads its output instead of asserting state by hand, the class of
       error that produced CF-87 and CF-88 stops being possible.
+- [x] CF-89 — P-09-LAND-FIX2's credential scan specified `service_role` as a bare
+      substring match. Like CF-87 before it, a literal-text rule cannot separate a
+      leaked key from prose about why keys must never appear — and it fired on six
+      legitimate policy sentences in `ADR.md`, `ARCHITECTURE.md` and
+      `B2S_PREPARE_PHASE.md`, two of them in documents the same task was landing.
+      The builder identified it as a PR-22 instance and halted rather than
+      weakening the check. Third instance of that class in one task. Owner: reviewer.
+      CF-89 — CLOSED (P01-T01). Rewritten as a shape assertion: the keyword only
+      matches beside a separator and a token of twenty characters or more, and the
+      rule set carries a Supabase connection-string pattern, a JWT triple and a PEM
+      header. The JWT pattern is the material improvement — it catches a real
+      Supabase key whether or not the word appears near it, which the substring
+      rule never could. Verified by a synthetic self-test against assignment-,
+      JSON-, JWT- and PEM-shaped fakes with the benign sentences left untouched.
+      Landed late: the finding was resolved in P-09-LAND-FIX2 but the row was not
+      written, and the omission was not reported as a deviation.

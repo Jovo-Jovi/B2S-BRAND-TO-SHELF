@@ -1,0 +1,24 @@
+/*
+ * Design tokens. CSS custom properties only.
+ * No rule in this file assigns a token to a property — the design surface
+ * (fixed at Gate 3, per docs/method/BUILD_PHASES.md) owns consumption.
+ */
+:root {
+  --b2s-space-1: 0.25rem;
+  --b2s-space-2: 0.5rem;
+  --b2s-space-3: 1rem;
+  --b2s-space-4: 1.5rem;
+  --b2s-space-5: 2rem;
+
+  --b2s-radius-sm: 0.25rem;
+  --b2s-radius-md: 0.5rem;
+  --b2s-radius-lg: 1rem;
+
+  --b2s-font-size-sm: 0.875rem;
+  --b2s-font-size-base: 1rem;
+  --b2s-font-size-lg: 1.25rem;
+  --b2s-font-size-xl: 1.5rem;
+
+  --b2s-line-height-tight: 1.25;
+  --b2s-line-height-base: 1.5;
+}

@@ -254,3 +254,17 @@ of asserting. Origin: CF-88, and CF-83 before it.
   environment: PowerShell mangles the heredoc before git-bash receives it. Write
   the JSON body to a temporary file and pass `--input <file>`, then delete it.
   Discovered at G3-CLOSE Task 1b.
+- Learned at P01-T01: PowerShell's `Get-ChildItem` (and other cmdlets that take
+  a `-Path`) treat `[` and `]` as wildcard characters, so a path containing a
+  literal bracket segment — `app/[locale]/...`, which the App Router's own
+  routing convention requires — silently matches nothing instead of erroring.
+  Use `-LiteralPath` whenever a path under `app/[locale]/` (or any other
+  bracketed route segment) is addressed directly; `git`, `rg` and the Read/Grep
+  tools are unaffected, only native PowerShell path cmdlets.
+- Learned at P01-T01: this shell is stateful across calls (documented, but easy
+  to forget mid-task). A bare `cd $env:TEMP` issued once for a throwaway
+  scaffold left the working directory changed for every later command in the
+  same session, including `npm install`, which silently ran against an
+  unrelated directory instead of failing. Pass `working_directory` explicitly
+  on every Shell call that must run in the repository rather than relying on a
+  prior `cd`.
