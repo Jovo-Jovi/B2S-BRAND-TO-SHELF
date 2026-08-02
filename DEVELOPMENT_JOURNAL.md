@@ -896,3 +896,34 @@ item outstanding. The stale `## Where we are` narrative paragraph describing
 the Task 6 halt as unresolved was left untouched, as it falls outside Task C's
 enumerated C1-C5 edits; flagged in the report as a residual inconsistency for
 the next task or the reviewer to clear.
+
+2026-08-01 | Standard | PREPARE, Gate 3 / G3-FIX: close Gate 3 hard failure; 15 rounding rules; PR-20 | docs/product/CALC_SPEC.md, docs/method/B2S_PREPARE_PHASE.md, docs/method/PRECEDENTS.md, SESSION_CONTEXT.md, DEVELOPMENT_JOURNAL.md | none — all four state assertions re-verified identical to the reviewer's stamped values (28 open/41 closed/highest CF-84; 28 open ids matching id-for-id; CALC_SPEC 25/15/8; PR-16 through PR-19 present, PR-20 absent) | GATE 3 RE-RUN
+
+Session summary: Gate 3 returned one HARD FAIL and one doc correction. FINDING
+1 — 15 of `CALC_SPEC.md`'s 25 Release 1 rows (R1-04, R1-08, R1-09, R1-10,
+R1-13, R1-14, R1-15, R1-16, R1-17, R1-18, R1-20, R1-21, R1-22, R1-23, R1-25)
+carried no `Rounding:` line, against the Gate 3 item requiring one on every
+row. All 15 supplied lines inserted verbatim immediately before each block's
+`Edge:` line (R1-09 has no `Edge:`, so before its `Assertion:` line instead),
+matching the existing field alignment; the 10 rows that already had a
+`Rounding:` line were left untouched. Verified: all 25 R1 blocks now carry a
+`Rounding:` line (26 total matches including the §0 template row), and the
+three self-counts — 25 `### R1-nn`, 15 `**CS-nn ·`, 8 `| Inn |` — are
+unchanged. FINDING 2 — the Gate 3 checklist in `B2S_PREPARE_PHASE.md` still
+required `SCOPE.md` to cover "14 modules", a figure inherited from the
+pre-CF-29 module map in §4.3 of the same file; corrected to 22, matching
+`SCOPE.md` §1 (precedence slot 2, outranking this file's slot 13). §4.3 itself
+left untouched, as it is the historical map CF-29 was raised against, and the
+same "14 modules" phrase inside §5 Release 1 prose was left alone — it is a
+different sentence, not the Gate 3 item. PR-20 (ceremony is budgeted by
+subject, not applied uniformly — full ceremony is reserved for money, tenant
+isolation, print, schema and `BrandConfig`; document hygiene batches into the
+next task touching the file) appended to `docs/method/PRECEDENTS.md`, landing
+the ruling the owner asked for after four consecutive turns spent on ledger
+bookkeeping. `SESSION_CONTEXT.md`'s `## Where we are` paragraph replaced
+verbatim as supplied, header updated, a G3-FIX done-steps row appended with
+its commit column left for the post-commit fill (PR-17), a PR-20
+frozen-decisions bullet added, and next action re-pointed at the Gate 3
+re-run. No carry-forward row opened, closed or amended — none was authorised
+by this task, and none of the two findings maps to an existing or new CF id.
+The open-id list is untouched, byte-for-byte, at its existing 28 ids.

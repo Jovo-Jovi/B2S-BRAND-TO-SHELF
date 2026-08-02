@@ -1,6 +1,6 @@
 # SESSION CONTEXT
-Updated: 2026-08-01 · By: Sonnet · Phase: PREPARE — Gate 3 ready ·
-Last task: P-08-PRE-FIX · Verdict: pending
+Updated: 2026-08-01 · By: Sonnet · Phase: PREPARE — Gate 3 fixes landed ·
+Last task: G3-FIX · Verdict: pending
 
 ## Read these too
 - `docs/method/PRECEDENTS.md` — binding rulings and environment quirks.
@@ -13,36 +13,14 @@ This file carries state and open ids only. Narrative belongs in the journal.
 Keep it short: if a paragraph is growing here, it belongs elsewhere.
 
 ## Where we are
-Greenfield. All eight Gate 3 blocking documents are landed: `PRODUCT_BRIEF`,
-`GLOSSARY`, `SCOPE`, `DECISIONS`, `DOMAIN_MODEL`, `TENANCY_MODEL`,
-`SECURITY_MODEL` and `CALC_SPEC`. `CALC_SPEC.md` carries 25 Release 1
-calculation rows, 15 signed calculation choices (CS-15 open), and 8 assertable
-identities; eleven of the 25 rows cite no legacy source at all, because tax,
-freight, money rounding and real payments never existed in the retiring tools.
-Every other frozen document is authored just-in-time, one step ahead of the
-module that needs it.
-
-OD-H7 SIGNED 2026-08-01 amends the Gate 3 checklist to the blocking set only
-(`DECISIONS.md` now 80 rows) and CS-15 is SIGNED, closing both items that were
-blocking the Gate 3 verdict. `docs/method/DEV_OS.md` §3's void parity gate now
-carries a VOID annotation (CF-33's underlying issue fixed). A repo-wide grep
-found zero occurrences of the owner's OS account name outside `legacy/`
-(frozen, covered by CF-14) in mutable current files.
-
-`P-08-PRE`'s carry-forward ledger reconciliation (Task 6) HALTED: its own
-stated premise — "highest existing id is CF-79" — is false. CF-80, CF-81 and
-CF-82 already exist in `CARRY_FORWARDS.md`, opened by the prior verdict-
-recording commit before this task began. This matches the prompt's own STOP
-CONDITION verbatim, so the ledger reconciliation, PR-16/PR-17, and the
-done-steps repair were not performed.
-
-Reviewer verdict recorded: **PASS**, and the HALT itself is graded as correct
-execution, not a failure. Two new carry-forwards logged by the review:
-CF-83 (reviewer state assertions are not stamped to a commit) and CF-84
-(a verdict-logged carry-forward is opened as a stub, then re-opened as new by
-the next prompt — this session's own CF-80/81/82 collision, generalised).
-Neither CF-80/81/82's disposition nor Task 6's ledger reconciliation was
-resolved by the verdict — that remains the next task's work.
+The prepare phase is complete. All eight Gate 3 blocking documents are landed and
+authored: `PRODUCT_BRIEF`, `GLOSSARY`, `SCOPE` (22 modules), `DECISIONS` (80
+signed ODs), `DOMAIN_MODEL` (87 entities across 9 tiers), `TENANCY_MODEL`,
+`SECURITY_MODEL`, and `CALC_SPEC` (25 Release 1 rows, 15 signed calculation
+choices, 8 assertable identities). Gate 3 returned one hard failure — missing
+rounding rules on 15 of the 25 `CALC_SPEC` rows — and one doc correction, both
+closed by G3-FIX. Every other frozen document is authored just-in-time under
+OD-H7, one step ahead of the module that needs it.
 
 ## Done steps
 
@@ -67,6 +45,7 @@ resolved by the verdict — that remains the next task's work.
 | P-07-LAND | Land CALC_SPEC (25 rows, CS-01..CS-14 signed); CF-45/62/70 closed, CF-47 amended, CF-78/79 landed | PASS | `9079a2e` |
 | P-08-PRE | Tasks 1-5 done: OD-H7 signed (80 ODs); Gate 3 checklist amended to blocking set; CS-15 signed; CF-33 DEV_OS.md annotation; CF-52 grep zero hits. Tasks 6-9 HALTED — CF-80/81/82 already exist, contradicting Task 6's stated premise | PASS | `986c21c` |
 | P-08-PRE-FIX | Resume Tasks 6-9: CF-80/81/82 expanded and closed; CF-04/27 void; CF-33/52 closed; 11 owners reassigned; PR-16 to PR-19 | pending | `5fdc2a3` |
+| G3-FIX | Gate 3 HARD FAIL closed: 15 missing Rounding lines in CALC_SPEC; module count 14→22 in the Gate 3 checklist; PR-20 ceremony budget | pending | <fill post-commit> |
 
 ## Open carry-forwards — ids only
 Full text in `docs/method/CARRY_FORWARDS.md`.
@@ -124,7 +103,9 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
   `DECISIONS.md` now carries 80 signed ODs, verified by count.
 - PR-16 through PR-19 landed 2026-08-01. PR-18 and PR-19 exist because the
   reviewer's own state assertion went stale between verdict and execution.
+- PR-20 landed 2026-08-01. Document hygiene batches into the next task touching
+  the file and never earns its own round trip.
 
 ## Next action
-GATE 3 verdict on the blocking set, per the amended checklist in
-`B2S_PREPARE_PHASE.md`. No owner signature outstanding.
+GATE 3 RE-RUN by the reviewer. On PASS, the prepare phase closes and
+`ARCHITECTURE.md`, the ADRs and the build phase plan begin.

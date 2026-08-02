@@ -355,6 +355,8 @@ Method:     rawShare_i   = discountTotal × gross_i / subtotal
             fractional part; tie-break higher gross, then lower ordinal
 Expected:   13.65 · 8.57 · 10.00, summing to 32.22
 Remainder:  two minor units, to L3 (.9977) then L1 (.9483)
+Rounding:   floor each raw share to currency precision, then restore the exact
+            total by the remainder rule above. Half-up is not used at this step
 Edge:       one line → it takes the whole discount. A zero-gross line receives
             a zero share and is skipped by the tie-break.
 ```
@@ -407,6 +409,7 @@ Legacy source: NONE
 Invariant:  Σ line tax
 Policy:     none
 Expected:   17.20 + 10.81 + 12.60 = 40.61
+Rounding:   none - every input is already at stored precision
 Edge:       mixed rates across lines are summed, never averaged.
 ```
 
@@ -417,6 +420,7 @@ Legacy source: EXTRACT_INVOICE_PRO.md §2.5 (C4)
 Invariant:  net plus tax
 Policy:     none
 Expected:   290.02 + 40.61 = 330.63
+Rounding:   none - every input is already at stored precision
 Assertion:  Invoice.total − Invoice.taxTotal == Σ InvoiceLine.netValue, exactly
 ```
 
@@ -430,6 +434,7 @@ Method:     next = max(sequence for this Tenant + BrandLine) + 1, allocated
             atomically at issue
 Expected:   scoped per Tenant then BrandLine (OD-C11, TENANCY_MODEL.md §4);
             never global; never reused
+Rounding:   N/A - a sequence number is an integer and is never rounded
 Edge:       a cancelled Invoice keeps its number and is corrected by CreditNote,
             never by reissue. A draft SalesOrder consumes no number.
 ```
@@ -467,6 +472,7 @@ Legacy source: NONE — recorded ABSENT at EXTRACT_INVOICE_PRO.md §5.4
 Invariant:  money received in excess of what is owed is still owed back
 Policy:     accept, reject, or clamp (CS-13)
 Expected:   pay 250.00 → outstanding −12.74, read as credit on account
+Rounding:   none - the amount is entered at stored precision
 Edge:       never clamped to zero. The legacy Math.max(0, …) at :2454 made
             over-return undetectable; the same clamp here would make
             overpayment undetectable.
@@ -483,6 +489,7 @@ Expected:   outstanding == total          → unpaid
             0 < outstanding < total       → partial
             outstanding == 0              → paid
             outstanding < 0               → overpaid
+Rounding:   N/A - the result is a state, not a number
 Edge:       "underpaid" in OD-C12 is `partial` once the buyer has stopped paying;
             it is a business reading of `partial`, not a fifth computed state.
 ```
@@ -499,6 +506,8 @@ Method:     if this tranche exhausts the line:
             else:
                 returnedValue = round(netValue × returnedQty / invoicedQty)
 Expected:   round(122.85 × 2 / 3) = 81.90
+Rounding:   half-up to currency precision on the proportional branch; none on
+            the residual branch, which is a subtraction and cannot drift
 Edge:       returned quantity exceeding invoiced quantity is rejected, not clamped.
             DOMAIN_MODEL.md D2: writeOffValue is always present, zero for restock.
 ```
@@ -511,6 +520,8 @@ Invariant:  tax charged on goods that came back is not owed
 Policy:     the tranche and residual rule (CS-11)
 Method:     same tranche/residual rule as R1-15, applied to InvoiceLine.taxValue
 Expected:   round(17.20 × 2 / 3) = 11.47
+Rounding:   half-up to currency precision on the proportional branch; none on
+            the residual branch
 Edge:       a fully returned line reverses exactly its taxValue, by residual.
 ```
 
@@ -521,6 +532,7 @@ Legacy source: NONE — no credit note, no refund record exists (§5.4)
 Invariant:  the money effect of a Return
 Policy:     none
 Expected:   81.90 + 11.47 = 93.37
+Rounding:   none - both inputs are already at stored precision
 Edge:       immutable once issued (DOMAIN_MODEL.md §3.5). A correction is a
             further CreditNote, never an edit.
 ```
@@ -532,6 +544,7 @@ Legacy source: EXTRACT_INVOICE_PRO.md §2.8 (C7)
 Invariant:  every invoiced unit on every line has come back
 Policy:     none
 Expected:   Σ returnedQty per line == invoicedQty, for every line
+Rounding:   N/A - the result is a comparison of quantities
 Edge:       under R1-15's residual rule the arithmetic already produces
             Σ returnedValue == Σ netValue == 290.02, so net revenue lands on
             0.00 with no special case. The legacy hard-zero branch at :2453
@@ -561,6 +574,7 @@ Policy:     none
 Method:     written by Shipment, never by Invoice (DOMAIN_MODEL.md §5.3, OD-E12).
             OD-C18: R1 auto-creates one Shipment per Invoice.
 Expected:   3 units sold → StockMovement(sale, −3)
+Rounding:   half-up to the UnitOfMeasure's declared precision, per R1-24
 Edge:       negative resulting level is permitted and flagged, never blocked —
             blocking it hides a counting error instead of surfacing it.
 ```
@@ -572,6 +586,7 @@ Legacy source: EXTRACT_STOCK_COSTS.md §2.10
 Invariant:  goods coming back and fit to sell increase the level
 Policy:     none
 Expected:   2 units restocked → StockMovement(return_restock, +2)
+Rounding:   half-up to the UnitOfMeasure's declared precision, per R1-24
 Edge:       written at Return acceptance, not at CreditNote issue.
 ```
 
@@ -584,6 +599,7 @@ Invariant:  goods that came back but cannot be sold are not sellable stock
 Policy:     the movement shape (CS-12)
 Expected:   1 unit written off → StockMovement(return_restock, +1)
                               then StockMovement(adjustment, −1, reason writeOff)
+Rounding:   half-up to the UnitOfMeasure's declared precision, per R1-24
 Edge:       net effect on StockLevel is zero, and both physical facts survive.
             The reason for the write-off is a separate field, never the
             disposition value itself.
@@ -598,6 +614,7 @@ Invariant:  StockLevel = Σ StockMovement, grouped by (variant|component,
             location, batch)
 Policy:     none — this is signed (DOMAIN_MODEL.md §5.2)
 Expected:   opening 50 · sale −3 · restock +2 · restock +1 · writeOff −1  →  49
+Rounding:   none - a sum of values already at unit precision
 Edge:       one write path. No document writes StockLevel. A correction is a new
             opposing StockMovement, never an edit (DOMAIN_MODEL.md §6).
 ```
@@ -627,6 +644,8 @@ Invariant:  a stored value has one canonical numeric form
 Policy:     digit system, decimal separator, grouping, symbol position — all
             resolved from Locale at render (DOMAIN_MODEL.md D8)
 Expected:   330.63 → "330.63 EGP" (en) · "٣٣٠٫٦٣ ج.م" (ar), same stored value
+Rounding:   none in storage. The rendered string shows exactly the Currency's
+            minor-unit count; rendering never alters the stored value
 Edge:       a formatted string never enters storage, never enters a comparison,
             and never enters an identifier.
 ```

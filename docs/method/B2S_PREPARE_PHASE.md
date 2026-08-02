@@ -1185,7 +1185,7 @@ Reviewer verdict. Every item must hold:
 - [ ] All 80 ODs signed and dated in `DECISIONS.md`
 - [ ] `PRODUCT_BRIEF.md` states purpose, tenancy model, core loop, acceptance event
 - [ ] `GLOSSARY.md` resolves every vocabulary collision, CF-28 included
-- [ ] `SCOPE.md` covers all 14 modules with release assignment; CF-29 closed
+- [ ] `SCOPE.md` covers all 22 modules with release assignment; CF-29 closed
 - [ ] `DOMAIN_MODEL.md` resolves every DIVERGENT item from the extracts; C1 closed
 - [ ] `TENANCY_MODEL.md` states the hierarchy, the member and role model, and the isolation boundary
 - [ ] `SECURITY_MODEL.md` states the isolation guarantee in testable terms; CF-31 closed

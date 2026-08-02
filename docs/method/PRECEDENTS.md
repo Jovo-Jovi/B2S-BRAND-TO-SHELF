@@ -147,6 +147,19 @@ opens it. A prompt that instructs a builder to create an id a verdict has alread
 logged will fire its own duplicate-id guard. Origin: CF-84, the direct cause of
 the P-08-PRE Task 6 halt.
 
+**PR-20 — Ceremony is budgeted by subject, not applied uniformly.**
+Full ceremony — its own task, its own window, its own ledger row, its own
+reviewer round trip — is reserved for money arithmetic, tenant isolation, print
+generation, schema, and `BrandConfig`. Document hygiene is not: stale
+cross-references, wrong counts, placeholder text, owner strings, vocabulary slips
+in prose and dead paragraphs are **batched into the next task that already
+touches the file**, reported as one line, and never given a task or a round trip
+of their own. A hygiene finding that genuinely cannot wait is fixed inside the
+task that found it. Origin: four consecutive turns spent on ledger bookkeeping
+rather than product, and the owner's correct objection to it. The carry-forward
+protocol still applies — nothing is silently patched — but a row and a line in a
+report is the whole of the ceremony a hygiene finding earns.
+
 ---
 
 ## 2. Environment quirks — never re-discover
