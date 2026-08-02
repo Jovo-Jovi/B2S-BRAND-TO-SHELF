@@ -1,5 +1,12 @@
 # B2S — PREPARE PHASE RUNBOOK
 
+> **SUPERSEDED 2026-08-01.** Gate 3 passed. Sequencing is now
+> `docs/method/BUILD_PHASES.md`. This file is retained as the record of the
+> prepare phase, the signing record for the 80 decisions promoted to
+> `DECISIONS.md`, and the source of §9's public-repository prevention rules and
+> §10's pre-relaunch audit, both of which remain in force. Do not cite it as the
+> current plan.
+
 **Product:** B2S | Brand to Shelf · *build.package.sell*
 **Document:** the complete sequence from today to "documents frozen, build may begin"
 **Authored:** 2026-07-30 by the reviewer surface

@@ -1,6 +1,6 @@
 # SESSION CONTEXT
-Updated: 2026-08-01 · By: Sonnet · Phase: PREPARE — Gate 3 closing ·
-Last task: G3-CLOSE · Verdict: pending
+Updated: 2026-08-01 · By: Sonnet · Phase: BUILD — P01 Foundation, entry ·
+Last task: P-09-LAND-FIX2 · Verdict: pending
 
 ## Read these too
 - `docs/method/PRECEDENTS.md` — binding rulings and environment quirks.
@@ -13,14 +13,15 @@ This file carries state and open ids only. Narrative belongs in the journal.
 Keep it short: if a paragraph is growing here, it belongs elsewhere.
 
 ## Where we are
-The prepare phase is complete. All eight Gate 3 blocking documents are landed and
-authored: `PRODUCT_BRIEF`, `GLOSSARY`, `SCOPE` (22 modules), `DECISIONS` (80
-signed ODs), `DOMAIN_MODEL` (87 entities across 9 tiers), `TENANCY_MODEL`,
-`SECURITY_MODEL`, and `CALC_SPEC` (25 Release 1 rows, 15 signed calculation
-choices, 8 assertable identities). Gate 3 returned one hard failure — missing
-rounding rules on 15 of the 25 `CALC_SPEC` rows — and one doc correction, both
-closed by G3-FIX. Every other frozen document is authored just-in-time under
-OD-H7, one step ahead of the module that needs it.
+Gate 3 passed 2026-08-01 and the prepare phase is closed. Eight blocking
+documents are frozen. Architecture is decided: `ARCHITECTURE.md` and eleven
+append-only ADRs, signed by the owner — Next.js App Router on Vercel, Supabase
+Postgres, row-level tenancy with default-deny RLS as the authorization boundary,
+the privileged client physically quarantined, exact-decimal money end to end.
+`BUILD_PHASES.md` sequences eight phases delivering Release 1; one branch per
+phase per `BRANCHING.md`. Next is P01 Foundation — no features: application
+shell, `DATA_MODEL.md` authored just-in-time, the tenancy-spine schema with RLS
+on every table, generated types, and the nine CI guards.
 
 ## Done steps
 
@@ -47,6 +48,11 @@ OD-H7, one step ahead of the module that needs it.
 | P-08-PRE-FIX | Resume Tasks 6-9: CF-80/81/82 expanded and closed; CF-04/27 void; CF-33/52 closed; 11 owners reassigned; PR-16 to PR-19 | pending | `5fdc2a3` |
 | G3-FIX | Gate 3 HARD FAIL closed: 15 missing Rounding lines in CALC_SPEC; module count 14→22 in the Gate 3 checklist; PR-20 ceremony budget | pending | `e6aebf4` |
 | G3-CLOSE | Secret scanning, push protection, force-push block and Dependabot enabled and verified; CF-85 closed; PR-21; BRANCHING.md | pending | `2d05635` |
+| P-09-LAND-FIX2 | Land ARCHITECTURE, ADR (11 entries), BUILD_PHASES; supersede the prepare runbook; docs-integrity workflow; CF-86, CF-87, CF-88; PR-22, PR-23; open phase/01-foundation | pending | <fill post-commit> |
+
+> Commit column: a backticked sha, or `—` where no single commit tracks the step
+> (P-00 through P-01c predate the one-task-one-commit convention). The most
+> recent row may read `pending` until its follow-up commit fills it (PR-17).
 
 ## Open carry-forwards — ids only
 Full text in `docs/method/CARRY_FORWARDS.md`.
@@ -79,6 +85,7 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
 - CF-75 — AGENTS.md and .cursor/rules/b2s-devos.mdc carried folder paths and a named library ahead of ARCHITECTURE.md; rewritten by P-05-PRE — owner: ARCHITECTURE.md, immediately after Gate 3
 - CF-83 — Reviewer state assertions are not stamped to a commit — owner: PRECEDENTS.md, PR-18
 - CF-84 — A verdict-logged carry-forward is opened as a stub, then re-opened as new by the next prompt — owner: PRECEDENTS.md, PR-19
+- CF-86 — Secret-scanning history backfill was outstanding at G3-CLOSE; the `[]` reading meant "not finished", not "clean" — owner: the P01 entry checklist, before any Supabase project is created and a real key exists
 
 ## Frozen decisions in force
 - Freeze point 2026-07-29 (`legacy/FREEZE.md`) — tools RETIRING, not port
@@ -111,7 +118,11 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
   deletion block on. Gate 3 item 11 evidence.
 - `docs/method/BRANCHING.md` IN FORCE. One branch per phase, exit gate on the
   branch, one consolidated PR per phase, deletion only on verified containment.
+- ADR-001 to ADR-011 SIGNED 2026-08-01. Append-only; superseded, never edited.
+- `ARCHITECTURE.md` precedence slot 11, `BUILD_PHASES.md` slot 13.
+  `B2S_PREPARE_PHASE.md` is superseded as a plan; its §9 and §10 remain in force.
 
 ## Next action
-GATE 3 VERDICT by the reviewer, on this report. On PASS the prepare phase closes
-and `ARCHITECTURE.md`, the first ADRs and the build phase plan begin.
+P01-T01 — reviewer emits the Foundation entry task. First item on the P01 entry
+checklist is CF-86: re-read the secret-scanning alerts endpoint and confirm the
+historical backfill has completed, before any Supabase project is created.

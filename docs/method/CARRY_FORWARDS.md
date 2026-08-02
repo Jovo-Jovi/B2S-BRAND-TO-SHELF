@@ -950,3 +950,44 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       administrator can still force-push deliberately. The block stops accident
       and tooling, not intent, and that is the trade the owner chose against
       review friction.
+- [ ] CF-86 — Secret scanning was enabled at G3-CLOSE and the alerts endpoint
+      returned `[]` seconds later. That is a real reading of a real endpoint, but
+      GitHub backfills historical scanning asynchronously and this repository has
+      substantial history, so `[]` at that moment meant the scan had not
+      finished — not that history is clean. The G3-CLOSE report characterised it
+      as "no history to scan", the only inexact claim in an otherwise exact
+      report, and the subtle form of the PR-21 trap: a check that ran but had not
+      concluded, recorded as a conclusion. Gate 3 passed on the protections being
+      live plus a reviewer sweep finding zero credential patterns in the working
+      tree; the historical result is outstanding.
+      Owner: the P01 entry checklist, before any Supabase project is created and
+      a real key exists.
+- [x] CF-87 — P-09-LAND Task 3 step 5 specified the placeholder check as a
+      negative string scan. A negative scan cannot distinguish a live unfilled
+      value from the documentation of one, so it was guaranteed to fail on four
+      prose quotations recording the CF-80 defect, including `PRECEDENTS.md`
+      PR-17 itself, whose purpose is to quote the anti-pattern it prevents. A
+      guard that fails on its own precedent is a broken guard. The builder found
+      it by verifying locally before committing, as required, and halted rather
+      than narrowing the check or editing the evidence. Owner: reviewer.
+      CF-87 — CLOSED (P-09-LAND-FIX2). Replaced by a positive shape assertion
+      scoped to the done-steps commit column, accepting a sha or a declared
+      em-dash, with the last row exempt. Strictly stronger: catches all four
+      CF-80 rows, catches malformed values neither party anticipated, cannot
+      false-positive on prose, and removes the transient-red-by-construction the
+      builder also flagged. Landed as PR-22.
+- [x] CF-88 — The first correction to CF-87 asserted that every commit column in
+      the done-steps table held a backticked sha. It does not: 4 of 21 data rows
+      carry a bare em-dash — P-00, P-01, P-01b, P-01c — which predate the
+      one-task-one-commit convention. The reviewer had read the tail of the table
+      rather than the table, and asserted a universal from a partial sample. The
+      corrected check would itself have failed on the current tree, which is a
+      listed HALT condition, so the builder halted a second time on the same
+      task. Two consecutive halts, both from reviewer state assertions rather
+      than builder error. Owner: reviewer.
+      CF-88 — CLOSED (P-09-LAND-FIX2). The em-dash is accepted as a well-formed
+      value and declared in a legend beneath the table. Landed as PR-23, which
+      requires universal claims to be enumerated over the whole set. The
+      docs-integrity workflow this task creates is the durable fix: once the
+      reviewer reads its output instead of asserting state by hand, the class of
+      error that produced CF-87 and CF-88 stops being possible.

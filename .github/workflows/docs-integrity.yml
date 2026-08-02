@@ -1,0 +1,30 @@
+name: docs-integrity
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Stated-count check (PR-15)
+        run: python3 scripts/check_stated_counts.py
+
+      - name: Ledger reconciliation
+        run: python3 scripts/check_ledger.py
+
+      - name: Credential pattern scan
+        run: python3 scripts/check_credentials.py
+
+      - name: Done-steps shape assertion
+        run: python3 scripts/check_done_steps_shape.py

@@ -958,3 +958,56 @@ for the post-commit fill per PR-17), frozen-decisions bullets and next action
 updated; the open carry-forward id list was left untouched at its existing 28
 ids because CF-85 was never present in it. No carry-forward other than CF-85
 was opened, closed or amended.
+
+2026-08-01 | Sonnet (standard) | BUILD entry / P-09-LAND-FIX2: land ARCHITECTURE, 11 ADRs, BUILD_PHASES; supersede the prepare runbook; docs-integrity CI; CF-86/87/88; open phase/01-foundation | docs/product/ARCHITECTURE.md, docs/product/ADR.md, docs/method/BUILD_PHASES.md, docs/method/B2S_PREPARE_PHASE.md, .github/workflows/docs-integrity.yml, scripts/check_stated_counts.py, scripts/check_ledger.py, scripts/check_credentials.py, scripts/check_done_steps_shape.py, docs/method/CARRY_FORWARDS.md, docs/method/PRECEDENTS.md, SESSION_CONTEXT.md, DEVELOPMENT_JOURNAL.md | three halts, all self-caught before any commit: a negative placeholder scan would have fired on PR-17's own quotation of the anti-pattern it documents (CF-87); the shape-assertion fix that replaced it was itself asserted as universal from a sample of the done-steps table, missing four pre-convention em-dash rows (CF-88); and a bare `service_role` credential match fired on the architecture's own policy prose in three landed documents, corrected to a shape assertion before commit | GATE VERDICT on this report, then P01-T01
+
+Session summary: Gate 3's three reviewer-authored documents landed from
+`~/Desktop/b2s-inbox` by copy, never retyped — `ARCHITECTURE.md` (6,451 bytes,
+sha256 `b1f53b8f…`), `ADR.md` (8,255 bytes, `3a5631dd…`), `BUILD_PHASES.md`
+(5,059 bytes, `f88b3f72…`) — byte-identical source-to-destination, valid UTF-8,
+no BOM. PR-15 self-counts held: 11 contiguous ADR entries (ADR-001–011), 8
+contiguous build phases (P01–P08), `ARCHITECTURE.md` §2 citing exactly those 11
+ids and no other. `B2S_PREPARE_PHASE.md` received the SUPERSEDED blockquote
+below its H1 (60,583 → 60,970 bytes), §9 and §10 left standing as still-in-force.
+
+The docs-integrity workflow went through three corrections before it passed
+locally, each one a halt on the reviewer's own state assertion rather than a
+builder defect, and each is now a landed precedent. First: the original step 5
+was a negative scan for `<this commit>`/`<fill post-commit>` — guaranteed to
+fail on four historical quotations of the CF-80 defect, including
+`PRECEDENTS.md`'s own PR-17 entry, whose entire purpose is to quote the
+anti-pattern it prevents. Halted before authoring anything (CF-87). Second: the
+replacement — a positive shape assertion requiring a backticked sha in every
+done-steps row but the last — was itself a universal asserted from the table's
+tail; four rows predating the one-task-one-commit convention (P-00, P-01,
+P-01b, P-01c) carry a bare em-dash. Halted again on the same task, both times
+before committing (CF-88). Third, caught by the builder without a round trip:
+the credential scan's literal `service_role` match fired on legitimate policy
+prose in `ADR.md`, `ARCHITECTURE.md` and `B2S_PREPARE_PHASE.md` — three
+documents that discuss the privileged key precisely to state why it must never
+appear in code. Rewritten as a shape assertion (keyword, then `:`/`=`, then a
+20+ character token) that a synthetic self-test confirmed catches an
+assignment-shaped fake, a JSON-shaped fake, a JWT-shaped fake and a PEM header,
+while leaving both benign policy sentences untouched. A separate, purely
+mechanical bug — the scanner's own variable name and dict key spelling the
+literal target substring, so the script matched itself — was found and fixed
+in the same pass.
+
+Landed: `.github/workflows/docs-integrity.yml` (checkout with `fetch-depth: 0`,
+then four dependency-free Python 3 scripts under `scripts/`, run in order,
+none skippable) — stated-count check mechanising PR-15 across `DOMAIN_MODEL.md`,
+`DECISIONS.md`, `CALC_SPEC.md` and `ADR.md`, plus the per-row `Rounding:`
+presence check; ledger reconciliation between `SESSION_CONTEXT.md`'s open ids
+and `CARRY_FORWARDS.md`'s open rows, with an owner-field check; the corrected
+shape-based credential scan; and the corrected done-steps shape assertion. All
+four verified locally against the current tree before commit, individually
+reported per PR-21, all passing. CF-86 landed OPEN — the G3-CLOSE secret-scan
+`[]` reading meant "not finished", not "clean", owner the P01 entry checklist.
+CF-87 and CF-88 landed CLOSED in the same task that opened them, per PR-19/PR-20.
+PR-22 (assert shape, not forbidden strings) and PR-23 (a universal is verified
+over the whole set, never a sample) appended to `PRECEDENTS.md` §1; the
+`gh api --input -` heredoc quirk appended to §2. `SESSION_CONTEXT.md` updated in
+full: header, `Where we are`, the new done-steps row with its commit column left
+for the post-commit fill (PR-17), a legend declaring the em-dash as a well-formed
+value, open-id count to 29 (CF-86 added, reconciled id-for-id against the
+ledger), frozen decisions, next action pointed at P01-T01 with CF-86 first.

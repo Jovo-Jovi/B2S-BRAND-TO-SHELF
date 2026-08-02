@@ -170,6 +170,27 @@ endpoint consulted and its actual response, verbatim. Origin: the Gate 3 item
 11 check, where the secret-scanning alerts endpoint returned "disabled on this
 repository" and the builder correctly refused to record it as zero alerts.
 
+**PR-22 — A guard asserts the shape a value must have, never the strings a file
+must not contain.**
+Negative string scans false-positive on the documentation of their own
+anti-pattern, and this repository documents its anti-patterns by rule — PR-07
+preserves original claims, the journal is append-only, and every precedent quotes
+the defect that produced it. A guard forbidding a literal will eventually fire on
+the precedent explaining why it exists. Assert instead what the value must be, at
+the structural location where the defect occurs: not "this file must not contain
+`<this commit>`" but "this table column must hold a sha or a declared em-dash."
+The positive form is narrower in scope, broader in what it catches, and cannot be
+defeated by rewording. Origin: CF-87.
+
+**PR-23 — A universal claim is verified over the whole set, never a sample.**
+When a prompt asserts "every row", "all files", "none of", or "the highest id",
+the reviewer enumerates the entire set programmatically and states the count
+examined alongside the claim. A universal drawn from the visible portion of a
+table, the tail of a file, or a snapshot taken at an earlier commit is a guess
+wearing the grammar of a fact, and the builder pays for it in a halt. Where a
+mechanised check for the property exists, the reviewer cites its output instead
+of asserting. Origin: CF-88, and CF-83 before it.
+
 ---
 
 ## 2. Environment quirks — never re-discover
@@ -229,3 +250,7 @@ repository" and the builder correctly refused to record it as zero alerts.
   `[System.IO.File]::WriteAllText($path, $msg, (New-Object
   System.Text.UTF8Encoding $false))` instead. Verify with
   `git log -1 --format=%s` before pushing — the BOM is invisible in most output.
+- `gh api --input -` with a shell heredoc fails with HTTP 400 in this
+  environment: PowerShell mangles the heredoc before git-bash receives it. Write
+  the JSON body to a temporary file and pass `--input <file>`, then delete it.
+  Discovered at G3-CLOSE Task 1b.
