@@ -1,6 +1,6 @@
 # SESSION CONTEXT
-Updated: 2026-08-01 · By: Sonnet · Phase: PREPARE — Gate 3 fixes landed ·
-Last task: G3-FIX · Verdict: pending
+Updated: 2026-08-01 · By: Sonnet · Phase: PREPARE — Gate 3 closing ·
+Last task: G3-CLOSE · Verdict: pending
 
 ## Read these too
 - `docs/method/PRECEDENTS.md` — binding rulings and environment quirks.
@@ -46,6 +46,7 @@ OD-H7, one step ahead of the module that needs it.
 | P-08-PRE | Tasks 1-5 done: OD-H7 signed (80 ODs); Gate 3 checklist amended to blocking set; CS-15 signed; CF-33 DEV_OS.md annotation; CF-52 grep zero hits. Tasks 6-9 HALTED — CF-80/81/82 already exist, contradicting Task 6's stated premise | PASS | `986c21c` |
 | P-08-PRE-FIX | Resume Tasks 6-9: CF-80/81/82 expanded and closed; CF-04/27 void; CF-33/52 closed; 11 owners reassigned; PR-16 to PR-19 | pending | `5fdc2a3` |
 | G3-FIX | Gate 3 HARD FAIL closed: 15 missing Rounding lines in CALC_SPEC; module count 14→22 in the Gate 3 checklist; PR-20 ceremony budget | pending | `e6aebf4` |
+| G3-CLOSE | Secret scanning, push protection, force-push block and Dependabot enabled and verified; CF-85 closed; PR-21; BRANCHING.md | pending | <fill post-commit> |
 
 ## Open carry-forwards — ids only
 Full text in `docs/method/CARRY_FORWARDS.md`.
@@ -105,7 +106,12 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
   reviewer's own state assertion went stale between verdict and execution.
 - PR-20 landed 2026-08-01. Document hygiene batches into the next task touching
   the file and never earns its own round trip.
+- Repository protections enabled 2026-08-01 (G3-CLOSE). Public, no required
+  reviews, no PR gate; secret scanning, push protection, force-push block and
+  deletion block on. Gate 3 item 11 evidence.
+- `docs/method/BRANCHING.md` IN FORCE. One branch per phase, exit gate on the
+  branch, one consolidated PR per phase, deletion only on verified containment.
 
 ## Next action
-GATE 3 RE-RUN by the reviewer. On PASS, the prepare phase closes and
-`ARCHITECTURE.md`, the ADRs and the build phase plan begin.
+GATE 3 VERDICT by the reviewer, on this report. On PASS the prepare phase closes
+and `ARCHITECTURE.md`, the first ADRs and the build phase plan begin.

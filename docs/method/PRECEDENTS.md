@@ -160,6 +160,16 @@ rather than product, and the owner's correct objection to it. The carry-forward
 protocol still applies — nothing is silently patched — but a row and a line in a
 report is the whole of the ceremony a hygiene finding earns.
 
+**PR-21 — The absence of a check is never reported as a passing check.**
+A report distinguishes "checked, found nothing" from "no check exists."
+Recording `0` where the correct answer is `N/A — not enabled` converts an
+absence of scanning into a clean result, and that is the most dangerous shape a
+gate report can take: it closes an item that was never examined. Where an
+item's evidence lives outside the repository, the report names the surface or
+endpoint consulted and its actual response, verbatim. Origin: the Gate 3 item
+11 check, where the secret-scanning alerts endpoint returned "disabled on this
+repository" and the builder correctly refused to record it as zero alerts.
+
 ---
 
 ## 2. Environment quirks — never re-discover

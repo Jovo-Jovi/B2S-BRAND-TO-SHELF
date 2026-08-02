@@ -932,3 +932,21 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       PRECEDENTS.md, PR-18.
 - [ ] CF-84 — A verdict-logged carry-forward is opened as a stub, then
       re-opened as new by the next prompt. Owner: PRECEDENTS.md, PR-19.
+- [x] CF-85 — `main` was an unprotected branch on a public repository with no
+      credential detection of any kind. Verified by `gh api` at the Gate 3 run:
+      secret scanning off, push protection off, and
+      `/branches/main/protection` returning 404 "Branch not protected", so
+      nothing prevented a force-push, a branch deletion, or history rewriting.
+      The secret-scanning alerts endpoint returned "disabled on this repository"
+      rather than a count — there had never been a scan, so no clean result
+      existed to report. `B2S_PREPARE_PHASE.md` §8 Step 1 had signed all three
+      as required and marked secret scanning "non-negotiable — this is what
+      enforces G7"; none had been executed. Owner: owner decision.
+      CF-85 — CLOSED (G3-CLOSE). The owner chose to enable all three while
+      keeping the repository public with no review requirement and no PR gate,
+      which is the configuration Step 1 specified. Secret scanning, push
+      protection, force-push block and deletion block are on, and Dependabot
+      alerts with them. Recorded honestly: `enforce_admins` is false, so an
+      administrator can still force-push deliberately. The block stops accident
+      and tooling, not intent, and that is the trade the owner chose against
+      review friction.

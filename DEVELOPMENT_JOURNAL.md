@@ -927,3 +927,34 @@ frozen-decisions bullet added, and next action re-pointed at the Gate 3
 re-run. No carry-forward row opened, closed or amended — none was authorised
 by this task, and none of the two findings maps to an existing or new CF id.
 The open-id list is untouched, byte-for-byte, at its existing 28 ids.
+
+2026-08-01 | Standard | PREPARE Gate 3 / G3-CLOSE (repo protections, CF-85, PR-21, BRANCHING.md) | docs/method/CARRY_FORWARDS.md, docs/method/PRECEDENTS.md, docs/method/BRANCHING.md (new), SESSION_CONTEXT.md | none | GATE 3 VERDICT by the reviewer
+
+Session summary: all five re-verified state assertions held with zero
+divergence (28 open / 41 closed, highest id CF-84; SESSION_CONTEXT's 28 open
+ids reconciled id-for-id; PR-16 through PR-20 present, PR-21 absent;
+`docs/method/BRANCHING.md` absent; CF-85 absent — no stub existed) before any
+write began. Task 1 ran the three `gh api` calls against
+`Jovo-Jovi/B2S-BRAND-TO-SHELF` and read each back: `security_and_analysis`
+returned `secret_scanning: enabled` and `secret_scanning_push_protection:
+enabled`; `/branches/main/protection` (set via a JSON-file `--input`, not a
+heredoc, after a heredoc attempt through git-bash under PowerShell failed
+parsing per the standing quirk) returned `allow_force_pushes: false`,
+`allow_deletions: false`, `enforce_admins: false`, and no
+`required_pull_request_reviews` — the review-free configuration the owner
+signed; `vulnerability-alerts` PUT and GET both returned HTTP 204, confirming
+enabled. The secret-scanning alerts endpoint returned a genuine `[]` (HTTP
+200, not a disabled-endpoint error) because scanning had just been turned on
+with nothing yet to find — reported as an honest 0 under PR-21, distinct from
+CF-85's historical "disabled on this repository" reading. CF-85 did not exist
+as a stub, so it was created new, directly closed (G3-CLOSE), carrying both
+the EXPANDED evidence text and the CLOSED text supplied verbatim. PR-21 (the
+absence of a check is never reported as a passing check) appended to
+`docs/method/PRECEDENTS.md`. `docs/method/BRANCHING.md` created verbatim as
+supplied — one branch per phase, exit gate on the branch before merge, one
+consolidated PR per phase with the owner merging, deletion only on verified
+containment. `SESSION_CONTEXT.md` header, done-steps row (commit column left
+for the post-commit fill per PR-17), frozen-decisions bullets and next action
+updated; the open carry-forward id list was left untouched at its existing 28
+ids because CF-85 was never present in it. No carry-forward other than CF-85
+was opened, closed or amended.
