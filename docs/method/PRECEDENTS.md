@@ -313,6 +313,13 @@ cannot find, and must never invent text to fill one. Origin: CF-91.
   `revoke all on all tables in schema public from anon, authenticated`. Every
   later migration that adds a table repeats the revoke, or the grant set silently
   widens and a policy that looked safe in isolation stops being safe.
+- Learned at P01-T02: this machine runs **Node v22.12.0** and npm 11.17.0, while
+  `ci.yml` pins `NODE_VERSION: "24"`. A local green is therefore evidence on a
+  different major version than the one CI uses, which weakens but does not replace
+  the verify-before-committing rule — keep doing it, and treat the pipeline's
+  conclusion as authoritative. Both were green for P01-T02. Neither the Supabase nor
+  the Vercel CLI is installed globally; `npx supabase@latest` reports 2.111.0 and
+  `npx vercel@latest` reports 58.4.4.
 - Learned at P01-T02: the four `docs-integrity` checks run as `python3`, which is
   correct on the ubuntu runner and **fails on this machine** — Windows ships a
   `python3` App Execution Alias that prints "Python was not found; run without
