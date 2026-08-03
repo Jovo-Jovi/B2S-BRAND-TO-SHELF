@@ -1637,3 +1637,67 @@ the script would be a second place to forget and forgetting is the failure mode.
 
 **The gate was not run and its verdict is not anticipated here.** A FIX task does
 not grade itself.
+
+---
+
+2026-08-03 | Opus (heavyweight) | BUILD P01-GATE-RERUN: phase 01 exit verification, second run — 27 criteria re-derived from the live catalog and the committed tree, citing no prior report | docs/method/CARRY_FORWARDS.md, SESSION_CONTEXT.md, DEVELOPMENT_JOURNAL.md | Three FAILs, none of them a tenant-isolation breach and none of them a regression of the first run's five, which are all genuinely closed: `SECURITY_MODEL.md` §11's first standing re-derivation found six live bypass mechanisms the document does not name — three `security definer` functions outside `public` and three role paths into a bypass role, the sharpest being `cli_login_postgres → postgres` — which §11.5 makes hard and not waivable by OD; four of thirteen checks report success on an empty set when their scan roots are removed, PR-21's exact shape; `MODULE_SPEC.md` §1 still does not name the root `__tests__/` that holds the isolation harness §P01 requires. Reported, not fixed. Two environment quirks found and `PRECEDENTS.md` deliberately not amended, because Task E's permitted writes did not include it — both are recorded in SESSION_CONTEXT for the FIX task | A named FIX task on the three, then a third full gate run
+
+**Verdict: FAIL. 24 of 27 criteria PASS, 3 FAIL.**
+
+**The FIX → RE-RUN pattern earned its keep on its first use, and not in the way
+it was designed to.** The pattern exists because a fix can regress something the
+first run passed. Nothing regressed: all five of the first run's failures are
+closed, every guard with a live target is proven by a planted violation and
+reverted at 12 of 12, and isolation re-ran at 31 PASS, 0 FAIL, 0 LOST with zero
+tenant rows before and after. What the second run bought was different. Two of
+its three failures are invisible to the first run's checklist — one because the
+mechanism the FIX landed (§11's standing re-derivation) had never been executed,
+and one because the probe that found it (delete the target, confirm the check
+errors) did not exist until this prompt. A gate that only re-checks what failed
+would have returned PASS.
+
+**§11.5 is a rule that only pays out when it is run, and it paid out
+immediately.** The section was written at P01-T05-FIX to close a finding about
+four undocumented `rolbypassrls` roles, and it closed that finding correctly —
+all five roles now match the catalog exactly, including the `MEMBER`-versus-
+`USAGE` distinction that makes `authenticator → service_role` visible at all.
+But §11.2's sentence "Six exist, all in schema `public`" is a claim about the
+whole catalog, and the catalog holds nine. The three extras are Supabase's own —
+`vault.create_secret`, `vault.update_secret`, `pgbouncer.get_auth` — owned by
+`supabase_admin`, `search_path` pinned, and unreachable by every API-facing role
+by two independent controls: no schema `USAGE` and no `EXECUTE`. §11.1 has the
+same shape of gap in the other direction: it enumerates every path by which
+`authenticator` reaches a bypass, which is one, and the catalog holds four paths
+into a bypass role in total. None of the other three starts at an API role, and
+`MEMBER` — which is transitive — confirms no chain reaches them.
+
+**None of this is a hole and all of it is a failure, which is the whole point of
+the rule.** §11's own preamble already records the precedent: four undocumented
+roles at the first gate, none reachable, and still a failure, because "an
+undocumented bypass is one nobody is watching, and nobody can re-check a list
+that does not exist." A gate that downgraded this to a note because it measured
+the reachability itself would be doing exactly what §11.5 forbids — reading the
+list and confirming it, instead of querying the catalog and comparing.
+
+**Four checks say OK on nothing.** `check-no-runtime-cdn`, and
+`check-no-hardcoded-literals` with `app/` and `proxy.ts` removed;
+`check-service-import` with every scan root removed, though it correctly fails
+when the quarantine itself is deleted; `check_credentials` with its whole scan
+set removed. Each prints its file count, so a human reading the log would see the
+zero — and each exits 0, so CI would not. Nine of thirteen already error
+correctly and are the model, three of them with a message that names the missing
+premise. This is PR-21 as a code defect rather than a reporting one, and it is
+the second time this project has met the shape: `check-service-import` was itself
+a vacuous pass at P01-T01.
+
+**CF-98's remedy turned out to exist while the row was being amended to say it
+did not.** The ruling landed verbatim as instructed. Re-deriving it produced two
+numbers rather than one — `npm audit` rolls three packages up to 3 high / 0
+moderate, while the advisory list underneath is the 3 high and 1 medium the row
+has always said — and both are now recorded so a later gate is not misled by the
+unit. The larger finding is that `postcss@8.5.25` and `sharp@0.35.3` are
+published and clear every advisory. `npm audit` does not offer them because it
+only proposes changes to declared dependencies, and the vulnerable pins belong to
+`next@16.2.12`, which is itself the latest release. PR-25 already authorises
+raising a transitive resolution as maintenance, so the remedy is a bump and not a
+wait. The gate did not take it: this task authorised no dependency work.

@@ -1350,6 +1350,31 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       maintenance rather than as a new dependency. What this needs is a task and
       a green pipeline, not an authorisation. Owner: **the P02 entry checklist**,
       as the first bookkeeping act of the phase.
+      AMENDED (P01-GATE-RERUN) — accepted risk, not a blocker. Three high and one
+      medium, all transitive through Next.js. The only remediation `npm audit`
+      offers is a semver-major framework downgrade, which is a regression rather
+      than a fix. The row stays open, is re-derived at every phase exit gate, and
+      closes when an upstream patch exists. Owner: every phase exit gate until
+      then.
+      **Re-derived at this gate, 2026-08-03, and one half of the closure
+      condition is already met.** `npm audit` reports 3 high / 0 moderate as a
+      package rollup over `next`, `postcss` and `sharp`; the same run's advisory
+      list is 3 high and 1 moderate — `postcss` twice high and once moderate,
+      `sharp` once high — which is the count above, measured per advisory rather
+      than per package. Both numbers are recorded so a later gate comparing
+      against this row is not misled by the unit. `fixAvailable` on all three
+      packages is `next@9.3.3, isSemVerMajor: true`, so the ruling's "only
+      remediation" clause is confirmed exactly.
+      **The patched versions now exist upstream.** `postcss@8.5.25` and
+      `sharp@0.35.3` are published and clear every advisory in this row. What is
+      not published is a Next.js release that consumes them: `next@16.2.12` is
+      both the installed and the latest version, and it pins `postcss@8.4.31` and
+      `sharp@0.34.5` in this lockfile. A non-regressive remediation therefore
+      does exist — raising the two transitive resolutions, which PR-25 already
+      authorises as maintenance — and it is not one `npm audit` will offer,
+      because `npm audit` only proposes changes to declared dependencies. The
+      gate does not take it: this task authorises no dependency work. Recorded so
+      the next task knows the remedy is a resolution bump and not a wait.
 - [ ] CF-99 — A pull request exists on `phase/01-foundation` that the task
       forbade, and it is not the builder's. P01-T02's done-when says "No pull
       request — T03 runs the isolation proof on this branch first, and the phase
