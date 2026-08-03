@@ -395,3 +395,30 @@ rule written for a different act.
   in Windows Credential Manager where the harness cannot reach it. A CLI that
   pushes migrations happily is therefore no evidence that the suite can run. The
   variable is the owner's to supply and is never requested in a chat surface.
+- P01-T04's two techniques — PostgreSQL applying a table's SELECT policies to
+  both the old and the new row of an UPDATE, and the substitution diagnostic
+  that isolates which clause refused — were already recorded above when the
+  P01-GATE session checked for them. Nothing was appended for either. Recorded
+  here only so the next task does not check a third time.
+- Learned at P01-GATE, a refinement of the two git-bash entries above: the
+  PowerShell parse of a `bash -c` argument also intercepts `<`, `>` and bare
+  `(` `)`. A redaction placeholder written with angle brackets and a heading
+  written with parentheses each silently truncated the command to nothing and
+  returned exit 0 with partial output — the worst shape, since a truncated
+  probe reads as a probe that found nothing. Three calls were burned on it.
+  Keep `bash -c` strings to plain words, or put the script in a file under
+  `$env:TEMP` and invoke `bash <file>` by path, which has none of these
+  problems and is what the rest of this session used.
+- Learned at P01-GATE: `python` on this machine writes stdout as cp1252, so
+  printing any repository text containing `—`, `§` or `→` raises
+  `UnicodeEncodeError` and kills the script mid-report, after it has already
+  printed the part that looked fine. Set `$env:PYTHONIOENCODING="utf-8"` before
+  any script that echoes document content. A subprocess captured with
+  `text=True` decodes with the same locale, so a wrapper that runs a checker and
+  prints its output will mojibake even when the checker itself is clean.
+- Learned at P01-GATE: the Grep tool is ripgrep and honours `.gitignore`, so
+  `.next/` is invisible to it. A scan of build output for a leaked secret — the
+  exact scan a gate owes — finds nothing through Grep and reports a clean
+  result, which is PR-21's failure shape arriving through a tool default rather
+  than a decision. Walk the build tree with a script instead, and state the file
+  count scanned so the zero is attributable.

@@ -1485,3 +1485,56 @@ least one assertion.
 where the harness cannot reach it — so a CLI that pushes migrations happily is no
 evidence the suite can run. The owner supplied it. Recorded in `PRECEDENTS.md`;
 no credential entered a commit, a report or any chat surface.
+
+---
+
+2026-08-03 | Opus (heavyweight) | BUILD P01-GATE: phase 01 exit verification — 23 criteria re-derived against the committed tree and the live project | docs/method/CARRY_FORWARDS.md, docs/method/PRECEDENTS.md, scripts/check_migration_split.py, .github/workflows/docs-integrity.yml, SESSION_CONTEXT.md, DEVELOPMENT_JOURNAL.md | Five FAILs, none of them a tenant-isolation breach: the MODULE_SPEC §1 tree does not match the tree that exists; two of the nine §6 guards have a live target and do not exist; four of the five RLS-bypassing roles are named in no document; eleven open carry-forwards name an owner whose moment has passed; CF-95 and CF-98 are still open naming P01 as owner. Reported, not fixed | P01-FIX on the five, then P02 entry
+
+**Verdict: FAIL. 17 of 23 criteria PASS, 5 FAIL, 1 unprovable as written.**
+
+**The exit standard itself passed.** Tenant isolation, re-proven here against
+`b2s-production`'s live catalog and live policies: **31 assertions, 31 PASS, 0
+FAIL, 0 LOST**, teardown verified at zero on all six tables, `auth.users`,
+`auth.identities` and `auth.sessions` by a query the suite does not itself run.
+Zero tenant rows before and after, so ADR-012's reinstatement trigger has not
+fired. Every one of the 18 live policies is reached by a named assertion that
+fired in this run, and all 24 table/operation cells are covered with no empty
+cell. Nothing in this phase leaks across a tenant boundary.
+
+**What failed is enforcement and bookkeeping, and both matter.** Two guards
+whose targets now exist were never written: `check-enum-keys`, with four live
+Postgres enums to check, and ARCHITECTURE §6's HTML-injection lint rule, proven
+absent rather than assumed — a probe component piping a route parameter straight
+into `dangerouslySetInnerHTML` lints clean at exit 0. `MODULE_SPEC.md` §1 names
+`lib/i18n/` for locale resolution and dictionary loading; both live at
+`app/[locale]/`, in a folder §1 does not name. The bypass inventory is clean in
+the database and incomplete in the documents: `supabase_admin`, `postgres`,
+`supabase_etl_admin` and `supabase_read_only_user` all carry `rolbypassrls` and
+none is named anywhere in `docs/`. Only `service_role` is, and only
+`service_role` is reachable from the API — `authenticator` may `SET ROLE` to
+`anon`, `authenticated` and `service_role`, and to nothing else.
+
+**CF-110 landed and closed, with its own number corrected.** The row states the
+T03 measurement as 18,495 characters; re-derived at `f3bbf7b` it is **18,496**,
+and the substance is otherwise exact. The supplied text was landed verbatim per
+PR-24 and the re-measurement appended beneath it rather than written over it.
+ADR-006's "verbatim" now means whitespace-normalised identical, and
+`scripts/check_migration_split.py` makes that mechanical — proven on six
+mutation probes against a throwaway copy, 6/6 behaving as the standard requires:
+an altered statement, a deleted line, two files swapped out of source order and
+an undeclared file each fail it, and the one it must **not** fire on — ten blank
+lines and trailing whitespace added to every migration, which is precisely
+CF-110's difference — passes.
+
+**Two carry-forwards are evidence-complete and were left open, because this task
+authorised closing exactly one row.** CF-95's remaining half is done on both
+counts: `types-drift` concluded success in CI run 30812893866 on `c08fb1b`, and
+the Vercel GitHub App is authorised — the same commit carries a `Vercel` status
+of `success`, "Deployment has completed". CF-98's four Dependabot advisories are
+unchanged at 3 high and 1 moderate. Both are one line each at P02 entry.
+
+**A gate that repairs what it finds is not a gate.** Nothing was fixed. The only
+writes were the four Task E permitted the gate to make, and the guard probes that
+proved each existing guard still fails on a violation were run into files created
+and deleted inside the same command, with `git status --porcelain` clean
+afterwards.

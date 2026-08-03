@@ -1,6 +1,6 @@
 # SESSION CONTEXT
-Updated: 2026-08-03 · By: Opus · Phase: BUILD — P01 Foundation, in progress ·
-Last task: P01-T04 · Verdict: pending
+Updated: 2026-08-03 · By: Opus · Phase: BUILD — P01 Foundation, exit gate run ·
+Last task: P01-GATE · Verdict: FAIL — 17 of 23 PASS, 5 FAIL, 1 unprovable
 
 ## Read these too
 - `docs/method/PRECEDENTS.md` — binding rulings and environment quirks.
@@ -41,7 +41,16 @@ policies and 6 functions. CF-103's exploit is closed — an owner invites, only
 the invitee accepts — and its remaining half, the session-to-membership binding,
 is retargeted to P02. Operator reach into tenant business data is behind a live
 consent grant, logged, and cannot return `payload`. `SECURITY_MODEL.md` §1 has a
-fourth guarantee, availability.
+fourth guarantee, availability. **P01-GATE ran the exit verification and the
+phase FAILED it** — 17 of 23 criteria PASS, 5 FAIL, 1 unprovable as written.
+Isolation is not among the failures: re-proven here at 31 PASS, 0 FAIL, 0 LOST,
+all 18 policies reached by a firing assertion and all 24 table/operation cells
+covered. What failed is enforcement and bookkeeping — the §1 tree does not match
+the tree that exists, two guards whose targets now exist were never written, four
+RLS-bypassing roles are named in no document, eleven open rows name an owner
+whose moment has passed, and CF-95 and CF-98 still name P01. All five are
+reported, none fixed. **The phase does not exit and PR #2 does not merge until
+P01-FIX closes them.**
 
 ## Done steps
 
@@ -73,6 +82,7 @@ fourth guarantee, availability.
 | P01-T02 | Resumed after the two-project halt. ADR-012 signed: one Supabase environment, named production. DATA_MODEL and MODULE_SPEC landed; BRANCHING §3.1; ARCHITECTURE §7 rows. Platform tier applied — 6 tables + `role` enum, RLS on all, 16 policies, 3 helpers, 5 indexes, active-owner trigger. Three clients, generated types, `check-service-import` made real, `check-data-boundary` and `types-drift` landed. CF-90/91 closed; CF-92 to CF-98 opened | pending | `f29c0d9` |
 | P01-T03 | Tenant-isolation proof. DATA_MODEL §3 and §5 rule 3 repaired; PR-25. Runnable suite at `__tests__/isolation/`, run against the live catalog and live policies: 21 assertions, 21 PASS, 0 FAIL, 0 LOST. Two synthetic tenants seeded and torn down, teardown verified by query at zero. CF-100/101/102 opened and closed; CF-103 to CF-106 opened as findings. `.nvmrc` and `engines` pinned to Node 24 | pending | `257e6a1` |
 | P01-T04 | FIX for the four T03 findings, gate re-run in full. Five migrations: invite-then-accept with a restrictive self-only rule, member self-visibility, operator reach behind `has_live_consent_grant` and the logged `operator_read_activity_event` path with `payload` out of its return type, explicit EXECUTE on all six functions. DATA_MODEL §2/§3.3/§3.5/§3.6/§5 and SECURITY_MODEL §1 amended — §1 now has four guarantees. `@types/node` 20→24. REVIEWER_CHAT_INSTRUCTIONS landed. Suite re-run: 31 assertions, 31 PASS, 0 FAIL, 0 LOST, teardown verified at zero. Policy census diffed against f3bbf7b, every one of 18 attributed and covered. CF-96/104/105/106 closed, CF-53/95/103 amended, CF-107/108 landed closed, CF-109 landed open | pending | `740601e` |
+| P01-GATE | Phase 01 exit verification, read-only but for four writes. 23 criteria re-derived against the committed tree and the live project: 17 PASS, 5 FAIL, 1 unprovable. Isolation re-run in full — 31 assertions, 31 PASS, 0 FAIL, 0 LOST, zero tenant rows before and after, all 18 policies reached by a firing assertion, all 24 table/operation cells covered. FAILs: MODULE_SPEC §1 tree vs actual; `check-enum-keys` and the HTML-injection lint rule missing with live targets; four `rolbypassrls` roles undocumented; 11 open rows with a passed owner; CF-95 and CF-98 open naming P01. CF-110 landed and closed; `check_migration_split.py` added to docs-integrity; four §2 environment quirks landed | FAIL | pending |
 
 > Commit column: one or more comma-separated backticked shas, or `—` where no
 > single commit tracks the step (P-00 through P-01c predate the one-task-one-commit
@@ -176,36 +186,75 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
   that skipped there would read as green. `SECURITY_MODEL.md` §4's re-run
   conditions apply: a new entity, any policy or grant change, a new privileged
   path, a role change, or any change to the operator surface re-runs the whole
-  gate.
+  gate. **Re-proven a third time at P01-GATE, independently: 31 PASS, 0 FAIL,
+  0 LOST, zero tenant rows before and after.**
+- ADR-006's "verbatim" DEFINED 2026-08-03 — P01-GATE, CF-110. A migration split
+  is verbatim when the concatenation of `supabase/migrations/*.sql` in filename
+  order is **whitespace-normalised identical** to `supabase/schema.sql` from its
+  first marker: blank lines and trailing whitespace differ freely, any changed
+  statement fails. `scripts/check_migration_split.py` asserts it on every push,
+  so the standard is mechanical rather than a matter of which task last measured
+  it.
 
 ## Next action
-P01-T04 done and pushed to `phase/01-foundation`, not merged. All four T03
-findings are closed or amended, and the gate that found them passes again: 31
-assertions, 31 PASS, 0 FAIL, 0 LOST, teardown verified at zero rows and zero
-`auth.users`.
+**P01-GATE ran and the phase FAILED it.** 17 of 23 criteria PASS, 5 FAIL, 1
+unprovable as written. Nothing was fixed — a gate that repairs what it finds is
+not a gate — so the five FAILs are the next task's inbox, not this one's.
 
-**The T04 fix broke twice before it worked, and the reason is worth carrying.**
-PostgreSQL applies a table's SELECT policies to an UPDATE twice — to the old row
-and again to the new one — so an UPDATE policy alone can never make a write
-reachable. The invitee's accept policy was written, applied and shipped-looking
-before the suite showed it matching zero rows and reporting success. Recorded in
-PRECEDENTS with the substitution method that diagnosed it. **Nothing here was
-found by reading a migration; all three states were found by running the gate.**
+**P01-FIX next**, and the phase does not exit until it lands. Five items, all
+small, none touching the schema or a policy:
 
-**T05 next**, the Phase 01 exit gate, once the owner clears CF-95: authorise the
-Vercel GitHub App and confirm `types-drift` runs green now that its secrets are
-set (CF-108). Everything else in the phase's inbox is a reviewer call rather
-than code — CF-93's seven specification gaps, CF-97's scanner narrowing, and
-CF-98's four Dependabot advisories, which PR-25 now unblocks.
+1. **`MODULE_SPEC.md` §1 vs the tree.** §1 names `lib/i18n/` for locale
+   resolution and dictionary loading; both live at `app/[locale]/`, in a folder
+   §1 does not name. One of the two is wrong. Either is a one-line change; both
+   staying as they are is not.
+2. **`check-enum-keys`.** ARCHITECTURE §6 row 7's target exists — four live
+   Postgres enums.
+3. **The HTML-injection lint rule**, §6's mechanism for CF-02. Proven absent at
+   the gate, not assumed: a probe component piping a route parameter straight
+   into `dangerouslySetInnerHTML` lints clean at exit 0.
+4. **The bypass inventory.** `supabase_admin`, `postgres`, `supabase_etl_admin`
+   and `supabase_read_only_user` all carry `rolbypassrls` and none is named in
+   any document. None is reachable from the API — `authenticator` may `SET ROLE`
+   only to `anon`, `authenticated` and `service_role` — so this is a
+   documentation gap in `SECURITY_MODEL.md`, not a hole.
+5. **CF-95 and CF-98**, both open naming P01 as owner. CF-95 is
+   evidence-complete and needs only its closing line: `types-drift` concluded
+   success in CI run 30812893866 on `c08fb1b`, and the same commit carries a
+   `Vercel` status of `success`. CF-98's four advisories are unchanged at 3 high
+   and 1 moderate and need the dependency bump PR-25 already authorises.
 
-One owner action is new and small: the local shell runs Node 22 while `.nvmrc`,
-`engines` and CI all say 24, so a local green is still evidence from a third
-version. Recorded as residue on CF-106.
+**P02 entry checklist — the inherited rows, each with its owner:**
 
-**PR #2 is still open and still must not be merged (CF-99)** until the phase gate
-passes. Isolation is proven, which removes the sharpest reason to hold it, but
-`BRANCHING.md` §3 wants one consolidated PR per phase at the exit gate, and `ci`
-is still red at `types-drift` until CF-95's secrets are set. It is **not** a
-draft and the T03 prompt's "do not un-draft" presumes it is — nothing was
-un-drafted because there was nothing to un-draft, and CF-99 is amended with the
-consequence: it is one click from merging, with no draft state in the way.
+- **CF-92** — owner: the task onboarding the first non-synthetic tenant, **and
+  the P02 exit gate**. ADR-012's condition still holds: zero real tenants,
+  verified at this gate. P02 must re-verify it before its first task and again
+  at its exit, because P02 is where authentication arrives and the first real
+  tenant becomes possible.
+- **CF-95** — owner: the owner, and now overdue. If P01-FIX has not closed it,
+  P02 inherits it as its first bookkeeping act.
+- **CF-103's remainder** — owner: **P02, with authentication**. The exploit half
+  is closed and re-tested. What remains is that `current_tenant_id()` returns
+  null on more than one active membership, contradicting `DOMAIN_MODEL.md` §5.1,
+  so a person who accepts a second invitation locks themselves out. This is a
+  design decision P02 must make before it writes a session, not after.
+- **CF-109** — owner: CF-92's reinstatement trigger. One environment means a
+  per-push isolation job would seed and tear down against production, so no CI
+  job runs the suite and a regression between gates is not caught until the next
+  gate. P02 holds that consequence consciously or ends it by standing up
+  staging.
+- Also inherited and already open: **CF-93** (seven DATA_MODEL specification
+  gaps), **CF-94** (`lib/` unguarded by two guards — re-confirmed live at this
+  gate), **CF-97** (the scanner narrowing, awaiting ratification), **CF-98** if
+  P01-FIX does not close it, and **CF-99** (PR #2).
+
+Preconditions P02 must verify before its first task: zero tenant rows in
+`b2s-production`; the isolation suite green at 31; `main` and
+`phase/01-foundation` in the state the gate left them, PR #2 unmerged.
+
+**PR #2 must not merge.** The gate's verdict is FAIL, and `BRANCHING.md` §3
+admits one consolidated PR per phase at a *passed* exit gate. Merging now puts
+a tree with two missing guards and an undocumented bypass inventory on `main`
+under a gate that rejected it. Isolation being proven is necessary and is not
+sufficient. It is still not a draft and still one click from merging, which is
+CF-99's amended consequence.

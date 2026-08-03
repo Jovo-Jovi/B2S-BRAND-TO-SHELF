@@ -1461,3 +1461,28 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       an isolation regression introduced between gates is not caught until the
       next gate.** Owner: CF-92's reinstatement trigger — when staging exists,
       the suite becomes a required CI job on any schema-touching pull request.
+- [x] CF-110 — P01-T03 verified `supabase/schema.sql` and the concatenated
+      migrations byte-identical at 18,495 characters. After P01-T04 they are
+      whitespace-normalised identical with ten blank lines differing at file
+      boundaries. The content is unchanged and no statement differs, but the
+      fidelity standard drifted between two tasks under the same rule. ADR-006
+      says migrations are split "verbatim"; a word that means byte-identical in
+      one task and whitespace-equivalent in the next is not a rule anyone can
+      enforce. Owner: P01-GATE.
+      CF-110 — CLOSED (P01-GATE). ADR-006's "verbatim" is stated to mean
+      whitespace-normalised identical, so a trailing newline at a file boundary
+      is not a divergence and a changed statement is. The docs-integrity workflow
+      gains a check asserting it on every push, which makes the standard
+      mechanical rather than a matter of which task last measured it.
+      **Gate re-measurement, appended rather than rewriting the claim above.**
+      The row's substance is confirmed and one number in it is not. Re-derived
+      at `f3bbf7b`: the T03 schema body from its first marker and the seven
+      concatenated migrations were both **18,496** characters and byte-identical
+      — one more than the 18,495 stated. At `c08fb1b` the body is 33,765
+      characters against 33,755 concatenated, a delta of exactly ten blank lines
+      across the five file boundaries P01-T04 introduced, and whitespace-
+      normalised identical at 705 non-blank lines on each side. The cause is
+      visible in the split itself: the seven T02 files each carry the two blank
+      lines that precede the next marker, and the five T04 files do not.
+      `scripts/check_migration_split.py` is the mechanism this row buys, wired
+      into `docs-integrity` and green at the closing commit.
