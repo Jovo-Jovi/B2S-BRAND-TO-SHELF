@@ -1,6 +1,7 @@
 # SESSION CONTEXT
-Updated: 2026-08-03 · By: Opus · Phase: BUILD — P01 Foundation, exit gate run ·
-Last task: P01-GATE · Verdict: FAIL — 17 of 23 PASS, 5 FAIL, 1 unprovable
+Updated: 2026-08-03 · By: Opus · Phase: BUILD — P01 Foundation, gate FIX landed ·
+Last task: P01-T05-FIX · Verdict: pending — the gate re-runs in full, in a fresh
+window, and it has not run here
 
 ## Read these too
 - `docs/method/PRECEDENTS.md` — binding rulings and environment quirks.
@@ -49,8 +50,20 @@ covered. What failed is enforcement and bookkeeping — the §1 tree does not ma
 the tree that exists, two guards whose targets now exist were never written, four
 RLS-bypassing roles are named in no document, eleven open rows name an owner
 whose moment has passed, and CF-95 and CF-98 still name P01. All five are
-reported, none fixed. **The phase does not exit and PR #2 does not merge until
-P01-FIX closes them.**
+reported, none fixed. **P01-T05-FIX closed all five and did not run the gate.**
+Both missing guards exist and both are proven by planted violation, not by
+reading: `check-enum-keys` asserts the shape of all 12 values across the four
+live enums, and the HTML-injection rule is six AST selectors that catch the
+gate's own probe. `MODULE_SPEC.md` follows the tree. `SECURITY_MODEL.md` §11 is
+the bypass inventory, re-derived from the live catalog rather than copied from
+the gate report, and it carries the standing rule that every phase exit gate
+re-derives it. Twelve stale owners were retargeted, not eleven — the new
+reachable-owner assertion in `check_ledger.py` found CF-54, which the gate did
+not name — and that check is proven on three positives and three negative
+controls. CF-95 is closed on a green `types-drift` and a passing Vercel status
+at two commits; **CF-98 is deliberately left open**, because its four advisories
+re-derive unchanged and D2's own condition says so. **The phase still does not
+exit and PR #2 still does not merge until the gate re-runs and passes.**
 
 ## Done steps
 
@@ -82,7 +95,8 @@ P01-FIX closes them.**
 | P01-T02 | Resumed after the two-project halt. ADR-012 signed: one Supabase environment, named production. DATA_MODEL and MODULE_SPEC landed; BRANCHING §3.1; ARCHITECTURE §7 rows. Platform tier applied — 6 tables + `role` enum, RLS on all, 16 policies, 3 helpers, 5 indexes, active-owner trigger. Three clients, generated types, `check-service-import` made real, `check-data-boundary` and `types-drift` landed. CF-90/91 closed; CF-92 to CF-98 opened | pending | `f29c0d9` |
 | P01-T03 | Tenant-isolation proof. DATA_MODEL §3 and §5 rule 3 repaired; PR-25. Runnable suite at `__tests__/isolation/`, run against the live catalog and live policies: 21 assertions, 21 PASS, 0 FAIL, 0 LOST. Two synthetic tenants seeded and torn down, teardown verified by query at zero. CF-100/101/102 opened and closed; CF-103 to CF-106 opened as findings. `.nvmrc` and `engines` pinned to Node 24 | pending | `257e6a1` |
 | P01-T04 | FIX for the four T03 findings, gate re-run in full. Five migrations: invite-then-accept with a restrictive self-only rule, member self-visibility, operator reach behind `has_live_consent_grant` and the logged `operator_read_activity_event` path with `payload` out of its return type, explicit EXECUTE on all six functions. DATA_MODEL §2/§3.3/§3.5/§3.6/§5 and SECURITY_MODEL §1 amended — §1 now has four guarantees. `@types/node` 20→24. REVIEWER_CHAT_INSTRUCTIONS landed. Suite re-run: 31 assertions, 31 PASS, 0 FAIL, 0 LOST, teardown verified at zero. Policy census diffed against f3bbf7b, every one of 18 attributed and covered. CF-96/104/105/106 closed, CF-53/95/103 amended, CF-107/108 landed closed, CF-109 landed open | pending | `740601e` |
-| P01-GATE | Phase 01 exit verification, read-only but for four writes. 23 criteria re-derived against the committed tree and the live project: 17 PASS, 5 FAIL, 1 unprovable. Isolation re-run in full — 31 assertions, 31 PASS, 0 FAIL, 0 LOST, zero tenant rows before and after, all 18 policies reached by a firing assertion, all 24 table/operation cells covered. FAILs: MODULE_SPEC §1 tree vs actual; `check-enum-keys` and the HTML-injection lint rule missing with live targets; four `rolbypassrls` roles undocumented; 11 open rows with a passed owner; CF-95 and CF-98 open naming P01. CF-110 landed and closed; `check_migration_split.py` added to docs-integrity; four §2 environment quirks landed | FAIL | pending |
+| P01-GATE | Phase 01 exit verification, read-only but for four writes. 23 criteria re-derived against the committed tree and the live project: 17 PASS, 5 FAIL, 1 unprovable. Isolation re-run in full — 31 assertions, 31 PASS, 0 FAIL, 0 LOST, zero tenant rows before and after, all 18 policies reached by a firing assertion, all 24 table/operation cells covered. FAILs: MODULE_SPEC §1 tree vs actual; `check-enum-keys` and the HTML-injection lint rule missing with live targets; four `rolbypassrls` roles undocumented; 11 open rows with a passed owner; CF-95 and CF-98 open naming P01. CF-110 landed and closed; `check_migration_split.py` added to docs-integrity; four §2 environment quirks landed | FAIL | `057ae11` |
+| P01-T05-FIX | FIX for the gate's five failures; the gate itself was not run. `check-enum-keys` written and wired into `guards` — 12 values across 4 enums, proven by five planted violations including Arabic and space-containing, each reverted. The HTML-injection rule configured as six AST selectors in the existing ESLint setup, proven by the gate's own probe — a route parameter into `dangerouslySetInnerHTML` — plus `innerHTML`/`outerHTML` in every syntactic form, 6 errors at exit 1, probe reverted, and zero hits on existing code. `MODULE_SPEC.md` §1 and §3 rule 4 follow the tree. `SECURITY_MODEL.md` §11 carries the bypass inventory, re-derived live and not copied, with the re-derivation rule. Twelve ledger owners retargeted, not eleven; CF-95 closed, CF-98 left open on unchanged advisories, CF-60 and CF-111 closed. `check_ledger.py` asserts owner reachability, proven on three positives and three negative controls. `BUILD_PHASES.md` §P01's A1 criterion made checkable. PR-26 and three quirks landed | pending | pending |
 
 > Commit column: one or more comma-separated backticked shas, or `—` where no
 > single commit tracks the step (P-00 through P-01c predate the one-task-one-commit
@@ -94,40 +108,38 @@ P01-FIX closes them.**
 ## Open carry-forwards — ids only
 Full text in `docs/method/CARRY_FORWARDS.md`.
 
-- CF-01 — Reinstate deferred Dev OS security/migration rule layer at P10 — owner: ARCHITECTURE.md, immediately after Gate 3 — the P10 it named does not exist in this plan
+- CF-01 — Reinstate deferred Dev OS security/migration rule layer at P10 — owner: the P02 entry checklist, subject by subject as each mechanism arrives (retargeted P01-T05-FIX; Gate 3 has passed)
 - CF-02 — Unescaped innerHTML in all legacy tools — owner: FEATURE_INVENTORY.md must-not-reproduce at P-07
 - CF-03 — Legacy catch(e){} swallowing — owner: FEATURE_INVENTORY.md must-not-reproduce at P-07
 - CF-05 — Print calibration unresolved until OD-5 signed — owner: PRINT_CONTRACT.md, authored just-in-time per OD-H7; the measurement is B2S_PREPARE_PHASE.md Step 15
-- CF-11 — REPORT.md §3.3 "design tools are independent islands" is FALSIFIED for the sticker tool — owner: the REPORT.md annotation task, before Gate 3
+- CF-11 — REPORT.md §3.3 "design tools are independent islands" is FALSIFIED for the sticker tool — owner: the REPORT.md annotation task at P02, batched with CF-72 (retargeted P01-T05-FIX)
 - CF-14 — Public repo: owner's given name and local folder path are permanently in git history — owner: RISK_REGISTER.md, authored just-in-time per OD-H7; its gate is the pre-relaunch audit, B2S_PREPARE_PHASE.md §10
 - CF-22 — Label-editor vs sticker-tool capability delta — owner: reviewer — verify closure against EXTRACT_DESIGN_TOOLS.md Part 2 at the TEMPLATE_MODEL.md authoring
 - CF-32 — CSV import resequenced from void to post-DATA_MODEL feature — owner: IMPORT_SPEC.md, P-10
-- CF-39 — `B2S_PREPARE_PHASE.md` §3/§4 now run together with no `---` separator — owner: reviewer, next light edit to `B2S_PREPARE_PHASE.md`
+- CF-39 — `B2S_PREPARE_PHASE.md` §3/§4 now run together with no `---` separator — owner: the P08 pre-relaunch audit, the next write task that opens the file (retargeted P01-T05-FIX)
 - CF-41 — `B2S_PREPARE_PHASE.md` §1's product-definition table gives the wrong repo URL — owner: the write task that lands CF-39 — P-12
 - CF-44 — VOID. Never issued; reviewer numbering error at the P-02 verdict — owner: none — void, retained as a numbering record. Exempt from the reachable-owner test by its VOID status
-- CF-46 — EXTRACT_STOCK_COSTS.md §C.4 lists ten findings awaiting accept/reject — owner: reviewer — adjudicate the ten findings at the FEATURE_INVENTORY.md authoring, which is where accepted findings land
+- CF-46 — EXTRACT_STOCK_COSTS.md §C.4 lists ten findings awaiting accept/reject — owner: the FEATURE_INVENTORY.md authoring, P08 (retargeted P01-T05-FIX)
 - CF-47 — Costing is last-purchase-price-wins by unconditional overwrite — owner: the R2 amendment to CALC_SPEC.md
-- CF-50 — AUDIT_STICKER.md §3.4 names the three bb_color_presets seeds wrong — owner: the AUDIT_STICKER.md annotation task, before Gate 3
+- CF-50 — AUDIT_STICKER.md §3.4 names the three bb_color_presets seeds wrong — owner: the AUDIT_STICKER.md annotation task at P08, batched with CF-56 (retargeted P01-T05-FIX)
 - CF-51 — Prompt-template defect: "one commit" collides with "do not amend or rewrite history" — owner: reviewer, standing
 - CF-53 — `docs/method/PROJECT_RECONFIG.md` was byte-identical to `CLAUDE_PROJECT_INSTRUCTIONS.md`. The three-copy half is settled at P01-T04 — builder charter, pivot record, reviewer reference, each now naming its own role; what remains open is the lost reconfiguration record behind the STATUS stub — owner: reviewer, decide at P-12
-- CF-54 — Stub count stated three ways — owner: reviewer, verify at Gate 3
-- CF-56 — The falsified sticker preset names appear at two locations in AUDIT_STICKER.md — owner: the AUDIT_STICKER.md annotation task, before Gate 3 — same task as CF-50
+- CF-54 — Stub count stated three ways — owner: the P08 pre-relaunch audit, batched with CF-39 (retargeted P01-T05-FIX — the twelfth stale owner, found by the new check rather than named by the gate)
+- CF-56 — The falsified sticker preset names appear at two locations in AUDIT_STICKER.md — owner: P08, the same task as CF-50 (retargeted P01-T05-FIX)
 - CF-58 — `tools/backup-browser-data.js` serves the abandoned browser-data backup workflow — owner: owner decision, retire or keep; landing at the next repo-maintenance task
-- CF-60 — Four open rows carry no explicit `Owner:` field (CF-01, CF-05, CF-27, CF-44) — owner: reviewer, before Gate 3
 - CF-69 — Invoice history is capped at 100 records with silent destruction — owner: FEATURE_INVENTORY.md must-not-reproduce
 - CF-71 — A parse failure is indistinguishable from an empty collection, then saved over real data — owner: FEATURE_INVENTORY.md must-not-reproduce
-- CF-72 — REPORT.md citations into the two business tools need re-derivation before use — owner: the REPORT.md annotation task, before Gate 3 — same task as CF-11
+- CF-72 — REPORT.md citations into the two business tools need re-derivation before use — owner: the REPORT.md annotation task at P02, batched with CF-11 (retargeted P01-T05-FIX)
 - CF-73 — bb-stock-costs.html:5645 ships a corrupted Arabic "full return" string on every printed report — owner: FEATURE_INVENTORY.md must-not-reproduce, UX_PRINCIPLES.md
 - CF-74 — Report engine has no resource bundle outside the invoice template; two strings re-declared eight times — owner: DOMAIN_MODEL.md and UX_PRINCIPLES.md
-- CF-75 — AGENTS.md and .cursor/rules/b2s-devos.mdc carried folder paths and a named library ahead of ARCHITECTURE.md; rewritten by P-05-PRE — owner: ARCHITECTURE.md, immediately after Gate 3
+- CF-75 — AGENTS.md and .cursor/rules/b2s-devos.mdc carried folder paths and a named library ahead of ARCHITECTURE.md; rewritten by P-05-PRE — owner: the P02 entry checklist; ARCHITECTURE.md now exists, so the rules files can cite it (retargeted P01-T05-FIX)
 - CF-83 — Reviewer state assertions are not stamped to a commit — owner: PRECEDENTS.md, PR-18
 - CF-84 — A verdict-logged carry-forward is opened as a stub, then re-opened as new by the next prompt — owner: PRECEDENTS.md, PR-19
 - CF-92 — ADR-012's reinstatement trigger: the isolation suite may run against production only while it holds zero real tenants, and a staging project exists before the first one — owner: the task onboarding the first non-synthetic tenant, and the Phase 02 exit gate
-- CF-93 — Seven specification gaps in DATA_MODEL.md's Platform tier, found by building it; none resolved by invention — owner: reviewer, at the next DATA_MODEL.md amendment
-- CF-94 — `check-no-runtime-cdn` and `check-no-hardcoded-literals` scan `app/` and `proxy.ts` only, so `lib/` is unguarded — owner: the next task touching either guard, at the latest the Phase 02 entry checklist
-- CF-95 — The deployment and drift pipeline is wired but not live. The `types-drift` secrets are now set (CF-108), so what remains open is the Vercel GitHub App authorisation and a green `types-drift` run to prove the fix — owner: the owner, before the Phase 01 exit gate
+- CF-93 — Seven specification gaps in DATA_MODEL.md's Platform tier, found by building it; none resolved by invention — owner: P02 for gaps 1, 2, 3, 4 and 7; P03 for gaps 5 and 6, each at its phase entry checklist (split P01-T05-FIX)
+- CF-94 — `check-no-runtime-cdn` and `check-no-hardcoded-literals` scan `app/` and `proxy.ts` only, so `lib/` is unguarded — owner: the P02 entry checklist for `lib/`; the task that creates each of `components/` and `features/` for those roots (split P01-T05-FIX)
 - CF-97 — The credential scanner fired on `process.env.SUPABASE_SERVICE_ROLE_KEY`, the safe form ADR-005 requires; the value side now rejects an environment indirection — owner: reviewer, to ratify the narrowing or reject it
-- CF-98 — Four open Dependabot alerts on the default branch (3 high, 1 moderate; `postcss` ×3 and `sharp`, both transitive through Next.js), unrecorded since G3-CLOSE enabled alerts — owner: the owner, to authorise a dependency-bump task; at the latest the Phase 01 exit gate
+- CF-98 — Four open Dependabot alerts on the default branch (3 high, 1 medium; `postcss` ×3 and `sharp`, both transitive through Next.js), re-derived unchanged at P01-T05-FIX and deliberately left open — owner: the P02 entry checklist, as its first bookkeeping act; PR-25 already authorises the bump
 - CF-99 — PR #2 (`main` ← `phase/01-foundation`) exists although P01-T02 forbade a pull request; opened by the owner's account, not the builder, and left untouched. Merging it before T03 lands the tenancy schema on `main` with tenant isolation unproven — owner: the owner, to leave it open until T03 and the phase gate pass, or close and re-open at the gate
 - CF-103 — **Exploit closed at P01-T04 and re-tested as proof 19; the row stays open for the other half.** An owner may only invite and only the invitee may accept, enforced by a restrictive table-wide rule rather than a per-policy one. What remains is that `current_tenant_id()` returns null on more than one active membership, contradicting `DOMAIN_MODEL.md` §5.1, so a person who accepts a second invitation locks themselves out — owner retargeted: **P02, with authentication**
 - CF-109 — The isolation suite is deliberately outside `npm test` and no CI job runs it. Originally forced by absent secrets, the decision now stands on ADR-012: one environment means a per-push job would seed and tear down against production on every commit. Consequence held consciously — a regression introduced between gates is not caught until the next gate — owner: CF-92's reinstatement trigger; when staging exists the suite becomes a required CI job on any schema-touching pull request
@@ -195,34 +207,53 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
   statement fails. `scripts/check_migration_split.py` asserts it on every push,
   so the standard is mechanical rather than a matter of which task last measured
   it.
+- **The RLS-bypass inventory is a standing check as of 2026-08-03 —
+  P01-T05-FIX.** `SECURITY_MODEL.md` §11 enumerates every mechanism that can
+  bypass row-level security: the five `rolbypassrls` roles with their `SET ROLE`
+  reachability, the six `security definer` functions with their pinned
+  `search_path`, table ownership and its `FORCE` state, and `service_role` with
+  ADR-005's quarantine. **It is re-derived from the live catalog at every phase
+  exit gate, and a mechanism that appears in the derivation but not in the
+  document is a hard failure of that gate.** Not waivable by OD, on §1's ground.
+- PR-26 landed 2026-08-03 — P01-T05-FIX. A plant-and-revert probe restores from
+  its own in-memory snapshot, never with `git checkout --`, which discards the
+  session's uncommitted work in the same file. Learned by doing it.
 
 ## Next action
-**P01-GATE ran and the phase FAILED it.** 17 of 23 criteria PASS, 5 FAIL, 1
-unprovable as written. Nothing was fixed — a gate that repairs what it finds is
-not a gate — so the five FAILs are the next task's inbox, not this one's.
+**Re-run P01-GATE in full, in a fresh window.** P01-T05-FIX closed all five of
+its failures and deliberately did not run it — a FIX task does not grade itself.
+Nothing here anticipates the verdict.
 
-**P01-FIX next**, and the phase does not exit until it lands. Five items, all
-small, none touching the schema or a policy:
+What the gate will find changed, and what it must re-derive rather than accept:
 
-1. **`MODULE_SPEC.md` §1 vs the tree.** §1 names `lib/i18n/` for locale
-   resolution and dictionary loading; both live at `app/[locale]/`, in a folder
-   §1 does not name. One of the two is wrong. Either is a one-line change; both
-   staying as they are is not.
-2. **`check-enum-keys`.** ARCHITECTURE §6 row 7's target exists — four live
-   Postgres enums.
-3. **The HTML-injection lint rule**, §6's mechanism for CF-02. Proven absent at
-   the gate, not assumed: a probe component piping a route parameter straight
-   into `dangerouslySetInnerHTML` lints clean at exit 0.
-4. **The bypass inventory.** `supabase_admin`, `postgres`, `supabase_etl_admin`
-   and `supabase_read_only_user` all carry `rolbypassrls` and none is named in
-   any document. None is reachable from the API — `authenticator` may `SET ROLE`
-   only to `anon`, `authenticated` and `service_role` — so this is a
-   documentation gap in `SECURITY_MODEL.md`, not a hole.
-5. **CF-95 and CF-98**, both open naming P01 as owner. CF-95 is
-   evidence-complete and needs only its closing line: `types-drift` concluded
-   success in CI run 30812893866 on `c08fb1b`, and the same commit carries a
-   `Vercel` status of `success`. CF-98's four advisories are unchanged at 3 high
-   and 1 moderate and need the dependency bump PR-25 already authorises.
+1. **`check-enum-keys`** exists, is wired as the fifth step of the `guards` job,
+   and reports 12 values across the four live enums. Re-prove it by planting,
+   not by reading — the guard scans `supabase/schema.sql` only, on the ground
+   that `check_migration_split.py` already asserts the migrations match it.
+2. **The HTML-injection rule** is six AST selectors under
+   `no-restricted-syntax` in the existing ESLint setup, no new dependency. The
+   gate's own probe now fails lint at exit 1. There are **no exemptions in the
+   tree** and none was granted: the rule fires nowhere on existing code.
+3. **`MODULE_SPEC.md`** §1 lists `dictionaries.ts` and `dictionaries/` under
+   `app/[locale]/` and no longer names `lib/i18n/`; §3 rule 4 follows. The only
+   two remaining occurrences of the string in the repository are in this file's
+   history above and in the append-only journal, both correct as records.
+4. **`SECURITY_MODEL.md` §11** is the bypass inventory. It was placed at §11 and
+   not inserted as §3 because 35 references to this document's section numbers
+   exist, some inside `supabase/schema.sql` and the migrations, which ADR-006
+   makes immutable. **The gate re-derives §11 from the live catalog** — that is
+   the standing rule the section states, and this is its first exercise.
+5. **The ledger.** Twelve owners retargeted, not the eleven the gate named;
+   CF-54 is the twelfth and is declared in its own row. CF-95 CLOSED, CF-98 left
+   OPEN on unchanged advisories, CF-60 and CF-111 closed. 35 open ids.
+   `check_ledger.py` now fails an open row whose owner names a gate or
+   phase-exit gate the done-steps table records as run.
+6. **`BUILD_PHASES.md` §P01** states the `DATA_MODEL.md` criterion in a form
+   that can be checked. Its second half — the migration implements nothing the
+   document does not specify — is the half the gate should actually verify, and
+   it has not been verified yet by anyone.
+
+**PR #2 must still not merge**, and the branch is still `phase/01-foundation`.
 
 **P02 entry checklist — the inherited rows, each with its owner:**
 
@@ -231,8 +262,9 @@ small, none touching the schema or a policy:
   verified at this gate. P02 must re-verify it before its first task and again
   at its exit, because P02 is where authentication arrives and the first real
   tenant becomes possible.
-- **CF-95** — owner: the owner, and now overdue. If P01-FIX has not closed it,
-  P02 inherits it as its first bookkeeping act.
+- **CF-95** — CLOSED at P01-T05-FIX. `types-drift` and all seven `ci` jobs
+  concluded success on both `c08fb1b` and `057ae11`, and both carry a `Vercel`
+  status of `success`. No longer inherited.
 - **CF-103's remainder** — owner: **P02, with authentication**. The exploit half
   is closed and re-tested. What remains is that `current_tenant_id()` returns
   null on more than one active membership, contradicting `DOMAIN_MODEL.md` §5.1,
@@ -243,18 +275,22 @@ small, none touching the schema or a policy:
   job runs the suite and a regression between gates is not caught until the next
   gate. P02 holds that consequence consciously or ends it by standing up
   staging.
-- Also inherited and already open: **CF-93** (seven DATA_MODEL specification
-  gaps), **CF-94** (`lib/` unguarded by two guards — re-confirmed live at this
-  gate), **CF-97** (the scanner narrowing, awaiting ratification), **CF-98** if
-  P01-FIX does not close it, and **CF-99** (PR #2).
+- Also inherited and already open, several now explicitly owned by P02 as of
+  P01-T05-FIX: **CF-01** and **CF-75** (the deferred rule layer and the two
+  always-on rules files, restorable now that `ARCHITECTURE.md` exists),
+  **CF-11** and **CF-72** (one `REPORT.md` annotation task, batched), **CF-93**
+  gaps 1, 2, 3, 4 and 7, **CF-94** for the `lib/` root, **CF-98** (the
+  dependency bump, still open on four unchanged advisories, PR-25 already
+  authorising it), and **CF-97** (the scanner narrowing, awaiting
+  ratification) and **CF-99** (PR #2) unchanged.
 
 Preconditions P02 must verify before its first task: zero tenant rows in
 `b2s-production`; the isolation suite green at 31; `main` and
-`phase/01-foundation` in the state the gate left them, PR #2 unmerged.
+`phase/01-foundation` in the state the re-run gate leaves them, PR #2 unmerged.
 
-**PR #2 must not merge.** The gate's verdict is FAIL, and `BRANCHING.md` §3
-admits one consolidated PR per phase at a *passed* exit gate. Merging now puts
-a tree with two missing guards and an undocumented bypass inventory on `main`
-under a gate that rejected it. Isolation being proven is necessary and is not
+**PR #2 must not merge.** The standing verdict is still the gate's FAIL until
+the gate re-runs and returns a different one, and `BRANCHING.md` §3 admits one
+consolidated PR per phase at a *passed* exit gate. A FIX task landing its five
+items is not that gate passing. Isolation being proven is necessary and is not
 sufficient. It is still not a draft and still one click from merging, which is
 CF-99's amended consequence.

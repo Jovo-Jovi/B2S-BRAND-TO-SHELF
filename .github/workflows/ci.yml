@@ -119,10 +119,12 @@ jobs:
           key: node_modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
           fail-on-cache-miss: true
 
-      # All four guards have a live target. check-service-import stopped being
+      # All five guards have a live target. check-service-import stopped being
       # a vacuous pass at P01-T02: ADR-005's quarantine now exists at
       # lib/supabase/server-only/, and the guard fails if it ever disappears
       # rather than reporting OK for lack of anything to check (PR-21).
+      # check-enum-keys joined them at P01-T05-FIX, when the P01 exit gate found
+      # ARCHITECTURE §6's row unenforced against four live Postgres enums.
       - name: check-no-runtime-cdn
         run: node scripts/check-no-runtime-cdn.mjs
 
@@ -134,6 +136,9 @@ jobs:
 
       - name: check-data-boundary
         run: node scripts/check-data-boundary.mjs
+
+      - name: check-enum-keys
+        run: node scripts/check-enum-keys.mjs
 
   # ARCHITECTURE.md §5 — types are generated from the one Supabase environment
   # (ADR-012), and a diff between the generated types and the committed ones

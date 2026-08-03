@@ -72,6 +72,10 @@ failure is not recoverable by a later fix: data disclosed is disclosed.
 5. **Any privileged path that bypasses tenant rules is physically quarantined**,
    reachable from exactly one place, and every use writes an `ActivityEvent`.
 
+**§11 is the exceptions list.** Every mechanism that can bypass the data layer's
+rules is enumerated there with its reachability, and the enumeration is
+re-derived from the live catalog at every phase exit gate.
+
 ---
 
 ## 3. The five testable properties
@@ -251,6 +255,122 @@ Run before public launch. **An audit, not a removal** — history is permanent.
 | An unauditable data touch | §7 |
 | A credential in a public repository | §8 |
 | Isolation asserted but never proven | §4 — CF-31 |
+| A bypass mechanism nobody wrote down, and therefore nobody re-checks | §11 — enumerated, and re-derived from the live catalog at every phase exit gate |
+
+---
+
+## 11. What can bypass RLS
+
+ADR-005 promises that reviewing "what can bypass isolation" is reading one file
+rather than searching a codebase. The P01 exit gate found that it was not: four
+roles carrying `rolbypassrls` were named in no document in this repository. None
+was reachable from the API, so this was a documentation gap and not a hole — but
+an undocumented bypass is one nobody is watching, and nobody can re-check a list
+that does not exist. This section is that one file.
+
+Every entry is derived from the live catalog of the one Supabase project
+(ADR-012), never from source. A bypass that exists in the database and not in
+the schema file is exactly the kind this section is for.
+
+### 11.1 Roles carrying `rolbypassrls`
+
+`rolbypassrls` exempts a role from every row-level policy on every table, with
+no per-table opt-out. Five roles carry it. The column that decides whether any
+of that matters is the last one: PostgREST connects as `authenticator` and can
+become another role only by `SET ROLE`, so a bypass role `authenticator` cannot
+become is not reachable through the API at all.
+
+| Role | Superuser | Can log in | `authenticator` can `SET ROLE` to it | Reachability |
+|---|---|---|---|---|
+| `postgres` | no | yes | **no** | Direct Postgres connection with its own credential |
+| `service_role` | no | no | **yes** | Through the API, and only with the privileged key — §11.4 |
+| `supabase_admin` | yes | yes | **no** | Supabase platform internals |
+| `supabase_etl_admin` | no | yes | **no** | Supabase platform internals |
+| `supabase_read_only_user` | no | yes | **no** | Supabase platform internals |
+
+`authenticator` may `SET ROLE` to exactly three roles — `anon`, `authenticated`
+and `service_role` — and only the third bypasses RLS. `authenticator` itself
+does not carry `rolbypassrls`. The other four bypass roles are platform roles
+outside the application's reach by construction rather than by policy.
+
+**Measure this with `MEMBER`, not `USAGE`.** `pg_has_role(role, target,
+'MEMBER')` is the `SET ROLE` privilege and is transitive. `USAGE` is automatic
+privilege inheritance and answers a different question. `authenticator` is
+`NOINHERIT`, so a `USAGE` audit reports that it cannot reach `service_role` —
+false, and reassuring in the worst possible way. Measured transitively with
+`MEMBER`, neither `anon` nor `authenticated` reaches any bypass role, so no
+escalation chain runs from an anonymous session to a bypass.
+
+### 11.2 `security definer` functions
+
+A `security definer` function executes with its owner's privileges and therefore
+reads past the caller's policies by design. Six exist, all in schema `public`,
+all owned by `postgres`, and all with `search_path` pinned to the empty string.
+The pin is the control that matters: without it, a caller who can create a
+schema can place their own table ahead of `public` on the search path and have
+the function read theirs instead.
+
+| Function | `search_path` | Why it must read past the caller's policies |
+|---|---|---|
+| `current_tenant_id()` | `''` | Resolves the caller's tenant by reading `membership`. It cannot be subject to the policies it exists to evaluate |
+| `is_operator()` | `''` | Reads `operator`, a table no tenant member has any policy to read |
+| `is_current_tenant_owner()` | `''` | A policy on `membership` cannot read `membership` — PostgreSQL raises infinite recursion. This is the only legal expression of a stated rule |
+| `enforce_tenant_active_owner()` | `''` | Counts a tenant's active owners across rows the acting member may not see, or the constraint could be defeated by hiding one |
+| `has_live_consent_grant(uuid)` | `''` | Evaluates the grant that gates operator reach, on a table the operator has no policy to read |
+| `operator_read_activity_event(uuid)` | `''` | The one declared operator read path. Refuses without a live grant, writes the log before returning, and omits `payload` from its return type |
+
+Each is `EXECUTE`-revoked from `public` and granted explicitly — CF-105 records
+why: `revoke all on all tables` does not cover functions, and a `public`
+function defaults to `EXECUTE` for `PUBLIC`, which makes it an RPC endpoint any
+anonymous caller can reach.
+
+### 11.3 Table ownership
+
+All six `public` tables are owned by `postgres`. A table's owner is exempt from
+its own row-level policies unless the table is declared `FORCE ROW LEVEL
+SECURITY`, and none of the six is. Ownership is therefore a real bypass and is
+listed here as one.
+
+It is not reachable through PostgREST. The API connects as `authenticator`,
+which is not `postgres` and — per §11.1, measured transitively — cannot
+`SET ROLE` to it. Reaching the owner needs a direct Postgres connection with the
+`postgres` credential, which lives outside the application entirely. RLS is
+enabled on all six tables; `FORCE` is what would additionally bind the owner,
+and its absence is the reason this row exists rather than a defect to fix here.
+
+### 11.4 `service_role`, and what contains it
+
+`service_role` is the one bypass reachable through the API, and it is the only
+one the application can hold. It is contained by construction, not by rule:
+
+- **ADR-005** — the privileged client is constructed in exactly one server-only
+  module and nowhere else. `check-service-import` fails the build on any import
+  of it from `app/`, `features/` or `components/`, and fails if the quarantine
+  directory itself disappears rather than passing for want of anything to check.
+- **§2.5 of this document** — every use writes an `ActivityEvent`.
+- **§8 and OD-G7** — the key exists only in the host platform's secret store,
+  never in the repository, never in a client bundle, never in a migration.
+- It cannot log in directly (`rolcanlogin` is false) and is `NOINHERIT` from
+  `authenticator`, so it is reached only by an explicit `SET ROLE` that PostgREST
+  issues only for a request whose key names it.
+
+### 11.5 The standing rule
+
+**This inventory is re-derived at every phase exit gate. A mechanism that
+appears in the derivation and is not in this document is a hard failure of that
+gate.**
+
+That is what turns a one-time audit into a standing check. The gate does not
+read this list and confirm it; it queries the live catalog and compares. The
+four mechanisms to enumerate are the four subsections above: roles carrying
+`rolbypassrls`, `security definer` functions and their pinned `search_path`,
+table ownership and `FORCE` state, and every path by which `authenticator` can
+reach a bypass role. A new mechanism outside those four categories is also a
+hard failure — the categories are what has been found so far, not a closed set.
+
+This failure is not waivable by OD, on the same ground as §1: a bypass nobody
+documented is a bypass nobody is watching, and the cost of discovering it late
+is not recoverable by a later fix.
 
 ---
 

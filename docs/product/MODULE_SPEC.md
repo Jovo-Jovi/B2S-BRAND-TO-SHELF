@@ -18,6 +18,8 @@ needs it, never in advance — an empty folder is a claim that work exists.
 ```
 app/                              route surface only, thin
   [locale]/
+    dictionaries.ts
+    dictionaries/                 locale resolution, dictionary loading
     (public)/                     unauthenticated: sign-in, invitation accept
     (app)/                        authenticated tenant surface
       onboarding/
@@ -60,7 +62,6 @@ lib/
     server.ts                     server client, acts as the member
     server-only/                  QUARANTINE — ADR-005
       service.ts                  the only construction of the privileged client
-  i18n/                           locale resolution, dictionary loading
   money/                          exact decimal, ADR-011
   print/                          the print engine, ADR-009
 
@@ -98,8 +99,8 @@ docs/                             product, method, requirements, archive
    Cross-module needs go through `lib/` or are a sign the module boundary is wrong.
 3. **Every mutation enters through `actions.ts` and is zod-validated before any
    database call** (ADR-010).
-4. **No literal anywhere outside `lib/i18n` dictionaries, configuration, or the
-   token stylesheet** (OD-D6, OD-D7).
+4. **No literal anywhere outside the locale dictionaries under `app/[locale]/`,
+   configuration, or the token stylesheet** (OD-D6, OD-D7).
 5. **A new folder needs a module in `SCOPE.md`.** If there is no module, there is
    no folder — raise an OD instead.
 

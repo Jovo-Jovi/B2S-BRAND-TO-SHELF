@@ -15,6 +15,13 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
 - [ ] CF-01 — Reinstate deferred Dev OS security/migration rule layer at P10
       AMENDED (P-08-PRE-FIX) — owner: ARCHITECTURE.md, immediately after Gate 3
       — the P10 it named does not exist in this plan
+      AMENDED (P01-T05-FIX) — the owner has passed. `ARCHITECTURE.md` was
+      authored at `3918cf4` and Gate 3 closed on 2026-08-01, so "immediately
+      after Gate 3" names a moment already gone and this row has had no live
+      owner since. Owner: **the P02 entry checklist**, reinstating the deferred
+      rule layer subject by subject as each arrives, rather than in one pass —
+      the layer was deferred because its mechanism was undecided, and mechanisms
+      are decided one at a time.
 - [ ] CF-02 — Unescaped innerHTML in all legacy tools. Owner: FEATURE_INVENTORY.md
       must-not-reproduce at P-07. Prior owner "every ported renderer" is void
       framing — nothing is ported. Evidence captured in EXTRACT_STOCK_COSTS.md
@@ -106,6 +113,9 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       EXTRACT_INVOICE_PRO.md.
       AMENDED (P-08-PRE-FIX) — owner: the REPORT.md annotation task, before
       Gate 3
+      AMENDED (P01-T05-FIX) — the owner has passed: "before Gate 3" names a gate
+      that closed on 2026-08-01. Owner: **the `REPORT.md` annotation task at
+      P02**, batched with CF-72 per PR-20 — one task, one round trip, both rows.
 - [x] CF-12 — REPORT.md §1 and inventory.json meta line counts are wrong by ~3,953
       lines (stock 5577→7084, invoice-pro 3498→4284, sticker 3701 unlisted;
       total 14529→~18482). Owner: reviewer, closes at Gate 1.
@@ -279,6 +289,13 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       inferred from the P-01c report — the reviewer verdict logged this as
       "CF-39 new" without landing wording here. Owner: reviewer, next light
       edit to `B2S_PREPARE_PHASE.md`.
+      AMENDED (P01-T05-FIX) — the owner has passed in the sense that matters: it
+      named no moment, and none arrived. `B2S_PREPARE_PHASE.md` is superseded as
+      a sequencing plan by `BUILD_PHASES.md` and nothing is going to edit it
+      lightly. Owner: **the next write task that touches
+      `B2S_PREPARE_PHASE.md`, which is the P08 pre-relaunch audit** — its §9 and
+      §10 remain in force and P08 runs the §10 audit, so that is the one moment
+      the document is opened for writing again. Batched there per PR-20.
 - [x] CF-40 — Session-tracking carry-forwards (CF-38, and now CF-39/CF-40
       themselves) are sometimes announced by a reviewer verdict as "new"
       without their descriptive text ever being supplied to the executing
@@ -429,6 +446,11 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       stands at 25 pending that confirmation.
       AMENDED (P-08-PRE-FIX) — owner: reviewer — adjudicate the ten findings at
       the FEATURE_INVENTORY.md authoring, which is where accepted findings land
+      AMENDED (P01-T05-FIX) — the owner names a task rather than a moment, and
+      the task now has one. Owner: **the `FEATURE_INVENTORY.md` authoring, P08**
+      — the document is authored just-in-time there per ARCHITECTURE §7 and
+      BUILD_PHASES P08, and that is where the 25 untriaged findings are
+      adjudicated.
 - [ ] CF-47 — Costing is last-purchase-price-wins by unconditional overwrite
       (bb-stock-costs.html:2994-2999): one new purchase price retroactively
       restates COGS and profit for every closed month. Policy, not defect. B2S
@@ -587,6 +609,11 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       sticker seed names were ever false. Second location annotated under CF-56.
       AMENDED (P-08-PRE-FIX) — owner: the AUDIT_STICKER.md annotation task,
       before Gate 3
+      AMENDED (P01-T05-FIX) — the owner has passed: "before Gate 3" names a gate
+      that closed on 2026-08-01. Owner: **the `AUDIT_STICKER.md` annotation task
+      at P08**, batched with CF-56 per PR-20. P08 is where that record is next
+      needed, because `FEATURE_INVENTORY.md` is authored there and
+      `AUDIT_STICKER.md` is its only source for the sticker tool.
 - [ ] CF-51 — Prompt-template defect: "one commit" combined with "do not amend
       or rewrite history" forbids any post-push correction, forcing a choice
       between two explicit instructions. P-04 hit this and correctly landed a
@@ -648,6 +675,19 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       prompt, 23 actual (21 under docs/product/, 2 under docs/method/). Same
       defect class as CF-38's 56-versus-79. P-12 corrected and P-01 annotated
       as-built by P-04c. Owner: reviewer, verify at Gate 3.
+      AMENDED (P01-T05-FIX) — **a twelfth stale owner, found by the check this
+      task landed rather than by the gate that ordered it.** The P01 exit gate
+      reported eleven open rows naming an owner whose moment had passed, and
+      P01-T05-FIX was told to retarget those eleven. Verified over the whole set
+      per PR-23, there are twelve: this row's owner is "reviewer, verify at
+      Gate 3", and Gate 3 closed on 2026-08-01. It is retargeted here rather
+      than left, because leaving it would land `check_ledger.py`'s new
+      reachable-owner assertion red on the very commit that introduces it. The
+      divergence from the prompt's stated count is declared in the task report.
+      Owner: **the P08 pre-relaunch audit**, batched with CF-39 per PR-20. P08 is
+      where the document set is audited in full and `ACCEPTANCE.md` is authored,
+      and the stub count is only meaningful against a finished document set —
+      under OD-H7 it changes at every phase that authors a just-in-time document.
 - [x] CF-55 — SESSION_CONTEXT.md is 58,233 bytes and grows every task, because
       the full carry-forward ledger including all appended amendment text lives
       inside the file that must be pasted at the start of every session. It is
@@ -672,6 +712,10 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       P-04c verdict.
       AMENDED (P-08-PRE-FIX) — owner: the AUDIT_STICKER.md annotation task,
       before Gate 3 — same task as CF-50
+      AMENDED (P01-T05-FIX) — as CF-50: "before Gate 3" has passed. Owner:
+      **P08, the same task as CF-50** — one annotation pass over
+      `AUDIT_STICKER.md` closes both locations, and splitting them would annotate
+      the same file twice.
 - [x] CF-57 — Extraction density drifted across the three passes:
       EXTRACT_STOCK_COSTS 174 KB from a 347 KB source (50%), EXTRACT_INVOICE_PRO
       231 KB from 222 KB (104%), EXTRACT_DESIGN_TOOLS 228 KB from 197 KB (116%).
@@ -704,13 +748,28 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       pattern and the api.github.com rate-limit quirk recorded in §2. The
       committed project instructions are synced by P-04e. Formal method OD to
       be recorded in DECISIONS.md at P-06.
-- [ ] CF-60 — Four open rows carry no explicit `Owner:` field: CF-01, CF-05,
+- [x] CF-60 — Four open rows carry no explicit `Owner:` field: CF-01, CF-05,
       CF-27, CF-44. Not a substantive gap — CF-01's owner is P10 and CF-05's is
       Step 15, both stated in prose rather than as a field; CF-27 is
       noted-no-action; CF-44 is void by design. But the Gate 3 checklist requires
       "No open carry-forward without a named owner" and a checklist cannot read
       prose. Normalise all four to explicit `Owner:` fields, inventing no owner —
       where none exists, write the reason. Owner: reviewer, before Gate 3.
+      CF-60 — CLOSED (P01-T05-FIX). The prior owner, "reviewer, before Gate 3",
+      passed on 2026-08-01. Retargeted to this task and closed rather than
+      re-owned, because its subject is done and was verified row by row here:
+      CF-01 carries `owner: ARCHITECTURE.md…` and now a P02 owner, CF-05 carries
+      `owner: PRINT_CONTRACT.md…`, CF-27 is CLOSED and VOID so the requirement —
+      "no **open** carry-forward without a named owner" — does not reach it, and
+      CF-44 carries `owner: none — void, retained as a numbering record`, which
+      is this row's own instruction to write the reason where no owner exists.
+      **What this row could not catch is the failure that produced the P01 gate's
+      D1.** It asked whether an owner field existed, never whether it pointed
+      anywhere, so eleven rows passed it while naming a gate or a phase already
+      behind us. `scripts/check_ledger.py` now asserts both: an open row names an
+      owner, and that owner does not name a gate or phase-exit gate already
+      recorded as run in `SESSION_CONTEXT.md`'s done-steps table. VOID rows are
+      exempt by the status CF-44 already declares.
 - [x] CF-61 — HARD FAILURE at Gate 1. EXTRACT_STOCK_COSTS.md §1.1.11 stated a
       fabricated typed field list for `bb_color_presets`: `bg, panel, ink, muted,
       gold, line`. Four names are wrong — `panel`, `ink` and `line` do not occur
@@ -822,6 +881,9 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       unverified REPORT.md line number.
       AMENDED (P-08-PRE-FIX) — owner: the REPORT.md annotation task, before
       Gate 3 — same task as CF-11
+      AMENDED (P01-T05-FIX) — the owner has passed: "before Gate 3" names a gate
+      that closed on 2026-08-01. Owner: **the `REPORT.md` annotation task at
+      P02**, batched with CF-11 per PR-20 — one task, one round trip, both rows.
 - [ ] CF-73 — bb-stock-costs.html:5645 contains `مرtجع كامل` — a Latin `t`
       where `ت` belongs. Every printed sales report containing a full return
       has shipped corrupted text, invisibly, for the life of the tool. This is
@@ -845,6 +907,14 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       defer mechanism. When Gate 3 closes, restore the enforcement column with
       real guard names and paths.   Owner: ARCHITECTURE.md, immediately after
       Gate 3.
+      AMENDED (P01-T05-FIX) — the owner has passed. Gate 3 closed on 2026-08-01
+      and `ARCHITECTURE.md` was authored at `3918cf4`, so the condition this row
+      was waiting on is met: the rules files can now cite real guard names and
+      real paths because a document defines them. Owner: **the P02 entry
+      checklist**. Both always-on rules files are restored in one pass, or they
+      drift from each other — `AGENTS.md` and `.cursor/rules/b2s-devos.mdc` are
+      the same rules in two activation syntaxes and changing one alone is a
+      defect by `AGENTS.md`'s own preamble.
 - [x] CF-76 — GLOSSARY.md changed eight things against VOCABULARY_DRAFT.md, each
       forced by extract evidence: a sixteenth collision (`preset` names both a
       colour theme and a print margin set); `PrintPreset` renamed `PrintProfile`
@@ -1112,6 +1182,35 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       because no other form is legal. Counted from the live catalog, 16 policies in
       total. Rule 3 needs restating as "every policy with a write side", or it fails
       a literal reading against a correct schema.
+      AMENDED (P01-T05-FIX) — "the next `DATA_MODEL.md` amendment" named no
+      moment and none arrived, so the row had no reachable owner. The seven gaps
+      are split by the phase that first needs each, and each is named.
+      **P02 — Tenancy and access** owns five. (1) §3's lead sentence, "Seven
+      tables for Release 1", against the six it enumerates — P02 is the phase
+      that builds on exactly those tables. (2) §2's stated helper count of two
+      against the three that exist, `is_current_tenant_owner()` being the
+      unlisted third. (3) The session-to-membership binding behind
+      `current_tenant_id()` returning null on more than one active membership:
+      the same subject as CF-103's remainder, and a decision P02 must make
+      **before** it writes a session, not after. (4) `TENANCY_MODEL.md` §3
+      rule 1's "exactly one `Owner` at all times" against §3.3's "at least one
+      active owner" — P02 ships provisioning and membership, so it is the phase
+      that must pick one and replace the trigger if "exactly one" wins. (7) §5
+      rule 3's "every tenant-scoped policy carries `WITH CHECK`", which cannot
+      hold literally because PostgreSQL rejects `with check` on a `for select`
+      policy — it binds every policy P02 writes, so P02 restates it or writes
+      policies against a rule no correct schema can satisfy.
+      **P03 — Brand and onboarding** owns two, and owns them because both bind
+      when a table is next created rather than when one is next read. (5) §1.4's
+      universal provenance — "every table, without exception" — against the
+      column lists in §3.4 `operator` and §3.6 `activity_event` that omit it. (6)
+      `updated_at` specified with no maintenance trigger and therefore inert on
+      all six tables today. P03 is the first phase after P02 that creates new
+      tables, and a universal rule that is already false of two tables will be
+      false of every table added under it until it is settled.
+      Owner: **P02 for gaps (1), (2), (3), (4) and (7); P03 for gaps (5) and
+      (6)**, each at the entry checklist of its phase, so the amendment is made
+      before the code that depends on it rather than after.
 - [ ] CF-94 — `check-no-runtime-cdn` and `check-no-hardcoded-literals` scan `app/`
       and `proxy.ts` only, which was the whole of the application source when
       P01-T01 authored them. `lib/` exists as of P01-T02-RESUME and is not
@@ -1121,7 +1220,22 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       `check-data-boundary` — already scan the wider root set and name the roots
       that do not yet exist in their own output. Owner: the next task that touches
       either guard, at the latest the Phase 02 entry checklist.
-- [ ] CF-95 — The deployment and drift pipeline is wired but not live, and both
+      AMENDED (P01-T05-FIX) — split by the phase that first needs each root, as
+      CF-93. This task touched neither guard, so the "next task that touches
+      either" clause did not fire here and the row's owner is now named by root.
+      **The P02 entry checklist** owns `lib/`, which exists today and is scanned
+      by neither guard — a hex colour or an external `<script>` under
+      `lib/supabase/` passes both right now. **The task that creates a root owns
+      adding it**: `components/ui` and `components/shared` arrive with the
+      design-surface catalog task, landed after the P01 shell and before P03
+      composes pages (`BUILD_PHASES.md`, "The design surface"), and `features/`
+      arrives at P03. Each root is added to both scanners by the task that
+      creates it, or it ships unscanned — which is exactly how `lib/` reached
+      this state, and why naming one future owner for all three roots would
+      reproduce it.
+      Owner: **the P02 entry checklist for `lib/`; the task that creates each of
+      `components/` and `features/` for those roots.**
+- [x] CF-95 — The deployment and drift pipeline is wired but not live, and both
       remaining steps are owner actions rather than builder work.
       (1) `vercel git connect` failed against the repository: the Vercel GitHub
       App is not authorised on it, so the project exists and is linked locally but
@@ -1150,6 +1264,19 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       is (1), the Vercel GitHub App authorisation, and the confirmation that
       `types-drift` now concludes success. Until that run exists, the pipeline is
       still wired-but-unproven, which is what CF-95 says.
+      CF-95 — CLOSED (P01-T05-FIX). Both remaining halves are done, and both are
+      proven by a run rather than by a setting. **(1) The Vercel GitHub App is
+      authorised.** Commits `c08fb1b` and `057ae11` each carry a `Vercel` commit
+      status of `success`, description "Deployment has completed", with a
+      combined commit state of `success`. **(2) `types-drift` concludes
+      success.** On `c08fb1b` in CI runs 30812893866 and 30812896168, and on the
+      gate commit `057ae11` in runs 30816883543 and 30816886716. On all four
+      runs every one of the seven `ci` jobs concluded success — `install`,
+      `lint`, `typecheck`, `unit`, `guards`, `types-drift` and `build`. `build`
+      matters here: it was skipped for as long as `types-drift` failed, so its
+      green discharges the second consequence this row asked the reviewer to
+      hold deliberately. The pipeline is no longer wired-but-unproven, which was
+      the whole of the claim.
 - [x] CF-96 — `docs/method/REVIEWER_CHAT_INSTRUCTIONS.md` sits untracked in the
       working tree. PR-14 requires a reviewer-authored document to stage outside
       the working tree and to enter the repository only by a land task, to its
@@ -1202,6 +1329,27 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       a new finding as a row. Owner: the owner, to authorise a dependency-bump
       task; at the latest the Phase 01 exit gate, since the alerts predate this
       branch and will not clear themselves.
+      AMENDED (P01-T05-FIX) — **re-derived and deliberately LEFT OPEN, because
+      the advisories are not closed.** The owner named the Phase 01 exit gate at
+      the latest, and that gate has now run, so the owner is retargeted; the
+      finding itself is unchanged in every particular. All four alerts are still
+      open, enumerated from the repository's Dependabot alerts endpoint rather
+      than restated from this row: **#4** `postcss` high — path traversal via
+      `sourceMappingURL`, vulnerable `<= 8.5.17`, first patched 8.5.18; **#3**
+      `postcss` high — arbitrary file read by the same route, vulnerable
+      `<= 8.5.11`, first patched 8.5.12; **#2** `sharp` high — inherited libvips
+      CVEs, vulnerable `< 0.35.0`, first patched 0.35.0; **#1** `postcss` medium
+      — XSS via an unescaped `</style>` in stringify output, vulnerable
+      `< 8.5.10`, first patched 8.5.10. Three high and one medium, all runtime
+      scope, all resolved in `package-lock.json` and declared in no
+      `package.json`, exactly as recorded.
+      `npm audit` locally reports the same packages and offers `next@9.3.3` as
+      the available fix — a semver-major **downgrade** of the framework, which is
+      not a fix and is recorded so the next task does not take it. The remedy is
+      to raise the transitive resolutions, which PR-25 already authorises as
+      maintenance rather than as a new dependency. What this needs is a task and
+      a green pipeline, not an authorisation. Owner: **the P02 entry checklist**,
+      as the first bookkeeping act of the phase.
 - [ ] CF-99 — A pull request exists on `phase/01-foundation` that the task
       forbade, and it is not the builder's. P01-T02's done-when says "No pull
       request — T03 runs the isolation proof on this branch first, and the phase
@@ -1486,3 +1634,32 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       lines that precede the next marker, and the five T04 files do not.
       `scripts/check_migration_split.py` is the mechanism this row buys, wired
       into `docs-integrity` and green at the closing commit.
+- [x] CF-111 — The P01 exit gate failed on five criteria. Two were hard failures:
+      `check-enum-keys` and the HTML-injection lint rule were both absent while
+      their targets existed, the second proven by a probe component piping a route
+      parameter into `dangerouslySetInnerHTML` and linting clean at exit 0. Three
+      were documentation: `MODULE_SPEC.md` §1 named `lib/i18n/` where the App
+      Router places dictionaries, four `rolbypassrls` roles appeared in no
+      document, and eleven ledger rows named an owner already passed. Owner:
+      P01-T05-FIX.
+      CF-111 — CLOSED (P01-T05-FIX). Both guards landed and proven by planted
+      violation. `MODULE_SPEC.md` follows the code. `SECURITY_MODEL.md` carries a
+      bypass inventory that every phase gate re-derives. Eleven rows retargeted
+      and `check_ledger.py` now fails on an unreachable owner, which is why CF-82
+      recurred as this gate's D1 — the check asked whether an owner existed and
+      never whether it pointed anywhere.
+      **Two corrections to the closing text above, appended per PR-07 rather than
+      written over it.** (1) **Twelve rows, not eleven.** The reachable-owner
+      assertion, run against the ledger as the gate left it, fires on ten rows —
+      CF-01, CF-11, CF-50, CF-54, CF-56, CF-60, CF-72, CF-75, CF-95 and CF-98.
+      Nine are among the gate's eleven; **CF-54 is not**, and its owner
+      "reviewer, verify at Gate 3" is the same defect. It is retargeted here and
+      declared, because a check landing red on the commit that introduces it is
+      not a check. The gate's other two — CF-39 and CF-46 — name no gate or phase
+      at all and so are unreachable in a way no mechanism catches; CF-93 and
+      CF-94 are the same. That is the honest boundary of what D3 buys: it catches
+      an owner pointing at a moment that has gone, not an owner pointing nowhere.
+      (2) **CF-98 is left OPEN, not closed.** Its four Dependabot advisories are
+      re-derived unchanged at 3 high and 1 medium, so the D2 instruction's own
+      condition — leave it open if any advisory is still open — applies. CF-95 is
+      closed.

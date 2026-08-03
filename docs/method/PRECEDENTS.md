@@ -208,6 +208,22 @@ and a journal line, not an OD. Introducing a package that was not there before
 still stops and flags. Origin: CF-98, four transitive advisories held up behind a
 rule written for a different act.
 
+**PR-26 — A plant-and-revert probe restores from its own snapshot, never from
+git.**
+Proving a guard by planting a violation into a tracked file and reverting is the
+right technique, and `git checkout -- <path>` is the wrong revert for it.
+Checkout restores the **committed** content, so it silently discards every
+uncommitted edit the current task has made to the same file — the probe reverts
+its own plant and the session's work with it, and the damage shows up only as a
+later check failing against text that was correct ten minutes earlier. The probe
+reads the file into memory before planting and writes those exact bytes back
+afterwards, then asserts the restored content is byte-identical to the snapshot.
+Origin: P01-T05-FIX, where a prover for `check_ledger.py` reverted both
+`CARRY_FORWARDS.md` and `SESSION_CONTEXT.md` to HEAD and destroyed twelve
+unstaged ledger amendments, which had to be re-authored. The probes in the same
+task that touched only `supabase/schema.sql` — a file the task had **not**
+edited — were safe by luck, not by design.
+
 ---
 
 ## 2. Environment quirks — never re-discover
@@ -422,3 +438,27 @@ rule written for a different act.
   result, which is PR-21's failure shape arriving through a tool default rather
   than a decision. Walk the build tree with a script instead, and state the file
   count scanned so the zero is attributable.
+- Learned at P01-T05-FIX: **ESLint reads directive comments wherever they
+  appear, including inside explanatory prose in `eslint.config.mjs` itself.**
+  A comment describing the exemption path — the words "eslint", "disable" and
+  "next-line" run together — is parsed as a live directive, and the words after
+  it are registered as rule names. The failure reads
+  `Definition for rule '<the rest of your sentence>' was not found`, pointing at
+  the config, which is baffling until you see it. Describe a disable directive
+  in prose; never spell one out.
+- Learned at P01-T05-FIX: **`pg_has_role(role, target, 'MEMBER')` is the
+  `SET ROLE` test. `'USAGE'` is not, and answers the opposite way here.** USAGE
+  reports automatic privilege inheritance; Supabase grants `service_role` to
+  `authenticator` with `NOINHERIT`, so a USAGE audit says `authenticator` cannot
+  reach `service_role` — false, and reassuring in the worst possible way for a
+  question about what can bypass RLS. MEMBER is also transitive, so it is the
+  one that answers "can this role become that role by any chain". Both were run
+  side by side at P01-T05-FIX and they disagree on the single most important
+  cell in the table.
+- Learned at P01-T05-FIX: `api.supabase.com` answers **403 with a body of
+  `error code: 1010`** to Python's default `urllib` User-Agent. That is a
+  Cloudflare browser-signature block at the edge, not a Supabase refusal and not
+  an authentication failure: it carries no SQLSTATE, so it is not a result and
+  the P01-T03 "never retry a 4xx" rule does not apply to it. Set any ordinary
+  User-Agent header and it goes away. Node's `fetch`, which the isolation
+  harness uses, sends one already, which is why this had not been hit before.

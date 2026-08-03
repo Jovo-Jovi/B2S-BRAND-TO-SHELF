@@ -1538,3 +1538,102 @@ writes were the four Task E permitted the gate to make, and the guard probes tha
 proved each existing guard still fails on a violation were run into files created
 and deleted inside the same command, with `git status --porcelain` clean
 afterwards.
+
+---
+
+2026-08-03 | Opus (heavyweight) | BUILD P01-T05-FIX: close the P01 exit gate's five failures; the gate itself was not run | scripts/check-enum-keys.mjs, scripts/check_ledger.py, .github/workflows/ci.yml, eslint.config.mjs, docs/product/MODULE_SPEC.md, docs/product/SECURITY_MODEL.md, docs/method/BUILD_PHASES.md, docs/method/CARRY_FORWARDS.md, docs/method/PRECEDENTS.md, SESSION_CONTEXT.md, DEVELOPMENT_JOURNAL.md | Twelve stale ledger owners, not the eleven the gate named — CF-54 was found by the check this task landed; CF-98 left open because its four advisories re-derive unchanged; a probe driver reverting with `git checkout --` destroyed a session's unstaged ledger amendments, re-authored, and recorded as PR-26 | Re-run P01-GATE in full, in a fresh window
+
+**Both missing guards exist and neither was proven by reading.**
+`check-enum-keys` asserts the shape every enumeration value must have —
+lowercase ASCII letters, digits and underscores, starting with a letter — at the
+one structural location where a value is created, which is PR-22's positive form
+rather than a scan for forbidden scripts. It reads `supabase/schema.sql` alone,
+because ADR-006 makes it authoritative and `check_migration_split.py` already
+asserts the migrations match it; reading both would assert one fact twice. It
+covers `alter type ... add value` as well as `create type`, since a rule
+defeatable by using the other statement is not a rule. Twelve values across four
+enumerations pass. Five planted violations each fail with the type and the value
+named: an Arabic value, a space-containing value, `Read Only`, `ReadOnly` — which
+exercises the third reason branch, the one whitespace would otherwise mask — and
+a value introduced by `alter type`. Each was reverted and the schema confirmed
+byte-clean by `git status` between probes.
+
+**The HTML-injection rule is six AST selectors, not a string scan.** ESLint's
+`no-restricted-syntax` in the existing configuration, no new dependency:
+`dangerouslySetInnerHTML` as a JSX attribute and as an object property, and
+`innerHTML`/`outerHTML` through plain member access, a computed key and an object
+literal. A grep for `innerHTML` fires on CF-02's own ledger row and on the
+comment explaining the rule; a selector matches only parsed syntax, which is
+PR-22's concern answered in the form a linter can take. The gate's own probe — a
+route parameter piped into `dangerouslySetInnerHTML` — now fails at exit 1, and
+all six selectors fired on a companion probe. Both were deleted and lint returns
+to exit 0. **The rule fires nowhere on existing code**, so there is no live CF-02
+instance in the new tree and no exemption was granted; the STOP condition for
+that case did not trigger.
+
+**`SECURITY_MODEL.md` §11 was re-derived from the live catalog, not copied from
+the gate report.** Five roles carry `rolbypassrls` — `postgres`, `service_role`,
+`supabase_admin`, `supabase_etl_admin`, `supabase_read_only_user` — and
+`authenticator` can `SET ROLE` to exactly one of them, `service_role`, measured
+transitively. Six `security definer` functions, all owned by `postgres`, all with
+`search_path` pinned to the empty string. All six tables owned by `postgres` with
+RLS enabled and **`FORCE` set on none**, which is why table ownership is a real
+bypass and is listed as one rather than waved past. The section is §11 and not a
+new §3 because 35 references to this document's section numbers exist across the
+repository, several inside `supabase/schema.sql` and the migrations, which
+ADR-006 makes immutable — renumbering would have falsified them.
+
+**The measurement that decides the whole section is `MEMBER`, not `USAGE`.**
+`pg_has_role(role, target, 'USAGE')` tests automatic privilege inheritance;
+`authenticator` is `NOINHERIT`, so USAGE reports that it **cannot** reach
+`service_role`. That is false, and it is false in the reassuring direction on the
+single most important cell in the table. `MEMBER` is the `SET ROLE` privilege and
+is transitive. Both were run side by side and they disagree. Recorded in
+`PRECEDENTS.md`, because an audit that asks the wrong question returns a clean
+answer and nobody looks again.
+
+**Twelve stale owners, not eleven.** The gate reported eleven open rows naming an
+owner whose moment had passed. Run against the ledger as the gate left it, the
+new reachable-owner assertion fires on ten rows: CF-01, CF-11, CF-50, CF-54,
+CF-56, CF-60, CF-72, CF-75, CF-95, CF-98. Nine are among the gate's eleven and
+**CF-54 is not** — its owner reads "reviewer, verify at Gate 3", which is the
+same defect. It was retargeted rather than left, because a check that lands red on
+the commit introducing it is not a check, and the divergence from the prompt's
+stated count is declared in the row itself and in the task report. The gate's
+other two, CF-39 and CF-46, name no gate or phase at all, as do CF-93 and CF-94;
+that is the honest boundary of what this mechanism buys. It catches an owner
+pointing at a moment that has gone. It cannot catch an owner pointing nowhere.
+
+**CF-95 closed, CF-98 left open.** CF-95's two remaining halves are both proven
+by a run rather than by a setting: `types-drift` and every one of the seven `ci`
+jobs concluded success on `c08fb1b` and on the gate commit `057ae11`, and both
+carry a `Vercel` status of `success`. `build` matters there — it was skipped for
+as long as `types-drift` failed. CF-98's four Dependabot advisories re-derive
+**unchanged** at three high and one medium, so D2's own condition applies and the
+row stays open. `npm audit` offers `next@9.3.3` as the available fix, a
+semver-major downgrade of the framework, recorded so the next task does not take
+it.
+
+**A probe destroyed a session's work, and the technique is now a precedent.** The
+prover for `check_ledger.py` planted rows into `CARRY_FORWARDS.md` and
+`SESSION_CONTEXT.md` and reverted with `git checkout --`, which restores the
+committed content and therefore discarded twelve unstaged ledger amendments made
+earlier in the same session. All six probes had already behaved correctly; the
+damage showed up in the driver's own final line, running against a ledger that had
+silently reverted to HEAD. The amendments were re-authored from the session
+record and the driver was rewritten to restore from its own in-memory snapshot
+and assert byte-identity afterwards. PR-26. The enum probes in the same task were
+safe only because they touched a file this task had not otherwise edited — luck,
+not design.
+
+**Three negative controls, because a check that fires on everything is not a
+check.** The reachable-owner assertion fires on `Gate 1`, on `Gate 3` and on
+"the Phase 01 exit gate", and does **not** fire on `Gate 9`, on "the Phase 02
+exit gate", or on a VOID row owned by `Gate 1` — the exemption CF-44's own text
+demands. The passed-list is derived from the done-steps table on every run: gates
+`[1, 3]` and phase-exit gate `[1]`, with Gate 1 recovered from P-02-FIX's task
+prose and Gate 3 from the `G3-` step ids. Nothing is hardcoded, because a list in
+the script would be a second place to forget and forgetting is the failure mode.
+
+**The gate was not run and its verdict is not anticipated here.** A FIX task does
+not grade itself.
