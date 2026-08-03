@@ -349,8 +349,25 @@ export type Database = {
     }
     Functions: {
       current_tenant_id: { Args: never; Returns: string }
+      has_live_consent_grant: {
+        Args: { p_tenant_id: string }
+        Returns: boolean
+      }
       is_current_tenant_owner: { Args: never; Returns: boolean }
       is_operator: { Args: never; Returns: boolean }
+      operator_read_activity_event: {
+        Args: { p_tenant_id: string }
+        Returns: {
+          action: string
+          actor_member_id: string
+          actor_operator_id: string
+          entity_id: string
+          entity_type: string
+          id: string
+          occurred_at: string
+          tenant_id: string
+        }[]
+      }
     }
     Enums: {
       consent_scope: "read_only"

@@ -629,6 +629,21 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       the evidence rather than the suspicion. The naming of the `docs/method/`
       copy is confirmed by the owner before anything is retired or renamed.
       Owner unchanged: reviewer, decide at P-12.
+      AMENDED (P01-T04) — **the three-copy question is settled, and the answer is
+      that there are not three copies of one document; there are three documents
+      with three distinct roles.** Stated so no later reader re-opens it:
+      `AGENTS.md` is the builder charter, in force on the builder surface;
+      `docs/method/CLAUDE_PROJECT_INSTRUCTIONS.md` is the historical record of
+      the reconfiguration at the greenfield pivot, kept because the pivot is the
+      reason the retiring tools are evidence rather than a port target; and
+      `docs/method/REVIEWER_CHAT_INSTRUCTIONS.md`, landed by this task under
+      CF-96, is the live reference for the reviewer surface. Each now opens by
+      naming its own role, so the roles cannot be inferred wrongly from
+      similarity of content. What remains for P-12 is unchanged and is the
+      original CF-53 finding: `docs/method/PROJECT_RECONFIG.md` holds a STATUS
+      stub where a lost record should be, and the reviewer decides whether it is
+      re-authored or the stub stands. The duplication half of this row is closed;
+      the lost-record half is what keeps it open.
 - [ ] CF-54 — Stub count stated three ways: 22 in P-01's done-when, 20 in P-12's
       prompt, 23 actual (21 under docs/product/, 2 under docs/method/). Same
       defect class as CF-38's 56-versus-79. P-12 corrected and P-01 annotated
@@ -1128,7 +1143,14 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       until the secrets are set, T03's included, and `build` is not exercised in CI
       while that is true, though it passes locally. Both follow from D4's explicit
       choice of a loud failure over a silent skip.
-- [ ] CF-96 — `docs/method/REVIEWER_CHAT_INSTRUCTIONS.md` sits untracked in the
+      AMENDED (P01-T04) — **half of (2) is done and the row is not closed here,
+      because the closing evidence is a green run nobody has seen yet.** The
+      owner set both secrets and CF-108 records the name collision that kept
+      `types-drift` red even once the value was present. What is left of this row
+      is (1), the Vercel GitHub App authorisation, and the confirmation that
+      `types-drift` now concludes success. Until that run exists, the pipeline is
+      still wired-but-unproven, which is what CF-95 says.
+- [x] CF-96 — `docs/method/REVIEWER_CHAT_INSTRUCTIONS.md` sits untracked in the
       working tree. PR-14 requires a reviewer-authored document to stage outside
       the working tree and to enter the repository only by a land task, to its
       final path; an untracked draft inside the tree is the CF-53 duplication risk
@@ -1137,6 +1159,16 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       rather than a copy of a committed one. P01-T02-RESUME did not touch it: no
       prompt has authorised landing it and it is outside the task's scope. Owner:
       the owner, to land it or remove it.
+      CF-96 — CLOSED (P01-T04). The owner authorised landing it as his own
+      reference copy and it is committed at `docs/method/REVIEWER_CHAT_INSTRUCTIONS.md`
+      with its content unchanged. One blockquote was prepended and nothing else:
+      it names the file as the owner's working reference, points at `AGENTS.md`
+      for the builder surface and at `CLAUDE_PROJECT_INSTRUCTIONS.md` for the
+      pivot record, and states that where they differ this file is live for the
+      reviewer surface only. That header is what stops the file from becoming the
+      CF-53 duplication risk again — the risk was never the third copy, it was
+      three documents with no stated difference between them. CF-53 amended in
+      the same task to record the settlement.
 - [ ] CF-97 — The credential scanner failed on the one construction ADR-005
       requires. `check_credentials.py`'s assignment pattern matched
       `serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY` in
@@ -1256,7 +1288,37 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       reach is a member whose id is known out of band. Owner: the
       session-to-membership binding decision named in CF-93 gap (3), which must
       also decide whether `membership_insert_owner` constrains `member_id`.
-- [ ] CF-104 — `DATA_MODEL.md` §2 narrows operator reach to "`tenant`,
+      AMENDED (P01-T04) — **the exploit is closed and re-tested; the row stays
+      open for the half that is not an exploit.**
+      Closed: an owner may invite anyone and may never make anyone active.
+      `membership_insert_owner` now requires `status = 'invited'`;
+      `membership_accept_invitation` lets the invitee, and only the invitee, move
+      their own row `invited` → `active`; and a RESTRICTIVE policy,
+      `membership_active_is_self_only`, states the rule once for the table rather
+      than for a policy — no UPDATE may leave an unarchived `active` membership
+      belonging to anyone but the caller. The restrictive form is deliberate:
+      fixing only `membership_update_owner` would have left the exploit alive in
+      one more move for the next UPDATE policy anyone adds. Two SELECT policies
+      were needed to make acceptance reachable at all; see PRECEDENTS, P01-T04,
+      on PostgreSQL applying SELECT policies to both the old and the new row of
+      an UPDATE. `DATA_MODEL.md` §3.3 carries the rule and `SECURITY_MODEL.md` §1
+      carries the fourth guarantee, availability, which the three original parts
+      did not cover.
+      Re-tested rather than asserted: proof 19 re-runs the original attack and
+      asserts what the victim keeps — the tenant their session resolves to and
+      every own-tenant row they read, unchanged before, during and after, while
+      every `active` and `suspended` insert naming them is refused 42501. The one
+      row the attacker may still create is an `invited` one, which the victim can
+      see and which confers nothing.
+      **Still open, and it is not the exploit.** `current_tenant_id()` returns
+      null for anyone holding more than one active membership, which contradicts
+      `DOMAIN_MODEL.md` §5.1, so a person who accepts a second invitation locks
+      *themselves* out by their own action. That is the session-to-membership
+      binding and it needs auth. Proof 17 pins the current fail-closed behaviour
+      so the change is visible when it is made. Owner retargeted: **P02, with
+      authentication** — no longer CF-93 gap (3) alone, and no longer anything to
+      do with `membership_insert_owner`, which is settled.
+- [x] CF-104 — `DATA_MODEL.md` §2 narrows operator reach to "`tenant`,
       `subscription` and `activity_event` **metadata columns only**", and no
       column-level narrowing exists. Found by P01-T03 proof 7, against the live
       policies. `tenant_select_operator`, `activity_event_select_operator` and
@@ -1270,7 +1332,35 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       bounded by that rule alone rather than by a policy. Owner: reviewer, at the
       next `DATA_MODEL.md` amendment — either narrow §2's wording to match §3, or
       specify the column-level mechanism §2 implies.
-- [ ] CF-105 — `EXECUTE` on `public` functions is granted to `PUBLIC` by default
+      CF-104 — CLOSED (P01-T04). §2 now states the operator rule once, in two
+      classes, and §3.5 and §3.6 reference it instead of restating it.
+      **Account metadata** — `tenant` and `consent_grant`. Unconditional operator
+      SELECT, no grant, no log. An operator who cannot read the consent record
+      cannot tell whether the access they hold is live.
+      **Tenant business data** — `activity_event`, and every later tier's tables
+      after it. No operator policy on the table at all;
+      `activity_event_select_operator` is dropped. The only reach is
+      `operator_read_activity_event(uuid)`, which refuses a caller who is not an
+      operator, refuses one with no live `consent_grant` — `revoked_at is null`
+      and `now() < expires_at`, evaluated per call — writes an `activity_event`
+      naming the operator before it returns anything, and does not have `payload`
+      in its return type.
+      B1 asked for the consent test in the policy and B2 for the `payload`
+      exclusion by column grant. Neither is expressible at this granularity and
+      both are met by the function instead. A policy cannot log: PostgREST runs
+      GET in a READ ONLY transaction, so an audit insert inside a read policy
+      would abort the read it was auditing. A column grant cannot separate an
+      operator from a member: both arrive as `authenticated`, privileges are
+      role-scoped, and revoking `payload` from that role would take it from the
+      tenant's own audit trail, which §7 gives them in full. Excluding it from
+      the operator alone is a projection, and a projection needs a function. The
+      deviation is the mechanism only; both properties are now structural rather
+      than promised, because there is no other path.
+      Proven by proofs 20a, 20b and 21: seven refusals with no live grant and
+      nothing logged for any of them, one success that wrote exactly one event
+      with `actor_operator_id` set, and `payload` absent by all three direct
+      shapes and by the declared path.
+- [x] CF-105 — `EXECUTE` on `public` functions is granted to `PUBLIC` by default
       and the grants migration's blanket revoke covers tables only, so every
       function in `public` is a callable PostgREST RPC endpoint for `anon`. Found
       by P01-T03 proof 15. All four functions present today are safe and were
@@ -1283,7 +1373,34 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       unless its migration revokes `execute` explicitly, and the existing revoke
       does not cover it. Owner: the next migration that adds a function to
       `public`; at the latest the Phase 02 entry checklist, alongside CF-94.
-- [ ] CF-106 — `@types/node` is pinned to major 20 while the toolchain now
+      CF-105 — CLOSED (P01-T04). `revoke execute on all functions in schema
+      public` from `public`, `anon`, `authenticated` and `service_role`, then an
+      explicit grant per function. The first attempt revoked `public` and `anon`
+      only, as the task worded it, and left `authenticated` and `service_role`
+      holding EXECUTE on everything — Supabase issues those two as default
+      privileges of their own, so revoking the `PUBLIC` default removes a default
+      that was never what carried them. Caught by proof 22 before the commit and
+      re-applied through `migration repair --status reverted` and a fresh push,
+      so ADR-006's single-applier rule holds.
+      **Six functions, not the five the task expected.** Four existed; CF-104's
+      fix added `has_live_consent_grant(uuid)` and
+      `operator_read_activity_event(uuid)`. Each ACL is asserted exactly by proof
+      22: the three tenancy helpers, the consent predicate and the operator read
+      path hold `[authenticated, postgres]`, because a policy expression runs
+      with the caller's privileges and every policy here is `to authenticated`.
+      `enforce_tenant_active_owner()` holds `[postgres]` alone and is the one
+      function no caller should invoke — a trigger function's EXECUTE is checked
+      when the trigger is created, never when it fires, so the constraint keeps
+      working while the RPC endpoint stops existing. Over the wire `anon` gets
+      401 on all six and both the operator and a tenant owner get 404 on the
+      trigger function. `service_role` receives no grant: it bypasses RLS,
+      evaluates none of these policies, and a privilege with no reader is
+      exposure with no purpose.
+      The obligation the finding named survives closure and is now stated in the
+      migration itself: any later migration adding a function to `public` repeats
+      the revoke and states its own grant, or the function ships publicly
+      callable.
+- [x] CF-106 — `@types/node` is pinned to major 20 while the toolchain now
       declares Node 24, so `typecheck` validates against a standard library four
       majors behind the one the code runs on. Found by P01-T03 while landing
       CF-102's closure: the `engines` field and `.nvmrc` fix the runtime skew and
@@ -1296,3 +1413,51 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       published advisory, so it stops and flags rather than being done here.
       Owner: the next task authorised to change a dependency; naturally CF-98's,
       which already owes a `package.json` change.
+      CF-106 — CLOSED (P01-T04), authorised by this task's C2 as maintenance
+      under PR-25 rather than as a new dependency. `package.json` moves
+      `@types/node` from `^20` to `^24` and `npm ls @types/node` resolves
+      `@types/node@24.13.3`, deduped everywhere it appears. `tsc --noEmit` is
+      clean on the new major and so is `eslint`, so nothing in the tree depended
+      on a Node 20 declaration.
+      **Residue, noticed while proving this and not part of the finding.** The
+      local runtime is `node v22.12.0` while `.nvmrc` and `engines` pin 24 and
+      `ci.yml` runs 24. CF-102 closed on the pin existing, and a pin that the
+      shell does not honour is a pin nobody applies: `npm install` did not object,
+      so `engine-strict` is off. Types now match CI and the declared runtime,
+      which is what CF-106 asked for, but a local green remains evidence from a
+      third version. Owner: the owner, to switch the shell to 24 or to say the
+      skew is accepted; at the latest the Phase 01 exit gate, where CF-102's
+      closure is re-read.
+- [x] CF-107 — Every commit on this repository was authored with the literal
+      placeholder `your.email@example.com`. A committed template placeholder,
+      the same class as CF-80 one level down in the toolchain: git configuration
+      rather than document content. It left every commit unattributed and caused
+      Vercel to refuse the deployment, since the address matches no GitHub
+      account. Owner: owner action.
+      CF-107 — CLOSED (P01-T04). The owner set a GitHub no-reply address, which
+      resolves to his account without putting a real email into a public
+      repository's permanent history — the same consideration CF-14 records for
+      his name. **Residue: commits before this change keep the placeholder and
+      history is not rewritten.** New commits are correctly attributed.
+- [x] CF-108 — The Supabase project identifier was held under two names:
+      `ci.yml` read `SUPABASE_PROJECT_ID` while the repository secret was
+      `SUPABASE_PROJECT_REF`, so `types-drift` failed at its require step with
+      the value present under a name nothing read. Two names for one value is
+      the collision class `GLOSSARY.md` exists to prevent, reaching CI
+      configuration where no glossary was being applied. Owner: owner action.
+      CF-108 — CLOSED (P01-T04). One name, `SUPABASE_PROJECT_ID`. The access
+      token was separately absent and has been added. `SUPABASE_SERVICE_ROLE_KEY`
+      was removed from repository secrets — no CI job needs it, and on a public
+      repository every secret is reachable by any workflow file, so it was
+      exposure with no reader. It remains in Vercel, production target only.
+- [ ] CF-109 — The isolation suite runs by `npm run test:isolation` and is
+      deliberately outside `npm test`, so no CI job executes it. That was
+      originally forced by absent secrets; the secrets now exist and the decision
+      stands anyway, on a different ground. Under ADR-012 there is one Supabase
+      environment, so a per-push isolation job would seed and tear down against
+      production on every commit — precisely what ADR-012's compensating controls
+      guard against. The suite therefore remains a gate run deliberately by a
+      heavyweight task, not a per-push check. **Consequence to hold consciously:
+      an isolation regression introduced between gates is not caught until the
+      next gate.** Owner: CF-92's reinstatement trigger — when staging exists,
+      the suite becomes a required CI job on any schema-touching pull request.

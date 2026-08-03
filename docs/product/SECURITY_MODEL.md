@@ -18,7 +18,7 @@
 > the existence of, or modify any record belonging to tenant B — regardless of
 > the request's shape, the role held, or the identifier supplied.**
 
-Three parts, each independently testable.
+Four parts, each independently testable.
 
 **Read.** No response body ever contains a tenant B record.
 
@@ -30,6 +30,23 @@ different response for a foreign record is a breach even when it returns no data
 **Modify.** No write, delete, archive or state transition reaches a tenant B
 record, including writes that supply a foreign identifier as a foreign key on an
 otherwise valid own-tenant record.
+
+**Availability.** No request executed in tenant A's context can cause a member
+of tenant B to lose access to tenant B. *Testably:* take any member of tenant B
+and record what they read. Let tenant A do anything the API permits — every
+write, on every table, with every identifier belonging to that member. Read
+again. **The two counts are equal, on every table, always.** A single row that
+falls to zero is a breach, whether or not anything of tenant B was read,
+inferred or modified.
+
+> Availability was added by P01-T04, and it was added because the first three
+> parts were all true of a live exploit. A tenant owner could bind a member of
+> another tenant into their own tenant as a second `active` membership, and
+> `current_tenant_id()` — which fails closed on more than one, deliberately —
+> then returned null, so the victim read nothing anywhere. Every record created
+> lived in the attacker's tenant. Read, existence and modify were each satisfied
+> while the victim was locked out of their own company by a stranger. A
+> guarantee that a proven attack satisfies is not yet the guarantee.
 
 **This gate cannot be waived by OD.** Every other standard in this platform can
 be traded against schedule by a signed decision. This one cannot, because a
@@ -222,6 +239,8 @@ Run before public launch. **An audit, not a removal** — history is permanent.
 | Failure | Foreclosed by |
 |---|---|
 | A tenant reading another's data | §1, proven by P1 |
+| A tenant locking another tenant's member out of their own tenant | §1 availability — the read count before equals the read count after |
+| Support staff reading a business row with no live grant, or reading one unlogged | §5, and the declared read path `DATA_MODEL.md` §2 requires |
 | Inferring a record's existence without reading it | §3 P2 |
 | A foreign key smuggling a foreign record into a valid write | §3 P3 |
 | Protection enabled with no rule, returning silence to everyone | §3 P4 — the positive path is mandatory |

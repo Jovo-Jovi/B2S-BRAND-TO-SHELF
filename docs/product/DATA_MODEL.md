@@ -54,12 +54,17 @@ policy fails closed and silent — embedded selects resolve to empty for every
 caller with no error anywhere. That is a documented incident in the method
 reference and it is the single easiest way to ship a broken read path.
 
-Two helper functions, `security definer`, `stable`, owned by the schema owner:
+Four helper functions, `security definer`, pinned `search_path`, owned by the
+schema owner. The first two are the tenancy spine; the third exists because a
+policy on `membership` cannot read `membership` without recursing; the fourth is
+the operator rule's predicate.
 
 | Helper | Returns |
 |---|---|
 | `current_tenant_id()` | The `tenant_id` of the calling identity's active `membership`, or null |
 | `is_operator()` | Whether the calling identity has an `operator` row |
+| `is_current_tenant_owner()` | Whether the caller's membership in their own active tenant carries role `owner` |
+| `has_live_consent_grant(tenant_id)` | Whether that tenant has a `consent_grant` that is neither revoked nor lapsed, evaluated now |
 
 **The standard tenant policy**, applied to every tenant-scoped table:
 
@@ -71,10 +76,47 @@ WITH CHECK  ( tenant_id = current_tenant_id() )
 `WITH CHECK` is not optional. Without it a member can insert a row carrying
 another tenant's `tenant_id` — the read is protected and the write is not.
 
-**Operator reach is separate and narrow.** `is_operator()` grants read on
-`tenant`, `subscription` and `activity_event` metadata columns only. It grants
-nothing on any business table. OD-G10 is a promise in the terms of service, and
-the policy set is what makes it true rather than aspirational.
+**Operator reach — the rule, stated once here.** OD-G10 is a promise in the
+terms of service; this is what makes it true rather than aspirational. §3's
+per-table entries reference this and never restate it. Two classes, and a table
+belongs to exactly one:
+
+**Account metadata — `tenant` and `consent_grant`.** An unconditional
+`is_operator()` SELECT policy. No consent grant is required and no access is
+logged. This is G10's "account metadata, usage and billing" half. `consent_grant`
+sits here because it is the authorisation record rather than the tenant's
+business: an operator who cannot read it cannot tell whether the access they
+hold is live, revoked or lapsed. `subscription` and `feature_flag` join this
+class when billing lands.
+
+**Tenant business data — `activity_event`, and every table in every tier after
+this one.** **No operator policy on the table at all.** An operator reaches a
+business row only through a *declared read path* — a `security definer` function
+that (1) refuses a caller who is not an operator, (2) refuses unless
+`has_live_consent_grant(tenant_id)` is true at that moment, (3) writes an
+`activity_event` carrying `actor_operator_id` before returning anything, and
+(4) projects away every column a support session does not need, `payload` first
+among them. `operator_read_activity_event(tenant_id)` is the first such path.
+Every later tier adds its own, or its tables stay out of operator reach entirely.
+
+**Why a function and not a policy, for the business half.** Two mechanisms do
+not exist at the granularity the rule needs, and pretending otherwise is how a
+guarantee becomes decoration:
+
+- *A policy cannot log.* PostgREST runs `GET` inside a `READ ONLY` transaction,
+  so a policy expression that wrote an audit row would abort the very read it
+  was auditing. "Every access under a grant is logged" (`SECURITY_MODEL.md` §5)
+  is unreachable on a policy-mediated read.
+- *A column grant cannot separate an operator from a member.* Both arrive as one
+  database role, and column privileges are role-scoped. Dropping `payload` from
+  that grant would drop it from the tenant's own audit trail too, which §7 gives
+  the tenant in full. Excluding it from the operator alone is a projection, and
+  a projection needs a function.
+
+Because the function is the *whole* of the operator's business-data reach, both
+properties are structural rather than trusted: no path returns `payload` to an
+operator, and no path returns a business row to an operator without writing the
+log.
 
 **Grants and policies compose.** A permissive policy over a table-wide column
 grant lets a member rewrite their own `role`. Column-scoped grants are used
@@ -143,10 +185,54 @@ own, and therefore an entity.
 **At least one `active` `owner` per tenant** — enforced by a constraint trigger,
 not by application code. A tenant with no owner is unreachable.
 
-**RLS.** SELECT where `tenant_id = current_tenant_id()`. INSERT and UPDATE
-restricted to callers whose own membership in that tenant is `owner`.
+**RLS.** SELECT where `tenant_id = current_tenant_id()`, **or where the row is
+the caller's own** (`member_id = auth.uid()`). INSERT and UPDATE restricted to
+callers whose own membership in that tenant is `owner`.
 **`role` is never self-writable** — no policy path lets a member raise their own
 role, and the grant is column-scoped to make that structural rather than trusted.
+
+The second SELECT clause is load-bearing for the rule below, and it has to be
+this wide. PostgreSQL applies the SELECT policies to an UPDATE twice: to the old
+row, because `UPDATE ... WHERE` reads existing values, and again to the new row,
+so that no UPDATE can push a row out of the caller's own visibility. An invitee
+therefore needs to see the row both as `invited` and as `active`, and a clause
+restricted to `invited` refuses the exact transition it exists to permit — found
+by measurement at the P01-T04 gate, not by reading the migration. Read on its
+own terms the clause says something obvious anyway: a person may know which
+tenants claim them, and in what role. No other member is exposed by it —
+`membership_select_tenant` is still the only way to see somebody else's row, and
+it still requires an active membership in that tenant.
+
+**What it concedes.** An owner can put one row into a stranger's result set,
+because inviting someone is how anyone joins a second tenant at all. It confers
+nothing: the row is `invited`, it does not change what the stranger's session
+resolves to, and ignoring it is a complete defence. §5 proof 9 asserts that from
+the victim's side rather than assuming it.
+
+**Invite, then accept. An owner may invite anyone; an owner may never make
+anyone active.** An owner's INSERT must carry `status = 'invited'`, and the only
+transition into `active` available to any caller is the invitee moving *their
+own* row. Stated as the rule the policies enforce: **no write may leave an
+unarchived `active` membership belonging to anyone but the caller.** An owner
+keeps suspend and archive on their own tenant's rows, because neither produces
+one. Provisioning the first `active` `owner` of a new tenant is therefore a
+privileged path (ADR-005) and could not be anything else — there is no owner yet
+to do the inviting.
+
+**Why, and it is not tidiness.** An owner who can force a stranger active can
+force a *second* active membership onto a member of another tenant.
+`current_tenant_id()` returns null for anyone holding more than one, by design,
+so that member is locked out of the tenant they actually belong to — by a
+stranger, through the ordinary API, needing nothing but their `member.id`.
+Nothing of the victim's tenant is read, inferred or modified, so the three parts
+of `SECURITY_MODEL.md` §1 did not cover it; §1 now carries a fourth,
+availability. Found live by the P01-T03 gate and recorded as CF-103.
+
+**What this rule does not settle.** A person who accepts a second invitation
+locks *themselves* out, by their own action, for the same reason. That is the
+session-to-membership binding — `TENANCY_MODEL.md` §2 binds a session to one
+membership and this document specifies no storage for the binding — and it
+belongs with authentication in Phase 02. CF-103 stays open for that half.
 
 ### 3.4 `operator`
 A B2S platform administrator. Not tenant-scoped.
@@ -176,9 +262,10 @@ A tenant's explicit, time-boxed permission for operator support access (OD-G10).
 | provenance | | per §1 |
 
 **RLS.** SELECT and INSERT where `tenant_id = current_tenant_id()` and the caller
-is `owner`. SELECT also where `is_operator()`. Never updatable — revocation sets
-`revoked_at` through a narrow column grant, and a lapsed grant is never extended,
-only replaced.
+is `owner`. SELECT also where `is_operator()`, unconditionally: `consent_grant`
+is **account metadata** under §2's operator rule, which is where the reasoning
+lives. Never updatable — revocation sets `revoked_at` through a narrow column
+grant, and a lapsed grant is never extended, only replaced.
 
 **A consent grant does not itself widen any policy.** It is the record that
 authorises an operator action and the thing an audit reads. Any policy consulting
@@ -202,9 +289,14 @@ The audit trail (OD-C15). Append-only.
 **Exactly one of** `actor_member_id`, `actor_operator_id` is non-null — a check
 constraint, because an event with no actor is not an audit trail.
 
-**RLS.** SELECT where `tenant_id = current_tenant_id()` or `is_operator()`.
-INSERT permitted for the tenant's own members. **No UPDATE policy and no DELETE
-policy exist** — that absence is the immutability, per §1.5.
+**RLS.** SELECT where `tenant_id = current_tenant_id()`. INSERT permitted for the
+tenant's own members. **No UPDATE policy and no DELETE policy exist** — that
+absence is the immutability, per §1.5. **There is no operator policy on this
+table**: `activity_event` is **tenant business data** under §2's operator rule,
+so an operator reaches it only through `operator_read_activity_event(tenant_id)`
+— live consent required, the access logged, `payload` never returned. The
+absence of an operator policy here is what makes that path the only one, and
+§2 is where the reasoning lives.
 
 ### 3.7 `role` — not a table
 `role` is a Postgres enum, not a table. The five values are fixed by
@@ -248,10 +340,30 @@ Against the **live** staging catalog, by query — never by reading the migratio
    A's rows and **zero** of B's, on every table, for select, insert, update and
    delete. The positive path is asserted too — permitted rows must actually come
    back, because default-deny failing silently looks identical to an empty table.
+   One class of row crosses by design: a `membership` row that is the caller's
+   own, per §3.3. It is asserted, not tolerated — proof 9 below fixes what a
+   foreign tenant may put there and what it may cost the caller.
 5. No member can raise their own `membership.role`, attempted directly.
 6. A member cannot insert a row carrying another tenant's `tenant_id`.
 7. `is_operator()` returns no business row on any table.
 8. Generated types match the live schema; the drift job fails loudly if not.
+9. **No write leaves an unarchived `active` membership belonging to anyone but
+   the caller** (§3.3). Proven from both sides: an owner's attempt to insert one
+   for a stranger is refused, an owner's attempt to update one into existence is
+   refused, and the invitee's own `invited` → `active` move succeeds and is the
+   only transition available to them. The invitee's move is proven to *land*,
+   not merely to be permitted — an accept policy over a row the invitee cannot
+   see never fires and reports success. What the invitee sees is asserted with
+   it: their own invitation, and no other row of the inviting tenant. What the
+   victim keeps is asserted opposite it: the tenant they resolve to and every
+   own-tenant row they read are unchanged by anything a foreign owner can do.
+10. **The operator surface obeys §2's rule.** A business-row read with no live
+    `consent_grant` is refused; the same read with one succeeds and writes an
+    `activity_event` carrying `actor_operator_id`; `payload` is never returned to
+    an operator, grant or no grant.
+11. **Every function in `public` carries an explicit `EXECUTE` grant.** None is
+    reachable by `PUBLIC` or by `anon`, and a function no caller needs is granted
+    to no one.
 
 **Not waivable by OD.**
 

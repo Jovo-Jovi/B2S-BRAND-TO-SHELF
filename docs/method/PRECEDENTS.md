@@ -376,3 +376,22 @@ rule written for a different act.
   nothing, which is PR-21's failure shape. The isolation suite runs on its own
   config through `npm run test:isolation`, and throws by name on an absent
   variable.
+- Learned at P01-T04: **PostgreSQL applies a table's SELECT policies to an
+  UPDATE twice** — to the old row, because `UPDATE ... WHERE` reads existing
+  values, and again to the **new** row, so that no UPDATE can push a row out of
+  the caller's own visibility. An UPDATE policy is therefore never sufficient on
+  its own: the caller must be able to see the row in both the state it starts in
+  and the state it ends in, or the write is refused. The two failures look
+  nothing alike and neither names the cause. Invisible **old** row: PostgREST
+  answers `204` under `return=minimal` and the row is unchanged — a silent
+  no-op that reads as success. Invisible **new** row: `42501 new row violates
+  row-level security policy for table "x"`, with no policy name, which points at
+  a WITH CHECK that may be perfectly correct. Diagnose it by substitution, not
+  by reading: replace the UPDATE policy's WITH CHECK with literal `true` and
+  drop every other UPDATE policy. If the refusal survives a check that cannot
+  fail, the SELECT policies are the cause.
+- Learned at P01-T04: the isolation harness reads `SUPABASE_ACCESS_TOKEN` from
+  the process environment or `.env.local`, and the Supabase CLI's own copy lives
+  in Windows Credential Manager where the harness cannot reach it. A CLI that
+  pushes migrations happily is therefore no evidence that the suite can run. The
+  variable is the owner's to supply and is never requested in a chat surface.

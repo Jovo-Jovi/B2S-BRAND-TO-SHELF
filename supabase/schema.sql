@@ -503,3 +503,320 @@ grant update (revoked_at) on public.consent_grant to authenticated;
 -- §3.6 — append only. No UPDATE and no DELETE privilege, matching the absent
 -- policies. The audit trail is tenant-readable in full (SECURITY_MODEL.md §7).
 grant select, insert on public.activity_event to authenticated;
+
+
+-- ===== migration: 20260803120001_membership_invite_lifecycle =====
+
+-- CF-103 — §3.3's invite-then-accept rule, enforced.
+--
+-- The defect: membership_insert_owner constrained tenant_id and the caller's
+-- role and said nothing about member_id or status, so tenant A's owner could
+-- insert an ACTIVE membership naming any member of any other tenant. That
+-- member then held two active memberships, current_tenant_id() returned null by
+-- design, and they lost access to their own tenant. Nothing of tenant B was
+-- read, inferred or modified, so SECURITY_MODEL.md §1's three parts did not
+-- cover it; §1 now carries a fourth, availability.
+--
+-- The rule: an owner may INVITE anyone. An owner may never MAKE anyone active.
+-- Only the invitee moves their own row to active. An invitation is an offer,
+-- and an offer the offeree cannot decline is not an offer.
+
+-- §3.3 — INSERT is invite-only. status = 'invited' is what makes "invite" the
+-- only thing an owner can do here; without it the WITH CHECK is a rule about
+-- which tenant the row lands in and not about what the row does.
+drop policy membership_insert_owner on public.membership;
+
+create policy membership_insert_owner on public.membership
+  for insert to authenticated
+  with check (
+    tenant_id = public.current_tenant_id()
+    and public.is_current_tenant_owner()
+    and status = 'invited'
+  );
+
+-- §3.3 — the invitee's own move, and the only status transition available to
+-- them: invited -> active, on their own row. USING reads the old row and
+-- WITH CHECK the new one, so the pair states the transition exactly.
+-- archived_at is null in USING because a withdrawn invitation is not an
+-- invitation (§1.3).
+create policy membership_accept_invitation on public.membership
+  for update to authenticated
+  using (
+    member_id = auth.uid()
+    and status = 'invited'
+    and archived_at is null
+  )
+  with check (
+    member_id = auth.uid()
+    and status = 'active'
+  );
+
+-- The rule stated once, RESTRICTIVE so it ANDs with every UPDATE policy on this
+-- table — the two that exist and any later one, which is the difference between
+-- fixing membership_update_owner and fixing the table. Without it the exploit
+-- survives the INSERT fix in one more move: an owner inserts the invitation the
+-- new WITH CHECK permits, then updates it to active under membership_update_owner.
+--
+-- No update may leave an unarchived ACTIVE membership belonging to anyone but
+-- the caller. An owner keeps suspend and archive, on their own tenant's rows,
+-- because neither produces one.
+create policy membership_active_is_self_only on public.membership
+  as restrictive for update to authenticated
+  using ( true )
+  with check (
+    status <> 'active'
+    or archived_at is not null
+    or member_id = auth.uid()
+  );
+
+
+-- ===== migration: 20260803120002_operator_consent_reach =====
+
+-- CF-104 — OD-G10, enforced rather than promised.
+--
+-- G10: an operator sees account metadata, usage and billing, never tenant
+-- business data; support access requires a ConsentGrant and is logged. What was
+-- built gave an operator an unconditional row read of activity_event, payload
+-- included, for every tenant, with nothing logged anywhere.
+--
+-- §2 now states the rule once, in two classes:
+--
+--   Account metadata — `tenant` and `consent_grant`. Unconditional operator
+--   SELECT policy, no grant required and no log written. These are the
+--   "account metadata" half of G10, and an operator who cannot read the consent
+--   record cannot tell whether the access they hold is live or lapsed.
+--
+--   Tenant business data — `activity_event` here, every later tier's tables
+--   after it. NO operator policy on the table at all. Reachable only through
+--   the declared read path below, which requires a live consent grant, writes
+--   an activity_event naming the operator, and never returns `payload`.
+--
+-- Why the business-data half is a function and not a policy. Two mechanisms
+-- the requirement asks for do not exist at this granularity:
+--
+--   A policy cannot log. PostgREST runs GET in a READ ONLY transaction, so a
+--   policy expression that inserted an audit row would abort the read it was
+--   auditing. "Every access under a grant is logged" (SECURITY_MODEL.md §5)
+--   therefore cannot be satisfied on a policy-mediated read.
+--
+--   A column grant cannot separate an operator from a member. Both arrive as
+--   the `authenticated` role, and column privileges are role-scoped. Excluding
+--   `payload` by grant would exclude it from the tenant's own audit trail too,
+--   which §7 gives the tenant in full. Excluding it from the operator alone is
+--   a projection, and a projection needs a function.
+--
+-- The function is therefore the whole of the operator's business-data reach,
+-- which makes both properties structural: there is no path that returns
+-- `payload` to an operator, and there is no path that returns a business row to
+-- an operator without writing the log.
+
+-- The live-grant predicate, separate because every later tier's business table
+-- reaches for the same test. §3.5: a consent grant is live when it has not been
+-- revoked and has not lapsed, evaluated at read time, never cached.
+create or replace function public.has_live_consent_grant(p_tenant_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1
+    from public.consent_grant g
+    where g.tenant_id = p_tenant_id
+      and g.revoked_at is null
+      and now() < g.expires_at
+  )
+$$;
+
+-- §3.6 — the operator loses the unconditional row read. What remains on the
+-- table is the tenant's own SELECT and the tenant's own INSERT; the absence of
+-- an operator policy here is what makes the declared path the only one.
+drop policy activity_event_select_operator on public.activity_event;
+
+-- The declared operator read path. VOLATILE because it writes: PostgREST runs
+-- POST /rpc in a read-write transaction, which is the whole reason the log can
+-- be written here and not in a policy.
+--
+-- `payload` is absent from the return type. That absence is the exclusion, and
+-- it holds whether or not a grant is live, because there is no argument and no
+-- caller that adds a column to a function's signature.
+create or replace function public.operator_read_activity_event(p_tenant_id uuid)
+returns table (
+  id                uuid,
+  tenant_id         uuid,
+  actor_member_id   uuid,
+  actor_operator_id uuid,
+  action            text,
+  entity_type       text,
+  entity_id         uuid,
+  occurred_at       timestamptz
+)
+language plpgsql
+volatile
+security definer
+set search_path = ''
+as $$
+begin
+  -- Refused, not empty. SECURITY_MODEL.md §5 makes an operator request with no
+  -- live grant indistinguishable from a cross-tenant one; both end here, and
+  -- neither says whether the tenant exists.
+  if not public.is_operator() then
+    raise exception 'operator read refused: the caller is not an operator'
+      using errcode = 'insufficient_privilege';
+  end if;
+
+  if not public.has_live_consent_grant(p_tenant_id) then
+    raise exception 'operator read refused: no live consent grant for this tenant'
+      using errcode = 'insufficient_privilege';
+  end if;
+
+  -- Written before the rows are returned, so a read that is interrupted after
+  -- the log is still a read that happened. The tenant reads this row like any
+  -- other event: §7 makes the audit trail theirs.
+  insert into public.activity_event
+    (tenant_id, actor_operator_id, action, entity_type, entity_id)
+  values
+    (p_tenant_id, auth.uid(), 'operator.activity_event.read', 'ActivityEvent', null);
+
+  return query
+    select e.id, e.tenant_id, e.actor_member_id, e.actor_operator_id,
+           e.action, e.entity_type, e.entity_id, e.occurred_at
+      from public.activity_event e
+     where e.tenant_id = p_tenant_id
+     order by e.occurred_at desc, e.id;
+end
+$$;
+
+
+-- ===== migration: 20260803120003_function_execute_grants =====
+
+-- CF-105 — EXECUTE on a function in `public` defaults to PUBLIC, and
+-- 20260802120007's blanket revoke covers tables only. Every function in this
+-- schema was therefore a PostgREST RPC endpoint callable by `anon`, including
+-- ones that had not been written yet.
+--
+-- Revoking PUBLIC and `anon` is not enough, and the reason is the same one
+-- 20260802120007 records for tables. A Supabase project ships ALTER DEFAULT
+-- PRIVILEGES granting EXECUTE on new functions in `public` to anon,
+-- authenticated and service_role, so each function arrives holding three
+-- explicit grants of its own. Revoking PUBLIC removes a default that was never
+-- what carried them. Every role is therefore revoked and only the ones that
+-- need a given function are granted it back.
+--
+-- The same shape as the table revoke, and the same obligation: any later
+-- migration that adds a function to `public` repeats this revoke and states its
+-- own grant, or the function ships callable by every signed-in identity.
+
+revoke execute on all functions in schema public from public;
+revoke execute on all functions in schema public from anon;
+revoke execute on all functions in schema public from authenticated;
+revoke execute on all functions in schema public from service_role;
+
+-- The three tenancy helpers are evaluated inside policies, and a policy
+-- expression is executed with the privileges of the caller, so `authenticated`
+-- needs EXECUTE for its own policies to work. `anon` evaluates none of them:
+-- every policy in this schema is `to authenticated`.
+grant execute on function public.current_tenant_id()        to authenticated;
+grant execute on function public.is_operator()              to authenticated;
+grant execute on function public.is_current_tenant_owner()  to authenticated;
+
+-- The consent predicate and the declared operator read path. Granting the read
+-- path to `authenticated` rather than to some narrower role is correct: there
+-- is no operator role, an operator is an ordinary authenticated identity with
+-- an `operator` row, and the function refuses anyone else on its first line.
+grant execute on function public.has_live_consent_grant(uuid)      to authenticated;
+grant execute on function public.operator_read_activity_event(uuid) to authenticated;
+
+-- enforce_tenant_active_owner() receives no grant, deliberately. A trigger
+-- function's EXECUTE privilege is checked when the trigger is created, never
+-- when it fires, so the constraint keeps working while the function stops
+-- being an RPC endpoint. It is the one function here that no caller should
+-- ever invoke directly.
+--
+-- service_role receives no grant either. It bypasses row-level security, so it
+-- evaluates none of these policies, and ADR-005's quarantined client uses it
+-- for provisioning writes alone. A privilege with no reader is exposure with no
+-- purpose.
+
+
+-- ===== migration: 20260803120004_membership_invitation_visibility =====
+
+-- This task's own gate finding, one layer beneath CF-103's fix. It is recorded
+-- as a separate migration rather than folded into 20260803120001 because that
+-- one is applied: an applied migration is history, and history that gets edited
+-- to look correct is the thing ADR-006's single-applier rule exists to prevent.
+--
+-- 20260803120001 gave the invitee an UPDATE policy and nothing to update.
+-- PostgreSQL applies the SELECT policies on top of an UPDATE policy's USING
+-- whenever the statement reads existing row values, and `UPDATE ... WHERE` —
+-- the only shape PostgREST emits for a PATCH — always does. membership's one
+-- SELECT policy is membership_select_tenant, `tenant_id = current_tenant_id()`,
+-- and an invitee holds no ACTIVE membership in the inviting tenant, because
+-- that is what being invited means. The row was invisible to the single person
+-- entitled to act on it. Their acceptance matched zero rows and PostgREST
+-- answered 204, so the defect presented as success.
+--
+-- A right nobody can exercise is not a right. An invitation the invitee cannot
+-- see is the availability defect wearing its other face: SECURITY_MODEL.md §1's
+-- fourth guarantee says an owner may not force a stranger active, and A2's
+-- answer to that was to make acceptance the invitee's to give. Withholding the
+-- row withholds the giving.
+--
+-- Scoped to the invitation and to nothing else. Without `status = 'invited'`
+-- this would read "see your own membership rows in every tenant", and then any
+-- owner anywhere could make a row appear in a stranger's result set at will and
+-- keep it there. What the invitee gains sight of is one offer addressed to them
+-- by name, which they accept or leave to lapse; the moment they accept, the row
+-- leaves this policy and is covered by membership_select_tenant like any other.
+create policy membership_select_own_invitation on public.membership
+  for select to authenticated
+  using (
+    member_id = auth.uid()
+    and status = 'invited'
+    and archived_at is null
+  );
+
+
+-- ===== migration: 20260803120005_membership_self_visibility =====
+
+-- 20260803120004 was half right, and the gate said so on the next run. This is
+-- the other half, kept as its own migration because 004 is applied and an
+-- applied migration is history (ADR-006).
+--
+-- 004 scoped the invitee's new SELECT policy to `status = 'invited'`, reasoning
+-- that an invitee needs to see the offer and nothing more. The offer became
+-- visible and acceptance was still refused, now with 42501 rather than a silent
+-- zero-row match.
+--
+-- Measured rather than guessed: with the accept policy's WITH CHECK replaced by
+-- literal `true` and both other UPDATE policies dropped, the refusal survived.
+-- A WITH CHECK that cannot fail was failing, so the check being violated was
+-- never the UPDATE policy's.
+--
+-- PostgreSQL applies the SELECT policies to an UPDATE **twice**: to the old row,
+-- which is why 004 was needed at all, and again to the NEW row, so that no
+-- UPDATE can push a row out of the caller's own visibility. An `invited`-only
+-- SELECT policy does exactly that: the row the invitee is permitted to write is
+-- `active`, and `active` is what the policy stops covering. Accepting an
+-- invitation under 004 meant updating a row into a state its owner could no
+-- longer see, and the server is right to refuse it.
+--
+-- So the rule is not "an invitee may see their invitation". It is the plainer
+-- thing that was true all along: **a member may see the membership rows that
+-- are theirs**, wherever they are, in whatever state. A person is entitled to
+-- know which tenants claim them and in what role, and no other member is
+-- exposed by it — `membership_select_tenant` remains the only way to see anyone
+-- else's row, and it still requires an active membership in that tenant.
+--
+-- What this concedes, stated rather than buried: an owner can now put one row
+-- into a stranger's result set, since inviting someone is how anyone ever joins
+-- a second tenant. It confers nothing. The row is `invited`, it does not move
+-- what the stranger resolves to, and ignoring it is a complete defence.
+-- DATA_MODEL.md §5 proof 9 asserts exactly that, from the victim's side.
+
+drop policy membership_select_own_invitation on public.membership;
+
+create policy membership_select_own on public.membership
+  for select to authenticated
+  using ( member_id = auth.uid() );

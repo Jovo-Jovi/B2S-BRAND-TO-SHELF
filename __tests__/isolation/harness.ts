@@ -217,6 +217,8 @@ export type Attempt = {
   message: string;
   ids: string[];
   count: number;
+  /** The rows verbatim, so a proof can assert on a key that must be absent. */
+  rows: Record<string, unknown>[];
 };
 
 function parseAttempt(status: number, raw: string): Attempt {
@@ -236,10 +238,11 @@ function parseAttempt(status: number, raw: string): Attempt {
       message: error.message ?? raw.slice(0, 300),
       ids: [],
       count: 0,
+      rows: [],
     };
   }
 
-  const rows = Array.isArray(payload) ? (payload as { id?: unknown }[]) : [];
+  const rows = Array.isArray(payload) ? (payload as Record<string, unknown>[]) : [];
   return {
     ok: true,
     status,
@@ -247,6 +250,7 @@ function parseAttempt(status: number, raw: string): Attempt {
     message: "",
     ids: rows.map((row) => row.id).filter((id): id is string => typeof id === "string"),
     count: rows.length,
+    rows,
   };
 }
 
@@ -256,13 +260,14 @@ async function postgrest(
   method: "GET" | "POST" | "PATCH" | "DELETE",
   path: string,
   body?: unknown,
+  prefer = "return=representation",
 ): Promise<Attempt> {
   const headers: Record<string, string> = {
     apikey: caller.apiKey,
     Accept: "application/json",
     // Every write returns its rows, so "refused" and "matched nothing" are
     // distinguishable. Conflating them is how a silent zero-row write passes.
-    Prefer: "return=representation",
+    Prefer: prefer,
   };
   // An empty token is the unauthenticated caller: the request carries the
   // publishable key alone and PostgREST resolves it to `anon`.
@@ -277,6 +282,9 @@ async function postgrest(
   return parseAttempt(result.status, result.body);
 }
 
+/** A row as PostgREST returned it, so a proof can assert on absent keys. */
+export type RawRow = Record<string, unknown>;
+
 export function makeProbes(config: Config) {
   return {
     select: (caller: Caller, table: TableName) =>
@@ -287,6 +295,28 @@ export function makeProbes(config: Config) {
 
     update: (caller: Caller, table: TableName, id: string, patch: Record<string, unknown>) =>
       postgrest(config, caller, "PATCH", `${table}?id=eq.${encodeURIComponent(id)}`, patch),
+
+    /**
+     * The same PATCH with no representation asked for. `UPDATE ... RETURNING`
+     * is subject to the SELECT policies as well as the UPDATE ones, so a caller
+     * permitted to write a row they cannot read — an invitee accepting, who
+     * holds no active membership in the inviting tenant and therefore no SELECT
+     * path to it — needs this form. Persistence is asserted through the
+     * privileged path either way.
+     */
+    updateMinimal: (caller: Caller, table: TableName, id: string, patch: Record<string, unknown>) =>
+      postgrest(
+        config,
+        caller,
+        "PATCH",
+        `${table}?id=eq.${encodeURIComponent(id)}`,
+        patch,
+        "return=minimal",
+      ),
+
+    /** A read naming its columns, so a proof can ask for one it must not get. */
+    selectColumns: (caller: Caller, table: TableName, columns: string) =>
+      postgrest(config, caller, "GET", `${table}?select=${encodeURIComponent(columns)}`),
 
     remove: (caller: Caller, table: TableName, id: string) =>
       postgrest(config, caller, "DELETE", `${table}?id=eq.${encodeURIComponent(id)}`),
@@ -301,7 +331,11 @@ export function makeProbes(config: Config) {
      * could be coerced into answering for another caller the whole policy set
      * would follow it.
      */
-    async rpc(caller: Caller, fn: string): Promise<{ status: number; body: string }> {
+    async rpc(
+      caller: Caller,
+      fn: string,
+      args: Record<string, unknown> = {},
+    ): Promise<{ status: number; body: string; rows: RawRow[] }> {
       const headers: Record<string, string> = {
         apikey: caller.apiKey,
         Accept: "application/json",
@@ -311,10 +345,20 @@ export function makeProbes(config: Config) {
 
       const result = await fetchResilient(
         `${config.url}/rest/v1/rpc/${fn}`,
-        { method: "POST", headers, body: "{}" },
+        { method: "POST", headers, body: JSON.stringify(args) },
         `${caller.label} rpc/${fn}`,
       );
-      return { status: result.status, body: result.body.trim() };
+
+      let rows: RawRow[] = [];
+      if (result.status < 400) {
+        try {
+          const parsed: unknown = JSON.parse(result.body);
+          if (Array.isArray(parsed)) rows = parsed as RawRow[];
+        } catch {
+          rows = [];
+        }
+      }
+      return { status: result.status, body: result.body.trim(), rows };
     },
   };
 }
@@ -652,7 +696,11 @@ export function record(id: string, claim: string, failures: string[], evidence: 
  */
 export const EXPECTED_ASSERTIONS = [
   "1", "2", "3", "4a", "4b", "4c", "4d", "5", "6", "7", "8",
-  "9", "10", "11", "12", "13", "14", "15", "16", "17", "D",
+  "9", "10", "11", "12", "13", "14", "15", "16", "17",
+  // P01-T04 — one line per fix, so a closed finding that reopens is louder
+  // than a finding that was never tested.
+  "18a", "18b", "18c", "18d", "18e", "19", "20a", "20b", "21", "22",
+  "D",
 ];
 
 export function printLedger(): void {

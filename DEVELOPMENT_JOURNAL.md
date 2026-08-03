@@ -1407,3 +1407,81 @@ reasons to hold — isolation is proven — while the red pipeline and
 that matters for "no credential in the commit", and the remote's response
 repeated CF-98's four Dependabot advisories, unchanged and now unblocked by
 PR-25 for whichever task takes them.
+
+---
+
+2026-08-03 | Opus (heavyweight) | BUILD P01-T04: FIX the four T03 findings, then re-run the whole gate — 31 assertions, 31 PASS, 0 FAIL, 0 LOST | supabase/migrations/20260803120001_membership_invite_lifecycle.sql, 20260803120002_operator_consent_reach.sql, 20260803120003_function_execute_grants.sql, 20260803120004_membership_invitation_visibility.sql, 20260803120005_membership_self_visibility.sql, supabase/schema.sql, docs/product/DATA_MODEL.md, docs/product/SECURITY_MODEL.md, docs/method/CARRY_FORWARDS.md, docs/method/PRECEDENTS.md, docs/method/REVIEWER_CHAT_INSTRUCTIONS.md, __tests__/isolation/harness.ts, __tests__/isolation/tenant-isolation.test.ts, package.json, package-lock.json, SESSION_CONTEXT.md | The fix for CF-103 was wrong twice and the suite caught it both times, in two different disguises; two migrations exist that would not have been written if the gate had been trusted to a reading of the SQL. B1 and B2 were met by a different mechanism than the prompt specified, declared below. CF-105 needed a wider revoke than the prompt's wording. Six functions, not five. CF-104/105/106/96 closed, CF-103/53/95 amended, CF-107/108 landed closed, CF-109 landed open | T05, the Phase 01 exit gate, once the owner clears CF-95
+
+**The fix for CF-103 was wrong twice, and both wrongs looked like success.** The
+first version added the invite-only `WITH CHECK`, the invitee's accept policy and
+the restrictive self-only rule, and read correctly end to end. The gate reported
+18c FAIL: the invitee's `PATCH` returned `204` and changed nothing. PostgreSQL
+applies the SELECT policies to an `UPDATE ... WHERE` because the statement reads
+existing row values, and an invitee holds no active membership in the inviting
+tenant — that is what being invited means — so the accept policy matched a row
+its only beneficiary could not see. A policy that can never fire, shipped behind
+a `204`.
+
+The second version gave the invitee sight of the invitation, scoped tightly to
+`status = 'invited'` on the reasoning that an offer is all they need. The gate
+reported 18c FAIL again, now `42501 new row violates row-level security policy`.
+That message points at a `WITH CHECK`, and the `WITH CHECK` was correct. It was
+diagnosed by substitution rather than by reading: with the accept policy's check
+replaced by literal `true` and both other UPDATE policies dropped, the refusal
+survived. A check that cannot fail was failing, so the check was never the one
+being violated. PostgreSQL applies the SELECT policies **twice** — to the old row
+and again to the new one, so that no UPDATE can push a row out of the caller's
+own visibility. An `invited`-only clause does exactly that, because the row the
+invitee is permitted to write is `active`. The rule was never "an invitee may see
+their invitation"; it is the plainer thing that was true all along, that a member
+may see the membership rows that are theirs. Recorded in `PRECEDENTS.md` with the
+substitution method, because the two failure shapes look nothing alike and
+neither names its cause.
+
+**What that cost, stated rather than buried.** `membership_select_own` lets an
+owner put one row into a stranger's result set, since inviting someone is how
+anyone joins a second tenant at all. Three proofs were restated to measure the
+property instead of a proxy that the new policy invalidated: 17 now asserts what
+the doubly-membered victim loses sight of — their colleague, their tenant, and
+the tenant their session resolves to — rather than a row count reaching zero,
+which `membership_select_own` would have made 2 in both states; 19 asserts that
+the victim's own-tenant reads and resolved tenant are unchanged, and separately
+that the only foreign row they gain is an `invited` one; 18c asserts the invitee
+sees their own row and none of the inviting tenant's other two. None of the three
+is weaker. Each replaced a number that could pass for the wrong reason with the
+thing `SECURITY_MODEL.md` §1 actually promises.
+
+**Deviation, CF-104 B1 and B2.** The prompt asked for the consent test in the
+policy and the `payload` exclusion by column grant. Neither is expressible at
+this granularity. A policy cannot log: PostgREST runs `GET` in a READ ONLY
+transaction, so an audit insert inside a read policy aborts the read it audits,
+and "every access under a grant is logged" cannot be satisfied on a
+policy-mediated read. A column grant cannot separate an operator from a member:
+both arrive as `authenticated`, column privileges are role-scoped, and revoking
+`payload` from that role would take it from the tenant's own audit trail, which
+§7 gives them in full. Both properties are instead structural in
+`operator_read_activity_event(uuid)` — there is no other path to a business row
+for an operator, it writes the log before it returns anything, and `payload` is
+absent from its return type, so no argument and no caller can add it. The
+mechanism deviates; the requirement is met more strongly than a policy could.
+
+**Deviation, CF-105 C1.** The prompt said revoke from `public, anon`. That was
+not enough: Supabase issues `EXECUTE` to `authenticated` and `service_role` as
+default privileges of their own, so revoking the `PUBLIC` default removed a
+default that was never what carried them. Proof 22 caught it before the commit,
+and the migration was re-applied through `migration repair --status reverted` and
+a fresh push so ADR-006's single-applier rule held. Six functions carry an
+explicit grant, not the five the prompt expected: CF-104's fix added two.
+
+**One state assertion diverged and did not halt.** The prompt asserted 16
+policies at `f3bbf7b`; the pre-run catalog read 17, because this task's own first
+two migrations were already applied when the census ran. E4 diffed every policy
+against the committed baseline and attributed all of them, so the divergence was
+this task's and nothing else's. The final census is 18, each one covered by at
+least one assertion.
+
+**Blocked once, on a credential.** `SUPABASE_ACCESS_TOKEN` was absent from
+`.env.local` and the Supabase CLI keeps its copy in Windows Credential Manager,
+where the harness cannot reach it — so a CLI that pushes migrations happily is no
+evidence the suite can run. The owner supplied it. Recorded in `PRECEDENTS.md`;
+no credential entered a commit, a report or any chat surface.
