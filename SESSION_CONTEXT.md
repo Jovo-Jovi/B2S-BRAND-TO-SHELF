@@ -1,6 +1,6 @@
 # SESSION CONTEXT
-Updated: 2026-08-02 · By: Opus · Phase: BUILD — P01 Foundation, in progress ·
-Last task: P01-T02 · Verdict: pending
+Updated: 2026-08-03 · By: Opus · Phase: BUILD — P01 Foundation, in progress ·
+Last task: P01-T03 · Verdict: pending
 
 ## Read these too
 - `docs/method/PRECEDENTS.md` — binding rulings and environment quirks.
@@ -28,8 +28,13 @@ applied to it — six tables plus the `role` enum, RLS on all six, 16 policies,
 three helper functions, five §4 indexes, the active-owner trigger — the three
 Supabase clients with the privileged one quarantined, generated types, and two
 more guards with the drift job. Five of the nine §6 guards are live; four await
-the phase that lands their target. **Tenant isolation is not yet proven: that is
-T03, on this branch, before the phase gate.**
+the phase that lands their target. **Tenant isolation is now proven.** P01-T03
+ran twenty-one assertions against the live catalog and the live policies —
+DATA_MODEL §5's eight, five adversarial additions, four more the gate authored
+itself, and a verified teardown. All PASS, none LOST. Two synthetic tenants were
+seeded under ADR-012's reserved prefix and removed, with zero rows and zero
+`auth.users` left behind, proven by query. The gate produced four findings, none
+of them a breach of `SECURITY_MODEL.md` §1: CF-103, CF-104, CF-105 and CF-106.
 
 ## Done steps
 
@@ -59,6 +64,7 @@ T03, on this branch, before the phase gate.**
 | P-09-LAND-FIX2 | Land ARCHITECTURE, ADR (11 entries), BUILD_PHASES; supersede the prepare runbook; docs-integrity workflow; CF-86, CF-87, CF-88; PR-22, PR-23; open phase/01-foundation | pending | `3918cf4` |
 | P01-T01 | Entry checklist (CF-86 closed); Next.js App Router skeleton, locale shell, token stylesheet, message catalogs; ci.yml with 3 guards; CF-89 landed and closed | PASS | `085a862`, `23a6929`, `04a503b` |
 | P01-T02 | Resumed after the two-project halt. ADR-012 signed: one Supabase environment, named production. DATA_MODEL and MODULE_SPEC landed; BRANCHING §3.1; ARCHITECTURE §7 rows. Platform tier applied — 6 tables + `role` enum, RLS on all, 16 policies, 3 helpers, 5 indexes, active-owner trigger. Three clients, generated types, `check-service-import` made real, `check-data-boundary` and `types-drift` landed. CF-90/91 closed; CF-92 to CF-98 opened | pending | `f29c0d9` |
+| P01-T03 | Tenant-isolation proof. DATA_MODEL §3 and §5 rule 3 repaired; PR-25. Runnable suite at `__tests__/isolation/`, run against the live catalog and live policies: 21 assertions, 21 PASS, 0 FAIL, 0 LOST. Two synthetic tenants seeded and torn down, teardown verified by query at zero. CF-100/101/102 opened and closed; CF-103 to CF-106 opened as findings. `.nvmrc` and `engines` pinned to Node 24 | pending | pending |
 
 > Commit column: one or more comma-separated backticked shas, or `—` where no
 > single commit tracks the step (P-00 through P-01c predate the one-task-one-commit
@@ -106,6 +112,10 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
 - CF-97 — The credential scanner fired on `process.env.SUPABASE_SERVICE_ROLE_KEY`, the safe form ADR-005 requires; the value side now rejects an environment indirection — owner: reviewer, to ratify the narrowing or reject it
 - CF-98 — Four open Dependabot alerts on the default branch (3 high, 1 moderate; `postcss` ×3 and `sharp`, both transitive through Next.js), unrecorded since G3-CLOSE enabled alerts — owner: the owner, to authorise a dependency-bump task; at the latest the Phase 01 exit gate
 - CF-99 — PR #2 (`main` ← `phase/01-foundation`) exists although P01-T02 forbade a pull request; opened by the owner's account, not the builder, and left untouched. Merging it before T03 lands the tenancy schema on `main` with tenant isolation unproven — owner: the owner, to leave it open until T03 and the phase gate pass, or close and re-open at the gate
+- CF-103 — A tenant owner can lock a member of another tenant out of that tenant: `membership_insert_owner` constrains `tenant_id` and the caller's role but not `member_id`, so a second active membership drives the victim's `current_tenant_id()` to null. Proven live by proof 17. Not a `SECURITY_MODEL.md` §1 breach — a cross-tenant availability effect, which §1 does not cover — owner: the session-to-membership binding decision named in CF-93 gap (3)
+- CF-104 — `DATA_MODEL.md` §2 narrows operator reach to "metadata columns only" while §3.1, §3.5 and §3.6 specify row-level operator reads, and row-level is what was built; an operator therefore reads every column of `tenant`, `consent_grant` and `activity_event`, `payload` included, for every tenant — owner: reviewer, at the next `DATA_MODEL.md` amendment
+- CF-105 — `EXECUTE` on `public` functions defaults to `PUBLIC` and the grants migration's blanket revoke covers tables only, so every `public` function is an RPC endpoint callable by `anon`. All four present today were proven to answer only for their caller; the next one added ships publicly callable unless its migration revokes `execute` — owner: the next migration adding a function to `public`; at the latest the Phase 02 entry checklist
+- CF-106 — `@types/node` is pinned to major 20 while the toolchain now declares Node 24, so `typecheck` validates against a standard library four majors behind the runtime. Found while landing CF-102's closure, which fixes the runtime skew and leaves the type skew. Not covered by PR-25 — an alignment, not an advisory — so it flags rather than being bumped here — owner: the next task authorised to change a dependency, naturally CF-98's
 
 ## Frozen decisions in force
 - Freeze point 2026-07-29 (`legacy/FREEZE.md`) — tools RETIRING, not port
@@ -147,28 +157,42 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
   and its trigger is a row count, not a judgement.
 - `ARCHITECTURE.md` precedence slot 11, `BUILD_PHASES.md` slot 13.
   `B2S_PREPARE_PHASE.md` is superseded as a plan; its §9 and §10 remain in force.
+- PR-25 landed 2026-08-03 — P01-T03. Raising the version of a package already
+  present, to close a published advisory, is maintenance and not a new
+  dependency. It needs a task and a green pipeline, not an OD. This unblocks
+  CF-98's four transitive advisories.
+- **Tenant isolation PROVEN 2026-08-03 — P01-T03**, against `b2s-production`'s
+  live catalog and live policies, at the commit that lands the suite. 21
+  assertions, 21 PASS. Re-run with `npm run test:isolation`; it is excluded from
+  `npm test` because `ci.yml`'s `unit` job holds no Supabase secrets and a suite
+  that skipped there would read as green. `SECURITY_MODEL.md` §4's re-run
+  conditions apply: a new entity, any policy or grant change, a new privileged
+  path, a role change, or any change to the operator surface re-runs the whole
+  gate.
 
 ## Next action
-P01-T02 done and pushed to `phase/01-foundation`, not merged: one Supabase project
-under ADR-012, `supabase/schema.sql` split verbatim into seven migrations and
-applied, six tables live with RLS and 16 policies read back from the catalog,
-`lib/supabase/` with the privileged client quarantined behind `server-only`,
-`types/database.ts` generated, and `check-service-import` · `check-data-boundary` ·
-`types-drift` in the pipeline. Five of nine §6 guards live.
+P01-T03 done and pushed to `phase/01-foundation`, not merged. Tenant isolation is
+proven against the live catalog: 21 assertions, 21 PASS, 0 FAIL, 0 LOST, teardown
+verified by query at zero rows and zero `auth.users`. The suite is committed and
+re-runnable at `__tests__/isolation/`, and Phase 02 inherits it.
 
-**T03 next, and it is the gate this task cannot be:** the isolation suite against
-the live project — two seeded tenants, A reads exactly A's rows and zero of B's on
-every table for select, insert, update and delete, the positive path asserted too,
-no member raising their own `membership.role`, no cross-tenant `tenant_id` on
-insert, `is_operator()` returning no business row. `DATA_MODEL.md` §5 is the
-checklist and is not waivable by OD. Synthetic tenants carry the reserved slug
-prefix and are torn down by the task that seeds them (ADR-012).
+**T04 next.** Three findings are its inbox, and none of them is mine to fix —
+a gate that repairs what it finds is not a gate:
+- CF-103, the only one with a live effect. Decide whether
+  `membership_insert_owner` must constrain `member_id`, together with CF-93 gap
+  (3)'s session-to-membership binding, which is the same decision seen from the
+  other side.
+- CF-104 and CF-105 are a specification conflict and a default, both reviewer
+  calls rather than code.
 
-Two owner actions block the phase gate, both in CF-95: authorise the Vercel GitHub
-App on the repository, and set `SUPABASE_ACCESS_TOKEN` and `SUPABASE_PROJECT_ID`
-as repository secrets. `types-drift` fails on every run until then, by design.
+Two owner actions still block the phase gate, both in CF-95: authorise the Vercel
+GitHub App on the repository, and set `SUPABASE_ACCESS_TOKEN` and
+`SUPABASE_PROJECT_ID` as repository secrets. `types-drift` fails on every run
+until then, by design. Both secrets now have a second reader — the isolation
+suite needs the same two values, so setting them serves the gate as well as the
+drift job.
 
-**Do not merge PR #2 yet (CF-99).** It exists although this task forbade opening one
-and was not opened by the builder. Merging before T03 puts the tenancy schema and
-every data-access path on `main` with tenant isolation unproven, which is the one
-standard `AGENTS.md` §4 marks not waivable by OD.
+**PR #2 is still open and still must not be merged (CF-99)** until the phase gate
+passes. Isolation is proven, which removes the sharpest reason to hold it, but
+`BRANCHING.md` §3 wants one consolidated PR per phase at the exit gate, and `ci`
+is still red at `types-drift` until CF-95's secrets are set.

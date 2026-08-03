@@ -1238,3 +1238,158 @@ exists but that it merges: the tenancy schema and every data-access path would r
 carrying a red pipeline with it and pre-empting `BRANCHING.md` §3's one consolidated
 PR per phase. The §3.1 exception this task landed covers the toolchain task only and
 says so.
+
+---
+
+2026-08-03 | Opus (heavyweight) | BUILD P01-T03: the isolation proof — 21 assertions against the live catalog and live policies, two synthetic tenants seeded and torn down | docs/product/DATA_MODEL.md, docs/method/PRECEDENTS.md, docs/method/CARRY_FORWARDS.md, __tests__/isolation/harness.ts, __tests__/isolation/tenant-isolation.test.ts, vitest.isolation.config.mts, vitest.config.mts, package.json, .nvmrc, SESSION_CONTEXT.md | Three findings opened rather than fixed, per the prompt's instruction that a gate which repairs what it finds is not a gate: CF-103, a cross-tenant availability effect provable live; CF-104, an operator-reach contradiction inside `DATA_MODEL.md`; CF-105, `EXECUTE` defaulting to `PUBLIC` on every `public` function; CF-106, `@types/node` four majors behind the Node version this task just pinned. Four deviations declared below, three of them additions to the prompt's thirteen | T04, with CF-103 as its first decision
+
+**Twenty-one assertions where the prompt asked for thirteen, and why the count
+moved.** Proof 4 is one line in `DATA_MODEL.md` §5 and four operations in
+PostgreSQL, so it is recorded as 4a, 4b, 4c and 4d — collapsing them would let a
+passing SELECT hide a failing DELETE behind a single tick. Three proofs were
+authored by the gate rather than the prompt: 14, that no view or other
+non-table relation exists in `public`, because RLS attaches to tables and a view
+owned by `postgres` is a documented way past every policy in this file; 15, that
+no role carries `rolbypassrls` or `rolsuper` and that each `security definer`
+helper answers only for its caller; 16, that a foreign id and a nonexistent id
+produce byte-identical answers, which is `SECURITY_MODEL.md` §3 P2 and was
+otherwise going to remain an unasserted claim. Teardown is the twenty-first, as
+`D`. The prompt's thirteen are all present and all reported.
+
+**The ledger, from the run immediately preceding the deliverable commit.**
+
+```
+PASS  1    RLS enabled on every table                    relrowsecurity true on 6/6 public tables
+PASS  2    Every table has >= 1 policy                   16 policies: activity_event=3, consent_grant=4,
+                                                         member=3, membership=3, operator=1, tenant=2
+PASS  3    Write policies carry WITH CHECK               3 INSERT, 10 SELECT, 3 UPDATE; 6 with_check, 13 qual
+PASS  4a   SELECT own returns, foreign does not          24 identity/table reads as exact sets; 21 permitted
+                                                         rows actually returned; 0 foreign ids observed
+PASS  4b   INSERT: permitted land, rest refused          24 probes, 4 identities x 6 tables; 7 landed
+PASS  4c   UPDATE: own lands, foreign reaches nothing    3 ungranted tables refused on the grant; every
+                                                         foreign target re-read privileged and unchanged
+PASS  4d   DELETE refused everywhere                     44 probes, 4 identities x 11 targets; all intact
+PASS  5    membership.role unwritable by grant           viewer 42501, owner 42501; role unchanged in both
+PASS  6    Cross-tenant tenant_id refused                membership, consent_grant, activity_event — 42501
+PASS  7    Operator: metadata reads only                 tenant=2, activity_event=2, consent_grant=2,
+                                                         operator=1, member=0, membership=0; insert 42501
+PASS  8    types/database.ts matches live schema         gen types exit 0, 15024 == 15024; 51 columns found
+PASS  9    activity_event has no UPDATE, no DELETE path  both 42501; row intact, action unchanged
+PASS  10   No identity can insert into operator          6 identities, all 42501
+PASS  11   consent_grant.expires_at outside the grant    42501; expires_at unchanged
+PASS  12   Last active owner cannot be deleted           HTTP 400; tenant A still holds 1 active owner
+PASS  13   anon reads zero rows on every table           6 tables, 401/42501 on each
+PASS  14   No view or non-table relation in public       6 relations, all relkind 'r', owned by postgres
+PASS  15   No rolbypassrls; helpers answer per caller    3 roles false; 4 functions security definer with a
+                                                         pinned search_path; 12 RPC answers all caller-correct
+PASS  16   Foreign and nonexistent ids answer alike      6 paired probes, 200/0 on both sides of each
+PASS  17   A second active membership denies a member    FINDING — CF-103
+PASS  D    Teardown verified by query                    all six tables 0, auth.users 0, zz-test- prefix 0
+
+21 expected — 21 PASS, 0 FAIL, 0 LOST
+```
+
+**Every one of them ran against the catalog, and getting there cost a
+mechanism.** `pg_class`, `pg_policy`, `pg_roles` and `pg_proc` are unreachable
+through PostgREST — the schema cache exposes `public` and nothing else — so
+"assert against the live catalog, never against `schema.sql`" needs a privileged
+SQL path, and the Management API's query endpoint is it, running as `postgres`.
+That same path does the seeding, the teardown and the after-the-fact re-reads
+that prove a refused write changed nothing. The unprivileged probes are raw
+`fetch` against PostgREST with a per-identity JWT from the GoTrue admin API, and
+they are raw `fetch` deliberately: importing `@supabase/supabase-js` inside
+`__tests__/` would construct a client outside `lib/supabase/` and
+`check-data-boundary` would fail the pipeline, correctly. The guard was right and
+the harness moved.
+
+**PASS on a refusal is only worth what the refusal is.** Every negative assertion
+checks the SQLSTATE, not merely that something went wrong: `42501` for a grant or
+a policy refusal, and the two are distinguished, because proof 5 specifically
+requires `membership.role` to fail on the *grant*. A 5xx from the gateway is not
+a refusal, and treating it as one would have manufactured a green result — the
+Management API returned an intermittent `upstream connect error` during
+development, and the fix was a retry that backs off on 5xx and network failure
+only, never on a 4xx, since the 4xx *is* the evidence. Recorded in
+`PRECEDENTS.md`. The positive path is asserted alongside every negative one for
+the reason the prompt names: 21 permitted rows came back on proof 4a, and 7
+permitted inserts landed on 4b, so default-deny-failing-silently is excluded
+rather than assumed.
+
+**A proof that throws leaves no line, and a short ledger reads as a clean one.**
+The suite declares its twenty-one ids up front, prints `LOST` for any that never
+recorded a verdict, and a final test asserts the recorded list equals the
+expected list exactly. This is PR-21 applied to the gate's own output: the
+failure mode being designed against is not a red tick but a proof that quietly
+never ran.
+
+**Three findings, none of them a breach of `SECURITY_MODEL.md` §1.** CF-103 is
+the one with a live effect and it was found by attacking rather than by reading:
+`membership_insert_owner` constrains the `tenant_id` and the caller's role but
+says nothing about `member_id`, so tenant A's owner can insert an active
+membership for tenant B's *viewer*. Nobody gains a read — A sees nothing new and
+B's viewer sees nothing of A's — but the victim now holds two active memberships,
+`current_tenant_id()` returns null, and they read zero rows in their own tenant
+until the row is removed. It is reversible and it was reversed in the same proof,
+which is why 17 reads PASS: the assertion is that the behaviour is what it is,
+and the behaviour is a finding. §1 guarantees confidentiality across tenants and
+that guarantee holds; availability across tenants is simply not covered, and the
+narrow fix belongs with CF-93 gap (3)'s session-to-membership binding rather than
+in this task. CF-104 is a contradiction inside `DATA_MODEL.md`: §2 says an
+operator reads "metadata columns only" while §3.1, §3.5 and §3.6 specify
+row-level operator reads, and row-level is what was built, so an operator reads
+`activity_event.payload` for every tenant. CF-105 is a default: the grants
+migration revokes on tables, `EXECUTE` on a `public` function defaults to
+`PUBLIC`, and all four helpers are therefore anonymous RPC endpoints. Proof 15
+establishes that all four answer only for their caller today; the row exists
+because the fifth function ships publicly callable unless its migration says
+otherwise.
+
+**Two reviewer defects repaired, and both were specification defects rather than
+code.** `DATA_MODEL.md` §3 claimed seven tables while §3.7 declared `role` an
+enum and not a table (CF-100), and §5 rule 3 demanded `WITH CHECK` on every
+tenant-scoped policy, which PostgreSQL rejects on a `FOR SELECT` policy and which
+was therefore unsatisfiable for ten of the sixteen (CF-101). Both are closed with
+the prompt's verbatim replacements. PR-25 is appended: a security bump of a
+package already present is maintenance, not a new dependency, which unblocks
+CF-98's four transitive advisories for a later task.
+
+**CF-102's closure lands the pin and does not pretend the skew is gone.**
+`.nvmrc` reads `24` and `engines.node` reads `>=24.0.0 <25.0.0` — an upper bound,
+not a floor, so the two artifacts and `ci.yml`'s `NODE_VERSION: "24"` say the
+same thing and moving the pipeline forward must move all three. Two honest
+qualifications. The local interpreter is still `v22.12.0`: every local check in
+this session ran on Node 22, so this task's own "verified locally" carries
+exactly the weakness CF-102 describes, and the pin takes effect when the owner
+switches, not when it commits. And landing it exposed CF-106 — `@types/node` is
+`^20`, four majors behind the runtime now declared, so `typecheck` validates
+against the wrong standard library in both directions. Bumping it is a
+dependency change and PR-25 does not reach it, because an alignment is not an
+advisory, so it is flagged rather than done. Closing CF-102 over an untouched
+`@types/node` would have been a half-closure of the sort PR-20 and PR-24 exist
+to prevent.
+
+**Deviations, stated rather than smoothed.** Four. The assertion count is 21
+against a stated 13, for the reasons above — the prompt's thirteen are a subset,
+none dropped. The suite is excluded from `npm test` and runs as
+`npm run test:isolation`: `ci.yml`'s `unit` job holds no Supabase secrets, and a
+suite that self-skipped there would report green while proving nothing, which is
+exactly the shape PR-21 forbids; the trade is that CI does not run this gate
+until CF-95's secrets are set, and it is run by hand at the phase gate meanwhile.
+The ledger prints from `afterAll` with Vitest's console interception disabled,
+because Vitest attributes console output to a task and drops what a final hook
+writes — the gate's evidence was being swallowed. And `docs/method/
+REVIEWER_CHAT_INSTRUCTIONS.md` sits untracked in the working tree; it is the
+owner's file, it predates this task, and it is left alone rather than swept into
+this commit.
+
+**Teardown, because a teardown you did not verify did not happen.** The
+`membership_active_owner_required` constraint trigger refuses the deletion of a
+tenant's last active owner, which is proof 12 passing and also the reason
+ordinary deletion cannot clean up after itself; teardown disables the trigger
+over the privileged path, deletes, and re-enables it in a `finally`. The
+verification is a separate query afterwards, not a claim by the code that did the
+deleting: all six tables at zero, `auth.users` at zero, and zero rows carrying the
+`zz-test-` prefix anywhere. ADR-012's reinstatement trigger is checked as a
+precondition in `beforeAll` rather than trusted — the suite refuses to run at all
+if `b2s-production` holds a single non-synthetic tenant, which is the row count
+CF-92 asks for, enforced instead of remembered.

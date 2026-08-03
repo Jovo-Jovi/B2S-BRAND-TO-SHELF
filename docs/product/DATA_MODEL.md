@@ -85,7 +85,9 @@ explicitly not member-writable.
 
 ## 3. The Platform tier
 
-Seven tables for Release 1. `subscription` and `feature_flag` are Release 3
+Six tables and one enum for Release 1 — §3.7 is `role`, which is an enum
+and deliberately not a table. `subscription` and `feature_flag` are
+Release 3
 (`SCOPE.md`) and land with billing.
 
 ### 3.1 `tenant`
@@ -236,7 +238,12 @@ Against the **live** staging catalog, by query — never by reading the migratio
 1. Every table has `rowsecurity = true`. Zero exceptions.
 2. Every table has at least one policy. **An RLS-enabled table with no policy is
    a hard failure**, not a warning.
-3. Every tenant-scoped policy carries `WITH CHECK`, not only `USING`.
+3. Every policy with a write side — INSERT, UPDATE, or ALL — carries
+   `WITH CHECK`. PostgreSQL rejects `WITH CHECK` on a `FOR SELECT` policy,
+   because a read produces no candidate row to check, so read policies
+   carry `USING` alone and that is correct rather than a gap. A `FOR ALL`
+   policy is not a way to satisfy this rule where a table must carry no
+   DELETE path.
 4. Seeded as two tenants with distinct members: tenant A's member reads exactly
    A's rows and **zero** of B's, on every table, for select, insert, update and
    delete. The positive path is asserted too — permitted rows must actually come

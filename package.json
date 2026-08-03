@@ -2,13 +2,17 @@
   "name": "b2s-brand-to-shelf",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=24.0.0 <25.0.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:isolation": "vitest run --config vitest.isolation.config.mts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",

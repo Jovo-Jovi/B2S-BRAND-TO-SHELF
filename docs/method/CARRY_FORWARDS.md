@@ -1190,3 +1190,96 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       task only and explicitly does not cover schema or data access. Owner: the
       owner, to leave it open until T03 and the phase gate have both passed, or to
       close it and re-open at the gate.
+- [x] CF-100 — `DATA_MODEL.md` §3 stated "Seven tables for Release 1" while §3.7
+      declares `role` an enum and explicitly not a table. The document's stated
+      count contradicted its own enumeration, in the document that defines the
+      schema, and the P01-T02 prompt repeated the error. Same class as CF-54, and
+      the exact subject of PR-15. The builder built six tables and one enum and
+      flagged the contradiction rather than resolving it. Owner: reviewer.
+      Opened by P01-T03, which found the row absent: the P01-T02 verdict that
+      logged it never ran, which is the PR-24 case exactly. Previously recorded
+      only as gap (1) of CF-93's seven.
+      CF-100 — CLOSED (P01-T03). §3 corrected to six tables and one enum.
+- [x] CF-101 — `DATA_MODEL.md` §5 rule 3 required `WITH CHECK` on every
+      tenant-scoped policy. PostgreSQL rejects `WITH CHECK` on a `FOR SELECT`
+      policy, so the criterion was unsatisfiable for ten of sixteen policies. An
+      unsatisfiable gate criterion is worse than a missing one: it forces the
+      honest builder to halt indefinitely or quietly reinterpret. The builder
+      reinterpreted on the narrowest reading and said so explicitly, which is the
+      correct handling of a defective specification. Owner: reviewer.
+      Opened by P01-T03, which found the row absent. Previously recorded only as
+      gap (7) of CF-93's seven.
+      CF-101 — CLOSED (P01-T03). Rule 3 now scopes to policies with a write side
+      and states why read policies carry `USING` alone. Verified against the live
+      catalog by proof 3: 16 policies, 3 INSERT and 3 UPDATE carrying
+      `with_check`, 10 SELECT carrying `qual` alone, zero exceptions.
+- [x] CF-102 — Local development runs Node 22 while `ci.yml` pins Node 24, so
+      "verified locally before committing" is evidence from a different major
+      version than the pipeline. Not a defect — both were green — but it weakens
+      every local verification claim by an unmeasured amount. Owner: this task.
+      Opened by P01-T03, which found the row absent; recorded until now only as a
+      PRECEDENTS.md §2 environment quirk, which is a note rather than a tracked
+      obligation.
+      CF-102 — CLOSED (P01-T03). An `.nvmrc` and a `package.json` `engines` field
+      pin local development to the pipeline's major version.
+- [ ] CF-103 — A tenant owner can lock a member of another tenant out of that
+      other tenant, through the ordinary API, using only that member's `member.id`.
+      Found by P01-T03 proof 17, against the live policies.
+      `membership_insert_owner`'s `WITH CHECK` constrains `tenant_id` and the
+      caller's role and says nothing about `member_id`, so tenant A's owner may
+      insert an `active` membership binding tenant B's member into tenant A. That
+      member then holds two active memberships, `current_tenant_id()` returns null
+      by design, and they read nothing from either tenant. Proven end to end:
+      the insert was accepted, the victim's reads fell from 2 rows to 0, and rose
+      to 2 again when the row was removed.
+      **This is not a breach of `SECURITY_MODEL.md` §1** and proof 4 is unaffected:
+      nothing of tenant B is read, inferred or modified, and the row created lives
+      in tenant A. It is a cross-tenant *availability* effect, which §1's three
+      parts — read, existence, modify — do not cover. Recorded rather than fixed,
+      per this task's instruction that a gate does not repair what it finds.
+      CF-93 gap (3) already records the lockout as a specification gap; what it
+      does not record is that another tenant can cause it. Exploitation needs the
+      victim's uuid, which no policy discloses across tenants, so the practical
+      reach is a member whose id is known out of band. Owner: the
+      session-to-membership binding decision named in CF-93 gap (3), which must
+      also decide whether `membership_insert_owner` constrains `member_id`.
+- [ ] CF-104 — `DATA_MODEL.md` §2 narrows operator reach to "`tenant`,
+      `subscription` and `activity_event` **metadata columns only**", and no
+      column-level narrowing exists. Found by P01-T03 proof 7, against the live
+      policies. `tenant_select_operator`, `activity_event_select_operator` and
+      `consent_grant_select_operator` are row-level, so an operator reads every
+      column of all three tables for every tenant, including
+      `activity_event.payload`, and with no `consent_grant` required. The schema
+      follows §3.1, §3.5 and §3.6, which specify exactly these row-level reads, so
+      this is §2 contradicting §3 rather than a build defect, and §3 is what was
+      built. `activity_event.payload` is separately bounded by §3.6 to "no
+      credential, no full row copy, no PII beyond ids", so the exposure today is
+      bounded by that rule alone rather than by a policy. Owner: reviewer, at the
+      next `DATA_MODEL.md` amendment — either narrow §2's wording to match §3, or
+      specify the column-level mechanism §2 implies.
+- [ ] CF-105 — `EXECUTE` on `public` functions is granted to `PUBLIC` by default
+      and the grants migration's blanket revoke covers tables only, so every
+      function in `public` is a callable PostgREST RPC endpoint for `anon`. Found
+      by P01-T03 proof 15. All four functions present today are safe and were
+      proven so by query: `current_tenant_id()`, `is_operator()` and
+      `is_current_tenant_owner()` answer only for `auth.uid()` and returned
+      null/false/false to an unauthenticated caller and each caller's own tenant
+      to the others, and `enforce_tenant_active_owner()` returns `trigger` and so
+      cannot be invoked directly. The finding is the default, not today's surface:
+      the next `security definer` function added to `public` is exposed to `anon`
+      unless its migration revokes `execute` explicitly, and the existing revoke
+      does not cover it. Owner: the next migration that adds a function to
+      `public`; at the latest the Phase 02 entry checklist, alongside CF-94.
+- [ ] CF-106 — `@types/node` is pinned to major 20 while the toolchain now
+      declares Node 24, so `typecheck` validates against a standard library four
+      majors behind the one the code runs on. Found by P01-T03 while landing
+      CF-102's closure: the `engines` field and `.nvmrc` fix the runtime skew and
+      leave the type skew untouched, which would make CF-102 read closed while
+      half the version mismatch survives. Nothing is known to be broken —
+      `tsc --noEmit` is clean and the isolation harness's Node built-ins and
+      global `fetch` all resolve — but a Node 24 API is currently a type error
+      and a Node 20 API removed since is currently not, in both directions
+      silently. PR-25 does not cover the bump: it is an alignment, not a
+      published advisory, so it stops and flags rather than being done here.
+      Owner: the next task authorised to change a dependency; naturally CF-98's,
+      which already owes a `package.json` change.

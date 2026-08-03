@@ -200,6 +200,14 @@ for each id it touches and instructs the builder to open it if absent and amend
 it if present, reporting which. A builder must never be asked to close a row it
 cannot find, and must never invent text to fill one. Origin: CF-91.
 
+**PR-25 — A security bump of an existing dependency is not a new dependency.**
+`AGENTS.md` §2 requires a stop-and-flag before adding a dependency. Raising the
+version of a package already present — direct or transitive — to close a
+published advisory is maintenance, not scope: it needs a task, a green pipeline
+and a journal line, not an OD. Introducing a package that was not there before
+still stops and flags. Origin: CF-98, four transitive advisories held up behind a
+rule written for a different act.
+
 ---
 
 ## 2. Environment quirks — never re-discover
@@ -326,3 +334,45 @@ cannot find, and must never invent text to fill one. Origin: CF-91.
   arguments to install from the Microsoft Store" and exits 9009 without running
   anything. `python` resolves to 3.13.1 here. Run the guards locally as `python
   scripts/<name>.py`; do not change the workflow to match the local shell.
+- Learned at P01-T03: `pg_catalog` is unreachable from any Supabase client.
+  PostgREST exposes the `public` schema, so `pg_class`, `pg_policy`, `pg_proc`
+  and `pg_roles` cannot be queried through it, and a proof that must read the
+  live catalog needs a second path. The one that needs no new dependency is the
+  Management API — `POST https://api.supabase.com/v1/projects/{ref}/database/query`
+  with a personal access token — which executes as `postgres`. It is also the
+  only way to run the DDL teardown needs.
+- Learned at P01-T03: that endpoint intermittently answers `503` with
+  `upstream connect error or disconnect/reset before headers` under a few hundred
+  sequential requests. Retry **gateway 5xx and dropped sockets only, never a
+  4xx**: a 4xx carries the SQLSTATE and message that half these proofs assert, so
+  retrying one would re-run an operation whose refusal was the result. Treating a
+  5xx as a result is worse still — "the write was refused" and "the request never
+  arrived" are indistinguishable to a caller that only checks for an error, so a
+  negative assertion passes for the wrong reason.
+- Learned at P01-T03: the `membership_active_owner_required` constraint trigger
+  makes a tenant's membership rows **undeletable by any path**, including
+  `service_role`, because every delete order ends with the tenant at zero active
+  owners. Teardown must `alter table public.membership disable trigger
+  membership_active_owner_required`, delete, and re-enable — which requires table
+  ownership and therefore the Management API, not a Supabase client.
+- Learned at P01-T03: `revoke all on all tables in schema public` does **not**
+  cover functions. `EXECUTE` on a `public` function defaults to `PUBLIC`, so every
+  function there is a PostgREST RPC endpoint callable by `anon`. Recorded as
+  CF-105; a migration adding a function revokes `execute` explicitly or the
+  function ships publicly callable.
+- Learned at P01-T03: vitest intercepts `console` output and attributes it to the
+  running task, which silently drops whatever a file-level `afterAll` writes. When
+  the printed output **is** the deliverable — a gate ledger, a coverage report —
+  set `disableConsoleIntercept: true` in that suite's config, or the run passes
+  with nothing to read.
+- Learned at P01-T03: the Supabase CLI on Windows stores its access token in
+  **Windows Credential Manager**, target `Supabase CLI:supabase`, not in a file.
+  `~/.supabase` holds only telemetry and traces, so its absence does not mean the
+  CLI is logged out. `cmdkey /list` confirms the entry exists without printing the
+  secret.
+- Learned at P01-T03: a suite that needs live credentials must be excluded from
+  `npm test` rather than made to skip. `ci.yml`'s `unit` job holds no Supabase
+  secrets, and a suite that skipped there would report green while proving
+  nothing, which is PR-21's failure shape. The isolation suite runs on its own
+  config through `npm run test:isolation`, and throws by name on an absent
+  variable.
