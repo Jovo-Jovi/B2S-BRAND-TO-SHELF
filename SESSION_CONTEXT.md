@@ -195,4 +195,7 @@ drift job.
 **PR #2 is still open and still must not be merged (CF-99)** until the phase gate
 passes. Isolation is proven, which removes the sharpest reason to hold it, but
 `BRANCHING.md` §3 wants one consolidated PR per phase at the exit gate, and `ci`
-is still red at `types-drift` until CF-95's secrets are set.
+is still red at `types-drift` until CF-95's secrets are set. It is **not** a
+draft and the T03 prompt's "do not un-draft" presumes it is — nothing was
+un-drafted because there was nothing to un-draft, and CF-99 is amended with the
+consequence: it is one click from merging, with no draft state in the way.

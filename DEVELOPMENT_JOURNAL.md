@@ -1393,3 +1393,17 @@ deleting: all six tables at zero, `auth.users` at zero, and zero rows carrying t
 precondition in `beforeAll` rather than trusted — the suite refuses to run at all
 if `b2s-production` holds a single non-synthetic tenant, which is the row count
 CF-92 asks for, enforced instead of remembered.
+
+**PR #2 was never a draft.** The prompt says "do not un-draft PR #2"; the API
+says `state: OPEN`, `isDraft: false`, `mergeable: MERGEABLE`, with no record of a
+draft state at any point. Nothing was un-drafted because there was nothing to
+un-draft, and the pull request was not touched in any way. Worth recording rather
+than passing over, because the instruction assumes a guard rail that does not
+exist: PR #2 is one click from merging the tenancy schema onto `main`. CF-99 is
+amended with that, and with the fact that T03 removes the sharpest of its three
+reasons to hold — isolation is proven — while the red pipeline and
+`BRANCHING.md` §3's one-PR-per-phase both still stand. Pushed
+`2776015..67b3d1a`; push protection did not reject, which is the only evidence
+that matters for "no credential in the commit", and the remote's response
+repeated CF-98's four Dependabot advisories, unchanged and now unblocked by
+PR-25 for whichever task takes them.

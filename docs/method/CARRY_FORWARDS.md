@@ -1190,6 +1190,19 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       task only and explicitly does not cover schema or data access. Owner: the
       owner, to leave it open until T03 and the phase gate have both passed, or to
       close it and re-open at the gate.
+      AMENDED (P01-T03). Two facts, neither of which changes the owner action.
+      The P01-T03 prompt says "do not un-draft PR #2", which presumes it is a
+      draft; it is not, and the API shows no record of it ever having been one.
+      `state: OPEN`, `isDraft: false`, `mergeable: MERGEABLE` as read at the T03
+      push. Nothing was un-drafted because there was nothing to un-draft, and the
+      instruction was honoured by touching the pull request not at all. The
+      practical effect is that the one guard rail the instruction assumed is
+      absent: PR #2 is mergeable now, by one click, with no draft state to clear
+      first. Second, T03 removes the sharpest of the three reasons above —
+      isolation is proven, 21 assertions, 0 FAIL — while the other two stand
+      unchanged: `ci` is still red at `types-drift` until CF-95's secrets are
+      set, and `BRANCHING.md` §3 still wants one consolidated PR at the phase
+      exit gate.
 - [x] CF-100 — `DATA_MODEL.md` §3 stated "Seven tables for Release 1" while §3.7
       declares `role` an enum and explicitly not a table. The document's stated
       count contradicted its own enumeration, in the document that defines the
