@@ -3,7 +3,7 @@
 **Status:** AUTHORED. Tier 1, precedence slot 2.
 **Landed:** 2026-08-01 by P-05-LAND.
 
-The 80 signed operational decisions, promoted verbatim from
+The 84 signed operational decisions, promoted verbatim from
 `docs/method/B2S_PREPARE_PHASE.md` §2, which remains the record of where
 they were signed. **This file is now the authoritative copy.** Rows are
 byte-identical to the register as signed; no rationale has been added after
@@ -16,7 +16,7 @@ never edited in place.
 
 ## 2. Decision register
 
-80 decisions, all signed. None open.
+84 decisions, all signed. None open.
 
 ### Group A — Product identity
 
@@ -137,6 +137,10 @@ never edited in place.
 | H5 | **Barcodes scannable, with one constraint: retail GTIN is ENTERED (GS1-allocated by the brand), never generated.** Generator produces Code 128 / Code 39 for internal and batch use, or EAN-13 on restricted-circulation prefixes (`02`, `04`, `20`–`29`), both labelled not-for-retail. | SIGNED (constrained) |
 | H6 | **Gate evidence: the four-standard acceptance model, §7.** | SIGNED |
 | **H7** | **Gate 3 verifies the blocking set only: `PRODUCT_BRIEF`, `GLOSSARY`, `SCOPE`, `DECISIONS`, `DOMAIN_MODEL`, `TENANCY_MODEL`, `SECURITY_MODEL`, `CALC_SPEC`. Every other frozen document is authored just-in-time, one step ahead of the module that needs it, and is verified by that module's own gate. `CALC_SPEC.md`'s Gate 3 item covers its 25 Release 1 rows; the fourteen Release 2 rows in its §6 land as signed amendments.** | SIGNED 2026-08-01 |
+| **H8** | **A readiness check precedes every heavyweight exit gate. A STANDARD-class task asserts every mechanically checkable criterion first; the heavyweight gate runs only when readiness is green.** | SIGNED 2026-08-04 |
+| **H9** | **A reviewer-authored specification lands with a conformance check that asserts it against reality. A specification no script can check does not land.** | SIGNED 2026-08-04 |
+| **H10** | **`MODULE_SPEC.md` §1 is the application tree. Repository-root configuration and infrastructure directories are outside its scope and are stated as such.** | SIGNED 2026-08-04 |
+| **H11** | **Every probe a gate invents becomes a permanent CI check or suite assertion. An adversarial pass is additive, never re-invented.** | SIGNED 2026-08-04 |
 
 ## 3. Decisions authored after the promotion
 
@@ -166,4 +170,75 @@ the time it is used.
 running Gate 3 against a checklist known to be stale, which would make every
 later citation of "Gate 3 passed" untrue. It does not foreclose any verification:
 every deferred item survives, attached to the gate that can actually evidence it.
+
+### OD-H8 — Readiness precedes the gate
+
+**Decision.** Before every heavyweight phase exit gate, a STANDARD-class readiness
+task runs and asserts only what is mechanically checkable: stated counts, tree
+conformance in both directions, guard presence measured against live targets,
+ledger owner reachability, and a diff of every specification against the live
+catalog. The exit gate runs only when readiness is green.
+
+**Date.** Signed 2026-08-04.
+
+**Rationale.** P01's exit gate ran three times. Eight of the nine findings from
+the first two runs were defects in reviewer-authored documents — a definition of
+done naming guards whose targets did not exist, a folder tree authored before the
+tree, a bypass inventory that did not exist and then was ambiguous, stated counts
+that contradicted their own enumerations, and an owner-reachability rule with no
+mechanism. Every one was cheap to detect and was detected in the most expensive
+place in the system: a heavyweight run with a 250-second live suite.
+
+**Forecloses.** Discovering a specification defect at a gate. Readiness costs a
+cheap run; a gate cycle costs a heavyweight run, a fix task, and a full re-run.
+
+### OD-H9 — A specification lands with its conformance check
+
+**Decision.** No reviewer-authored specification lands unless a script asserts it
+against reality and runs in CI. Where the assertion needs the live database, it
+runs in the readiness task instead. A specification that cannot be checked
+mechanically is too vague to gate against and is rewritten until it can be.
+
+**Date.** Signed 2026-08-04.
+
+**Rationale.** `check_stated_counts.py` already does this for numbers and has
+caught what the reviewer repeatedly missed by hand. Extending it from counts to
+trees, schemas and inventories is the same move applied to the same failure.
+
+**Forecloses.** A document whose first contact with reality is a gate, and the
+reviewer asserting conformance from memory — which PR-23 already forbids and
+which kept happening anyway.
+
+### OD-H10 — `MODULE_SPEC.md` §1 is the application tree
+
+**Decision.** §1 specifies the application: `app/`, `features/`, `components/`,
+`lib/`, `supabase/`, `types/`, `scripts/`, `docs/` and the root `__tests__/`.
+Repository-root configuration files and infrastructure directories are outside
+its scope, and §1 states that rather than leaving it inferred.
+
+**Date.** Signed 2026-08-04.
+
+**Rationale.** The same finding recurred at all three P01 gate runs. The document
+was authored as an application tree and checked as a repository, and both
+readings were defensible — which made it a scope question rather than a defect,
+and one the builder correctly refused to decide three times.
+
+**Forecloses.** The fourth recurrence, and a §1 that grows to enumerate every
+`.gitignore` and lockfile in the repository.
+
+### OD-H11 — Adversarial probes are additive
+
+**Decision.** Every probe a gate invents becomes a permanent CI check or suite
+assertion in the fix task that follows. A gate's adversarial pass extends the
+permanent set; it never re-invents it.
+
+**Date.** Signed 2026-08-04.
+
+**Rationale.** P01's C9 probe — remove a check's target, then empty it — found
+four checks passing on nothing, and its two-way form found a fifth. That probe
+existed for one run. Had it been permanent from the first, the second gate cycle
+would not have happened.
+
+**Forecloses.** A gate whose rigour depends on whoever runs it remembering last
+time's ideas.
 

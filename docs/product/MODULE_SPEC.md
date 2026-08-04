@@ -15,13 +15,46 @@
 Only Release 1 folders are created. A folder is created by the task that first
 needs it, never in advance — an empty folder is a claim that work exists.
 
+**Scope of §1 — the application tree (OD-H10).** §1 specifies the application and
+nothing else. Nine roots are in scope, and every directory the application places
+inside them is named here.
+
+**In scope:** `app/` · `features/` · `components/` · `lib/` · `supabase/` ·
+`types/` · `scripts/` · `docs/` · `__tests__/`
+
+**Specified at directory granularity:** `scripts/` · `docs/`
+
+Neither of those two holds application code. The annotation beside each below is
+the whole of its specification, and its internal organisation is not §1's to fix.
+
+Everything the two lists above do not reach is **out of scope**: every
+repository-root file — manifests, lockfiles, tool configuration, the always-on
+rules, the state and journal files — and every directory that is not one of the
+nine, which today means `.github/`, `.cursor/` and `legacy/`. Each is governed
+where it lives: the pipeline by `ARCHITECTURE.md` §6, the retiring tools by
+`legacy/FREEZE.md`, the rules files by `AGENTS.md`. A tree that enumerated them
+would be a second place to forget, and forgetting is the failure this document
+exists to prevent. Out of scope is the complement of **In scope** and is never a
+list of its own, so a new root is excluded by not being added rather than by
+being named somewhere else.
+
+**A path below that does not exist yet says so.** The word `deferred` in the
+annotation column means the folder is not created until the task that first needs
+it, naming that task's phase where it is known.
+
+`scripts/check_module_spec_tree.py` asserts this section in both directions on
+every push (OD-H9): a named path whose parent exists must itself exist or be
+marked deferred, and every tracked directory inside the nine roots must be named
+here. §1 names directories, plus the individual files it calls out; it does not
+enumerate every file, and the check does not pretend otherwise.
+
 ```
 app/                              route surface only, thin
   [locale]/
     dictionaries.ts
     dictionaries/                 locale resolution, dictionary loading
-    (public)/                     unauthenticated: sign-in, invitation accept
-    (app)/                        authenticated tenant surface
+    (public)/                     unauthenticated: sign-in, invitation accept — deferred, P02
+    (app)/                        authenticated tenant surface — deferred, P02
       onboarding/
       brand/
       packaging/
@@ -29,10 +62,10 @@ app/                              route surface only, thin
       inventory/
       sales/
       settings/
-    (operator)/                   the B2S operator surface, OD-G10
-  api/                            only where a route handler is unavoidable
+    (operator)/                   the B2S operator surface, OD-G10 — deferred, P08
+  api/                            only where a route handler is unavoidable — deferred until one is
 
-features/                         one folder per SCOPE.md module
+features/                         one folder per SCOPE.md module — deferred, each lands with its module
   onboarding/
   brand/
   assets/
@@ -52,7 +85,7 @@ features/                         one folder per SCOPE.md module
     components/                   module-private components, composed from ui/
     __tests__/
 
-components/
+components/                       deferred, the design-surface catalog lands before P03
   ui/                             DESIGN SURFACE — primitives
   shared/                         DESIGN SURFACE — composed, cross-module
 
@@ -62,8 +95,8 @@ lib/
     server.ts                     server client, acts as the member
     server-only/                  QUARANTINE — ADR-005
       service.ts                  the only construction of the privileged client
-  money/                          exact decimal, ADR-011
-  print/                          the print engine, ADR-009
+  money/                          exact decimal, ADR-011 — deferred, P05
+  print/                          the print engine, ADR-009 — deferred, P06
 
 supabase/
   migrations/                     split verbatim from the authoritative source

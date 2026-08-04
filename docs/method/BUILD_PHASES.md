@@ -13,18 +13,28 @@ gate run by the heavyweight class, on the branch, before the pull request.
 ## The lifecycle, every phase
 
 ```
-ENTRY ──► TASKS ──► EXIT VERIFICATION ──► SIGN-OFF ──► HANDOFF
+ENTRY ──► TASKS ──► READINESS ──► EXIT VERIFICATION ──► SIGN-OFF ──► HANDOFF
 ```
 
 **ENTRY.** Read the prior phase's carry-forwards. Verify preconditions. Resolve any
 decide-and-document task first — an architectural fork is decided explicitly,
 never improvised by the build.
 
+**READINESS (OD-H8).** A STANDARD-class task asserting only what is mechanically
+checkable: stated counts, tree conformance both directions, every guard whose
+target exists, ledger owner reachability, and every specification diffed against
+the live catalog. It reports a list, not a verdict. **The exit verification does
+not run until readiness is green** — a heavyweight gate is for adversarial
+reasoning, not for discovering that a document says one thing and the tree says
+another.
+
 **EXIT VERIFICATION.** A dedicated read-only heavyweight task producing a
 line-by-line PASS/FAIL ledger against the definition of done and the acceptance
 standards, verified against the **live** staging database and real policies by
 catalog query, never against a prior summary. One hard failure blocks sign-off,
-spawns a named FIX task, and the verification is re-run in full.
+spawns a named FIX task, and the verification is re-run in full. *Its adversarial
+probes become permanent CI checks or suite assertions in the fix task that
+follows (OD-H11).*
 
 **HANDOFF.** Carry-forwards into the next phase's entry checklist. One consolidated
 pull request. Branch deleted only on verified containment.

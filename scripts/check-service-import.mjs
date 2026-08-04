@@ -24,6 +24,14 @@ const SCANNED_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx"]);
 // floor is on the total examined, not on each root existing.
 const MINIMUM_FILES = 1;
 
+// PR-28 — and the quarantine has to hold something. An existing but EMPTY
+// server-only/ passed this guard at exit 0: the directory test succeeded, the
+// scan roots still held files, and the one module the whole rule exists to
+// contain had gone. Found by the two-way form of the empty-target probe, whose
+// earlier one-way form only ever removed the directory. A quarantine with no
+// privileged client in it is not a quarantine.
+const MINIMUM_QUARANTINED_MODULES = 1;
+
 // Any specifier that resolves into the quarantine, whether written through the
 // `@/` alias, from the repository root, or by relative climb. The npm package
 // `server-only` — nothing after it — is a different thing, is what the
@@ -73,6 +81,20 @@ if (!quarantineExists) {
   process.exit(1);
 }
 
+const quarantinedModules = readdirSync(QUARANTINE_DIR).filter((entry) =>
+  SCANNED_EXTENSIONS.has(extname(entry)),
+);
+
+if (quarantinedModules.length < MINIMUM_QUARANTINED_MODULES) {
+  console.error(
+    `FAIL: ${QUARANTINE_DIR} holds ${quarantinedModules.length} module(s), ` +
+      `minimum ${MINIMUM_QUARANTINED_MODULES}. The directory exists and the ` +
+      `privileged client it is supposed to contain does not, so this guard ` +
+      `would report OK while protecting nothing (PR-27, PR-28).`,
+  );
+  process.exit(1);
+}
+
 const perRoot = new Map();
 
 for (const root of SCAN_ROOTS) {
@@ -118,5 +140,6 @@ console.log(
     (rootsAbsent.length > 0
       ? ` (not yet created: ${rootsAbsent.join(", ")})`
       : "") +
-    `; no import of ${QUARANTINE_DIR}`,
+    `; ${quarantinedModules.length} module(s) in ${QUARANTINE_DIR}, minimum ` +
+    `${MINIMUM_QUARANTINED_MODULES}; no import of ${QUARANTINE_DIR}`,
 );

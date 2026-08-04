@@ -1896,3 +1896,86 @@ in a file and never on the command line. And `Set-Content -Encoding utf8` writes
 BOM that `JSON.parse` rejects, so a probe that reads its own output strips
 `\uFEFF` first. Both are parked for `PRECEDENTS.md` §2; neither cost anything the
 second time.
+
+---
+
+2026-08-04 | Sonnet (standard) | BETWEEN P01 and P02 · M-01 — land OD-H8 to OD-H11 and close the four parked rows | DECISIONS.md, BUILD_PHASES.md, BRANCHING.md, MODULE_SPEC.md, DATA_MODEL.md, PRECEDENTS.md, CARRY_FORWARDS.md, SESSION_CONTEXT.md, README.md, docs-integrity.yml, check_module_spec_tree.py (new), check_data_model_schema.py (new), check_ledger.py, check_done_steps_shape.py, check-service-import.mjs, docs/ADRs/ (deleted) | PASS — 84 ODs verified by count, twelve checks green, 40 of 40 prover assertions passed. One state assertion diverged as reported rather than as verified: `phase/01-foundation` was still present both places and this task deleted it. Two ids no instruction asked for: CF-119, and CF-114's citations amended | P02 entry — OD-G13 and CF-103's remainder await the owner's signature
+
+**The probe found two things a reading would not, which is the whole argument for
+OD-H11 landing on the same day as the checks it governs.** E3 asks for a planted
+violation per check, and the honest way to plant one is to plant the violation a
+reviewer would actually make. For `check_module_spec_tree` that is not a renamed
+directory — it is dropping a root from §1's `In scope:` line, the exact edit
+someone makes while tidying a list. The first version of the check reported OK.
+It had derived its own scope from that line, so removing a root removed the
+check's reason to look inside it: the specification narrowed and the check
+narrowed with it, silently and in the same direction. That is PR-21's failure
+with a new surface, and no amount of reading the script would have surfaced it,
+because the script was correct with respect to what it had been told. The fix is
+that the `In scope:` line and the tree block's top-level entries must now agree
+in both directions, so narrowing one without the other is itself the violation.
+
+**The second finding was in a guard this task was not sent to inspect.**
+`check-service-import` reported OK over a `lib/supabase/server-only/` that
+existed and held nothing. Four checks were caught passing on an empty set at
+P01's second gate and a fifth at the third; this is the sixth, found because the
+probe ran two-way over every check rather than over the ones the prompt named.
+It is landed as CF-119 and closed, with a floor of one quarantined module. PR-28
+is what makes that the required move instead of a discretionary one — a probe's
+finding belongs to the fix task that follows, and this task was the fix task
+that followed.
+
+**Six of the eight state assertions re-verified; one diverged in the direction
+the task itself corrected.** PR #2 is merged at `eda0f45` and `main` carries P01,
+so nothing halted. But `phase/01-foundation` was still present locally and on
+origin, and deleting it was step one of the instruction rather than a
+pre-existing condition. Containment was proven before the delete, not assumed:
+local `main` was fast-forwarded from `04a503b` to `eda0f45` first, because
+`git log main..phase/01-foundation` against a stale `main` reports the whole
+phase as unmerged and would have blocked a delete that was safe. The other
+divergence is a reconciliation rather than a defect: the prompt's "13 scripts" is
+thirteen (check, premise) pairs and not thirteen files — ten tracked scripts
+carry them, and the two new checks make fifteen cases.
+
+**`MODULE_SPEC.md` §1 gained a scope statement whose hardest sentence is the one
+about the complement.** OD-H10 excludes root configuration and infrastructure
+directories, and the tempting way to write that is a list of what is excluded.
+That list would be a second place to forget, and forgetting is the failure the
+document exists to prevent — so out of scope is defined as the complement of **In
+scope**, and a new root is excluded by not being added rather than by being named
+somewhere else. `deferred` markers carry the eight paths the tree names before
+the task that creates them, which is what lets the forward direction assert
+today without waiting for P02.
+
+**`DATA_MODEL.md` §1 stopped contradicting §3 by naming its three departures in
+a table.** The heading said "every table, without exception" above three tables
+that deliberately carry no provenance. Reworded, it now states which rules are
+departed from nowhere, which two carry exceptions, and what each exception is and
+why — `operator` and `activity_event` from rules 3 and 4, `consent_grant` from
+rule 3. No rule changed. The table's last sentence is the load-bearing one: a
+departure not listed there is a defect and not a decision.
+
+**Two checks whose failures were tracebacks now fail in one line like the other
+eleven.** `check_ledger` and `check_done_steps_shape` raised `FileNotFoundError`
+on a removed target — detection worked, PR-27's operator-facing message did not.
+Each now tests for the file and exits with `FAIL:` and a path.
+`check_done_steps_shape` also gained the floor it lacked, on rows of either kind
+rather than on any narrower property.
+
+**The prover's controls are the part that makes 40 assertions mean something.**
+Fifteen cases erroring on a removed target and fifteen on an emptied one proves
+nothing by itself, since a check that fails unconditionally satisfies both. The
+controls prove the floors did not become false ones: the ledger green with every
+row closed and the open-id list emptied, both new checks green on the untouched
+tree, and a 0-byte `proxy.ts` correctly reported as one file scanned rather than
+as an empty scan set. That last one came out of getting the emptied case wrong
+first — truncating a file to zero bytes does not remove it from the scan set, so
+the emptied case for a file root has to remove the file and the emptied case for
+a directory root has to empty the directory.
+
+**One quirk paid for once, and one repaid.** `shutil.rmtree` cannot delete a
+`.git` directory on Windows: git marks objects read-only and the unlink raises
+`WinError 5`, so a sandbox teardown needs an `onexc` handler that chmods and
+retries. And the sandbox itself is built from `git ls-files`, which meant the two
+new checks were invisible to it until they were staged — a check proves nothing
+in a sandbox it was never copied into.

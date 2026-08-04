@@ -1821,3 +1821,134 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       document hygiene in the next task that already opens the file. Owner: the
       P02 entry checklist, batched — one task opening all three, since the
       correction is the same sentence three times.
+      AMENDED (M-01) — **the citations only; the row stays open and is not this
+      task's to close.** M-01's Task B inserted the READINESS stage into
+      `BUILD_PHASES.md`'s lifecycle, which shifted that file's three lines:
+      :25 → **:33**, :37 → **:47**, :41 → **:51**. The other four citations are
+      unmoved and re-verified here — `DEV_OS_REFERENCE.md`:95/:118/:205 and
+      `ARCHITECTURE.md`:118. M-01 did not correct the sentences: CF-114 is one
+      batched task across three files, PR-20 puts it in the task that opens all
+      three, and fixing a third of it would leave a row that looks half-closed
+      with no record of which third. Owner unchanged: the P02 entry checklist.
+- [x] CF-115 — `MODULE_SPEC.md` §1 describes the application tree and nothing
+      else. It names 53 paths, and the tree holds all 20 that should exist, so the
+      forward direction is clean. The reverse direction is not: §1 names **no**
+      repository-root file — 17 of them, including `package.json`, `proxy.ts`,
+      `eslint.config.mjs`, `next.config.ts`, `tsconfig.json`, both vitest configs
+      and `.nvmrc` — and none of the six tracked infrastructure directories:
+      `.cursor/`, `.cursor/rules/`, `.github/`, `.github/workflows/`,
+      `docs/ADRs/`, `legacy/`. `docs/` itself is named but `docs/ADRs/` falls
+      outside its one-line "product, method, requirements, archive" annotation.
+      Two remedies and the choice is the reviewer's: §1 gains an infrastructure
+      block, or §1 states its scope as the application tree and the gate criterion
+      is scoped to match. Found at P01-GATE-RUN3 as the third run's single
+      documentation correction, and the same finding recurred at all three runs.
+      Owner: the next documentation task, or the P02 entry checklist.
+      **Opened and closed by M-01**, per PR-24 — the row was parked in
+      `SESSION_CONTEXT.md` as a proposal with a reserved id and existed in no
+      ledger row, so this task opened it before closing it.
+      CF-115 — CLOSED (M-01) on the second remedy, which the owner signed as
+      **OD-H10**: §1 is the application tree, and repository-root configuration
+      files and infrastructure directories are outside its scope. §1 now carries a
+      scope statement saying so rather than leaving it inferred — an `In scope:`
+      line naming the nine roots, a `Specified at directory granularity:` line
+      naming the two that hold no application code, and a paragraph stating that
+      out of scope is the **complement** of the first list and never a list of its
+      own, so a new root is excluded by not being added rather than by being named
+      somewhere else. The scope is therefore a decision in the document, not an
+      exception list in a script. `scripts/check_module_spec_tree.py` asserts §1
+      in both directions inside that scope on every push (OD-H9) and is proven on
+      three planted violations: a named path that does not exist, a tracked
+      directory §1 stops naming, and a root quietly dropped from the `In scope:`
+      line. **The third plant is the one worth recording.** The check's first
+      draft passed it: reading the roots out of the document and then trusting
+      them meant dropping `types/` from that line put its whole subtree outside
+      the check, and the reverse direction went silent on a root while still
+      reporting success — PR-21's shape one level up, inside the very check
+      written to close PR-21's shape. The remedy is that the `In scope:` line and
+      the tree block's top-level entries must now agree in both directions, so
+      neither can narrow without the other.
+- [x] CF-116 — `docs/ADRs/` holds one tracked file, `.gitkeep`, and no ADR; all
+      twelve live in the append-only `docs/product/ADR.md`. `MODULE_SPEC.md` §1
+      states that "an empty folder is a claim that work exists". The folder makes
+      that claim and the work is elsewhere. Remedy is one deletion, which a
+      read-only gate may not make. Owner: the next repo-maintenance task.
+      **Opened and closed by M-01**, per PR-24 — parked as a proposal at
+      P01-GATE-RUN3 and present in no ledger row.
+      CF-116 — CLOSED (M-01). `docs/ADRs/.gitkeep` removed with `git rm` and the
+      directory is gone from the tree; `docs/product/ADR.md` re-counted at
+      **12** ADR headings, so nothing was lost with it. One consequence was
+      fixed in the same task rather than deferred: `README.md`'s directory table
+      carried a `docs/ADRs/` row reading "Architecture decision records (empty
+      until C5)", which the deletion turned into a claim about a path that no
+      longer exists. It now points at `docs/product/ADR.md`. The three surviving
+      mentions are deliberately untouched — two are append-only history
+      (`DEVELOPMENT_JOURNAL.md`, and this ledger) and one is the archived
+      `docs/archive/2026-07/RUNBOOK.md`, which is a record of a plan and not a
+      claim about the tree.
+- [x] CF-117 — `DATA_MODEL.md` §1 is titled "Universal rules — every table,
+      without exception" and its rules 3 and 4 put `archived_at` and the
+      provenance trio on every table. §3 then departs three times, deliberately
+      and defensibly: `operator` carries neither, `activity_event` carries neither
+      and has `occurred_at` because an append-only row has no `updated_at`, and
+      `consent_grant` carries provenance but `revoked_at` rather than
+      `archived_at`. **The live schema matches §3 exactly**, so the contradiction
+      is internal to the document and the gate's A1 criterion passes on it. §1
+      needs the three carve-outs named, or a sentence admitting a reasoned
+      departure in §3. Owner: the next `DATA_MODEL.md` amendment, which is P02's
+      tier.
+      **Opened and closed by M-01**, per PR-24 — parked as a proposal at
+      P01-GATE-RUN3 and present in no ledger row.
+      CF-117 — CLOSED (M-01) by naming the exceptions, **changing no rule**.
+      Rules 1 through 8 are byte-identical. §1's heading is now "Universal rules,
+      and the three tables that depart from them", and its new lead carries a
+      three-row table stating each departure, which rule it departs from and why,
+      each pointing at the §3 subsection that states it in full. The lead also
+      names the six rules that are departed from nowhere — 1, 2, 5, 6, 7 and 8 —
+      so the scope of the exception is bounded rather than left open, and states
+      that a departure not listed there is a defect and not a decision. The
+      document no longer contradicts itself and no policy, grant or column
+      changed.
+- [x] CF-118 — `check_ledger.py` and `check_done_steps_shape.py` detect a removed
+      target correctly and exit non-zero, but surface it as a Python traceback
+      rather than the one-line `FAIL:` message PR-27 describes. Detection is
+      intact and the exit code is right; only the operator-facing message is
+      wrong, and a traceback reads as a broken check rather than a caught
+      violation. Owner: the next task touching `scripts/`.
+      **Opened and closed by M-01**, per PR-24 — parked as a proposal at
+      P01-GATE-RUN3 and present in no ledger row.
+      CF-118 — CLOSED (M-01). Both now guard their `read()` with an
+      `os.path.isfile` test and print one `FAIL:` line naming the absent file and
+      what it is to that check, which is the shape the other eleven already had.
+      `check_done_steps_shape.py` also gained the floor PR-27 requires — it
+      printed a row count without ever stating a minimum — and its zero-data-row
+      path now says so in the PR-27 idiom instead of a bare message.
+      **Re-proven by re-running the two-way probe over the whole set**, now
+      fifteen cases rather than thirteen because the two OD-H9 conformance checks
+      join it: every case errors with a removed target and with an emptied one,
+      30 of 30 runs at a non-zero exit, every one carrying a `FAIL:` line and
+      **not one** surfacing a traceback. The controls hold with them: a ledger
+      whose every row is closed and whose open-id list is empty is still green,
+      so the floor is on rows of either kind and not a false one, and a 0-byte
+      `proxy.ts` still counts as one file examined, so `check-no-runtime-cdn`
+      reporting OK over it is the true answer rather than a vacuous pass.
+- [x] CF-119 — `check-service-import.mjs` reports `OK` at exit 0 when
+      `lib/supabase/server-only/` **exists and is empty**. The guard tests that
+      the quarantine directory is present and that its scan roots hold at least
+      one file, and both pass in that state, so ADR-005's one construction site
+      can be deleted while the guard that exists to protect it stays green. This
+      is PR-21's shape and it is the sixth instance of it in this repository.
+      Found at M-01 by the two-way form of the empty-target probe: the one-way
+      form only ever **removed** the directory, which the guard does catch, and
+      CF-112's own text records that removal case as the reason this check was
+      considered sound. No instruction named this row; it is opened because the
+      probe found it and PR-28 — landed in this same task — says a probe's
+      finding becomes a permanent check in the fix task that follows, and this is
+      that task. Owner: M-01.
+      CF-119 — CLOSED (M-01). The guard now asserts
+      `MINIMUM_QUARANTINED_MODULES = 1`: the quarantine must hold at least one
+      module of a scanned extension, and it names the count in both its failure
+      message and its OK line so the premise is attributable either way. Proven
+      on the case that found it — quarantine present, emptied, exit 1 with a
+      message — with the removal case re-run alongside it and still erroring, so
+      detection was extended rather than moved.

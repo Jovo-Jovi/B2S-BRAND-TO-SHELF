@@ -21,4 +21,4 @@ Six single-file HTML business tools for Balance Bites are being unified into one
 | `tools/` | One-off utilities (e.g. browser-data backup script) |
 | `docs/` | Audit outputs and addenda |
 | `docs/method/` | Dev OS, phase plan, prompts |
-| `docs/ADRs/` | Architecture decision records (empty until C5) |
+| `docs/product/ADR.md` | Architecture decision records, append-only |

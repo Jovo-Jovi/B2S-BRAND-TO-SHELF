@@ -4,7 +4,13 @@ done-steps table except the last, the commit column must be either one or
 more backticked hex shas (comma-separated if several) or the declared
 sentinel em-dash. The last row is exempt: its commit cannot exist before the
 commit that contains it (PR-17).
+
+PR-27 — this check states the minimum it expected to examine. CF-118 — a removed
+scan target is reported as one `FAIL:` line naming the file, never as a traceback:
+detection and the exit code were already right, but a traceback reads as a broken
+check rather than as a caught violation.
 """
+import os
 import re
 import sys
 
@@ -12,6 +18,8 @@ FAIL = False
 
 EM_DASH = "\u2014"
 SHA_CELL = re.compile(r"^(`[0-9a-f]{7,40}`)(,\s*`[0-9a-f]{7,40}`)*$")
+
+MINIMUM_DONE_STEPS_ROWS = 1
 
 
 def fail(msg):
@@ -21,6 +29,10 @@ def fail(msg):
 
 
 def read(path):
+    if not os.path.isfile(path):
+        print(f"FAIL: {path} does not exist — it is this check's only scan "
+              f"target, so there is no done-steps table to assert (PR-27, CF-118)")
+        sys.exit(1)
     with open(path, "r", encoding="utf-8") as f:
         return f.read()
 
@@ -46,8 +58,10 @@ def main():
         sys.exit(1)
 
     data_lines = table_lines[2:]  # skip header row and the --- separator row
-    if not data_lines:
-        fail(f"{path}: done-steps table has no data rows")
+    if len(data_lines) < MINIMUM_DONE_STEPS_ROWS:
+        fail(f"{path}: done-steps table holds {len(data_lines)} data row(s), "
+             f"minimum {MINIMUM_DONE_STEPS_ROWS}. A shape assertion over no rows "
+             f"reported success (PR-27)")
         sys.exit(1)
 
     for i, line in enumerate(data_lines):
@@ -65,7 +79,8 @@ def main():
 
     if FAIL:
         sys.exit(1)
-    print(f"OK: {len(data_lines)} done-steps rows checked, commit column well-formed")
+    print(f"OK: {len(data_lines)} done-steps rows checked, minimum "
+          f"{MINIMUM_DONE_STEPS_ROWS}, commit column well-formed")
 
 
 if __name__ == "__main__":

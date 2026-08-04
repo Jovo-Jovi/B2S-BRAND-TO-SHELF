@@ -19,7 +19,23 @@
 
 ---
 
-## 1. Universal rules — every table, without exception
+## 1. Universal rules, and the three tables that depart from them
+
+These rules govern every table unless §3 states otherwise for a table by name.
+§3 departs three times, each departure deliberate and reasoned where it is
+declared, and the live schema matches §3 exactly. Rules 1, 2, 5, 6, 7 and 8 are
+departed from nowhere; only rules 3 and 4 carry exceptions, and these are all of
+them:
+
+| Table | Departs from | Why |
+|---|---|---|
+| `operator` | rule 3 and rule 4 | A platform administrator is not tenant data. The grant's own lifecycle is `granted_at`, `granted_by` and `revoked_at` — provenance and retirement stated in the terms that apply to it (§3.4) |
+| `activity_event` | rule 3 and rule 4 | Append-only under rule 5. An immutable row has no `updated_at` to maintain and nothing to archive, so it carries `occurred_at` (§3.6) |
+| `consent_grant` | rule 3 | Provenance per rule 4, but retirement is `revoked_at`: a grant is revoked or lapses and is never extended, and archiving it would hide the record an operator access is audited against (§3.5) |
+
+A departure not listed here is a defect and not a decision. §3 states each in
+full; this table exists so that a rule below is never read as a claim §3
+contradicts.
 
 1. **Tenant scope.** Every table except `tenant`, `member` and `operator` carries
    a non-null `tenant_id` referencing `tenant(id)`. There is no global collection.
@@ -136,6 +152,15 @@ the stated total was wrong, which is PR-15's exact shape. The count is now
 asserted against `supabase/schema.sql` by `scripts/check_stated_counts.py`.
 `subscription` and `feature_flag` are Release 3 (`SCOPE.md`) and land with
 billing.
+
+**The four enums:** `role` · `tenant_status` · `membership_status` ·
+`consent_scope`
+
+That roster restates the paragraph above in one parseable line so a script can
+read it. `scripts/check_data_model_schema.py` asserts this section against
+`supabase/schema.sql` in both directions on every push (OD-H9): the stated table
+and enum counts, the enum names on this line, and the table names in the §3.n
+headings below, each of which must exist in the schema and be accounted for by it.
 
 ### 3.1 `tenant`
 One company. One master `brand`. The root of every scope chain.

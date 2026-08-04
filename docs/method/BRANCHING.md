@@ -41,6 +41,12 @@ guards nothing. It carries no features, no schema and no data access, so the
 phase gate has nothing to test that the branch does not already show. Every other
 task follows §3. Signed by the owner, 2026-08-01.
 
+## 3.2 Method amendments
+
+A change to the method — a decision, a precedent, a lifecycle, a conformance
+check — is not phase work and lands on `main` directly. §3's one-branch-one-PR
+rule governs work that builds the product. Signed by the owner, 2026-08-04.
+
 ## 4. Deletion requires verified containment
 
 A phase branch is deleted only after

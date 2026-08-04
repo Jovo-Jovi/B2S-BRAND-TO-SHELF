@@ -234,6 +234,14 @@ Origin: CF-112, four of thirteen checks passing over an empty set at the second
 P01 exit gate, found by a probe that removed each target rather than by reading
 any of them.
 
+**PR-28 — A gate's probe outlives the gate.**
+An adversarial probe that finds something is landed as a permanent check by the
+fix task that follows, and an adversarial probe that finds nothing is landed too,
+because a probe that passes today is the one that catches tomorrow's regression.
+A gate's rigour must not depend on whoever runs it having the same idea twice.
+Origin: OD-H11, and the two-way empty-target probe that found four checks passing
+on nothing at one gate and a fifth at the next.
+
 ---
 
 ## 2. Environment quirks — never re-discover
@@ -487,3 +495,26 @@ any of them.
   parser rather than npm. Redirect stderr away (`2>$null`) or capture stdout
   alone, then parse. The same applies to any npm command whose machine-readable
   output is consumed in this shell.
+- Found at P01-GATE-RUN3, landed here at M-01: PowerShell strips the backticks a
+  JavaScript template literal needs out of a `node -e` argument, because the
+  backtick is PowerShell's own escape character. An independent probe therefore
+  goes in a file and is invoked by path, never written on the command line —
+  which is the same conclusion the `bash -c` entries above reach for a different
+  reason.
+- Found at P01-GATE-RUN3, landed here at M-01, a companion to the
+  `Set-Content -Encoding UTF8` BOM entry above: the BOM it writes also makes
+  `JSON.parse` reject the file at character 0, so a probe that reads back its own
+  output strips a leading `\uFEFF` first. The better fix is not to write one —
+  `[System.IO.File]::WriteAllText` with `UTF8Encoding $false`.
+- Learned at M-01: PowerShell rejects a heredoc passed to `python -` exactly as it
+  rejects one passed to `git commit`, and fails at parse time with "The '<'
+  operator is reserved for future use" before Python is reached. A throwaway
+  script goes in a file under `$env:TEMP` and is invoked by path. Related: an
+  ad-hoc `python -c` one-liner is safe only while it contains no `<`, `>`, `(`,
+  `)` or backtick.
+- Learned at M-01: `shutil.rmtree` fails with `PermissionError: [WinError 5]` on a
+  `.git` directory, because git marks its object files read-only and Windows
+  refuses to unlink a read-only file. Pass an `onexc` handler that does
+  `os.chmod(path, stat.S_IWRITE)` and retries. This bites any probe that builds a
+  throwaway clone of the tree and then cleans it up, and it surfaces halfway
+  through the run rather than at the start.

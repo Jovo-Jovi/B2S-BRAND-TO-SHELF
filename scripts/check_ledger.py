@@ -21,7 +21,13 @@ out from under both patterns — and used to print "OK: 0 open ids reconcile
 id-for-id" at exit 0. Found at P01-T06-FIX by the same probe that found the four
 named at the second P01 exit gate; this one the gate's own sandbox missed,
 because its case deleted the file rather than emptying the row set.
+
+CF-118 — a removed scan target is reported as one `FAIL:` line naming the file,
+never as a traceback. Detection and the exit code were already right; a traceback
+reads as a broken check rather than as a caught violation, and it does not tell
+the operator which of the two targets went missing.
 """
+import os
 import re
 import sys
 
@@ -39,6 +45,11 @@ def fail(msg):
 
 
 def read(path):
+    if not os.path.isfile(path):
+        print(f"FAIL: {path} does not exist — it is one of this check's two scan "
+              f"targets, and no reconciliation is possible without it (PR-27, "
+              f"CF-118)")
+        sys.exit(1)
     with open(path, "r", encoding="utf-8") as f:
         return f.read()
 

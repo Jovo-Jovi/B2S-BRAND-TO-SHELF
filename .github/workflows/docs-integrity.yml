@@ -31,3 +31,12 @@ jobs:
 
       - name: Migration split fidelity (ADR-006, CF-110)
         run: python3 scripts/check_migration_split.py
+
+      # OD-H9 — a reviewer-authored specification lands with the check that
+      # asserts it against reality. These two are the static half; the assertions
+      # that need the live database belong to the readiness task (OD-H8).
+      - name: MODULE_SPEC §1 tree conformance (OD-H10, CF-115)
+        run: python3 scripts/check_module_spec_tree.py
+
+      - name: DATA_MODEL §3 against the authoritative schema
+        run: python3 scripts/check_data_model_schema.py
