@@ -1702,3 +1702,108 @@ only proposes changes to declared dependencies, and the vulnerable pins belong t
 `next@16.2.12`, which is itself the latest release. PR-25 already authorises
 raising a transitive resolution as maintenance, so the remedy is a bump and not a
 wait. The gate did not take it: this task authorised no dependency work.
+
+---
+
+2026-08-04 | Opus (heavyweight) | BUILD P01-T06-FIX: the second gate's three failures, and CF-98 | docs/product/SECURITY_MODEL.md, docs/product/MODULE_SPEC.md, docs/product/DATA_MODEL.md, scripts/check-no-runtime-cdn.mjs, scripts/check-no-hardcoded-literals.mjs, scripts/check-service-import.mjs, scripts/check_credentials.py, scripts/check_ledger.py, scripts/check_stated_counts.py, package.json, package-lock.json, docs/method/PRECEDENTS.md, docs/method/CARRY_FORWARDS.md, SESSION_CONTEXT.md, DEVELOPMENT_JOURNAL.md | Three deviations, all declared: the prompt's C1 snippet names `tests/` and the tree has `__tests__/`, so the spec follows the tree; a fifth empty-set check was found beyond the four named and was given a floor with them; CF-114 was opened for a finding the sweep produced, which no instruction named | P01-GATE, third full run, fresh window
+
+**The gate was not run and its verdict is not anticipated here.**
+
+**The reviewer called the §11 ambiguity its own, and that is what made the fix
+structural.** §11.2 read "Six exist, all in schema `public`" — a claim about what
+this project built, phrased as a claim about the catalog, which holds nine. The
+tempting repair is a longer list. It would have failed again on the next
+platform object, because the sentence's defect was not its length: a
+re-derivation reads the catalog, and the catalog does not distinguish a function
+this project wrote from one Supabase installed. §11 is now two tiers with two
+different requirements. §11a is justified object by object. §11b is enumerated,
+measured and re-derived, and an unchanged platform object is a pass while an
+unlisted one is a failure. Writing a justification for `pgbouncer.get_auth` on
+Supabase's behalf would have produced a paragraph nobody could maintain and
+nobody would believe.
+
+**Re-deriving §11b found two things the gate that ordered the re-derivation had
+not.** The gate measured the three platform functions on schema `USAGE` and
+`EXECUTE` and recorded all three unreachable from every API role. On direct
+privilege that is exactly right. Measured a third way — can this role reach the
+function by first becoming a role that can — `authenticator` reaches both
+`vault` functions through `service_role`, which holds `USAGE` on `vault` and
+`EXECUTE` on both. It is the `MEMBER`-versus-`USAGE` mistake one level down: the
+same shape of question, asked about a function instead of a role, answered by
+the same wrong measurement. It grants a holder of the privileged key nothing new
+— `service_role` already bypasses every policy on every table — but that is a
+conclusion, not a reason to leave it unlisted. Separately, the gate counted four
+`MEMBER` paths into a bypass role and the catalog holds ten: six grants and four
+that are `supabase_admin`'s implicit superuser membership. Both extra grants,
+`postgres → service_role` and `cli_login_postgres → service_role`, are
+transitive consequences of rows already listed, and both are listed anyway,
+because §11.5 asks what the catalog holds rather than what is novel.
+
+**`cli_login_postgres` is the only credential on the list and it is the one
+thing here that was investigated rather than described.** It owns nothing, holds
+no table privilege, has no default ACL, appears in no `pg_shdepend` row, carries
+no comment and has no session. Its password expired 2026-08-03 13:03:08 UTC,
+confirmed expired when measured at 2026-08-04 10:50:12 UTC. It is residue of the
+Supabase CLI's "Initialising login role…" — the quirk this project recorded at
+P01-T02, months before anyone noticed the role it leaves behind. Revocation is
+recommended and was not performed: dropping a platform-managed role is the
+owner's call, not a fix task's. §11b.4 also records that the CLI re-provisions
+one on the next link, so a `cli_login_*` role reappearing is expected and is not
+a regression — the kind of thing that costs a gate an hour if nobody wrote it
+down.
+
+**The event triggers are ruled rather than assumed, and the ruling has two
+halves.** They are not an RLS bypass: they fire only on DDL, `anon`,
+`authenticated` and `authenticator` hold `CREATE` on zero schemas measured
+across every schema in the database, and none of the six functions is `security
+definer`. They *are* a code-execution surface owned by `supabase_admin`, and the
+honest version of that says every migration this project applies is DDL, so four
+of the six fire inside our own transactions and run `supabase_admin`-authored
+code with an unpinned `search_path`. Nothing there is reachable from a tenant
+session and nothing there is ours to change, which is the tier b shape exactly.
+
+**A check that passes on nothing is a defect the probe finds and the reading
+never does.** Thirteen (check, premise) pairs, each run in a throwaway copy of
+the tree with its premise removed. Before: nine errored, four reported success.
+After: thirteen error. The four named in the prompt got a minimum non-zero
+scanned count and a message naming the empty or absent root. `check_credentials`
+needed a second correction on the way — an empty CI diff now widens to a
+whole-tree scan rather than reporting a clean zero, because an empty diff is an
+absent scope and not an empty scan set, and a floor that turned an empty commit
+red would be a false floor.
+
+**A fifth was found, and the interesting part is why the gate's sandbox missed
+it.** `check_ledger` printed `OK: 0 open ids reconcile id-for-id … 0 owner(s)
+checked` at exit 0 when every open row was removed. The gate's case for that
+check deleted the ledger file, which raises; emptying the row set does not. The
+floor it got is deliberately not the obvious one. Zero *open* rows is a
+legitimate end state — the day this project closes its last carry-forward, CI
+must not turn red — so the floor is on rows of either kind, which is what
+catches a moved file or a changed row syntax. A control case asserts exactly
+that: 96 rows, all closed, open-id list emptied, still green. That control is
+the point. Thirteen cases erroring proves nothing on its own, because a check
+that fails always would satisfy it; seven controls prove the floors were added
+without breaking detection or inventing a false one.
+
+**CF-98 closed on the remedy the previous gate identified and was not allowed to
+take.** `npm audit` before: three high, `postcss <=8.5.22` and `sharp <0.35.0`,
+with `next@16.3.0` offered as the only fix and marked outside the stated range.
+After two `overrides` entries: zero. `npm ls` shows both pins overridden and the
+`vite → postcss` path deduped onto the patched version. Install, lint,
+typecheck, unit, all five guards and build ran green in `ci.yml`'s own order.
+PR-25 is what makes this maintenance rather than scope, and the comment beside
+the overrides names both CF-98 and PR-25, so the day an upstream release
+consumes them the reason they exist is next to them rather than in a ledger.
+
+**Three deviations, declared rather than smoothed over.** The prompt's C1
+snippet writes the root test directory as `tests/`; the tree has `__tests__/`,
+and the criterion is that §1 matches the tree, so writing `tests/` would have
+failed the same criterion at the next gate for a new reason. The audit of the
+remaining nine checks found a fifth empty-set pass, which no instruction named;
+it was fixed with the four because it is the same defect and leaving it would
+have handed the third gate the same finding in a new place. And the staging
+sweep produced three surviving documents that this task does not open —
+`BUILD_PHASES.md`, `DEV_OS_REFERENCE.md` and one sentence in `ARCHITECTURE.md`
+that sits just below the ADR-012 note covering the table above it. PR-20 puts
+those in the next task that already opens each file, so they are CF-114 rather
+than an edit made here, and CF-114 is an id no instruction asked for.

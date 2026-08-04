@@ -224,6 +224,16 @@ unstaged ledger amendments, which had to be re-authored. The probes in the same
 task that touched only `supabase/schema.sql` — a file the task had **not**
 edited — were safe by luck, not by design.
 
+**PR-27 — A check asserts a floor, or it is not a check.**
+Every guard and integrity check states the minimum it expected to examine and
+fails when it examined less. `OK: 0 file(s) scanned` and exit 0 is PR-21's shape
+produced by the check itself: it ran, it concluded nothing, and it reported
+success. The failure arrives silently the day a scan root is renamed, a glob stops
+matching, or a directory moves — the check keeps passing and stops guarding.
+Origin: CF-112, four of thirteen checks passing over an empty set at the second
+P01 exit gate, found by a probe that removed each target rather than by reading
+any of them.
+
 ---
 
 ## 2. Environment quirks — never re-discover
@@ -458,7 +468,22 @@ edited — were safe by luck, not by design.
 - Learned at P01-T05-FIX: `api.supabase.com` answers **403 with a body of
   `error code: 1010`** to Python's default `urllib` User-Agent. That is a
   Cloudflare browser-signature block at the edge, not a Supabase refusal and not
-  an authentication failure: it carries no SQLSTATE, so it is not a result and
+  an   authentication failure: it carries no SQLSTATE, so it is not a result and
   the P01-T03 "never retry a 4xx" rule does not apply to it. Set any ordinary
   User-Agent header and it goes away. Node's `fetch`, which the isolation
   harness uses, sends one already, which is why this had not been hit before.
+- Found at P01-GATE-RERUN, landed here at P01-T06-FIX: the Management API's
+  `GET /v1/projects/<ref>/types/typescript` defaults to schema `public` **alone**,
+  while the pinned CLI's `supabase gen types typescript` emits `public` and
+  `graphql_public`. Ask the endpoint with
+  `?included_schemas=public,graphql_public` or the two outputs differ by the
+  whole `graphql_public` block, and a `types-drift` check that is in fact clean
+  reports a difference nobody can fix by regenerating. The CLI is what `ci.yml`
+  runs, so the CLI's schema set is the correct one and the endpoint is what has
+  to be told.
+- Found at P01-GATE-RERUN, landed here at P01-T06-FIX: `npm audit --json 2>&1`
+  in PowerShell merges npm's stderr warning into the same stream as the JSON
+  document, so the result fails to parse at character 0 and the error names the
+  parser rather than npm. Redirect stderr away (`2>$null`) or capture stdout
+  alone, then parse. The same applies to any npm command whose machine-readable
+  output is consumed in this shell.

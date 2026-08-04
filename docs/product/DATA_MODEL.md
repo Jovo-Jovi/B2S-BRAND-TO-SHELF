@@ -127,10 +127,15 @@ explicitly not member-writable.
 
 ## 3. The Platform tier
 
-Six tables and one enum for Release 1 — §3.7 is `role`, which is an enum
-and deliberately not a table. `subscription` and `feature_flag` are
-Release 3
-(`SCOPE.md`) and land with billing.
+Six tables and four enums for Release 1. §3.7 is `role`, which is an enum,
+deliberately not a table, and the only one of the four with a subsection of its
+own. The other three — `tenant_status`, `membership_status` and `consent_scope`
+— are declared inline in the column tables of §3.1, §3.3 and §3.5. That is why
+this line read "one enum" until P01-T06-FIX: every value was specified and only
+the stated total was wrong, which is PR-15's exact shape. The count is now
+asserted against `supabase/schema.sql` by `scripts/check_stated_counts.py`.
+`subscription` and `feature_flag` are Release 3 (`SCOPE.md`) and land with
+billing.
 
 ### 3.1 `tenant`
 One company. One master `brand`. The root of every scope chain.
@@ -325,7 +330,7 @@ reader.
 
 ## 5. What the Phase 01 exit gate must prove
 
-Against the **live** staging catalog, by query — never by reading the migration.
+Against the **live** catalog, by query — never by reading the migration.
 
 1. Every table has `rowsecurity = true`. Zero exceptions.
 2. Every table has at least one policy. **An RLS-enabled table with no policy is

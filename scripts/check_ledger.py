@@ -12,6 +12,15 @@ gate that closed weeks earlier. CF-60 closes on the same reasoning.
 The passed-list is derived from SESSION_CONTEXT.md's done-steps table on every
 run, never hardcoded here. A list in this file would be a second place to
 forget, and forgetting is the whole failure mode.
+
+PR-27 — this check states the minimum it expected to examine. The floor is on
+rows of EITHER kind, not on open ones: closing the last carry-forward is a
+legitimate end state and must not turn CI red. A ledger holding no row at all is
+a different thing entirely — the file has moved, or the row syntax has changed
+out from under both patterns — and used to print "OK: 0 open ids reconcile
+id-for-id" at exit 0. Found at P01-T06-FIX by the same probe that found the four
+named at the second P01 exit gate; this one the gate's own sandbox missed,
+because its case deleted the file rather than emptying the row set.
 """
 import re
 import sys
@@ -19,6 +28,8 @@ import sys
 FAIL = False
 
 EM_DASH = "\u2014"
+
+MINIMUM_LEDGER_ROWS = 1
 
 
 def fail(msg):
@@ -54,6 +65,12 @@ def ledger_open_rows():
         end = next(b for b in boundaries if b > start)
         rows[m.group(1)] = text[start:end]
     return rows
+
+
+def ledger_all_rows():
+    """Every carry-forward row, open or closed. This is the floor's scan set."""
+    text = read("docs/method/CARRY_FORWARDS.md")
+    return re.findall(r"^- \[[ x]\] (CF-\d+)", text, re.M)
 
 
 def done_steps_rows():
@@ -145,6 +162,17 @@ def check_owner_reachable(rid, clause, gates, phase_gates):
 
 
 def main():
+    all_rows = ledger_all_rows()
+    if len(all_rows) < MINIMUM_LEDGER_ROWS:
+        fail(
+            f"docs/method/CARRY_FORWARDS.md holds {len(all_rows)} carry-forward "
+            f"row(s) of any kind, minimum {MINIMUM_LEDGER_ROWS}. Zero OPEN rows is "
+            f"a legitimate end state; zero rows at all means the ledger has moved "
+            f"or its row syntax has changed, and this check reconciled nothing "
+            f"while reporting success (PR-27)"
+        )
+        sys.exit(1)
+
     session_ids = session_open_ids()
     ledger_rows = ledger_open_rows()
     ledger_ids = set(ledger_rows.keys())
@@ -181,8 +209,9 @@ def main():
     if FAIL:
         sys.exit(1)
     print(
-        f"OK: {len(ledger_ids)} open ids reconcile id-for-id; every open row names an "
-        f"owner; {checked} owner(s) checked against "
+        f"OK: {len(ledger_ids)} open ids reconcile id-for-id out of "
+        f"{len(all_rows)} ledger row(s), minimum {MINIMUM_LEDGER_ROWS}; every open "
+        f"row names an owner; {checked} owner(s) checked against "
         f"{len(gates)} passed gate(s) {sorted(gates)} and "
         f"{len(phase_gates)} passed phase-exit gate(s) {sorted(phase_gates)}"
     )

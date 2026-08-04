@@ -1314,7 +1314,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       fixture deleted. The rejected alternative was renaming the variable, which
       leaves the false positive live for the next legitimate reader of that
       environment name. Owner: reviewer, to ratify the narrowing or reject it.
-- [ ] CF-98 — Four open Dependabot alerts on the default branch, unrecorded since
+- [x] CF-98 — Four open Dependabot alerts on the default branch, unrecorded since
       alerts were enabled at G3-CLOSE and surfaced by the P01-T02 push, which
       printed them on the remote's response. All four are transitive runtime
       dependencies resolved in `package-lock.json` and declared in no
@@ -1375,6 +1375,34 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       because `npm audit` only proposes changes to declared dependencies. The
       gate does not take it: this task authorises no dependency work. Recorded so
       the next task knows the remedy is a resolution bump and not a wait.
+      CF-98 — CLOSED (P01-T06-FIX), on the remedy the gate identified and could
+      not take. Two `overrides` entries raise the transitive pins to the
+      published patched versions: `postcss` `8.4.31` → `8.5.25` and `sharp`
+      `0.34.5` → `0.35.3`. Both are the latest published release of their
+      package. This is maintenance under PR-25 and not a new dependency: neither
+      package is added, both were already in the tree, and `package.json`'s
+      `dependencies` and `devDependencies` are untouched.
+      **Before**: `npm audit` reports `3 high severity vulnerabilities` at exit
+      1 — `postcss <=8.5.22` carrying all four advisories in this row, and
+      `sharp <0.35.0` carrying the libvips CVEs — with `fix available via npm
+      audit fix --force` offering `next@16.3.0`, "outside the stated dependency
+      range". `npm ls` shows `next@16.2.12 → postcss@8.4.31` and
+      `vitest → vite@8.2.0 → postcss@8.5.25`, and `next@16.2.12 → sharp@0.34.5`.
+      **After**: `npm audit` reports `found 0 vulnerabilities` at exit 0. `npm
+      ls` shows `next@16.2.12 → postcss@8.5.25 overridden` with the vite path
+      deduped onto it, and `next@16.2.12 → sharp@0.35.3 overridden`.
+      **The whole pipeline stays green** on the bumped tree, run locally in
+      `ci.yml`'s own order: `npm install` exit 0 removing 1 and changing 3
+      packages over 388 audited; `lint` exit 0 (the one pre-existing warning in
+      the archived backup script, 0 errors); `typecheck` exit 0; `npm test` 2
+      passed; all five guards OK; `npm run build` exit 0, compiled in 1525 ms,
+      4 of 4 static pages generated for `/en` and `/ar`. Local Node is 22 and
+      CI pins 24, so the pipeline's own conclusion remains authoritative.
+      The row's owner — "every phase exit gate until an upstream Next.js release
+      consumes them" — is discharged rather than retargeted: there is nothing
+      left to re-derive. `package.json` carries a comment naming CF-98 and PR-25
+      beside the overrides, so the day an upstream release consumes them, the
+      reason they exist is next to them.
 - [ ] CF-99 — A pull request exists on `phase/01-foundation` that the task
       forbade, and it is not the builder's. P01-T02's done-when says "No pull
       request — T03 runs the isolation proof on this branch first, and the phase
@@ -1688,3 +1716,108 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       re-derived unchanged at 3 high and 1 medium, so the D2 instruction's own
       condition — leave it open if any advisory is still open — applies. CF-95 is
       closed.
+- [x] CF-112 — Four of the thirteen (check, premise) pairs in this repository
+      report success over an empty scan set, which is PR-21's exact shape
+      produced by the check itself rather than by a report. Found at the second
+      P01 exit gate by a probe that removed each check's target and ran it, not
+      by reading any of them. `check-no-runtime-cdn` says `OK: no runtime CDN
+      reference in 0 file(s)` with `app/` and `proxy.ts` gone;
+      `check-no-hardcoded-literals` says `OK: no hardcoded literal in 0 file(s)
+      scanned` on the same removal; `check-service-import` says `OK: 0 file(s)
+      scanned under []` with all three scan roots gone, though it correctly
+      fails when the quarantine itself is removed; `check_credentials` says
+      `OK: scanned 0 file(s)` wherever `git ls-files` returns nothing. Each
+      prints its count, so a human reading the log would see the zero — and each
+      exits 0, so CI would not. Owner: P01-T06-FIX.
+      CF-112 — CLOSED (P01-T06-FIX). Every one of the thirteen cases now errors
+      on an empty premise, verified by re-running the same sandbox: the four
+      named above plus the nine that already errored, none of which regressed.
+      Each of the four asserts a minimum non-zero scanned count and names the
+      empty or absent root in its failure message. `check_credentials` gained a
+      second correction on the way: an empty CI diff now widens to a whole-tree
+      scan instead of reporting a clean zero, because an empty diff is an absent
+      scope rather than an empty scan set. PR-27 is landed.
+      **A fifth was found here and is closed with them.** The audit of the
+      remaining nine, run as cases rather than as a reading, showed
+      `check_ledger` printing `OK: 0 open ids reconcile id-for-id … 0 owner(s)
+      checked` at exit 0 when every open row is removed. The gate's own sandbox
+      missed it because its case deleted the ledger file, which raises, rather
+      than emptying the row set, which did not. Its floor is deliberately on
+      rows of **either** kind and not on open ones: closing the last
+      carry-forward is a legitimate end state and must not turn CI red, while a
+      ledger holding no row at all means the file has moved or the row syntax
+      has changed out from under both patterns. A control case asserts exactly
+      that — 96 rows all closed, open-id list emptied, still green.
+      `check_stated_counts` was also failing only by traceback on a missing
+      target and now names the target and counts what it examined.
+- [x] CF-113 — `SECURITY_MODEL.md` §11's first standing re-derivation, at the
+      second P01 exit gate, found six live bypass mechanisms the document does
+      not name — three `security definer` functions outside `public`
+      (`vault.create_secret`, `vault.update_secret`, `pgbouncer.get_auth`) and
+      three role paths into a bypass role (`cli_login_postgres → postgres`,
+      `supabase_storage_admin → service_role`, `supabase_realtime_admin →
+      service_role`). None is reachable from an API-facing role by direct
+      privilege, so this is a documentation gap rather than a hole — and §11.5
+      makes it a hard failure regardless, not waivable by OD, on §1's ground
+      that an undocumented bypass is one nobody is watching. Owner: P01-T06-FIX.
+      CF-113 — CLOSED (P01-T06-FIX). **The ambiguity was the reviewer's, and the
+      remedy is structural rather than a longer list.** §11.2 read "Six exist,
+      all in schema `public`" — a claim about the objects this project created,
+      written as a claim about the whole catalog, which holds nine. A
+      re-derivation reads the catalog and cannot make a distinction the sentence
+      only assumed. §11 is now two tiers. §11a is B2S-owned and each entry is
+      individually justified; an object there the project did not deliberately
+      create is a hard failure. **§11b is platform-owned and its requirement is
+      enumeration and change detection, not justification**: each entry states
+      owner, schema and measured reachability, an unchanged platform object is
+      not a failure, and an unlisted one is. Justifying `pgbouncer.get_auth` is
+      not this project's to do; noticing the day it changes is.
+      **The re-derivation at closure exceeded the gate's own findings in two
+      places, both recorded in §11 rather than softened.** (1) The gate measured
+      the three platform functions on schema `USAGE` and `EXECUTE` alone and
+      recorded them unreachable by all three API roles. Measured a third way —
+      reachable-by-`SET ROLE` — `authenticator` reaches both `vault` functions
+      through `service_role`, which holds `USAGE` on `vault` and `EXECUTE` on
+      both. It grants a holder of the privileged key nothing it does not already
+      have, since `service_role` bypasses every policy on every table, but it is
+      the `MEMBER`-versus-`USAGE` mistake one level down and it is now
+      enumerated. (2) The gate counted four `MEMBER` paths into a bypass role;
+      the catalog holds ten — six grants and four that are `supabase_admin`'s
+      implicit superuser membership. The two extra grants, `postgres →
+      service_role` and `cli_login_postgres → service_role`, are transitive
+      consequences of rows already listed and are listed anyway.
+      **`cli_login_postgres` is investigated and not dropped**, per the task.
+      It is residue of CLI linking — `supabase link` and `db push` provision a
+      temporary login role through the Management API, the quirk recorded at
+      P01-T02 — and nothing depends on it: zero owned objects, zero table
+      privileges, zero default-ACL entries, zero `pg_shdepend` rows, zero active
+      sessions. Its password expired 2026-08-03 13:03:08 UTC, confirmed expired
+      when measured 2026-08-04 10:50:12 UTC. **Recommended for revocation, an
+      owner decision**, because dropping a platform-managed role is not a fix
+      task's call; §11b.4 also records that the CLI re-provisions one on the
+      next link, so a reappearance is expected and is not a regression.
+      **The six event triggers are ruled rather than assumed.** They are not an
+      RLS bypass: they fire only on DDL, no API role holds `CREATE` on any
+      schema, and none of the six functions is `security definer`. They are a
+      code-execution surface owned by `supabase_admin`, listed in §11b.5 with
+      that characterisation stated. The `MEMBER`-versus-`USAGE` rule is now
+      mandatory in §11.0.1, with the `NOINHERIT` reason, so the next gate cannot
+      ask the wrong question.
+- [ ] CF-114 — ADR-012 retired the staging environment, and three documents
+      still describe it as one that exists. A sweep of all 110 non-vendored
+      files at P01-T06-FIX found 37 matching lines in 9 files; six of the nine
+      are correct — the append-only journal and `ADR.md`, `PRECEDENTS.md`'s two
+      uses meaning the git index and PR-14's reviewer folder, and CF-92,
+      CF-109 and the isolation suite's own guard, all of which speak of a
+      staging project as a future thing. The two named casualties are retired.
+      What survives is: `docs/method/BUILD_PHASES.md`:25 "the **live** staging
+      database", :37 "data contract live in staging" and :41 "Supabase staging
+      and production projects" as a P01 deliverable; `docs/method/
+      DEV_OS_REFERENCE.md`:95 "staging DB", :118 "regenerates from staging" and
+      :205 "data contract live in staging"; and `docs/product/ARCHITECTURE.md`:118
+      "Types are generated from staging", which sits just below the ADR-012
+      amendment note that covers the table above it but not this sentence. Not
+      fixed here: none of the three is in this task's write set, and PR-20 puts
+      document hygiene in the next task that already opens the file. Owner: the
+      P02 entry checklist, batched — one task opening all three, since the
+      correction is the same sentence three times.

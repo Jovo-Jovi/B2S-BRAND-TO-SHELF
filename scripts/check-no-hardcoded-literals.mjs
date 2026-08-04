@@ -13,6 +13,11 @@ const ROOTS = ["app", "proxy.ts"];
 const SCANNED_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx"]);
 const EXEMPT_PATH_SEGMENT = `${sep}dictionaries${sep}`;
 
+// PR-27 — a check states the minimum it expected to examine and fails when it
+// examined less. A root that is renamed, moved, or reduced entirely to exempt
+// files leaves this guard reporting "OK ... 0 file(s) scanned" at exit 0.
+const MINIMUM_FILES = 1;
+
 const CHECKS = [
   { name: "hex colour", pattern: /#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3}(?:[0-9a-fA-F]{2})?)?\b/ },
   { name: "Arabic literal", pattern: /[\u0600-\u06FF]/ },
@@ -26,6 +31,8 @@ const CHECKS = [
 
 let violations = 0;
 let filesScanned = 0;
+const perRoot = new Map();
+const absentRoots = [];
 
 function walk(path) {
   const stats = statSync(path);
@@ -54,13 +61,35 @@ function walk(path) {
 }
 
 for (const root of ROOTS) {
+  const before = filesScanned;
   try {
     walk(root);
   } catch (err) {
     if (err.code !== "ENOENT") {
       throw err;
     }
+    absentRoots.push(root);
+    continue;
   }
+  perRoot.set(root, filesScanned - before);
+}
+
+if (filesScanned < MINIMUM_FILES) {
+  console.error(
+    `FAIL: ${filesScanned} file(s) scanned, minimum ${MINIMUM_FILES}. This guard ` +
+      `examined nothing, and nothing found in nothing is not a pass (PR-27).`,
+  );
+  if (absentRoots.length > 0) {
+    console.error(`  scan root(s) that do not exist: ${absentRoots.join(", ")}`);
+  }
+  const empty = [...perRoot].filter(([, n]) => n === 0).map(([r]) => r);
+  if (empty.length > 0) {
+    console.error(
+      `  scan root(s) present but empty : ${empty.join(", ")} ` +
+        `(every file under them is a named exemption, or none has a scanned extension)`,
+    );
+  }
+  process.exit(1);
 }
 
 if (violations > 0) {
@@ -68,4 +97,8 @@ if (violations > 0) {
   process.exit(1);
 }
 
-console.log(`OK: no hardcoded literal in ${filesScanned} file(s) scanned`);
+const census = [...perRoot].map(([r, n]) => `${r}: ${n}`).join(", ");
+console.log(
+  `OK: no hardcoded literal in ${filesScanned} file(s) scanned, minimum ${MINIMUM_FILES} [${census}]` +
+    (absentRoots.length > 0 ? ` (not yet created: ${absentRoots.join(", ")})` : ""),
+);

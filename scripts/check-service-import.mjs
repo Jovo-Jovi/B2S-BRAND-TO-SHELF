@@ -16,6 +16,14 @@ const QUARANTINE_DIR = join("lib", "supabase", "server-only");
 const SCAN_ROOTS = ["app", "features", "components"];
 const SCANNED_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx"]);
 
+// PR-27 — the quarantine floor above was only half of it. This guard also
+// needs somewhere to look: with every scan root gone it reported
+// "OK: 0 file(s) scanned under []" at exit 0, which is the same defect as a
+// missing quarantine wearing a cleaner message. `features/` and `components/`
+// are legitimately absent until the phase that creates them (CF-94), so the
+// floor is on the total examined, not on each root existing.
+const MINIMUM_FILES = 1;
+
 // Any specifier that resolves into the quarantine, whether written through the
 // `@/` alias, from the repository root, or by relative climb. The npm package
 // `server-only` — nothing after it — is a different thing, is what the
@@ -65,16 +73,36 @@ if (!quarantineExists) {
   process.exit(1);
 }
 
+const perRoot = new Map();
+
 for (const root of SCAN_ROOTS) {
+  const before = filesScanned;
   try {
     walk(root);
     rootsPresent.push(root);
+    perRoot.set(root, filesScanned - before);
   } catch (err) {
     if (err.code !== "ENOENT") {
       throw err;
     }
     rootsAbsent.push(root);
   }
+}
+
+if (filesScanned < MINIMUM_FILES) {
+  console.error(
+    `FAIL: ${filesScanned} file(s) scanned across [${SCAN_ROOTS.join(", ")}], ` +
+      `minimum ${MINIMUM_FILES}. The quarantine exists and nothing was examined ` +
+      `against it, which is not a pass (PR-27).`,
+  );
+  if (rootsAbsent.length > 0) {
+    console.error(`  scan root(s) that do not exist: ${rootsAbsent.join(", ")}`);
+  }
+  const empty = [...perRoot].filter(([, n]) => n === 0).map(([r]) => r);
+  if (empty.length > 0) {
+    console.error(`  scan root(s) present but empty : ${empty.join(", ")}`);
+  }
+  process.exit(1);
 }
 
 if (violations > 0) {
@@ -85,7 +113,8 @@ if (violations > 0) {
 }
 
 console.log(
-  `OK: ${filesScanned} file(s) scanned under [${rootsPresent.join(", ")}]` +
+  `OK: ${filesScanned} file(s) scanned under [${rootsPresent.join(", ")}], ` +
+    `minimum ${MINIMUM_FILES}` +
     (rootsAbsent.length > 0
       ? ` (not yet created: ${rootsAbsent.join(", ")})`
       : "") +

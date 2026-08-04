@@ -70,11 +70,24 @@ supabase/
   schema.sql                      the authoritative source, ADR-006
 
 types/
-  database.ts                     GENERATED from staging. Never hand-edited
+  database.ts                     GENERATED from the live project. Never hand-edited
+
+__tests__/                        cross-cutting suites only
+  isolation/                      the tenant-isolation harness and suite
+  *.test.tsx                      shell and cross-cutting tests
 
 scripts/                          CI guards and integrity checks
 docs/                             product, method, requirements, archive
 ```
+
+**Where a test lives is decided by what it covers.** A module-private test lives
+in that feature folder's own `__tests__/`, beside the code it tests. A
+cross-cutting suite — one that spans modules, or that proves a property of the
+whole system rather than of one module — lives in the repository-root
+`__tests__/`. `__tests__/isolation/` is the second kind: `BUILD_PHASES.md` §P01
+lists the tenant-isolation suite as a phase deliverable, it belongs to no
+feature, and ADR-003 makes what it proves a property of the database rather than
+of any module.
 
 ---
 
