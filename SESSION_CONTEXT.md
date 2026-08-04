@@ -412,6 +412,14 @@ What P02 should know before its first task:
   does inherit is the maintenance obligation the closure created: two
   `overrides` entries in `package.json`, each removed when an upstream Next.js
   release consumes it. The comment beside them names CF-98 and PR-25.
+  **P01-GATE-RUN3 measured the removal condition as met**: `next@16.3.0` fixes
+  all three packages as a non-major bump, so both overrides can go at the next
+  maintenance task under PR-25. It also reconciled the count, which had read
+  three or four depending on who was asked — `npm audit` counts **packages**
+  and reports 3 high on `main`; those three carry **5** distinct advisories;
+  GitHub Dependabot counts **alerts** and reports **4**, being 3 high and 1
+  moderate. All three figures are correct and this branch is **zero** on every
+  one of them. State the unit with the number or the disagreement recurs.
 - **CF-114** — owner: the P02 entry checklist, batched. Three documents still
   describe staging as an environment that exists. One task opens all three; the
   correction is the same sentence three times.

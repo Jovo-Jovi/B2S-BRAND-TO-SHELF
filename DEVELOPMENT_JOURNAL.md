@@ -1859,12 +1859,28 @@ drifting; it is that §1 was authored as the application tree and is being check
 as the repository. That is a scope question and the remedy is the reviewer's
 choice, so CF-115 states both options rather than picking one.
 
-**A measurement contradicted the prompt, and the measurement wins.** D4 asked to
-record that `main` still reports four advisories until the merge. `main` reports
-three high. CF-98's original text said four and the count moved when one advisory
-was superseded, so the prompt inherited a stale figure — the same way PR-18 and
-PR-19 exist because a reviewer state assertion went stale between verdict and
-execution. This branch reports zero, which is the number that matters.
+**D4 looked like a stale figure in the prompt and was actually two tools counting
+different units.** The prompt asked to record that `main` still reports four until
+the merge. `npm audit` on `main`'s lockfile prints "3 high severity
+vulnerabilities", so the first reading was that the four was stale. It is not.
+`npm audit`'s headline counts *packages* and takes each one's worst severity —
+`postcss`, `sharp` and `next`, three of them, all rolled up to high. Underneath
+those three sit **five** distinct advisories: four against `postcss`, two high and
+two moderate, and one high against `sharp`. GitHub's own push response, which is
+where CF-98's four came from, counts alerts and reports **four on the default
+branch, three high and one moderate**. Three, four and five are all correct
+answers to differently-phrased questions, and none of them contradicts another.
+The number that decides the criterion is unambiguous either way: this branch
+reports **zero** on every one of the three counts, because the two `overrides`
+entries lift `postcss` past 8.5.22 and `sharp` past 0.35.0.
+
+Worth stating plainly because the first version of this entry got it wrong: the
+lesson is not that the prompt was stale, it is that "how many vulnerabilities"
+has no single answer unless the unit is named. A future gate should record the
+unit alongside the figure — packages, advisories or alerts — or it will keep
+re-deriving this disagreement. `next@16.3.0` now offers a non-major fix for all
+of them, which would let both overrides go; that is a maintenance task's call
+under PR-25 and not a gate's.
 
 **Two probes that a passing run still has to run.** The two guards P01 does not
 owe were confirmed target-free rather than assumed so: zero page-geometry signals
