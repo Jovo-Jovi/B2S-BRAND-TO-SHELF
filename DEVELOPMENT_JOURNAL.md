@@ -1807,3 +1807,76 @@ sweep produced three surviving documents that this task does not open —
 that sits just below the ADR-012 note covering the table above it. PR-20 puts
 those in the next task that already opens each file, so they are CF-114 rather
 than an edit made here, and CF-114 is an id no instruction asked for.
+
+---
+
+2026-08-04 | Opus (heavyweight) | BUILD P01-GATE-RUN3: phase 01 exit verification, third run | SESSION_CONTEXT.md, DEVELOPMENT_JOURNAL.md | PASS — 27 criteria, 26 PASS, 1 DOC CORRECTION, 0 HARD FAILURES. One deviation declared: D4's prompt says `main` reports four advisories and the measurement is three high, so the measured figure is reported. Four ids parked as proposals (CF-115 to CF-118), none landed, because a read-only gate writes no ledger rows | P02 entry checklist, after the owner decides PR #2
+
+**The phase passes, and the standing ruling is what makes that the honest verdict
+rather than a generous one.** One finding survived the run: `MODULE_SPEC.md` §1
+names no repository-root file and none of the six infrastructure directories. Two
+runs ago that shape of finding was a FAIL and the phase was blocked twice on it.
+The difference is not that the finding got smaller — it is that the reviewer
+separated the bar that blocks sign-off from the bar that earns a correction, and
+a document under-describing `.github/` does not put a tenant's data at risk. The
+temptation in the other direction was real and worth naming: a third consecutive
+FAIL would have looked more rigorous than a PASS, and inflating a doc correction
+to reach it would have been the same dishonesty as softening a hard failure,
+pointed the other way.
+
+**The census is what A1's amended criterion actually asks for.** "The schema
+implements nothing the document does not specify" is one-directional, and reading
+it that way changes the work: not "does every documented thing exist" but "can
+every live thing be pointed at a line in the document". So the run enumerated all
+132 objects in `public` by kind — 6 tables, 51 columns, 12 enum values, 25
+constraints, 13 indexes, 6 functions, 1 trigger, 18 policies, and zero views and
+zero sequences, which matters because a view is exactly the object that would
+carry data around a policy. Every one traced. The document also landed at
+`22b233f` on 2026-07-30, four days and many commits before the first migration at
+`f29c0d9`, so the ordering half is satisfied by commit order and not only by
+authorship date — which is the thing the first gate could not prove and
+`BUILD_PHASES.md` §P01 was amended to make checkable.
+
+**The census also found the one thing worth carrying: `DATA_MODEL.md` argues with
+itself.** §1 is titled "Universal rules — every table, without exception" and puts
+`archived_at` and the provenance trio on every table. §3 then departs three times.
+`operator` has neither; `activity_event` has neither and carries `occurred_at`,
+because an append-only audit row with an `updated_at` is a contradiction in terms;
+`consent_grant` has provenance but `revoked_at` rather than `archived_at`, because
+a grant is revoked and not archived. Every departure is right. The live schema
+matches §3 column for column, which is why A1 passes. What is wrong is the word
+"exception" in a heading above three of them, and that is CF-117 rather than a
+schema change — the schema is not what is mistaken here.
+
+**The reverse-direction check is the one that keeps finding things, and this is
+the third distinct instance.** Run one found the §1 tree stale. Run two found the
+root `__tests__/` unnamed. This run walked it the other way and found 17
+repository-root files and six infrastructure directories that §1 has never named,
+plus `docs/ADRs/` held open by a `.gitkeep` while all twelve ADRs live in
+`docs/product/ADR.md` — which §1's own sentence, "an empty folder is a claim that
+work exists", rules out. The pattern across three runs is not that §1 keeps
+drifting; it is that §1 was authored as the application tree and is being checked
+as the repository. That is a scope question and the remedy is the reviewer's
+choice, so CF-115 states both options rather than picking one.
+
+**A measurement contradicted the prompt, and the measurement wins.** D4 asked to
+record that `main` still reports four advisories until the merge. `main` reports
+three high. CF-98's original text said four and the count moved when one advisory
+was superseded, so the prompt inherited a stale figure — the same way PR-18 and
+PR-19 exist because a reviewer state assertion went stale between verdict and
+execution. This branch reports zero, which is the number that matters.
+
+**Two probes that a passing run still has to run.** The two guards P01 does not
+owe were confirmed target-free rather than assumed so: zero page-geometry signals
+anywhere in the tree, and zero `zod` imports with every candidate mutation
+boundary sitting inside the isolation harness rather than in application code.
+"Outstanding" and "vacuous" look identical from a green pipeline, which is PR-21's
+whole lesson, and the only way to tell them apart is to go looking for the target
+and fail to find it.
+
+**Two shell quirks paid for once.** PowerShell strips the backticks a JavaScript
+template literal needs out of a `node -e` argument, so an independent probe goes
+in a file and never on the command line. And `Set-Content -Encoding utf8` writes a
+BOM that `JSON.parse` rejects, so a probe that reads its own output strips
+`\uFEFF` first. Both are parked for `PRECEDENTS.md` §2; neither cost anything the
+second time.
