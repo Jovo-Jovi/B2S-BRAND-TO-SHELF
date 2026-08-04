@@ -28,3 +28,6 @@ jobs:
 
       - name: Done-steps shape assertion
         run: python3 scripts/check_done_steps_shape.py
+
+      - name: Migration split fidelity (ADR-006, CF-110)
+        run: python3 scripts/check_migration_split.py

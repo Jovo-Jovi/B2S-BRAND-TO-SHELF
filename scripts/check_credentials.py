@@ -3,6 +3,12 @@
 every tracked file when there is no prior commit to diff against (a first
 run). Reports only the file and line number of a match, never the matched
 text (PR-10).
+
+PR-27 — this check states the minimum it expected to examine and fails when it
+examined less. It used to print "OK: scanned 0 file(s)" and exit 0 wherever
+`git ls-files` returned nothing: outside a repository, in an empty one, or when
+git refuses the directory. A credential scan that opened no file is the most
+dangerous shape a green check can take.
 """
 import json
 import os
@@ -18,9 +24,19 @@ FAIL = False
 # appear in code — a bare-word match cannot tell that prose from a leak.
 # Matching only "keyword, then an assignment, then a long token" catches the
 # actual shape a leaked value takes and leaves the policy prose alone.
+#
+# The assignment pattern excludes an environment indirection on the value side.
+# Reading the key from the environment is the prescribed safe form (ADR-005), and
+# `serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY` is a 37-character token
+# by shape while carrying no secret. Without the exclusion the guard fails on the
+# one construction the architecture requires, and a permanently red guard is read
+# by nobody. A quoted value is still matched: the exclusion sits before the
+# optional quote, so only a bare env read is let through.
 PATTERNS = {
     "Supabase privileged-role key assignment": re.compile(
-        r"service[_-]?role(?:[_-]?key)?[\"']?\s*[:=]\s*[\"']?[A-Za-z0-9._+/=-]{20,}",
+        r"service[_-]?role(?:[_-]?key)?[\"']?\s*[:=]\s*"
+        r"(?!process\.env|import\.meta\.env|Deno\.env|os\.environ|os\.getenv)"
+        r"[\"']?[A-Za-z0-9._+/=-]{20,}",
         re.I,
     ),
     "Supabase connection string": re.compile(
@@ -33,6 +49,8 @@ PATTERNS = {
 }
 
 ENV_FILE = re.compile(r"(^|/)\.env$")
+
+MINIMUM_FILES = 1
 
 
 def fail(msg):
@@ -83,7 +101,13 @@ def changed_files():
 
     if base and head:
         r = run(["git", "diff", "--name-only", "--diff-filter=d", base, head])
-        return [p for p in r.stdout.splitlines() if p]
+        changed = [p for p in r.stdout.splitlines() if p]
+        if changed:
+            return changed
+        # An empty diff is not an empty scan set. It means this run has no
+        # scope narrower than the whole tree — an empty commit, or a push whose
+        # tree is unchanged — so widen rather than report a clean zero.
+        return None
 
     # No CI event context: a local run. Diff against HEAD plus untracked
     # files, which is what the next commit would actually introduce.
@@ -100,21 +124,44 @@ def changed_files():
 
 
 def main():
-    files = changed_files()
-    scope = "diff" if files is not None else "whole tree (first run)"
-    targets = files if files is not None else tracked_files()
+    tracked = tracked_files()
+    if not tracked:
+        fail(
+            "no tracked file found. `git ls-files` returned nothing, so this "
+            "check's scan root — the repository working tree — is empty or "
+            "unreadable. Zero files scanned is not a pass (PR-27)"
+        )
+        sys.exit(1)
 
-    for path in tracked_files():
+    files = changed_files()
+    scope = "diff" if files is not None else "whole tree (no diff scope)"
+    targets = files if files is not None else tracked
+
+    for path in tracked:
         if ENV_FILE.search(path):
             fail(f".env file tracked at {path}")
 
+    opened = 0
     for path in targets:
         if os.path.isfile(path):
             scan_file(path)
+            opened += 1
 
     if FAIL:
         sys.exit(1)
-    print(f"OK: scanned {len(targets)} file(s) [{scope}], no credential pattern found")
+
+    if opened < MINIMUM_FILES:
+        fail(
+            f"{opened} file(s) opened out of {len(targets)} target(s) [{scope}], "
+            f"minimum {MINIMUM_FILES}. Every target named by this scan's root is "
+            f"absent from disk, so nothing was examined (PR-27)"
+        )
+        sys.exit(1)
+
+    print(
+        f"OK: scanned {opened} file(s) [{scope}], minimum {MINIMUM_FILES}, "
+        f"{len(tracked)} tracked, no credential pattern found"
+    )
 
 
 if __name__ == "__main__":

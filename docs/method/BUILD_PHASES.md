@@ -36,7 +36,7 @@ pull request. Branch deleted only on verified containment.
 ### P01 — Foundation
 *No features.* Skeleton, data contract live in staging, gates.
 
-`DATA_MODEL.md` authored just-in-time before the first migration ·
+`DATA_MODEL.md` authored just-in-time, landed no later than the first migration ·
 `MODULE_SPEC.md` with the folder tree · Next.js application shell with RTL and
 the token system · Supabase staging and production projects · the authoritative
 schema for the tenancy spine with RLS on every table · generated types and the
@@ -44,6 +44,21 @@ drift job · the nine CI guards from `ARCHITECTURE.md` §6 · the privileged-cli
 quarantine and its guard · the RLS test harness.
 
 **Exit standard:** tenant isolation, proven by catalog query against live policies.
+
+> **The `DATA_MODEL.md` criterion, restated so it can be checked.** This clause
+> read "authored just-in-time **before** the first migration", and the P01 exit
+> gate could not prove or disprove it: the document's content and the first
+> migrations both landed in commit `f29c0d9`, so it is satisfied by authorship
+> date and unprovable by commit order. Landing together is what just-in-time
+> authoring produces and is not a defect. The checkable form is:
+>
+> **`DATA_MODEL.md` is landed in the same commit as the first migration or
+> earlier, and the migration implements no table, column, policy or constraint
+> the document does not specify.**
+>
+> The second half is the real requirement — the point of authoring first was
+> never the ordering, it was that the schema is not invented by the migration —
+> and it is provable by reading the migration against the document.
 
 ### P02 — Tenancy and access
 `Tenant`, `Member`, `Membership`, `Role`, provisioning, Supabase Auth wiring,

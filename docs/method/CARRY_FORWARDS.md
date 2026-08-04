@@ -15,6 +15,13 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
 - [ ] CF-01 — Reinstate deferred Dev OS security/migration rule layer at P10
       AMENDED (P-08-PRE-FIX) — owner: ARCHITECTURE.md, immediately after Gate 3
       — the P10 it named does not exist in this plan
+      AMENDED (P01-T05-FIX) — the owner has passed. `ARCHITECTURE.md` was
+      authored at `3918cf4` and Gate 3 closed on 2026-08-01, so "immediately
+      after Gate 3" names a moment already gone and this row has had no live
+      owner since. Owner: **the P02 entry checklist**, reinstating the deferred
+      rule layer subject by subject as each arrives, rather than in one pass —
+      the layer was deferred because its mechanism was undecided, and mechanisms
+      are decided one at a time.
 - [ ] CF-02 — Unescaped innerHTML in all legacy tools. Owner: FEATURE_INVENTORY.md
       must-not-reproduce at P-07. Prior owner "every ported renderer" is void
       framing — nothing is ported. Evidence captured in EXTRACT_STOCK_COSTS.md
@@ -106,6 +113,9 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       EXTRACT_INVOICE_PRO.md.
       AMENDED (P-08-PRE-FIX) — owner: the REPORT.md annotation task, before
       Gate 3
+      AMENDED (P01-T05-FIX) — the owner has passed: "before Gate 3" names a gate
+      that closed on 2026-08-01. Owner: **the `REPORT.md` annotation task at
+      P02**, batched with CF-72 per PR-20 — one task, one round trip, both rows.
 - [x] CF-12 — REPORT.md §1 and inventory.json meta line counts are wrong by ~3,953
       lines (stock 5577→7084, invoice-pro 3498→4284, sticker 3701 unlisted;
       total 14529→~18482). Owner: reviewer, closes at Gate 1.
@@ -279,6 +289,13 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       inferred from the P-01c report — the reviewer verdict logged this as
       "CF-39 new" without landing wording here. Owner: reviewer, next light
       edit to `B2S_PREPARE_PHASE.md`.
+      AMENDED (P01-T05-FIX) — the owner has passed in the sense that matters: it
+      named no moment, and none arrived. `B2S_PREPARE_PHASE.md` is superseded as
+      a sequencing plan by `BUILD_PHASES.md` and nothing is going to edit it
+      lightly. Owner: **the next write task that touches
+      `B2S_PREPARE_PHASE.md`, which is the P08 pre-relaunch audit** — its §9 and
+      §10 remain in force and P08 runs the §10 audit, so that is the one moment
+      the document is opened for writing again. Batched there per PR-20.
 - [x] CF-40 — Session-tracking carry-forwards (CF-38, and now CF-39/CF-40
       themselves) are sometimes announced by a reviewer verdict as "new"
       without their descriptive text ever being supplied to the executing
@@ -429,6 +446,11 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       stands at 25 pending that confirmation.
       AMENDED (P-08-PRE-FIX) — owner: reviewer — adjudicate the ten findings at
       the FEATURE_INVENTORY.md authoring, which is where accepted findings land
+      AMENDED (P01-T05-FIX) — the owner names a task rather than a moment, and
+      the task now has one. Owner: **the `FEATURE_INVENTORY.md` authoring, P08**
+      — the document is authored just-in-time there per ARCHITECTURE §7 and
+      BUILD_PHASES P08, and that is where the 25 untriaged findings are
+      adjudicated.
 - [ ] CF-47 — Costing is last-purchase-price-wins by unconditional overwrite
       (bb-stock-costs.html:2994-2999): one new purchase price retroactively
       restates COGS and profit for every closed month. Policy, not defect. B2S
@@ -587,6 +609,11 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       sticker seed names were ever false. Second location annotated under CF-56.
       AMENDED (P-08-PRE-FIX) — owner: the AUDIT_STICKER.md annotation task,
       before Gate 3
+      AMENDED (P01-T05-FIX) — the owner has passed: "before Gate 3" names a gate
+      that closed on 2026-08-01. Owner: **the `AUDIT_STICKER.md` annotation task
+      at P08**, batched with CF-56 per PR-20. P08 is where that record is next
+      needed, because `FEATURE_INVENTORY.md` is authored there and
+      `AUDIT_STICKER.md` is its only source for the sticker tool.
 - [ ] CF-51 — Prompt-template defect: "one commit" combined with "do not amend
       or rewrite history" forbids any post-push correction, forcing a choice
       between two explicit instructions. P-04 hit this and correctly landed a
@@ -629,10 +656,38 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       the evidence rather than the suspicion. The naming of the `docs/method/`
       copy is confirmed by the owner before anything is retired or renamed.
       Owner unchanged: reviewer, decide at P-12.
+      AMENDED (P01-T04) — **the three-copy question is settled, and the answer is
+      that there are not three copies of one document; there are three documents
+      with three distinct roles.** Stated so no later reader re-opens it:
+      `AGENTS.md` is the builder charter, in force on the builder surface;
+      `docs/method/CLAUDE_PROJECT_INSTRUCTIONS.md` is the historical record of
+      the reconfiguration at the greenfield pivot, kept because the pivot is the
+      reason the retiring tools are evidence rather than a port target; and
+      `docs/method/REVIEWER_CHAT_INSTRUCTIONS.md`, landed by this task under
+      CF-96, is the live reference for the reviewer surface. Each now opens by
+      naming its own role, so the roles cannot be inferred wrongly from
+      similarity of content. What remains for P-12 is unchanged and is the
+      original CF-53 finding: `docs/method/PROJECT_RECONFIG.md` holds a STATUS
+      stub where a lost record should be, and the reviewer decides whether it is
+      re-authored or the stub stands. The duplication half of this row is closed;
+      the lost-record half is what keeps it open.
 - [ ] CF-54 — Stub count stated three ways: 22 in P-01's done-when, 20 in P-12's
       prompt, 23 actual (21 under docs/product/, 2 under docs/method/). Same
       defect class as CF-38's 56-versus-79. P-12 corrected and P-01 annotated
       as-built by P-04c. Owner: reviewer, verify at Gate 3.
+      AMENDED (P01-T05-FIX) — **a twelfth stale owner, found by the check this
+      task landed rather than by the gate that ordered it.** The P01 exit gate
+      reported eleven open rows naming an owner whose moment had passed, and
+      P01-T05-FIX was told to retarget those eleven. Verified over the whole set
+      per PR-23, there are twelve: this row's owner is "reviewer, verify at
+      Gate 3", and Gate 3 closed on 2026-08-01. It is retargeted here rather
+      than left, because leaving it would land `check_ledger.py`'s new
+      reachable-owner assertion red on the very commit that introduces it. The
+      divergence from the prompt's stated count is declared in the task report.
+      Owner: **the P08 pre-relaunch audit**, batched with CF-39 per PR-20. P08 is
+      where the document set is audited in full and `ACCEPTANCE.md` is authored,
+      and the stub count is only meaningful against a finished document set —
+      under OD-H7 it changes at every phase that authors a just-in-time document.
 - [x] CF-55 — SESSION_CONTEXT.md is 58,233 bytes and grows every task, because
       the full carry-forward ledger including all appended amendment text lives
       inside the file that must be pasted at the start of every session. It is
@@ -657,6 +712,10 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       P-04c verdict.
       AMENDED (P-08-PRE-FIX) — owner: the AUDIT_STICKER.md annotation task,
       before Gate 3 — same task as CF-50
+      AMENDED (P01-T05-FIX) — as CF-50: "before Gate 3" has passed. Owner:
+      **P08, the same task as CF-50** — one annotation pass over
+      `AUDIT_STICKER.md` closes both locations, and splitting them would annotate
+      the same file twice.
 - [x] CF-57 — Extraction density drifted across the three passes:
       EXTRACT_STOCK_COSTS 174 KB from a 347 KB source (50%), EXTRACT_INVOICE_PRO
       231 KB from 222 KB (104%), EXTRACT_DESIGN_TOOLS 228 KB from 197 KB (116%).
@@ -689,13 +748,28 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       pattern and the api.github.com rate-limit quirk recorded in §2. The
       committed project instructions are synced by P-04e. Formal method OD to
       be recorded in DECISIONS.md at P-06.
-- [ ] CF-60 — Four open rows carry no explicit `Owner:` field: CF-01, CF-05,
+- [x] CF-60 — Four open rows carry no explicit `Owner:` field: CF-01, CF-05,
       CF-27, CF-44. Not a substantive gap — CF-01's owner is P10 and CF-05's is
       Step 15, both stated in prose rather than as a field; CF-27 is
       noted-no-action; CF-44 is void by design. But the Gate 3 checklist requires
       "No open carry-forward without a named owner" and a checklist cannot read
       prose. Normalise all four to explicit `Owner:` fields, inventing no owner —
       where none exists, write the reason. Owner: reviewer, before Gate 3.
+      CF-60 — CLOSED (P01-T05-FIX). The prior owner, "reviewer, before Gate 3",
+      passed on 2026-08-01. Retargeted to this task and closed rather than
+      re-owned, because its subject is done and was verified row by row here:
+      CF-01 carries `owner: ARCHITECTURE.md…` and now a P02 owner, CF-05 carries
+      `owner: PRINT_CONTRACT.md…`, CF-27 is CLOSED and VOID so the requirement —
+      "no **open** carry-forward without a named owner" — does not reach it, and
+      CF-44 carries `owner: none — void, retained as a numbering record`, which
+      is this row's own instruction to write the reason where no owner exists.
+      **What this row could not catch is the failure that produced the P01 gate's
+      D1.** It asked whether an owner field existed, never whether it pointed
+      anywhere, so eleven rows passed it while naming a gate or a phase already
+      behind us. `scripts/check_ledger.py` now asserts both: an open row names an
+      owner, and that owner does not name a gate or phase-exit gate already
+      recorded as run in `SESSION_CONTEXT.md`'s done-steps table. VOID rows are
+      exempt by the status CF-44 already declares.
 - [x] CF-61 — HARD FAILURE at Gate 1. EXTRACT_STOCK_COSTS.md §1.1.11 stated a
       fabricated typed field list for `bb_color_presets`: `bg, panel, ink, muted,
       gold, line`. Four names are wrong — `panel`, `ink` and `line` do not occur
@@ -807,6 +881,9 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       unverified REPORT.md line number.
       AMENDED (P-08-PRE-FIX) — owner: the REPORT.md annotation task, before
       Gate 3 — same task as CF-11
+      AMENDED (P01-T05-FIX) — the owner has passed: "before Gate 3" names a gate
+      that closed on 2026-08-01. Owner: **the `REPORT.md` annotation task at
+      P02**, batched with CF-11 per PR-20 — one task, one round trip, both rows.
 - [ ] CF-73 — bb-stock-costs.html:5645 contains `مرtجع كامل` — a Latin `t`
       where `ت` belongs. Every printed sales report containing a full return
       has shipped corrupted text, invisibly, for the life of the tool. This is
@@ -830,6 +907,14 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       defer mechanism. When Gate 3 closes, restore the enforcement column with
       real guard names and paths.   Owner: ARCHITECTURE.md, immediately after
       Gate 3.
+      AMENDED (P01-T05-FIX) — the owner has passed. Gate 3 closed on 2026-08-01
+      and `ARCHITECTURE.md` was authored at `3918cf4`, so the condition this row
+      was waiting on is met: the rules files can now cite real guard names and
+      real paths because a document defines them. Owner: **the P02 entry
+      checklist**. Both always-on rules files are restored in one pass, or they
+      drift from each other — `AGENTS.md` and `.cursor/rules/b2s-devos.mdc` are
+      the same rules in two activation syntaxes and changing one alone is a
+      defect by `AGENTS.md`'s own preamble.
 - [x] CF-76 — GLOSSARY.md changed eight things against VOCABULARY_DRAFT.md, each
       forced by extract evidence: a sixteenth collision (`preset` names both a
       colour theme and a print margin set); `PrintPreset` renamed `PrintProfile`
@@ -1012,3 +1097,727 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       JSON-, JWT- and PEM-shaped fakes with the benign sentences left untouched.
       Landed late: the finding was resolved in P-09-LAND-FIX2 but the row was not
       written, and the omission was not reported as a deviation.
+- [x] CF-90 — `ARCHITECTURE.md` §7 gave arrival points for ten deferred documents
+      and omitted three: `UX_PRINCIPLES.md`, `DOCUMENT_SPEC.md` and
+      `REGULATORY.md`. OD-H7's premise is that every deferred document carries
+      its Gate 3 item to a named later gate; three had nowhere to arrive and would
+      never have been written. Owner: reviewer.
+      CF-90 — CLOSED (P01-T02-RESUME). Three rows added to §7.
+      Builder annotation, P01-T02-RESUME, 2026-08-02, per PR-07 — the claim text
+      above is landed verbatim as supplied and is left intact. Its count is off by
+      one: §7 named **eleven** documents across seven rows before this amendment
+      (`DATA_MODEL`, `BRAND_CONFIG`, `CONTENT_MODEL`, `TEMPLATE_MODEL`,
+      `PRINT_CONTRACT`, `PRINT_PRODUCTION_SPEC`, `IMPORT_SPEC`,
+      `FEATURE_INVENTORY`, `RISK_REGISTER`, `ACCEPTANCE`, `MODULE_SPEC`), not ten.
+      Verified by enumerating the table at `04a503b`. The substance of the finding
+      — three documents with no arrival point — is correct and was verified
+      independently: all three exist as stubs under `docs/product/`.
+- [x] CF-91 — PR-19 states that the step recording a reviewer verdict opens every
+      carry-forward that verdict logged. When the owner merges and proceeds
+      directly, no recording step runs, and those rows are never opened — CF-90
+      was logged in the P01-T01 verdict and did not exist when the next task tried
+      to close it. The builder correctly refused to invent text for an unbacked
+      id. Owner: reviewer.
+      CF-91 — CLOSED (P01-T02-RESUME) by PR-24.
+- [ ] CF-92 — ADR-012 runs B2S on a single Supabase environment. Its reinstatement
+      trigger is a row count: the isolation suite may run against production only
+      while it holds zero real tenants, and a staging project is created before
+      the first real tenant is onboarded. Owner: the task that onboards the first
+      non-synthetic tenant, and the Phase 02 exit gate, which must assert the row
+      count rather than assume it.
+- [ ] CF-93 — Seven specification gaps in `DATA_MODEL.md`'s Platform tier, found by
+      building it at P01-T02-RESUME. None was resolved by invention: each was
+      implemented on the narrowest reading available and is recorded here for the
+      tier amendment. Owner: reviewer, at the next `DATA_MODEL.md` amendment.
+      (1) §3's lead sentence says "Seven tables for Release 1" while §3 enumerates
+      six — 3.1 `tenant`, 3.2 `member`, 3.3 `membership`, 3.4 `operator`, 3.5
+      `consent_grant`, 3.6 `activity_event` — with 3.7 `role` stated to be a
+      Postgres enum and explicitly "not a table". Seven is the count of Release 1
+      Platform *entities*; six is the table count, and §3.7 records the divergence
+      as deliberate. Built as six tables and one enum. Both the P01-T02 prompt and
+      its resumption inherited "seven tables", so that done-when clause could not
+      be met as worded.
+      (2) §2 tabulates two helper functions. A third is structurally required:
+      §3.3 restricts `membership` INSERT and UPDATE to owners, and a policy on
+      `membership` cannot read `membership` — PostgreSQL raises "infinite
+      recursion detected in policy for relation membership". Built as
+      `is_current_tenant_owner()`, `security definer` and `stable` like the other
+      two. Mechanism for an explicitly stated policy rather than a new rule, but
+      §2's table does not list it and the stated count of two is now wrong.
+      (3) `current_tenant_id()` is specified as "the `tenant_id` of the calling
+      identity's active `membership`", while §3.2 permits a person to hold
+      memberships in several tenants and `TENANCY_MODEL.md` §2 binds a session to
+      exactly one membership at a time. No storage for that binding is specified
+      and no rule is given for choosing among several. Built to return null when
+      the caller holds more than one active membership, so the ambiguous case
+      denies rather than silently serving the wrong tenant's rows. A
+      session-to-membership binding must be specified before any member may hold
+      two active memberships, or that member will be locked out by design.
+      (4) `TENANCY_MODEL.md` §3 rule 1 says "Every `Tenant` has exactly one
+      `Owner` at all times"; §3.3 says "At least one `active` `owner` per tenant".
+      These are different constraints, and `TENANCY_MODEL.md` holds the higher
+      precedence slot. Built as "at least one", per §3.3 and per the prompt's
+      explicit instruction. The divergence is unsettled and the trigger will need
+      replacing if "exactly one" wins.
+      (5) §1.4 makes provenance universal — "every table, without exception" —
+      and the column lists in §3.4 `operator` and §3.6 `activity_event` both omit
+      it, with `granted_at`/`granted_by` and `occurred_at` standing in its place.
+      §3.5 `consent_grant` carries provenance but deliberately no `archived_at`.
+      Built to the per-table column lists, on the reading that the specific
+      statement governs the general one and that adding a column is the error the
+      prompt forbids outright.
+      (6) §1.4 specifies `updated_at timestamptz not null default now()` and no
+      maintenance trigger. Without one the column never changes after insert.
+      Built exactly as specified, so `updated_at` is inert on all six tables
+      today.
+      (7) §5 rule 3 — "every tenant-scoped policy carries `WITH CHECK`, not only
+      `USING`" — cannot hold literally for a read policy. PostgreSQL rejects
+      `with check` on a `for select` policy, because a select produces no candidate
+      row to check. Two shapes satisfy the intent: one `for all` policy per table
+      carrying both clauses, or per-command policies where every clause that can
+      legally exist does. `for all` was rejected because it covers DELETE, and §3.6
+      requires `activity_event` to carry no DELETE policy at all — the absence is
+      the immutability. Built as per-command policies: all six INSERT and UPDATE
+      policies carry `WITH CHECK`, and the ten SELECT policies carry `USING` alone
+      because no other form is legal. Counted from the live catalog, 16 policies in
+      total. Rule 3 needs restating as "every policy with a write side", or it fails
+      a literal reading against a correct schema.
+      AMENDED (P01-T05-FIX) — "the next `DATA_MODEL.md` amendment" named no
+      moment and none arrived, so the row had no reachable owner. The seven gaps
+      are split by the phase that first needs each, and each is named.
+      **P02 — Tenancy and access** owns five. (1) §3's lead sentence, "Seven
+      tables for Release 1", against the six it enumerates — P02 is the phase
+      that builds on exactly those tables. (2) §2's stated helper count of two
+      against the three that exist, `is_current_tenant_owner()` being the
+      unlisted third. (3) The session-to-membership binding behind
+      `current_tenant_id()` returning null on more than one active membership:
+      the same subject as CF-103's remainder, and a decision P02 must make
+      **before** it writes a session, not after. (4) `TENANCY_MODEL.md` §3
+      rule 1's "exactly one `Owner` at all times" against §3.3's "at least one
+      active owner" — P02 ships provisioning and membership, so it is the phase
+      that must pick one and replace the trigger if "exactly one" wins. (7) §5
+      rule 3's "every tenant-scoped policy carries `WITH CHECK`", which cannot
+      hold literally because PostgreSQL rejects `with check` on a `for select`
+      policy — it binds every policy P02 writes, so P02 restates it or writes
+      policies against a rule no correct schema can satisfy.
+      **P03 — Brand and onboarding** owns two, and owns them because both bind
+      when a table is next created rather than when one is next read. (5) §1.4's
+      universal provenance — "every table, without exception" — against the
+      column lists in §3.4 `operator` and §3.6 `activity_event` that omit it. (6)
+      `updated_at` specified with no maintenance trigger and therefore inert on
+      all six tables today. P03 is the first phase after P02 that creates new
+      tables, and a universal rule that is already false of two tables will be
+      false of every table added under it until it is settled.
+      Owner: **P02 for gaps (1), (2), (3), (4) and (7); P03 for gaps (5) and
+      (6)**, each at the entry checklist of its phase, so the amendment is made
+      before the code that depends on it rather than after.
+- [ ] CF-94 — `check-no-runtime-cdn` and `check-no-hardcoded-literals` scan `app/`
+      and `proxy.ts` only, which was the whole of the application source when
+      P01-T01 authored them. `lib/` exists as of P01-T02-RESUME and is not
+      scanned; `features/` and `components/` will not be either when they arrive.
+      A hex colour or an external `<script>` under `lib/` passes both guards
+      today. The two guards landed at P01-T02-RESUME — `check-service-import` and
+      `check-data-boundary` — already scan the wider root set and name the roots
+      that do not yet exist in their own output. Owner: the next task that touches
+      either guard, at the latest the Phase 02 entry checklist.
+      AMENDED (P01-T05-FIX) — split by the phase that first needs each root, as
+      CF-93. This task touched neither guard, so the "next task that touches
+      either" clause did not fire here and the row's owner is now named by root.
+      **The P02 entry checklist** owns `lib/`, which exists today and is scanned
+      by neither guard — a hex colour or an external `<script>` under
+      `lib/supabase/` passes both right now. **The task that creates a root owns
+      adding it**: `components/ui` and `components/shared` arrive with the
+      design-surface catalog task, landed after the P01 shell and before P03
+      composes pages (`BUILD_PHASES.md`, "The design surface"), and `features/`
+      arrives at P03. Each root is added to both scanners by the task that
+      creates it, or it ships unscanned — which is exactly how `lib/` reached
+      this state, and why naming one future owner for all three roots would
+      reproduce it.
+      Owner: **the P02 entry checklist for `lib/`; the task that creates each of
+      `components/` and `features/` for those roots.**
+- [x] CF-95 — The deployment and drift pipeline is wired but not live, and both
+      remaining steps are owner actions rather than builder work.
+      (1) `vercel git connect` failed against the repository: the Vercel GitHub
+      App is not authorised on it, so the project exists and is linked locally but
+      no push deploys anything.
+      (2) The `types-drift` job requires repository secrets
+      `SUPABASE_ACCESS_TOKEN` and `SUPABASE_PROJECT_ID`. `gh secret list` returned
+      empty, so the job fails on every run until both are set. That red is the
+      specified behaviour of the job, not a defect in it — a job that skipped
+      instead would be the defect ARCHITECTURE.md §5 names. The access token must
+      be minted by the owner; it is a credential and was never requested here.
+      Owner: the owner, before the Phase 01 exit gate.
+      OBSERVED (P01-T02, commit `f29c0d9`). The behaviour is confirmed in the
+      pipeline rather than only in the YAML: `docs-integrity` concluded **success**;
+      `ci` concluded **failure**, with `install`, `lint`, `typecheck`, `unit` and
+      `guards` all success — all four guard steps green in-pipeline — `types-drift`
+      failing at its first step, `Require the drift secrets`, and `build`
+      **skipped** as its consequence. Two consequences the reviewer should hold
+      deliberately rather than discover: `ci` is red on every push to this branch
+      until the secrets are set, T03's included, and `build` is not exercised in CI
+      while that is true, though it passes locally. Both follow from D4's explicit
+      choice of a loud failure over a silent skip.
+      AMENDED (P01-T04) — **half of (2) is done and the row is not closed here,
+      because the closing evidence is a green run nobody has seen yet.** The
+      owner set both secrets and CF-108 records the name collision that kept
+      `types-drift` red even once the value was present. What is left of this row
+      is (1), the Vercel GitHub App authorisation, and the confirmation that
+      `types-drift` now concludes success. Until that run exists, the pipeline is
+      still wired-but-unproven, which is what CF-95 says.
+      CF-95 — CLOSED (P01-T05-FIX). Both remaining halves are done, and both are
+      proven by a run rather than by a setting. **(1) The Vercel GitHub App is
+      authorised.** Commits `c08fb1b` and `057ae11` each carry a `Vercel` commit
+      status of `success`, description "Deployment has completed", with a
+      combined commit state of `success`. **(2) `types-drift` concludes
+      success.** On `c08fb1b` in CI runs 30812893866 and 30812896168, and on the
+      gate commit `057ae11` in runs 30816883543 and 30816886716. On all four
+      runs every one of the seven `ci` jobs concluded success — `install`,
+      `lint`, `typecheck`, `unit`, `guards`, `types-drift` and `build`. `build`
+      matters here: it was skipped for as long as `types-drift` failed, so its
+      green discharges the second consequence this row asked the reviewer to
+      hold deliberately. The pipeline is no longer wired-but-unproven, which was
+      the whole of the claim.
+- [x] CF-96 — `docs/method/REVIEWER_CHAT_INSTRUCTIONS.md` sits untracked in the
+      working tree. PR-14 requires a reviewer-authored document to stage outside
+      the working tree and to enter the repository only by a land task, to its
+      final path; an untracked draft inside the tree is the CF-53 duplication risk
+      in a new place. It is not byte-identical to
+      `docs/method/CLAUDE_PROJECT_INSTRUCTIONS.md`, so it is a distinct document
+      rather than a copy of a committed one. P01-T02-RESUME did not touch it: no
+      prompt has authorised landing it and it is outside the task's scope. Owner:
+      the owner, to land it or remove it.
+      CF-96 — CLOSED (P01-T04). The owner authorised landing it as his own
+      reference copy and it is committed at `docs/method/REVIEWER_CHAT_INSTRUCTIONS.md`
+      with its content unchanged. One blockquote was prepended and nothing else:
+      it names the file as the owner's working reference, points at `AGENTS.md`
+      for the builder surface and at `CLAUDE_PROJECT_INSTRUCTIONS.md` for the
+      pivot record, and states that where they differ this file is live for the
+      reviewer surface only. That header is what stops the file from becoming the
+      CF-53 duplication risk again — the risk was never the third copy, it was
+      three documents with no stated difference between them. CF-53 amended in
+      the same task to record the settlement.
+- [ ] CF-97 — The credential scanner failed on the one construction ADR-005
+      requires. `check_credentials.py`'s assignment pattern matched
+      `serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY` in
+      `lib/supabase/server-only/service.ts`: an environment-variable name is a
+      37-character token by shape, so reading the key from the environment — the
+      prescribed safe form — looks identical to assigning one. No secret was
+      present. Fourth instance of the CF-87 / CF-88 / CF-89 class, a text rule that
+      cannot separate a leak from the documentation or the safe handling of one,
+      and the first to fire on code rather than prose. Repaired in place rather
+      than halted, because the shape rule is right and only its value side was
+      wrong: the pattern now rejects `process.env`, `import.meta.env`, `Deno.env`,
+      `os.environ` and `os.getenv` on the value side and is otherwise unchanged.
+      The exclusion sits before the optional quote, so a quoted value is still
+      matched. Re-proven by a synthetic self-test — bare, quoted and JSON-shaped
+      fakes all still fail, the benign policy sentence still passes — and the
+      fixture deleted. The rejected alternative was renaming the variable, which
+      leaves the false positive live for the next legitimate reader of that
+      environment name. Owner: reviewer, to ratify the narrowing or reject it.
+- [x] CF-98 — Four open Dependabot alerts on the default branch, unrecorded since
+      alerts were enabled at G3-CLOSE and surfaced by the P01-T02 push, which
+      printed them on the remote's response. All four are transitive runtime
+      dependencies resolved in `package-lock.json` and declared in no
+      `package.json`: `postcss` three times — path traversal via
+      `sourceMappingURL` disclosing arbitrary `.map` files (high, first patched
+      8.5.18), arbitrary file read by the same route (high, 8.5.12), and XSS via an
+      unescaped `</style>` in stringify output (medium, 8.5.10) — and `sharp` once,
+      inheriting four libvips CVEs (high, 0.35.0). Both reach the tree through
+      Next.js. Not fixed here: a version bump is a dependency change, AGENTS.md
+      requires stopping and flagging before one, and this task authorises no
+      dependency work. Recorded rather than acted on, per the instruction to report
+      a new finding as a row. Owner: the owner, to authorise a dependency-bump
+      task; at the latest the Phase 01 exit gate, since the alerts predate this
+      branch and will not clear themselves.
+      AMENDED (P01-T05-FIX) — **re-derived and deliberately LEFT OPEN, because
+      the advisories are not closed.** The owner named the Phase 01 exit gate at
+      the latest, and that gate has now run, so the owner is retargeted; the
+      finding itself is unchanged in every particular. All four alerts are still
+      open, enumerated from the repository's Dependabot alerts endpoint rather
+      than restated from this row: **#4** `postcss` high — path traversal via
+      `sourceMappingURL`, vulnerable `<= 8.5.17`, first patched 8.5.18; **#3**
+      `postcss` high — arbitrary file read by the same route, vulnerable
+      `<= 8.5.11`, first patched 8.5.12; **#2** `sharp` high — inherited libvips
+      CVEs, vulnerable `< 0.35.0`, first patched 0.35.0; **#1** `postcss` medium
+      — XSS via an unescaped `</style>` in stringify output, vulnerable
+      `< 8.5.10`, first patched 8.5.10. Three high and one medium, all runtime
+      scope, all resolved in `package-lock.json` and declared in no
+      `package.json`, exactly as recorded.
+      `npm audit` locally reports the same packages and offers `next@9.3.3` as
+      the available fix — a semver-major **downgrade** of the framework, which is
+      not a fix and is recorded so the next task does not take it. The remedy is
+      to raise the transitive resolutions, which PR-25 already authorises as
+      maintenance rather than as a new dependency. What this needs is a task and
+      a green pipeline, not an authorisation. Owner: **the P02 entry checklist**,
+      as the first bookkeeping act of the phase.
+      AMENDED (P01-GATE-RERUN) — accepted risk, not a blocker. Three high and one
+      medium, all transitive through Next.js. The only remediation `npm audit`
+      offers is a semver-major framework downgrade, which is a regression rather
+      than a fix. The row stays open, is re-derived at every phase exit gate, and
+      closes when an upstream patch exists. Owner: every phase exit gate until
+      then.
+      **Re-derived at this gate, 2026-08-03, and one half of the closure
+      condition is already met.** `npm audit` reports 3 high / 0 moderate as a
+      package rollup over `next`, `postcss` and `sharp`; the same run's advisory
+      list is 3 high and 1 moderate — `postcss` twice high and once moderate,
+      `sharp` once high — which is the count above, measured per advisory rather
+      than per package. Both numbers are recorded so a later gate comparing
+      against this row is not misled by the unit. `fixAvailable` on all three
+      packages is `next@9.3.3, isSemVerMajor: true`, so the ruling's "only
+      remediation" clause is confirmed exactly.
+      **The patched versions now exist upstream.** `postcss@8.5.25` and
+      `sharp@0.35.3` are published and clear every advisory in this row. What is
+      not published is a Next.js release that consumes them: `next@16.2.12` is
+      both the installed and the latest version, and it pins `postcss@8.4.31` and
+      `sharp@0.34.5` in this lockfile. A non-regressive remediation therefore
+      does exist — raising the two transitive resolutions, which PR-25 already
+      authorises as maintenance — and it is not one `npm audit` will offer,
+      because `npm audit` only proposes changes to declared dependencies. The
+      gate does not take it: this task authorises no dependency work. Recorded so
+      the next task knows the remedy is a resolution bump and not a wait.
+      CF-98 — CLOSED (P01-T06-FIX), on the remedy the gate identified and could
+      not take. Two `overrides` entries raise the transitive pins to the
+      published patched versions: `postcss` `8.4.31` → `8.5.25` and `sharp`
+      `0.34.5` → `0.35.3`. Both are the latest published release of their
+      package. This is maintenance under PR-25 and not a new dependency: neither
+      package is added, both were already in the tree, and `package.json`'s
+      `dependencies` and `devDependencies` are untouched.
+      **Before**: `npm audit` reports `3 high severity vulnerabilities` at exit
+      1 — `postcss <=8.5.22` carrying all four advisories in this row, and
+      `sharp <0.35.0` carrying the libvips CVEs — with `fix available via npm
+      audit fix --force` offering `next@16.3.0`, "outside the stated dependency
+      range". `npm ls` shows `next@16.2.12 → postcss@8.4.31` and
+      `vitest → vite@8.2.0 → postcss@8.5.25`, and `next@16.2.12 → sharp@0.34.5`.
+      **After**: `npm audit` reports `found 0 vulnerabilities` at exit 0. `npm
+      ls` shows `next@16.2.12 → postcss@8.5.25 overridden` with the vite path
+      deduped onto it, and `next@16.2.12 → sharp@0.35.3 overridden`.
+      **The whole pipeline stays green** on the bumped tree, run locally in
+      `ci.yml`'s own order: `npm install` exit 0 removing 1 and changing 3
+      packages over 388 audited; `lint` exit 0 (the one pre-existing warning in
+      the archived backup script, 0 errors); `typecheck` exit 0; `npm test` 2
+      passed; all five guards OK; `npm run build` exit 0, compiled in 1525 ms,
+      4 of 4 static pages generated for `/en` and `/ar`. Local Node is 22 and
+      CI pins 24, so the pipeline's own conclusion remains authoritative.
+      The row's owner — "every phase exit gate until an upstream Next.js release
+      consumes them" — is discharged rather than retargeted: there is nothing
+      left to re-derive. `package.json` carries a comment naming CF-98 and PR-25
+      beside the overrides, so the day an upstream release consumes them, the
+      reason they exist is next to them.
+- [ ] CF-99 — A pull request exists on `phase/01-foundation` that the task
+      forbade, and it is not the builder's. P01-T02's done-when says "No pull
+      request — T03 runs the isolation proof on this branch first, and the phase
+      gate follows it." No `gh pr create` was issued by this task. PR #2, base
+      `main` from `phase/01-foundation`, was opened by the `Jovo-Jovi` account at
+      2026-08-02T11:54:45Z, four minutes after the deliverable push at 11:50:44Z,
+      with the commit subject truncated to an ellipsis as its title and body — the
+      signature of GitHub's "Compare & pull request" banner rather than of a
+      deliberate authoring. It is left open and untouched: closing it would revert
+      an owner action on the owner's own repository, and the builder does not do
+      that unilaterally. **The risk is merging it.** Doing so before T03 puts the
+      tenancy schema and every data-access path on `main` before anything has
+      proven that tenant A cannot read tenant B, which is the one acceptance
+      standard `AGENTS.md` §4 marks not waivable by OD. It would also carry a red
+      pipeline onto `main`, since `ci` fails at `types-drift` until CF-95's secrets
+      are set, and it would pre-empt `BRANCHING.md` §3's one consolidated PR per
+      phase at the exit gate — the §3.1 foundation exception covered the toolchain
+      task only and explicitly does not cover schema or data access. Owner: the
+      owner, to leave it open until T03 and the phase gate have both passed, or to
+      close it and re-open at the gate.
+      AMENDED (P01-T03). Two facts, neither of which changes the owner action.
+      The P01-T03 prompt says "do not un-draft PR #2", which presumes it is a
+      draft; it is not, and the API shows no record of it ever having been one.
+      `state: OPEN`, `isDraft: false`, `mergeable: MERGEABLE` as read at the T03
+      push. Nothing was un-drafted because there was nothing to un-draft, and the
+      instruction was honoured by touching the pull request not at all. The
+      practical effect is that the one guard rail the instruction assumed is
+      absent: PR #2 is mergeable now, by one click, with no draft state to clear
+      first. Second, T03 removes the sharpest of the three reasons above —
+      isolation is proven, 21 assertions, 0 FAIL — while the other two stand
+      unchanged: `ci` is still red at `types-drift` until CF-95's secrets are
+      set, and `BRANCHING.md` §3 still wants one consolidated PR at the phase
+      exit gate.
+- [x] CF-100 — `DATA_MODEL.md` §3 stated "Seven tables for Release 1" while §3.7
+      declares `role` an enum and explicitly not a table. The document's stated
+      count contradicted its own enumeration, in the document that defines the
+      schema, and the P01-T02 prompt repeated the error. Same class as CF-54, and
+      the exact subject of PR-15. The builder built six tables and one enum and
+      flagged the contradiction rather than resolving it. Owner: reviewer.
+      Opened by P01-T03, which found the row absent: the P01-T02 verdict that
+      logged it never ran, which is the PR-24 case exactly. Previously recorded
+      only as gap (1) of CF-93's seven.
+      CF-100 — CLOSED (P01-T03). §3 corrected to six tables and one enum.
+- [x] CF-101 — `DATA_MODEL.md` §5 rule 3 required `WITH CHECK` on every
+      tenant-scoped policy. PostgreSQL rejects `WITH CHECK` on a `FOR SELECT`
+      policy, so the criterion was unsatisfiable for ten of sixteen policies. An
+      unsatisfiable gate criterion is worse than a missing one: it forces the
+      honest builder to halt indefinitely or quietly reinterpret. The builder
+      reinterpreted on the narrowest reading and said so explicitly, which is the
+      correct handling of a defective specification. Owner: reviewer.
+      Opened by P01-T03, which found the row absent. Previously recorded only as
+      gap (7) of CF-93's seven.
+      CF-101 — CLOSED (P01-T03). Rule 3 now scopes to policies with a write side
+      and states why read policies carry `USING` alone. Verified against the live
+      catalog by proof 3: 16 policies, 3 INSERT and 3 UPDATE carrying
+      `with_check`, 10 SELECT carrying `qual` alone, zero exceptions.
+- [x] CF-102 — Local development runs Node 22 while `ci.yml` pins Node 24, so
+      "verified locally before committing" is evidence from a different major
+      version than the pipeline. Not a defect — both were green — but it weakens
+      every local verification claim by an unmeasured amount. Owner: this task.
+      Opened by P01-T03, which found the row absent; recorded until now only as a
+      PRECEDENTS.md §2 environment quirk, which is a note rather than a tracked
+      obligation.
+      CF-102 — CLOSED (P01-T03). An `.nvmrc` and a `package.json` `engines` field
+      pin local development to the pipeline's major version.
+- [ ] CF-103 — A tenant owner can lock a member of another tenant out of that
+      other tenant, through the ordinary API, using only that member's `member.id`.
+      Found by P01-T03 proof 17, against the live policies.
+      `membership_insert_owner`'s `WITH CHECK` constrains `tenant_id` and the
+      caller's role and says nothing about `member_id`, so tenant A's owner may
+      insert an `active` membership binding tenant B's member into tenant A. That
+      member then holds two active memberships, `current_tenant_id()` returns null
+      by design, and they read nothing from either tenant. Proven end to end:
+      the insert was accepted, the victim's reads fell from 2 rows to 0, and rose
+      to 2 again when the row was removed.
+      **This is not a breach of `SECURITY_MODEL.md` §1** and proof 4 is unaffected:
+      nothing of tenant B is read, inferred or modified, and the row created lives
+      in tenant A. It is a cross-tenant *availability* effect, which §1's three
+      parts — read, existence, modify — do not cover. Recorded rather than fixed,
+      per this task's instruction that a gate does not repair what it finds.
+      CF-93 gap (3) already records the lockout as a specification gap; what it
+      does not record is that another tenant can cause it. Exploitation needs the
+      victim's uuid, which no policy discloses across tenants, so the practical
+      reach is a member whose id is known out of band. Owner: the
+      session-to-membership binding decision named in CF-93 gap (3), which must
+      also decide whether `membership_insert_owner` constrains `member_id`.
+      AMENDED (P01-T04) — **the exploit is closed and re-tested; the row stays
+      open for the half that is not an exploit.**
+      Closed: an owner may invite anyone and may never make anyone active.
+      `membership_insert_owner` now requires `status = 'invited'`;
+      `membership_accept_invitation` lets the invitee, and only the invitee, move
+      their own row `invited` → `active`; and a RESTRICTIVE policy,
+      `membership_active_is_self_only`, states the rule once for the table rather
+      than for a policy — no UPDATE may leave an unarchived `active` membership
+      belonging to anyone but the caller. The restrictive form is deliberate:
+      fixing only `membership_update_owner` would have left the exploit alive in
+      one more move for the next UPDATE policy anyone adds. Two SELECT policies
+      were needed to make acceptance reachable at all; see PRECEDENTS, P01-T04,
+      on PostgreSQL applying SELECT policies to both the old and the new row of
+      an UPDATE. `DATA_MODEL.md` §3.3 carries the rule and `SECURITY_MODEL.md` §1
+      carries the fourth guarantee, availability, which the three original parts
+      did not cover.
+      Re-tested rather than asserted: proof 19 re-runs the original attack and
+      asserts what the victim keeps — the tenant their session resolves to and
+      every own-tenant row they read, unchanged before, during and after, while
+      every `active` and `suspended` insert naming them is refused 42501. The one
+      row the attacker may still create is an `invited` one, which the victim can
+      see and which confers nothing.
+      **Still open, and it is not the exploit.** `current_tenant_id()` returns
+      null for anyone holding more than one active membership, which contradicts
+      `DOMAIN_MODEL.md` §5.1, so a person who accepts a second invitation locks
+      *themselves* out by their own action. That is the session-to-membership
+      binding and it needs auth. Proof 17 pins the current fail-closed behaviour
+      so the change is visible when it is made. Owner retargeted: **P02, with
+      authentication** — no longer CF-93 gap (3) alone, and no longer anything to
+      do with `membership_insert_owner`, which is settled.
+- [x] CF-104 — `DATA_MODEL.md` §2 narrows operator reach to "`tenant`,
+      `subscription` and `activity_event` **metadata columns only**", and no
+      column-level narrowing exists. Found by P01-T03 proof 7, against the live
+      policies. `tenant_select_operator`, `activity_event_select_operator` and
+      `consent_grant_select_operator` are row-level, so an operator reads every
+      column of all three tables for every tenant, including
+      `activity_event.payload`, and with no `consent_grant` required. The schema
+      follows §3.1, §3.5 and §3.6, which specify exactly these row-level reads, so
+      this is §2 contradicting §3 rather than a build defect, and §3 is what was
+      built. `activity_event.payload` is separately bounded by §3.6 to "no
+      credential, no full row copy, no PII beyond ids", so the exposure today is
+      bounded by that rule alone rather than by a policy. Owner: reviewer, at the
+      next `DATA_MODEL.md` amendment — either narrow §2's wording to match §3, or
+      specify the column-level mechanism §2 implies.
+      CF-104 — CLOSED (P01-T04). §2 now states the operator rule once, in two
+      classes, and §3.5 and §3.6 reference it instead of restating it.
+      **Account metadata** — `tenant` and `consent_grant`. Unconditional operator
+      SELECT, no grant, no log. An operator who cannot read the consent record
+      cannot tell whether the access they hold is live.
+      **Tenant business data** — `activity_event`, and every later tier's tables
+      after it. No operator policy on the table at all;
+      `activity_event_select_operator` is dropped. The only reach is
+      `operator_read_activity_event(uuid)`, which refuses a caller who is not an
+      operator, refuses one with no live `consent_grant` — `revoked_at is null`
+      and `now() < expires_at`, evaluated per call — writes an `activity_event`
+      naming the operator before it returns anything, and does not have `payload`
+      in its return type.
+      B1 asked for the consent test in the policy and B2 for the `payload`
+      exclusion by column grant. Neither is expressible at this granularity and
+      both are met by the function instead. A policy cannot log: PostgREST runs
+      GET in a READ ONLY transaction, so an audit insert inside a read policy
+      would abort the read it was auditing. A column grant cannot separate an
+      operator from a member: both arrive as `authenticated`, privileges are
+      role-scoped, and revoking `payload` from that role would take it from the
+      tenant's own audit trail, which §7 gives them in full. Excluding it from
+      the operator alone is a projection, and a projection needs a function. The
+      deviation is the mechanism only; both properties are now structural rather
+      than promised, because there is no other path.
+      Proven by proofs 20a, 20b and 21: seven refusals with no live grant and
+      nothing logged for any of them, one success that wrote exactly one event
+      with `actor_operator_id` set, and `payload` absent by all three direct
+      shapes and by the declared path.
+- [x] CF-105 — `EXECUTE` on `public` functions is granted to `PUBLIC` by default
+      and the grants migration's blanket revoke covers tables only, so every
+      function in `public` is a callable PostgREST RPC endpoint for `anon`. Found
+      by P01-T03 proof 15. All four functions present today are safe and were
+      proven so by query: `current_tenant_id()`, `is_operator()` and
+      `is_current_tenant_owner()` answer only for `auth.uid()` and returned
+      null/false/false to an unauthenticated caller and each caller's own tenant
+      to the others, and `enforce_tenant_active_owner()` returns `trigger` and so
+      cannot be invoked directly. The finding is the default, not today's surface:
+      the next `security definer` function added to `public` is exposed to `anon`
+      unless its migration revokes `execute` explicitly, and the existing revoke
+      does not cover it. Owner: the next migration that adds a function to
+      `public`; at the latest the Phase 02 entry checklist, alongside CF-94.
+      CF-105 — CLOSED (P01-T04). `revoke execute on all functions in schema
+      public` from `public`, `anon`, `authenticated` and `service_role`, then an
+      explicit grant per function. The first attempt revoked `public` and `anon`
+      only, as the task worded it, and left `authenticated` and `service_role`
+      holding EXECUTE on everything — Supabase issues those two as default
+      privileges of their own, so revoking the `PUBLIC` default removes a default
+      that was never what carried them. Caught by proof 22 before the commit and
+      re-applied through `migration repair --status reverted` and a fresh push,
+      so ADR-006's single-applier rule holds.
+      **Six functions, not the five the task expected.** Four existed; CF-104's
+      fix added `has_live_consent_grant(uuid)` and
+      `operator_read_activity_event(uuid)`. Each ACL is asserted exactly by proof
+      22: the three tenancy helpers, the consent predicate and the operator read
+      path hold `[authenticated, postgres]`, because a policy expression runs
+      with the caller's privileges and every policy here is `to authenticated`.
+      `enforce_tenant_active_owner()` holds `[postgres]` alone and is the one
+      function no caller should invoke — a trigger function's EXECUTE is checked
+      when the trigger is created, never when it fires, so the constraint keeps
+      working while the RPC endpoint stops existing. Over the wire `anon` gets
+      401 on all six and both the operator and a tenant owner get 404 on the
+      trigger function. `service_role` receives no grant: it bypasses RLS,
+      evaluates none of these policies, and a privilege with no reader is
+      exposure with no purpose.
+      The obligation the finding named survives closure and is now stated in the
+      migration itself: any later migration adding a function to `public` repeats
+      the revoke and states its own grant, or the function ships publicly
+      callable.
+- [x] CF-106 — `@types/node` is pinned to major 20 while the toolchain now
+      declares Node 24, so `typecheck` validates against a standard library four
+      majors behind the one the code runs on. Found by P01-T03 while landing
+      CF-102's closure: the `engines` field and `.nvmrc` fix the runtime skew and
+      leave the type skew untouched, which would make CF-102 read closed while
+      half the version mismatch survives. Nothing is known to be broken —
+      `tsc --noEmit` is clean and the isolation harness's Node built-ins and
+      global `fetch` all resolve — but a Node 24 API is currently a type error
+      and a Node 20 API removed since is currently not, in both directions
+      silently. PR-25 does not cover the bump: it is an alignment, not a
+      published advisory, so it stops and flags rather than being done here.
+      Owner: the next task authorised to change a dependency; naturally CF-98's,
+      which already owes a `package.json` change.
+      CF-106 — CLOSED (P01-T04), authorised by this task's C2 as maintenance
+      under PR-25 rather than as a new dependency. `package.json` moves
+      `@types/node` from `^20` to `^24` and `npm ls @types/node` resolves
+      `@types/node@24.13.3`, deduped everywhere it appears. `tsc --noEmit` is
+      clean on the new major and so is `eslint`, so nothing in the tree depended
+      on a Node 20 declaration.
+      **Residue, noticed while proving this and not part of the finding.** The
+      local runtime is `node v22.12.0` while `.nvmrc` and `engines` pin 24 and
+      `ci.yml` runs 24. CF-102 closed on the pin existing, and a pin that the
+      shell does not honour is a pin nobody applies: `npm install` did not object,
+      so `engine-strict` is off. Types now match CI and the declared runtime,
+      which is what CF-106 asked for, but a local green remains evidence from a
+      third version. Owner: the owner, to switch the shell to 24 or to say the
+      skew is accepted; at the latest the Phase 01 exit gate, where CF-102's
+      closure is re-read.
+- [x] CF-107 — Every commit on this repository was authored with the literal
+      placeholder `your.email@example.com`. A committed template placeholder,
+      the same class as CF-80 one level down in the toolchain: git configuration
+      rather than document content. It left every commit unattributed and caused
+      Vercel to refuse the deployment, since the address matches no GitHub
+      account. Owner: owner action.
+      CF-107 — CLOSED (P01-T04). The owner set a GitHub no-reply address, which
+      resolves to his account without putting a real email into a public
+      repository's permanent history — the same consideration CF-14 records for
+      his name. **Residue: commits before this change keep the placeholder and
+      history is not rewritten.** New commits are correctly attributed.
+- [x] CF-108 — The Supabase project identifier was held under two names:
+      `ci.yml` read `SUPABASE_PROJECT_ID` while the repository secret was
+      `SUPABASE_PROJECT_REF`, so `types-drift` failed at its require step with
+      the value present under a name nothing read. Two names for one value is
+      the collision class `GLOSSARY.md` exists to prevent, reaching CI
+      configuration where no glossary was being applied. Owner: owner action.
+      CF-108 — CLOSED (P01-T04). One name, `SUPABASE_PROJECT_ID`. The access
+      token was separately absent and has been added. `SUPABASE_SERVICE_ROLE_KEY`
+      was removed from repository secrets — no CI job needs it, and on a public
+      repository every secret is reachable by any workflow file, so it was
+      exposure with no reader. It remains in Vercel, production target only.
+- [ ] CF-109 — The isolation suite runs by `npm run test:isolation` and is
+      deliberately outside `npm test`, so no CI job executes it. That was
+      originally forced by absent secrets; the secrets now exist and the decision
+      stands anyway, on a different ground. Under ADR-012 there is one Supabase
+      environment, so a per-push isolation job would seed and tear down against
+      production on every commit — precisely what ADR-012's compensating controls
+      guard against. The suite therefore remains a gate run deliberately by a
+      heavyweight task, not a per-push check. **Consequence to hold consciously:
+      an isolation regression introduced between gates is not caught until the
+      next gate.** Owner: CF-92's reinstatement trigger — when staging exists,
+      the suite becomes a required CI job on any schema-touching pull request.
+- [x] CF-110 — P01-T03 verified `supabase/schema.sql` and the concatenated
+      migrations byte-identical at 18,495 characters. After P01-T04 they are
+      whitespace-normalised identical with ten blank lines differing at file
+      boundaries. The content is unchanged and no statement differs, but the
+      fidelity standard drifted between two tasks under the same rule. ADR-006
+      says migrations are split "verbatim"; a word that means byte-identical in
+      one task and whitespace-equivalent in the next is not a rule anyone can
+      enforce. Owner: P01-GATE.
+      CF-110 — CLOSED (P01-GATE). ADR-006's "verbatim" is stated to mean
+      whitespace-normalised identical, so a trailing newline at a file boundary
+      is not a divergence and a changed statement is. The docs-integrity workflow
+      gains a check asserting it on every push, which makes the standard
+      mechanical rather than a matter of which task last measured it.
+      **Gate re-measurement, appended rather than rewriting the claim above.**
+      The row's substance is confirmed and one number in it is not. Re-derived
+      at `f3bbf7b`: the T03 schema body from its first marker and the seven
+      concatenated migrations were both **18,496** characters and byte-identical
+      — one more than the 18,495 stated. At `c08fb1b` the body is 33,765
+      characters against 33,755 concatenated, a delta of exactly ten blank lines
+      across the five file boundaries P01-T04 introduced, and whitespace-
+      normalised identical at 705 non-blank lines on each side. The cause is
+      visible in the split itself: the seven T02 files each carry the two blank
+      lines that precede the next marker, and the five T04 files do not.
+      `scripts/check_migration_split.py` is the mechanism this row buys, wired
+      into `docs-integrity` and green at the closing commit.
+- [x] CF-111 — The P01 exit gate failed on five criteria. Two were hard failures:
+      `check-enum-keys` and the HTML-injection lint rule were both absent while
+      their targets existed, the second proven by a probe component piping a route
+      parameter into `dangerouslySetInnerHTML` and linting clean at exit 0. Three
+      were documentation: `MODULE_SPEC.md` §1 named `lib/i18n/` where the App
+      Router places dictionaries, four `rolbypassrls` roles appeared in no
+      document, and eleven ledger rows named an owner already passed. Owner:
+      P01-T05-FIX.
+      CF-111 — CLOSED (P01-T05-FIX). Both guards landed and proven by planted
+      violation. `MODULE_SPEC.md` follows the code. `SECURITY_MODEL.md` carries a
+      bypass inventory that every phase gate re-derives. Eleven rows retargeted
+      and `check_ledger.py` now fails on an unreachable owner, which is why CF-82
+      recurred as this gate's D1 — the check asked whether an owner existed and
+      never whether it pointed anywhere.
+      **Two corrections to the closing text above, appended per PR-07 rather than
+      written over it.** (1) **Twelve rows, not eleven.** The reachable-owner
+      assertion, run against the ledger as the gate left it, fires on ten rows —
+      CF-01, CF-11, CF-50, CF-54, CF-56, CF-60, CF-72, CF-75, CF-95 and CF-98.
+      Nine are among the gate's eleven; **CF-54 is not**, and its owner
+      "reviewer, verify at Gate 3" is the same defect. It is retargeted here and
+      declared, because a check landing red on the commit that introduces it is
+      not a check. The gate's other two — CF-39 and CF-46 — name no gate or phase
+      at all and so are unreachable in a way no mechanism catches; CF-93 and
+      CF-94 are the same. That is the honest boundary of what D3 buys: it catches
+      an owner pointing at a moment that has gone, not an owner pointing nowhere.
+      (2) **CF-98 is left OPEN, not closed.** Its four Dependabot advisories are
+      re-derived unchanged at 3 high and 1 medium, so the D2 instruction's own
+      condition — leave it open if any advisory is still open — applies. CF-95 is
+      closed.
+- [x] CF-112 — Four of the thirteen (check, premise) pairs in this repository
+      report success over an empty scan set, which is PR-21's exact shape
+      produced by the check itself rather than by a report. Found at the second
+      P01 exit gate by a probe that removed each check's target and ran it, not
+      by reading any of them. `check-no-runtime-cdn` says `OK: no runtime CDN
+      reference in 0 file(s)` with `app/` and `proxy.ts` gone;
+      `check-no-hardcoded-literals` says `OK: no hardcoded literal in 0 file(s)
+      scanned` on the same removal; `check-service-import` says `OK: 0 file(s)
+      scanned under []` with all three scan roots gone, though it correctly
+      fails when the quarantine itself is removed; `check_credentials` says
+      `OK: scanned 0 file(s)` wherever `git ls-files` returns nothing. Each
+      prints its count, so a human reading the log would see the zero — and each
+      exits 0, so CI would not. Owner: P01-T06-FIX.
+      CF-112 — CLOSED (P01-T06-FIX). Every one of the thirteen cases now errors
+      on an empty premise, verified by re-running the same sandbox: the four
+      named above plus the nine that already errored, none of which regressed.
+      Each of the four asserts a minimum non-zero scanned count and names the
+      empty or absent root in its failure message. `check_credentials` gained a
+      second correction on the way: an empty CI diff now widens to a whole-tree
+      scan instead of reporting a clean zero, because an empty diff is an absent
+      scope rather than an empty scan set. PR-27 is landed.
+      **A fifth was found here and is closed with them.** The audit of the
+      remaining nine, run as cases rather than as a reading, showed
+      `check_ledger` printing `OK: 0 open ids reconcile id-for-id … 0 owner(s)
+      checked` at exit 0 when every open row is removed. The gate's own sandbox
+      missed it because its case deleted the ledger file, which raises, rather
+      than emptying the row set, which did not. Its floor is deliberately on
+      rows of **either** kind and not on open ones: closing the last
+      carry-forward is a legitimate end state and must not turn CI red, while a
+      ledger holding no row at all means the file has moved or the row syntax
+      has changed out from under both patterns. A control case asserts exactly
+      that — 96 rows all closed, open-id list emptied, still green.
+      `check_stated_counts` was also failing only by traceback on a missing
+      target and now names the target and counts what it examined.
+- [x] CF-113 — `SECURITY_MODEL.md` §11's first standing re-derivation, at the
+      second P01 exit gate, found six live bypass mechanisms the document does
+      not name — three `security definer` functions outside `public`
+      (`vault.create_secret`, `vault.update_secret`, `pgbouncer.get_auth`) and
+      three role paths into a bypass role (`cli_login_postgres → postgres`,
+      `supabase_storage_admin → service_role`, `supabase_realtime_admin →
+      service_role`). None is reachable from an API-facing role by direct
+      privilege, so this is a documentation gap rather than a hole — and §11.5
+      makes it a hard failure regardless, not waivable by OD, on §1's ground
+      that an undocumented bypass is one nobody is watching. Owner: P01-T06-FIX.
+      CF-113 — CLOSED (P01-T06-FIX). **The ambiguity was the reviewer's, and the
+      remedy is structural rather than a longer list.** §11.2 read "Six exist,
+      all in schema `public`" — a claim about the objects this project created,
+      written as a claim about the whole catalog, which holds nine. A
+      re-derivation reads the catalog and cannot make a distinction the sentence
+      only assumed. §11 is now two tiers. §11a is B2S-owned and each entry is
+      individually justified; an object there the project did not deliberately
+      create is a hard failure. **§11b is platform-owned and its requirement is
+      enumeration and change detection, not justification**: each entry states
+      owner, schema and measured reachability, an unchanged platform object is
+      not a failure, and an unlisted one is. Justifying `pgbouncer.get_auth` is
+      not this project's to do; noticing the day it changes is.
+      **The re-derivation at closure exceeded the gate's own findings in two
+      places, both recorded in §11 rather than softened.** (1) The gate measured
+      the three platform functions on schema `USAGE` and `EXECUTE` alone and
+      recorded them unreachable by all three API roles. Measured a third way —
+      reachable-by-`SET ROLE` — `authenticator` reaches both `vault` functions
+      through `service_role`, which holds `USAGE` on `vault` and `EXECUTE` on
+      both. It grants a holder of the privileged key nothing it does not already
+      have, since `service_role` bypasses every policy on every table, but it is
+      the `MEMBER`-versus-`USAGE` mistake one level down and it is now
+      enumerated. (2) The gate counted four `MEMBER` paths into a bypass role;
+      the catalog holds ten — six grants and four that are `supabase_admin`'s
+      implicit superuser membership. The two extra grants, `postgres →
+      service_role` and `cli_login_postgres → service_role`, are transitive
+      consequences of rows already listed and are listed anyway.
+      **`cli_login_postgres` is investigated and not dropped**, per the task.
+      It is residue of CLI linking — `supabase link` and `db push` provision a
+      temporary login role through the Management API, the quirk recorded at
+      P01-T02 — and nothing depends on it: zero owned objects, zero table
+      privileges, zero default-ACL entries, zero `pg_shdepend` rows, zero active
+      sessions. Its password expired 2026-08-03 13:03:08 UTC, confirmed expired
+      when measured 2026-08-04 10:50:12 UTC. **Recommended for revocation, an
+      owner decision**, because dropping a platform-managed role is not a fix
+      task's call; §11b.4 also records that the CLI re-provisions one on the
+      next link, so a reappearance is expected and is not a regression.
+      **The six event triggers are ruled rather than assumed.** They are not an
+      RLS bypass: they fire only on DDL, no API role holds `CREATE` on any
+      schema, and none of the six functions is `security definer`. They are a
+      code-execution surface owned by `supabase_admin`, listed in §11b.5 with
+      that characterisation stated. The `MEMBER`-versus-`USAGE` rule is now
+      mandatory in §11.0.1, with the `NOINHERIT` reason, so the next gate cannot
+      ask the wrong question.
+- [ ] CF-114 — ADR-012 retired the staging environment, and three documents
+      still describe it as one that exists. A sweep of all 110 non-vendored
+      files at P01-T06-FIX found 37 matching lines in 9 files; six of the nine
+      are correct — the append-only journal and `ADR.md`, `PRECEDENTS.md`'s two
+      uses meaning the git index and PR-14's reviewer folder, and CF-92,
+      CF-109 and the isolation suite's own guard, all of which speak of a
+      staging project as a future thing. The two named casualties are retired.
+      What survives is: `docs/method/BUILD_PHASES.md`:25 "the **live** staging
+      database", :37 "data contract live in staging" and :41 "Supabase staging
+      and production projects" as a P01 deliverable; `docs/method/
+      DEV_OS_REFERENCE.md`:95 "staging DB", :118 "regenerates from staging" and
+      :205 "data contract live in staging"; and `docs/product/ARCHITECTURE.md`:118
+      "Types are generated from staging", which sits just below the ADR-012
+      amendment note that covers the table above it but not this sentence. Not
+      fixed here: none of the three is in this task's write set, and PR-20 puts
+      document hygiene in the next task that already opens the file. Owner: the
+      P02 entry checklist, batched — one task opening all three, since the
+      correction is the same sentence three times.

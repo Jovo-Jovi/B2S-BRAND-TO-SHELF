@@ -191,6 +191,49 @@ wearing the grammar of a fact, and the builder pays for it in a halt. Where a
 mechanised check for the property exists, the reviewer cites its output instead
 of asserting. Origin: CF-88, and CF-83 before it.
 
+**PR-24 — A prompt supplies the full text of every carry-forward it names, and
+says open-or-amend rather than close.**
+PR-19 assumes a verdict-recording step always runs. It does not when the owner
+merges and proceeds directly, so a row logged in a verdict may not exist when the
+next task reaches for it. Every prompt therefore carries the complete claim text
+for each id it touches and instructs the builder to open it if absent and amend
+it if present, reporting which. A builder must never be asked to close a row it
+cannot find, and must never invent text to fill one. Origin: CF-91.
+
+**PR-25 — A security bump of an existing dependency is not a new dependency.**
+`AGENTS.md` §2 requires a stop-and-flag before adding a dependency. Raising the
+version of a package already present — direct or transitive — to close a
+published advisory is maintenance, not scope: it needs a task, a green pipeline
+and a journal line, not an OD. Introducing a package that was not there before
+still stops and flags. Origin: CF-98, four transitive advisories held up behind a
+rule written for a different act.
+
+**PR-26 — A plant-and-revert probe restores from its own snapshot, never from
+git.**
+Proving a guard by planting a violation into a tracked file and reverting is the
+right technique, and `git checkout -- <path>` is the wrong revert for it.
+Checkout restores the **committed** content, so it silently discards every
+uncommitted edit the current task has made to the same file — the probe reverts
+its own plant and the session's work with it, and the damage shows up only as a
+later check failing against text that was correct ten minutes earlier. The probe
+reads the file into memory before planting and writes those exact bytes back
+afterwards, then asserts the restored content is byte-identical to the snapshot.
+Origin: P01-T05-FIX, where a prover for `check_ledger.py` reverted both
+`CARRY_FORWARDS.md` and `SESSION_CONTEXT.md` to HEAD and destroyed twelve
+unstaged ledger amendments, which had to be re-authored. The probes in the same
+task that touched only `supabase/schema.sql` — a file the task had **not**
+edited — were safe by luck, not by design.
+
+**PR-27 — A check asserts a floor, or it is not a check.**
+Every guard and integrity check states the minimum it expected to examine and
+fails when it examined less. `OK: 0 file(s) scanned` and exit 0 is PR-21's shape
+produced by the check itself: it ran, it concluded nothing, and it reported
+success. The failure arrives silently the day a scan root is renamed, a glob stops
+matching, or a directory moves — the check keeps passing and stops guarding.
+Origin: CF-112, four of thirteen checks passing over an empty set at the second
+P01 exit gate, found by a probe that removed each target rather than by reading
+any of them.
+
 ---
 
 ## 2. Environment quirks — never re-discover
@@ -268,3 +311,179 @@ of asserting. Origin: CF-88, and CF-83 before it.
   unrelated directory instead of failing. Pass `working_directory` explicitly
   on every Shell call that must run in the repository rather than relying on a
   prior `cd`.
+- Learned at P01-T02: `supabase link` and `supabase db push` need **no database
+  password**. The CLI provisions a temporary login role through the Management
+  API using the access token, printing "Initialising login role...". Only
+  `supabase login` (or `SUPABASE_ACCESS_TOKEN`) is required, so a schema apply
+  never needs the owner to reset the database password. The CLI is not installed
+  globally here; `npx supabase@latest` works and reports 2.111.0.
+- Learned at P01-T02: `supabase db push` prints `Warning: failed to cache
+  migrations catalog: ... failed to run docker. Docker Desktop is a
+  prerequisite`. It is a **local cache** warning only. Every migration applied
+  and the remote ledger was correct. Docker is not needed to push to a remote
+  project; do not install it in response to this line.
+- Learned at P01-T02: `vercel link` rewrites two files without asking. It appends
+  `VERCEL_OIDC_TOKEN` to `.env.local`, and appends `.vercel` **and a duplicate
+  `.env*`** to `.gitignore` even when `.env*` is already matched. Run
+  `git diff -- .gitignore` immediately after linking and tidy the duplicate.
+- Learned at P01-T02: `vercel whoami` with no stored credentials does **not**
+  report "not authenticated". It starts a device-login flow, and that flow can
+  complete silently against an existing browser session — so a read-only probe
+  for authentication state authenticated the machine as a side effect. Probe for
+  credentials with something that cannot mutate state, or expect the login.
+- Learned at P01-T02: Next.js inlines `NEXT_PUBLIC_*` into the client bundle only
+  for **literal** member access. `process.env[name]` with a computed key is
+  `undefined` in the browser, so a tidy `requiredEnv("NAME")` helper silently
+  breaks the browser client while typechecking and building cleanly.
+- Learned at P01-T02: write `supabase gen types` output with
+  `[System.IO.File]::WriteAllText(..., UTF8Encoding $false)`. PowerShell 5.1's
+  `>` redirection produces UTF-16 and `Out-File -Encoding utf8` produces a BOM;
+  either makes the committed types differ from a Linux CI regeneration on every
+  run, which the `types-drift` job would report as permanent, unfixable drift.
+- Learned at P01-T02: a Supabase project grants `anon` and `authenticated` broad
+  table privileges by **default privilege**, so a newly created table arrives
+  with table-wide UPDATE already granted. Column-scoped grants are therefore
+  decoration unless the migration first issues
+  `revoke all on all tables in schema public from anon, authenticated`. Every
+  later migration that adds a table repeats the revoke, or the grant set silently
+  widens and a policy that looked safe in isolation stops being safe.
+- Learned at P01-T02: this machine runs **Node v22.12.0** and npm 11.17.0, while
+  `ci.yml` pins `NODE_VERSION: "24"`. A local green is therefore evidence on a
+  different major version than the one CI uses, which weakens but does not replace
+  the verify-before-committing rule — keep doing it, and treat the pipeline's
+  conclusion as authoritative. Both were green for P01-T02. Neither the Supabase nor
+  the Vercel CLI is installed globally; `npx supabase@latest` reports 2.111.0 and
+  `npx vercel@latest` reports 58.4.4.
+- Learned at P01-T02: the four `docs-integrity` checks run as `python3`, which is
+  correct on the ubuntu runner and **fails on this machine** — Windows ships a
+  `python3` App Execution Alias that prints "Python was not found; run without
+  arguments to install from the Microsoft Store" and exits 9009 without running
+  anything. `python` resolves to 3.13.1 here. Run the guards locally as `python
+  scripts/<name>.py`; do not change the workflow to match the local shell.
+- Learned at P01-T03: `pg_catalog` is unreachable from any Supabase client.
+  PostgREST exposes the `public` schema, so `pg_class`, `pg_policy`, `pg_proc`
+  and `pg_roles` cannot be queried through it, and a proof that must read the
+  live catalog needs a second path. The one that needs no new dependency is the
+  Management API — `POST https://api.supabase.com/v1/projects/{ref}/database/query`
+  with a personal access token — which executes as `postgres`. It is also the
+  only way to run the DDL teardown needs.
+- Learned at P01-T03: that endpoint intermittently answers `503` with
+  `upstream connect error or disconnect/reset before headers` under a few hundred
+  sequential requests. Retry **gateway 5xx and dropped sockets only, never a
+  4xx**: a 4xx carries the SQLSTATE and message that half these proofs assert, so
+  retrying one would re-run an operation whose refusal was the result. Treating a
+  5xx as a result is worse still — "the write was refused" and "the request never
+  arrived" are indistinguishable to a caller that only checks for an error, so a
+  negative assertion passes for the wrong reason.
+- Learned at P01-T03: the `membership_active_owner_required` constraint trigger
+  makes a tenant's membership rows **undeletable by any path**, including
+  `service_role`, because every delete order ends with the tenant at zero active
+  owners. Teardown must `alter table public.membership disable trigger
+  membership_active_owner_required`, delete, and re-enable — which requires table
+  ownership and therefore the Management API, not a Supabase client.
+- Learned at P01-T03: `revoke all on all tables in schema public` does **not**
+  cover functions. `EXECUTE` on a `public` function defaults to `PUBLIC`, so every
+  function there is a PostgREST RPC endpoint callable by `anon`. Recorded as
+  CF-105; a migration adding a function revokes `execute` explicitly or the
+  function ships publicly callable.
+- Learned at P01-T03: vitest intercepts `console` output and attributes it to the
+  running task, which silently drops whatever a file-level `afterAll` writes. When
+  the printed output **is** the deliverable — a gate ledger, a coverage report —
+  set `disableConsoleIntercept: true` in that suite's config, or the run passes
+  with nothing to read.
+- Learned at P01-T03: the Supabase CLI on Windows stores its access token in
+  **Windows Credential Manager**, target `Supabase CLI:supabase`, not in a file.
+  `~/.supabase` holds only telemetry and traces, so its absence does not mean the
+  CLI is logged out. `cmdkey /list` confirms the entry exists without printing the
+  secret.
+- Learned at P01-T03: a suite that needs live credentials must be excluded from
+  `npm test` rather than made to skip. `ci.yml`'s `unit` job holds no Supabase
+  secrets, and a suite that skipped there would report green while proving
+  nothing, which is PR-21's failure shape. The isolation suite runs on its own
+  config through `npm run test:isolation`, and throws by name on an absent
+  variable.
+- Learned at P01-T04: **PostgreSQL applies a table's SELECT policies to an
+  UPDATE twice** — to the old row, because `UPDATE ... WHERE` reads existing
+  values, and again to the **new** row, so that no UPDATE can push a row out of
+  the caller's own visibility. An UPDATE policy is therefore never sufficient on
+  its own: the caller must be able to see the row in both the state it starts in
+  and the state it ends in, or the write is refused. The two failures look
+  nothing alike and neither names the cause. Invisible **old** row: PostgREST
+  answers `204` under `return=minimal` and the row is unchanged — a silent
+  no-op that reads as success. Invisible **new** row: `42501 new row violates
+  row-level security policy for table "x"`, with no policy name, which points at
+  a WITH CHECK that may be perfectly correct. Diagnose it by substitution, not
+  by reading: replace the UPDATE policy's WITH CHECK with literal `true` and
+  drop every other UPDATE policy. If the refusal survives a check that cannot
+  fail, the SELECT policies are the cause.
+- Learned at P01-T04: the isolation harness reads `SUPABASE_ACCESS_TOKEN` from
+  the process environment or `.env.local`, and the Supabase CLI's own copy lives
+  in Windows Credential Manager where the harness cannot reach it. A CLI that
+  pushes migrations happily is therefore no evidence that the suite can run. The
+  variable is the owner's to supply and is never requested in a chat surface.
+- P01-T04's two techniques — PostgreSQL applying a table's SELECT policies to
+  both the old and the new row of an UPDATE, and the substitution diagnostic
+  that isolates which clause refused — were already recorded above when the
+  P01-GATE session checked for them. Nothing was appended for either. Recorded
+  here only so the next task does not check a third time.
+- Learned at P01-GATE, a refinement of the two git-bash entries above: the
+  PowerShell parse of a `bash -c` argument also intercepts `<`, `>` and bare
+  `(` `)`. A redaction placeholder written with angle brackets and a heading
+  written with parentheses each silently truncated the command to nothing and
+  returned exit 0 with partial output — the worst shape, since a truncated
+  probe reads as a probe that found nothing. Three calls were burned on it.
+  Keep `bash -c` strings to plain words, or put the script in a file under
+  `$env:TEMP` and invoke `bash <file>` by path, which has none of these
+  problems and is what the rest of this session used.
+- Learned at P01-GATE: `python` on this machine writes stdout as cp1252, so
+  printing any repository text containing `—`, `§` or `→` raises
+  `UnicodeEncodeError` and kills the script mid-report, after it has already
+  printed the part that looked fine. Set `$env:PYTHONIOENCODING="utf-8"` before
+  any script that echoes document content. A subprocess captured with
+  `text=True` decodes with the same locale, so a wrapper that runs a checker and
+  prints its output will mojibake even when the checker itself is clean.
+- Learned at P01-GATE: the Grep tool is ripgrep and honours `.gitignore`, so
+  `.next/` is invisible to it. A scan of build output for a leaked secret — the
+  exact scan a gate owes — finds nothing through Grep and reports a clean
+  result, which is PR-21's failure shape arriving through a tool default rather
+  than a decision. Walk the build tree with a script instead, and state the file
+  count scanned so the zero is attributable.
+- Learned at P01-T05-FIX: **ESLint reads directive comments wherever they
+  appear, including inside explanatory prose in `eslint.config.mjs` itself.**
+  A comment describing the exemption path — the words "eslint", "disable" and
+  "next-line" run together — is parsed as a live directive, and the words after
+  it are registered as rule names. The failure reads
+  `Definition for rule '<the rest of your sentence>' was not found`, pointing at
+  the config, which is baffling until you see it. Describe a disable directive
+  in prose; never spell one out.
+- Learned at P01-T05-FIX: **`pg_has_role(role, target, 'MEMBER')` is the
+  `SET ROLE` test. `'USAGE'` is not, and answers the opposite way here.** USAGE
+  reports automatic privilege inheritance; Supabase grants `service_role` to
+  `authenticator` with `NOINHERIT`, so a USAGE audit says `authenticator` cannot
+  reach `service_role` — false, and reassuring in the worst possible way for a
+  question about what can bypass RLS. MEMBER is also transitive, so it is the
+  one that answers "can this role become that role by any chain". Both were run
+  side by side at P01-T05-FIX and they disagree on the single most important
+  cell in the table.
+- Learned at P01-T05-FIX: `api.supabase.com` answers **403 with a body of
+  `error code: 1010`** to Python's default `urllib` User-Agent. That is a
+  Cloudflare browser-signature block at the edge, not a Supabase refusal and not
+  an   authentication failure: it carries no SQLSTATE, so it is not a result and
+  the P01-T03 "never retry a 4xx" rule does not apply to it. Set any ordinary
+  User-Agent header and it goes away. Node's `fetch`, which the isolation
+  harness uses, sends one already, which is why this had not been hit before.
+- Found at P01-GATE-RERUN, landed here at P01-T06-FIX: the Management API's
+  `GET /v1/projects/<ref>/types/typescript` defaults to schema `public` **alone**,
+  while the pinned CLI's `supabase gen types typescript` emits `public` and
+  `graphql_public`. Ask the endpoint with
+  `?included_schemas=public,graphql_public` or the two outputs differ by the
+  whole `graphql_public` block, and a `types-drift` check that is in fact clean
+  reports a difference nobody can fix by regenerating. The CLI is what `ci.yml`
+  runs, so the CLI's schema set is the correct one and the endpoint is what has
+  to be told.
+- Found at P01-GATE-RERUN, landed here at P01-T06-FIX: `npm audit --json 2>&1`
+  in PowerShell merges npm's stderr warning into the same stream as the JSON
+  document, so the result fails to parse at character 0 and the error names the
+  parser rather than npm. Redirect stderr away (`2>$null`) or capture stdout
+  alone, then parse. The same applies to any npm command whose machine-readable
+  output is consumed in this shell.
