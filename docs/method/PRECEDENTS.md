@@ -319,6 +319,17 @@ Where a method change touches either file while a phase branch is open, it lands
 on the branch. Refines PR-32; supersedes nothing. Origin: OD-H12, whose rows
 CF-129 and CF-130 exist only on `phase/02-tenancy-and-access`.
 
+**PR-35 — `docs/ROADMAP.md` and `docs/roadmap.html` are generated, never edited.**
+A roadmap that restates `BUILD_PHASES.md`, the ledger and the done-steps table
+is a second copy of four sources of truth, and a second copy rots — CF-122 and
+CF-93 are the same disease at smaller scale. Both files are emitted by
+`scripts/generate_roadmap.py` from committed inputs alone, and
+`scripts/check_roadmap.py` fails any push where either differs from its own
+regeneration. A hand edit is a defect, not a shortcut. Every task that changes
+phase state, closes a carry-forward, or adds a done-steps row regenerates both
+in the same commit. The generator embeds no commit sha, branch or timestamp,
+because a value that changes at commit time makes the check unsatisfiable.
+
 ---
 
 ## 2. Environment quirks — never re-discover
