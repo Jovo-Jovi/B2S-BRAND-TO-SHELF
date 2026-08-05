@@ -1,18 +1,19 @@
 # SESSION CONTEXT
 Updated: 2026-08-05 · By: Opus · Phase: P02
-Last task: P02-T05 · Verdict: pending. OD-G13's two acts exist. Authentication
-materialises a `Member` — a trigger on `auth.users`, so the row is written in the
-same transaction as the identity and a duplicate address takes the auth row down
-with it rather than leaving a half-linked one. It grants nothing: a fresh
-`Member` resolves null and reads only their own row. A `Tenant` is created only
-by `provision_tenant()`, one `security definer` function and therefore one
-transaction, writing the tenant, the caller's active owner `membership` and the
-`activity_event` together or not at all. It has no member parameter, so the only
-tenant a caller can create is one they own. Neither is rate-limited and two
-finding rows say what that leaves reachable. Suite 46 → 56, all 46 retained; one
-pre-existing expectation moved, because staff are materialised too, and the move
-is a ledger row of its own. Both ADR-012 counts zero on both sides of the run.
-Full detail in the done-steps row below and in `docs/method/CARRY_FORWARDS.md`.
+Last task: P02-T06 · Verdict: pending. `SECURITY_MODEL.md` §11 now says what the
+database holds. §11a was re-derived from `schema.sql` rather than read: eight
+`security definer` functions in `public`, not the six it claimed, because
+P02-T05 added two and the section was never named in that task's prompt. Each of
+the eight now carries an individual justification, and `provision_tenant`'s says
+what a hostile authenticated caller can and cannot do with a grant every
+signed-in identity holds. §11b was re-measured against the live catalog with
+`MEMBER` and is unchanged in every respect the tier asks about — one value moved,
+`cli_login_postgres`'s password expiry, and that is CF-133. The recurrence is
+closed by `check_security_model_bypass.py`, which asserts §11a.1 against the
+schema both ways on every push and, run against the unedited document, names the
+two functions P02-T05 omitted. Suite still 56, 0 FAIL, 0 LOST; all four ADR-012
+counts zero. Full detail in the done-steps row below and in
+`docs/method/CARRY_FORWARDS.md`.
 
 ## Read these too
 - `docs/method/PRECEDENTS.md` — binding rulings and environment quirks.
@@ -66,6 +67,7 @@ Keep it short: if a paragraph is growing here, it belongs elsewhere.
 | P02-T03 | P02 entry preconditions, established by query and by running, never by reading a document that claims it. On `main` per BRANCHING §3.2 — an entry gate is not phase work and opens no phase branch. ADR-012's condition measured against `b2s-production` before anything else ran, through the Management API rather than the suite's own path: `select count(*) from public.tenant` returned `[{"count":0}]` and `select count(*) from auth.users` returned `[{"count":0}]`. Suite size then established from the file rather than from a prior gate report — 31 `record()` call sites, 31 distinct, zero duplicates, set-equal to `harness.ts`'s `EXPECTED_ASSERTIONS` with nothing declared-but-unrecorded and nothing recorded-but-undeclared. Suite run in full: **31 expected — 31 PASS, 0 FAIL, 0 LOST**, 18 live policies enumerated across 6 tables, ledger line D reporting all eleven teardown counters at zero, 190s. vitest's own line reads 32 passed, 0 failed, 0 skipped — one more than the ledger, reconciled from the file and not waved through: 32 `it()` blocks, 31 recording a verdict and the thirty-second the completeness guard at :1903 that asserts no proof exited without one and by design records nothing itself. The two counts re-queried afterwards by the same independent path: `public.tenant` → `[{"count":0}]`, `auth.users` → `[{"count":0}]`. Four results, all zero, so no synthetic row survived the run and no HARD FAILURE arises. CF-92 and CF-109 re-verified live and deliberately left unamended, both owned elsewhere. CF-125 opened and closed. Ledger: 110 rows, 34 open, reconciling id-for-id. All thirteen checks green, each stating its floor. No application code, no migration, no schema change, no row created or left behind | pending | `a4bb442` |
 | P02-T04 | Session-to-membership resolution under OD-G14. First P02 build task, on `phase/02-tenancy-and-access` off `main` at `97b5009` per BRANCHING §2; no PR, §3 puts one at the phase exit. ADR-012's condition measured first and again after each of the two suite runs, by a path the suite does not use: `select count(*) from public.tenant` → `[{"count":0}]` and `select count(*) from auth.users` → `[{"count":0}]`, corroborated by PostgREST `Content-Range: */0` and GoTrue admin `total=0`. **Transport: the request header `x-b2s-tenant`**, read inside the function from PostgREST's `request.headers` setting. Chosen against the two alternatives OD-G14 forecloses — not a JWT claim, not a stored per-person column — and against `set_config`, which no PostgREST caller can reach per request. Forgery is inert by construction: the header selects from the caller's own active memberships and can only narrow that set, never extend it, so a forged value reaches at most a tenant the caller already holds and otherwise resolves null; proven by 23o, where anon, an unaffiliated member and an operator each forge all three tenants and reach nothing. `stable` is retained and is correct — `request.headers` is fixed for the statement, which is exactly what `stable` promises, and `volatile` would forbid the function inside an RLS policy. Migration 13, `20260805120001_session_tenant_selector`, replaces the function body only: no table, no enum, no policy, no grant changed, and the six-row contract of `DATA_MODEL.md` §2.1 is implemented literally, uuid parsed without raising and `status = 'active' and archived_at is null` unchanged. `check_migration_split.py` reconciles 13 migrations to `schema.sql`, 831 non-blank lines identical on both sides. `types/database.ts` regenerated by the CLI — **unchanged**, byte-identical, the function's signature having not moved. `DATA_MODEL.md` §2.1 carries the contract as the table itself rather than prose approximating it; §3.3's two stale paragraphs amended; no helper added so §2's "Four helper functions" is untouched, and `check_stated_counts.py` and `check_data_model_schema.py` are green. Proof: 15 new assertions, 23a–23o, each seeded through the privileged path and each asserting reads as well as the resolved id, covering all six contract rows plus five the prompt did not ask for — a suspended selection (23n), an empty and whitespace selector (23l), header- and value-case with a near-miss header name (23m), and forgery by three unentitled callers (23o). All landed permanently per OD-H11. **46 expected — 46 PASS, 0 FAIL, 0 LOST**, ledger line D reporting all eleven teardown counters at zero, 374s; vitest reads 47, one more than the ledger, the completeness guard as reconciled at P02-T03. All 31 prior assertions pass unchanged and none was weakened; proof 17 keeps its assertion and only its evidence prose moved. New precedent PR-30 — a negative result is evidence only if the request reached the thing under test — with the Cloudflare WAF header block, PostgREST's `request.headers` contract and Node's control-character header rejection landed as quirks. CF-93 amended, gap 3 closed, row stays open for gap 6; CF-103 CLOSED. Ledger: 110 rows, 33 open | pending | `a342756` |
 | P02-T05 | Member materialisation and Tenant provisioning — OD-G13's two acts, which the schema specified and no live caller could reach. On `phase/02-tenancy-and-access` from `f68c714`; no PR, §3 puts one at the phase exit. ADR-012's condition measured before anything ran and again after each suite run, by a path the suite does not use: `select count(*) from public.tenant` → `[{"count":0}]` and `select count(*) from auth.users` → `[{"count":0}]`, four results, all zero. Migration 14, `20260805120002_member_materialisation_and_tenant_provisioning`, adds two functions and one trigger and touches no table, enum, policy or existing grant. **Act one is a trigger, not an RPC** — `member_materialisation`, `after insert on auth.users for each row`, calling `materialise_member()`: the id and the address are read out of the row `auth` itself wrote, so there is no argument to forge, and a refusal aborts the auth transaction so the second identity is never created either. `EXECUTE` granted to **nobody**, a trigger function's privilege being checked at creation and never at firing. **Act two is one function, therefore one transaction** — `provision_tenant(text,text,text,text)`, `security definer`, `EXECUTE` to `authenticated` alone, revoked from `public`, `anon` and `service_role` per CF-105's standing obligation. Chosen over the ADR-005 `service_role` client for atomicity and not taste: PostgREST gives each request its own transaction, so three round trips cannot be one act and a failure after the tenant insert would leave a tenant with no owner that the deferred `membership_active_owner_required` would never catch, firing as it does at the commit of a transaction that had already succeeded. It has no member parameter, so the caller is the owner by construction. `check_migration_split.py` reconciles **14** migrations, 1086 non-blank lines identical both ways. `types/database.ts` regenerated by the CLI — **changed**, +9 lines, `provision_tenant`'s `Args`/`Returns` added; `materialise_member` is absent because it returns `trigger`, which the generator does not emit. No hand edit. `DATA_MODEL.md` §3.1, §3.2, §3.3 and §3.6 each record the write path that now exists instead of its absence. **Neither total moved, which is the answer to Task 5's question:** no table and no enum was added, so §3's totals hold; and neither new function is a policy predicate, so §2's "Four helper functions" and its four-row table hold too — `check_data_model_schema.py` green both ways, `check_stated_counts.py` green. Proof: 10 new assertions, **46 → 56**, all 46 retained. `56 expected — 56 PASS, 0 FAIL, 0 LOST`, 534s, line D reporting all **thirteen** teardown counters at zero; vitest reads 57, one more than the ledger, the completeness guard as reconciled at P02-T03. 24a-24c materialisation: a fresh `Member` resolves null and reads exactly one row across the six tables, their own, by `member_select_self`; a held address refused on the two routes `users_email_partial_key` does not cover — it is partial on `is_sso_user = false` — with 0 member and 0 `auth.users` rows left for the refused id and the row already held byte-identical as jsonb; and 12 refusals across 4 callers × 3 payload shapes, all on the grant and none on a unique key. 25a-25f provisioning: three rows counted by query and shown to be each other's; **atomicity proven by forcing a failure**, a fault trigger in its own schema gated on one member, injected after the tenant insert and again after tenant + membership, 0 tenants by creator, 0 by slug, 0 memberships and 0 events after each, with the same caller unimpeded writing 1/1/1 as the control; no owner parameter in the catalog and 6 spellings of one rejected; two calls issued together yielding distinct tenants; those two isolated from each other across all six tables both ways; and nothing in the catalog calling the function — 0 triggers, 0 defaults, 0 policy expressions, no other body. 26 closes CF-128 twice over per PR-30: 6 duplicate-header pairs over HTTP by a caller holding exactly one membership, each 200/null, which distinguishes "the selector arrived and did not match" from "the transport dropped it" because that same caller resolves tenant A with no header and with one; plus 4 forged `request.headers` shapes in process. **One pre-existing expectation moved** — proof 7's exact set for `member`, from none to the operator's own id, materialisation being unconditional — landed as a ledger row rather than a report paragraph; the claim is unchanged, the set is still exact, no policy was altered. Harness: `rawHeaders`/`selectingTwice` so the same header can be sent twice, `seed` adopting materialised rows by `on conflict (id)`, and fault-schema teardown with two counters of its own. PR-31 and PR-32 landed verbatim; three quirks landed — P02-T04's PowerShell `rg` quoting, a backtick in a SQL comment inside a template literal, and two catalog typings that each cost a suite run. CF-127, CF-128 and CF-131 opened-or-named and closed; CF-126, CF-129 and CF-130 landed open. **33 open at `f68c714` + 3 landed open − 0 previously-open closed = 36 open**, ledger 110 → 116 rows, reconciling id-for-id. All thirteen checks green, each stating its floor | pending | `87b1b8b` |
+| P02-T06 | §11's bypass inventory re-derived and made self-asserting. On `phase/02-tenancy-and-access` from `2be3ee6` per PR-32; no PR, §3 puts one at the phase exit. ADR-012's condition measured before anything ran and again after the suite, by a path the suite does not use: `select count(*) from public.tenant` → `[{"count":0}]` and `select count(*) from auth.users` → `[{"count":0}]`, four results, all zero. **§11a re-derived from `schema.sql`, not from the section**: 9 `create ... function public.*` statements resolving to **8 distinct identities** — `current_tenant_id()` is created at :202 and replaced at :877 by migration 13, one identity — every one `security definer`, every one owned by `postgres`, every one `search_path` pinned to `''`, and 0 with the statements disagreeing on either. The live catalog agrees exactly and puts the whole-catalog total at **11**, not the nine §11a.1 claimed. §11a.1 therefore states eight and eleven, and carries eight rows: `materialise_member()` justified on `member` having no INSERT policy and `supabase_auth_admin` no INSERT privilege, so no non-definer path could materialise; `provision_tenant` on `tenant` having no INSERT policy and `membership_insert_owner` refusing a caller who cannot yet own a tenant that does not exist. The grant paragraph's "each…granted explicitly" corrected to the measured split — **six granted to `authenticated`, two trigger functions granted to nobody**, which assertion 22 independently enumerates ACL by ACL. `provision_tenant`'s containment written in P02-T04's can/cannot shape: it can create unboundedly (CF-129), squat slugs (CF-129) and pass unvalidated currency and locale (CF-130); it cannot name another owner, run unauthenticated, run without a live `member` row, touch a row other than the three it writes, or carry the definer context past its own return. §11a.3 records what the grant moves — `service_role` is still the only *role* a request bypasses RLS as, and no longer the only API-reachable way past a policy. **§11b re-measured against the live catalog with `pg_has_role(role, target, 'MEMBER')`, never `'USAGE'`** (§11.0.1): 3 functions outside `public` with identical owners, pins, three-way reachability and `EXECUTE` holder sets, `authenticator` reaching both `vault` functions by `SET ROLE service_role` and nothing else; 5 `rolbypassrls` roles out of 16 non-`pg_`; **the same ten `MEMBER` paths**, six grants and four superuser-implicit; ten `anon`/`authenticated` cells, all false; 6 event triggers, none `security definer`; 0 schemas carrying `CREATE` for any of the three API roles, across 25. **No platform object appeared that §11b does not list.** One §11b value moved and is CF-133. `scripts/check_security_model_bypass.py` landed as `docs-integrity`'s **ninth** step, asserting §11a.1 against `schema.sql` both ways — stated total, table rows and schema set all three equal, every function with a row and every row with a function — plus the catalog total against its two tiers and §11b.1's back-reference against §11a.1. Run against the **unedited** document it names both missing functions and calls the document the short side, which is the answer to whether it would have caught P02-T05: it would. Proven on **eleven** plant-and-revert cases from an in-memory snapshot, never `git checkout --` (PR-26) — seven content violations, one per assertion, and both scan targets removed and emptied — 11 of 11 caught, 0 tracebacks, every failure a one-line `FAIL:` naming the short side, all 11 reverts byte-identical. Two-way (check, premise) set: nineteen → **twenty-six** (PR-28, one case per assertion; 19 + 7 = 26). Suite re-run in full: **56 expected — 56 PASS, 0 FAIL, 0 LOST**, 336s, line D reporting all thirteen teardown counters at zero; vitest reads 57, the completeness guard as reconciled at P02-T03. No assertion added, none weakened, none lost. PR-33 landed and one quirk. CF-132 opened and CLOSED, with one figure corrected against the artifact before landing and the original recorded; CF-133 landed open. **36 open at `2be3ee6` + 1 landed open − 0 previously-open closed = 37 open**, ledger 116 → 118 rows, reconciling id-for-id. All **fourteen** checks green. No application code, no migration, no schema change, no row created or left behind | pending | pending |
 
 > Commit column: one or more comma-separated backticked shas, or `—` where no
 > single commit tracks the step (P-00 through P-01c predate the one-task-one-commit
@@ -113,6 +115,7 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
 - CF-126 — owner: the task that first subscribes to Realtime, and the P02 exit gate, which re-derives it
 - CF-129 — owner: the task that wires the sign-up surface, and the P02 exit gate
 - CF-130 — owner: the task that authors BrandConfig, where the currency and locale sets are decided, and the P02 exit gate
+- CF-133 — owner: the owner, on SECURITY_MODEL.md §11b.4's standing recommendation, and the P02 exit gate, which re-derives §11b and re-reads this column
 
 ## Frozen decisions in force
 - Freeze point 2026-07-29 (`legacy/FREEZE.md`) — tools RETIRING, not port
@@ -182,11 +185,14 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
 - **The RLS-bypass inventory is a standing check as of 2026-08-03 —
   P01-T05-FIX.** `SECURITY_MODEL.md` §11 enumerates every mechanism that can
   bypass row-level security: the five `rolbypassrls` roles with their `SET ROLE`
-  reachability, the six `security definer` functions with their pinned
-  `search_path`, table ownership and its `FORCE` state, and `service_role` with
+  reachability, every `security definer` function with its pinned `search_path`,
+  table ownership and its `FORCE` state, and `service_role` with
   ADR-005's quarantine. **It is re-derived from the live catalog at every phase
   exit gate, and a mechanism that appears in the derivation but not in the
   document is a hard failure of that gate.** Not waivable by OD, on §1's ground.
+  The counts are not restated here: they moved at P02-T06 and
+  `check_security_model_bypass.py` now asserts §11a.1's against `schema.sql`
+  both ways on every push.
 - **§11 is TWO TIERS as of 2026-08-04 — P01-T06-FIX.** §11a is B2S-owned: the
   `public` functions, the `public` tables and the privileged key, each
   individually justified, and an object there the project did not deliberately
@@ -228,21 +234,21 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
   finds something is landed as a permanent check by the fix task that follows,
   and one that finds nothing is landed too, because a probe that passes today is
   the one that catches tomorrow's regression.
-- **The static conformance set is still seven `docs-integrity` checks and five
-  `guards`, twelve in total, as of 2026-08-05 — P02-T01.** The two-way
-  empty-target probe covers **sixteen** (check, premise) cases, up from
-  fifteen, because `check_stated_counts.py`'s new SESSION_CONTEXT-register
-  assertion joins it — proven on a wrong figure, zero matching lines,
-  two matching lines, a removed target and an emptied target, all five
-  reverted byte-identical to snapshot, per PR-26. A new check adds a case to
-  it, per PR-28. Live-catalog conformance belongs to the readiness task
-  (OD-H8) and is not implemented yet.
+- **The static conformance set is nine `docs-integrity` checks and five
+  `guards`, fourteen in total, as of 2026-08-05 — P02-T06.** The two-way
+  empty-target probe covers **twenty-six** (check, premise) cases, up from
+  nineteen, because `check_security_model_bypass.py` joins it with seven
+  assertions — proven on eleven plant-and-revert cases, 11 of 11 caught, every
+  revert byte-identical to an in-memory snapshot per PR-26. A new check adds a
+  case per assertion, per PR-28. Live-catalog conformance belongs to the
+  readiness task (OD-H8) and to §11.5's re-derivation at each phase exit gate,
+  and neither is implemented as a script.
 
 ## Next action
 **The next P02 build task, on `phase/02-tenancy-and-access`** — the branch is
-open and carries P02-T04 and P02-T05. Do not branch from `main` again and do not
-open a pull request; `BRANCHING.md` §3 puts one consolidated PR at the phase
-exit, after the gate has run on the branch.
+open and carries P02-T04, P02-T05 and P02-T06. Do not branch from `main` again
+and do not open a pull request; `BRANCHING.md` §3 puts one consolidated PR at the
+phase exit, after the gate has run on the branch.
 
 Both of OD-G13's acts now exist in the database, so the invitation flow CF-121
 owns is the remaining tenancy write path, and it can assume a `Member` exists for
@@ -257,9 +263,14 @@ auth transaction and no document says what the person is shown.
 
 One owner decision is waiting and does not block P02: `cli_login_postgres`,
 §11b.4. Revocation was recommended at P01-T06-FIX and deliberately not
-performed. Its password expired 2026-08-03, nothing depends on it, and the
-CLI re-provisions one on the next link, so a reappearance is expected rather
-than a regression.
+performed. Nothing depends on it — re-measured at zero on every count at
+P02-T06 — and the CLI re-provisions one on the next link, so a reappearance is
+expected rather than a regression. **What P02-T06 found and CF-133 carries is
+that the credential is not permanently dead**: the CLI issues a fresh
+short-dated password on every `db push`, so a LOGIN role one `SET ROLE` from
+`postgres` is live for the length of each push window. Migrations 13 and 14 both
+ran inside one. "Revocation is cosmetic" holds only in the gaps between pushes,
+which is the one word of §11b.4 the second reading changes.
 
 What P02 should know before its first task:
 
@@ -300,7 +311,7 @@ Of the preconditions P02 owed before its first task, **two were discharged at
 P02-T03 and re-measured at P02-T04, and are not to be re-cited from this file**:
 zero `public.tenant` rows and zero `auth.users` in `b2s-production`, which is
 ADR-012's condition and CF-92's trigger, measured zero on both sides of every
-run; and the isolation suite green, now at 46, 0 FAIL, 0 LOST. Both were taken
+run; and the isolation suite green, now at 56, 0 FAIL, 0 LOST. Both were taken
 by query and by running, and both go stale the moment anything touches the
 schema — `SECURITY_MODEL.md` §4's re-run conditions decide when, not the fact
 that a task once measured them. P02-T04 changed the schema, which is why it
@@ -317,11 +328,16 @@ byte-identical to live. **`main` carries P01** as of `eda0f45`, so P02 branches
 from `main` per `BRANCHING.md` §2 and still verifies which branch it is standing
 on rather than assuming.
 
-**Both directions of the two new conformance checks are part of that
-precondition set now.** `check_module_spec_tree.py` and
-`check_data_model_schema.py` run in `docs-integrity` on every push, so P02 creating
-`features/` or `components/` must name the directory in `MODULE_SPEC.md` §1 and
-drop its `deferred` marker in the same commit, and P02 adding a table or an enum
-must land the §3 subsection and the roster line with the migration. That is
-OD-H9 working as intended: the document and the schema cannot drift for a phase
-and be reconciled at a gate, because the push fails first.
+**Both directions of the three conformance checks are part of that
+precondition set now.** `check_module_spec_tree.py`, `check_data_model_schema.py`
+and `check_security_model_bypass.py` run in `docs-integrity` on every push, so
+P02 creating `features/` or `components/` must name the directory in
+`MODULE_SPEC.md` §1 and drop its `deferred` marker in the same commit, P02
+adding a table or an enum must land the §3 subsection and the roster line with
+the migration, and **P02 adding a `security definer` function in `public` must
+land its §11a.1 row and move the two totals with it**. That is OD-H9 working as
+intended: the document and the schema cannot drift for a phase and be reconciled
+at a gate, because the push fails first. The static half is what those three
+cover; the platform half of §11 — §11b's three functions, five roles, ten paths
+and six event triggers — has no static premise to check against and is still the
+gate's live re-derivation, per §11.5.

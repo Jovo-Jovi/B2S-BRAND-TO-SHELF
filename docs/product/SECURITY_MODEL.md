@@ -343,11 +343,11 @@ entry here that the project did not deliberately create is a hard failure.
 #### 11a.1 `security definer` functions in `public`
 
 A `security definer` function executes with its owner's privileges and therefore
-reads past the caller's policies by design. **Six exist in schema `public`**, all
-owned by `postgres`, and all with `search_path` pinned to the empty string. The
-live catalog holds **nine** in total; the other three are Supabase's own and are
-enumerated in §11b.1. Stating the count without stating the tier is the defect
-§11.0 exists to close.
+reads past the caller's policies by design. **Eight exist in schema `public`**,
+all owned by `postgres`, and all with `search_path` pinned to the empty string.
+The live catalog holds **eleven** in total; the other three are Supabase's own
+and are enumerated in §11b.1. Stating the count without stating the tier is the
+defect §11.0 exists to close.
 
 The pin is the control that matters: without it, a caller who can create a
 schema can place their own table ahead of `public` on the search path and have
@@ -361,11 +361,54 @@ the function read theirs instead.
 | `enforce_tenant_active_owner()` | `''` | Counts a tenant's active owners across rows the acting member may not see, or the constraint could be defeated by hiding one |
 | `has_live_consent_grant(uuid)` | `''` | Evaluates the grant that gates operator reach, on a table the operator has no policy to read |
 | `operator_read_activity_event(uuid)` | `''` | The one declared operator read path. Refuses without a live grant, writes the log before returning, and omits `payload` from its return type |
+| `materialise_member()` | `''` | Writes the `member` row for a new identity, from a trigger on `auth.users`. `member` carries no INSERT policy at all and GoTrue's `supabase_auth_admin` holds no INSERT privilege on it, so there is no non-definer path by which authentication could create one. It holds no grant, so it is not an endpoint — see below |
+| `provision_tenant(text, text, text, text)` | `''` | Writes a `tenant`, its first active owner `membership` and the `activity_event` in one transaction. `tenant` carries no INSERT policy and `authenticated` holds no INSERT privilege on it; and the caller cannot yet be an owner of a tenant that does not exist, so `membership_insert_owner` would refuse the second row even where the privilege exists. Granted to every `authenticated` caller — the containment is below |
 
-Each is `EXECUTE`-revoked from `public` and granted explicitly — CF-105 records
-why: `revoke all on all tables` does not cover functions, and a `public`
-function defaults to `EXECUTE` for `PUBLIC`, which makes it an RPC endpoint any
-anonymous caller can reach.
+`EXECUTE` on a `public` function defaults to `PUBLIC`, which makes it an RPC
+endpoint any anonymous caller can reach — CF-105 records why: `revoke all on all
+tables` does not cover functions. All eight are therefore revoked from `public`,
+`anon` and `service_role`, and what remains is not uniform:
+
+- **Six are granted to `authenticated`**, and to nothing else:
+  `current_tenant_id()`, `is_operator()`, `is_current_tenant_owner()`,
+  `has_live_consent_grant(uuid)`, `operator_read_activity_event(uuid)` and
+  `provision_tenant(text, text, text, text)`.
+- **Two are granted to nobody at all.** `enforce_tenant_active_owner()` and
+  `materialise_member()` are trigger functions, and a trigger function's
+  `EXECUTE` privilege is checked when the trigger is created, never when it
+  fires. The trigger keeps working while the function stops being an endpoint,
+  which is the correct state for a function no caller should ever invoke
+  directly. `postgres` holds `EXECUTE` on both because it owns them.
+
+**`provision_tenant` is granted to every `authenticated` caller, and this states
+what that leaves reachable.** It is the first function here that both writes to
+the tenancy spine and is callable by anyone signed in, so the grant is stated
+with its limits rather than inferred from the function's name.
+
+A hostile authenticated caller **can**: create tenants, as many as they like,
+because nothing rate-limits it (CF-129); take any unused `slug`, which is
+globally unique, and so deny that name to everyone else (CF-129); and set
+`base_currency` and `default_locale` to any text at all, because neither is
+validated here and `tenant` carries no constraint for either (CF-130).
+
+A hostile authenticated caller **cannot**: name anybody else as the owner —
+there is no member parameter, the owner is `auth.uid()`, and naming a stranger
+would need an argument this signature does not have; call it without an
+authenticated identity, refused with `insufficient_privilege` on a null
+`auth.uid()`; call it holding no live `member` row, refused the same way, so a
+failed materialisation cannot be repaired through this path either; read or
+write any row other than the three it creates, because those three inserts are
+the only statements in the body that touch the spine; or carry the definer
+context any further, because the function returns a uuid and every read the
+caller makes afterwards goes back through RLS as `authenticated`.
+
+The shape is the one P02-T04 used for the `x-b2s-tenant` selector: the privilege
+is real, and what bounds it is that the only thing the caller can name is
+something they will own. What is left over is volume, not reach — which is why
+CF-129 and CF-130 are open rows about growth and validation and neither is an
+isolation finding. Assertions 25a to 25f prove the reach half, including two
+tenants provisioned this way isolated from each other across all six tables in
+both directions.
 
 #### 11a.2 Table ownership
 
@@ -400,6 +443,20 @@ application can hold. It is contained by construction, not by rule:
   `authenticator`, so it is reached only by an explicit `SET ROLE` that PostgREST
   issues only for a request whose key names it.
 
+**What P02-T05's grant moves here.** `service_role` is still the only *role* a
+request can bypass RLS as, and the four bullets above are unchanged: no grant in
+this schema makes `authenticated` a member of it, and §11b.3 measures that at
+ten cells, all false. What is no longer a safe reading is that the privileged
+key is the only API-reachable way past a policy. `provision_tenant` is a second
+one — a `postgres`-owned definer function callable by every signed-in identity —
+and it is contained by a different mechanism: not ADR-005's quarantine and the
+`ActivityEvent` rule, which govern a key that can do anything, but the function
+body's own two refusals and its absent member parameter, which govern a
+privilege that can do exactly one thing. §11a.1 carries that containment,
+because that is where the object lives. The distinction matters at a gate: a
+review that greps for the privileged client finds every use of the key and none
+of these, and §11a.1's table is the whole of the other list.
+
 ---
 
 ### §11b — Platform-owned
@@ -413,9 +470,12 @@ object is not a failure; an unlisted one is.
 
 #### 11b.1 `security definer` functions outside `public`
 
-Three, against §11a.1's six. All owned by `supabase_admin`, all with
-`search_path` pinned to the empty string — the same control §11a.1 relies on,
-applied by the platform rather than by us.
+**Three exist outside schema `public`**, against §11a.1's eight. All owned by
+`supabase_admin`, all with `search_path` pinned to the empty string — the same
+control §11a.1 relies on, applied by the platform rather than by us. Re-measured
+against the live catalog at P02-T06: the same three functions, the same owners,
+the same pin, the same reachability, and the same `EXECUTE` holder sets. Nothing
+in this subsection moved; §11a.1's figure did.
 
 | Function | Schema (owner) | Owner | `search_path` | `anon` | `authenticated` | `authenticator` |
 |---|---|---|---|---|---|---|
@@ -509,6 +569,24 @@ zero active sessions.
 
 **Its credential is already dead.** `VALID UNTIL 2026-08-03 13:03:08.837799+00`,
 measured expired at 2026-08-04 10:50:12 UTC. It cannot authenticate today.
+
+> **Re-measured 2026-08-05 15:13:17 UTC — P02-T06.** `VALID UNTIL` now reads
+> `2026-08-05 14:04:09.794236+00`, expired sixty-nine minutes before the
+> reading. It is the same role — same name, same `LOGIN`, same `NOINHERIT`
+> membership of `postgres` and `service_role`, and every dependency measurement
+> above re-taken at zero: zero relations, schemas, functions, types and
+> databases owned, zero table privileges, zero default-ACL entries, zero
+> `pg_shdepend` rows, no comment, zero active sessions, and exactly one
+> `cli_login_*` role in the cluster. Owner, schema, reachability and membership
+> are unchanged, so §11.5's tier b verdict on it is a **pass**, and the
+> re-provisioning is the one this subsection already forecast.
+>
+> What the second reading shows that the first could not is that the credential
+> is not permanently dead. It is dead *between* pushes and live for the window
+> each `supabase db push` opens, so "revocation is cosmetic while the password
+> stays expired" holds only in the gaps. Two of this branch's migrations ran
+> inside two such windows. Recorded as **CF-133**; the recommendation below is
+> unchanged and is still the owner's to take.
 
 **Recommended: revoke it.** It is residue of CLI linking, nothing needs it, and
 the shape it leaves behind — a login role one `SET ROLE` from `postgres` — is

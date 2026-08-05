@@ -287,6 +287,27 @@ nowhere, and `check_ledger.py` would pass on both while agreeing with neither.
 P02-T04 already did this correctly with PR-30. Method unrelated to the open
 phase still lands on `main`. Refines §3.2; supersedes nothing. Origin: CF-127.
 
+**PR-33 — A supplied figure is verified against the artifact before it is
+landed, and a correction that changes nothing is a correction, not a halt.**
+PR-24 makes a prompt carry the full text of every carry-forward it names, and
+PR-15 and PR-18 make a stated figure verifiable and a divergence a halt. Between
+them sits a case neither answers: prose the builder is asked to land verbatim,
+carrying a count **about a third artifact**, where the count is wrong and the
+finding survives being corrected. Landing it verbatim puts a false figure in a
+permanent record that every later reader will trust; halting spends a round trip
+on a number that changes nothing about what the task should do. Neither is
+right. The builder measures the figure against the artifact, lands the measured
+one, records the supplied wording immediately beside it so the record still
+shows what was claimed and by whom, and reports the correction as a deviation.
+**The halt is reserved for a divergence that changes the task** — a premise that
+makes the work unnecessary, impossible, or different in kind — which is what
+PR-18 is for and what this does not weaken. Origin: P02-T06, where CF-132's
+supplied text read "stated six and enumerated five" and §11a.1's table held six
+rows; the section was short of the schema by two either way, so the finding, the
+owner and the remedy were all unaffected. Verified programmatically, not by eye:
+the new check's stated-total-versus-table-rows assertion did not fire against
+the unedited document, and does fire when the total is planted at seven.
+
 ---
 
 ## 2. Environment quirks — never re-discover
@@ -600,6 +621,18 @@ phase still lands on `main`. Refines §3.2; supersedes nothing. Origin: CF-127.
   `TS1005: ',' expected` at a line that looks syntactically fine. Prose inside a
   template literal names types in words — "of type char" — rather than quoting
   them in backticks.
+- Learned at P02-T06, and it is the one measurement §11.0.1 does *not* warn
+  about: **`has_function_privilege(role, oid, 'EXECUTE')` does not fold in a
+  `NOINHERIT` membership.** `authenticator` is a `MEMBER` of `service_role`,
+  `service_role` holds `EXECUTE` on both `vault` functions, and
+  `has_function_privilege('authenticator', ...)` still answers **false** — which
+  is correct and is the same answer reading `aclexplode(proacl)` gives, so the
+  two agree and §11b.1's "direct EXECUTE" column can be taken from either. The
+  trap is the opposite of the `pg_has_role` one: here the convenient function
+  under-reports rather than over-reports, so it is safe for the *direct* question
+  and useless for the reachable-by-`SET ROLE` one. That third measurement has to
+  be built by hand — `pg_has_role(role, r, 'MEMBER')` joined against the ACL and
+  against schema `USAGE` — and it is the only one that finds the `vault` path.
 - Learned at P02-T05, two catalog typings that cost a full suite run each:
   `pg_policy.polcmd` is of type `"char"`, not `text`, so concatenating it has no
   unique operator and the query fails 42725 — cast it explicitly. And

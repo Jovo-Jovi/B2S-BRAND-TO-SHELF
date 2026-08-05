@@ -2211,3 +2211,70 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       an operator does not have. The measurement is still an exact set, so the proof
       cannot pass by reading more than one row, and no policy was altered to
       accommodate it. `DATA_MODEL.md` §3.2 states the consequence.
+- [x] CF-132 — P02-T05 added two `security definer` functions in `public`,
+      `materialise_member()` and `provision_tenant(text,text,text,text)`, and
+      `SECURITY_MODEL.md` was unchanged across the whole branch. §11a.1 stated six
+      and enumerated six while the schema held eight. §11a is the B2S-owned tier,
+      whose standard is individual justification, so an unlisted object this project
+      created is a specification defect even where no isolation property is
+      affected — and none is: `materialise_member()` holds no grant and
+      `provision_tenant` refuses a null `auth.uid()` and a caller with no live
+      member row. Cause: the reviewer's P02-T05 prompt named `DATA_MODEL.md`'s
+      subsections and did not name `SECURITY_MODEL.md` §11 — the third consecutive
+      task where an unnamed specification went stale, which is why this row lands a
+      check rather than a resolution. Owner: P02-T06.
+      ONE FIGURE CORRECTED AGAINST THE ARTIFACT BEFORE LANDING (PR-18). The
+      supplied text read "stated six and enumerated **five**". At `2be3ee6`
+      §11a.1's table held **six** rows — `current_tenant_id()`, `is_operator()`,
+      `is_current_tenant_owner()`, `enforce_tenant_active_owner()`,
+      `has_live_consent_grant(uuid)` and `operator_read_activity_event(uuid)` —
+      counted programmatically, not by eye: run against the unedited document,
+      `check_security_model_bypass.py`'s stated-total-versus-table-rows assertion
+      did **not** fire, and the same assertion fires in plant case 3 when the
+      stated total is moved to seven. The finding is unaffected: six stated, six
+      listed, eight in the schema, so the document was short by exactly the two
+      functions P02-T05 added. Landing "five" would have put a false figure in a
+      permanent ledger; the original wording is recorded here rather than
+      overwritten, per PR-07's reasoning.
+      CLOSED (P02-T06) — §11a re-derived against the schema, §11b re-measured
+      against the catalog, and `check_security_model_bypass.py` asserting both
+      ways. §11a.1 now carries eight rows, each individually justified, a
+      corrected `public` total of eight and a corrected catalog total of eleven;
+      the grant paragraph states the real split — six granted to `authenticated`,
+      two trigger functions granted to nobody — where it previously claimed all
+      were "granted explicitly", which was never true of
+      `enforce_tenant_active_owner()`. `provision_tenant`'s containment is stated
+      in the can/cannot shape P02-T04 used for the header selector. §11a.3 records
+      what the grant moves: `service_role` is still the only *role* a request can
+      bypass RLS as, and it is no longer the only API-reachable way past a policy.
+      §11b re-derived live and unchanged in every respect the tier asks about —
+      three functions outside `public` with identical owners, pins, reachability
+      and `EXECUTE` holder sets; five `rolbypassrls` roles out of sixteen
+      non-`pg_`; ten `MEMBER` paths, the same ten; ten `anon`/`authenticated`
+      cells, all false; six event triggers, none `security definer`, and zero
+      `CREATE` on twenty-five schemas for all three API roles. One §11b value did
+      move and is CF-133.
+- [ ] CF-133 — `cli_login_postgres`'s password is not permanently expired; it is
+      re-issued live by every `supabase db push`. §11b.4 recorded `VALID UNTIL
+      2026-08-03 13:03:08.837799+00`, measured expired, and concluded that
+      "revocation is cosmetic while the password stays expired". Re-measured at
+      P02-T06 the column reads `2026-08-05 14:04:09.794236+00` — a different,
+      later value, expired at the moment of reading by sixty-nine minutes. The
+      CLI issues a fresh short-dated password each time it links or pushes, which
+      §11b.4 forecast for the *role* and did not state for the *credential*. What
+      that leaves reachable: for the length of each push window this project
+      opens, a LOGIN role that is a `MEMBER` of `postgres` — carrying
+      `rolbypassrls` and §11a.2's ownership bypass — holds a live password.
+      Migrations 13 and 14 both ran inside such a window. Nothing is disclosed and
+      no isolation property is affected: the password is never written to this
+      repository and never printed, and the role owns zero relations, schemas,
+      functions, types and databases, holds zero table privileges, has zero
+      default-ACL entries, zero `pg_shdepend` rows, no comment and zero sessions,
+      all re-measured at P02-T06. What changes is one word: the standing
+      recommendation to revoke is not cosmetic, because the surface recurs on a
+      schedule this project controls rather than decaying once. Not actioned here
+      — dropping or altering a platform-managed role is the owner's call, as
+      §11b.4 already says, and revocation alone does not stop the next push
+      re-provisioning one. Owner: **the owner, on §11b.4's standing
+      recommendation**, and the P02 exit gate, which re-derives §11b and re-reads
+      this column.
