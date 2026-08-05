@@ -26,6 +26,17 @@ CF-118 — a removed scan target is reported as one `FAIL:` line naming the file
 never as a traceback. Detection and the exit code were already right; a traceback
 reads as a broken check rather than as a caught violation, and it does not tell
 the operator which of the two targets went missing.
+
+CF-122 — SESSION_CONTEXT.md restated carry-forward content (gap lists, line
+citations, open/closed status) that this file never asserted, and the
+restatements went stale between amendments while every check stayed green,
+because reconciling ids is not the same property as reconciling content. Two
+assertions close the class rather than the three found instances: the open-ids
+section may carry an id and an owner and nothing else, so there is no content
+left to go stale; and any carry-forward id named anywhere else in the file,
+outside the done-steps table, must be OPEN in the ledger — a closed id has
+nothing to say there that the ledger and the journal do not already say
+permanently.
 """
 import os
 import re
@@ -36,6 +47,17 @@ FAIL = False
 EM_DASH = "\u2014"
 
 MINIMUM_LEDGER_ROWS = 1
+
+# CF-122 — the open-ids section shape. Every line is either the fixed pointer
+# sentence, blank, or exactly "- CF-nn <em-dash> owner: <owner>" with no
+# description, no citation and no line number.
+OPEN_IDS_LINE_RE = re.compile(r"^- (CF-\d+) " + EM_DASH + r" owner: .+$")
+
+# CF-122 — the floor for the outside-done-steps scan. The open-ids section
+# alone always names at least one id while any carry-forward is open, so
+# finding zero ids outside the done-steps table means this check examined the
+# wrong span rather than a file with nothing to say.
+MINIMUM_IDS_OUTSIDE_DONE_STEPS = 1
 
 
 def fail(msg):
@@ -54,14 +76,109 @@ def read(path):
         return f.read()
 
 
-def session_open_ids():
-    path = "SESSION_CONTEXT.md"
-    text = read(path)
+def open_ids_section_span(text):
     m = re.search(r"## Open carry-forwards.*?\n(.*?)\n## ", text, re.S)
     if not m:
-        fail(f"{path}: could not isolate the open carry-forwards section")
-        return set()
-    return set(re.findall(r"^-\s*(CF-\d+)\s*" + EM_DASH, m.group(1), re.M))
+        fail("SESSION_CONTEXT.md: could not isolate the open carry-forwards section")
+        return None
+    return m.span(1)
+
+
+def done_steps_span(text):
+    m = re.search(r"## Done steps\n(.*?)\n## ", text, re.S)
+    if not m:
+        fail("SESSION_CONTEXT.md: could not isolate the done-steps table")
+        return None
+    return m.span(1)
+
+
+def check_open_ids_shape(ledger_ids):
+    """CF-122, assertion (i). Every line in the open-ids section is blank, the
+    fixed pointer sentence, or exactly '- CF-nn <em-dash> owner: <owner>' — and
+    the id set that shape yields equals the ledger's open set, id-for-id. A
+    row's substance (gap lists, line citations) has nowhere to go stale here
+    because this check does not let it land in the first place.
+
+    Returns the id set found, or None if the section could not be isolated at
+    all (already reported by open_ids_section_span).
+    """
+    text = read("SESSION_CONTEXT.md")
+    span = open_ids_section_span(text)
+    if span is None:
+        return None
+    section = text[span[0]:span[1]]
+
+    ids_seen = []
+    for line in section.splitlines():
+        stripped = line.strip()
+        if stripped == "" or stripped.startswith("Full text in"):
+            continue
+        m = OPEN_IDS_LINE_RE.match(line)
+        if not m:
+            fail(
+                "SESSION_CONTEXT.md open-ids section line does not match "
+                f"'- CF-nn {EM_DASH} owner: <owner>': {line!r}"
+            )
+            continue
+        ids_seen.append(m.group(1))
+
+    seen_ids = set(ids_seen)
+    if len(ids_seen) != len(seen_ids):
+        dupes = sorted({i for i in ids_seen if ids_seen.count(i) > 1})
+        fail(f"SESSION_CONTEXT.md open-ids section repeats id(s): {dupes}")
+
+    only_session = sorted(seen_ids - ledger_ids)
+    only_ledger = sorted(ledger_ids - seen_ids)
+    if only_session or only_ledger:
+        fail(
+            "open-id mismatch between SESSION_CONTEXT.md and CARRY_FORWARDS.md — "
+            f"only in SESSION_CONTEXT.md: {only_session}; "
+            f"only in CARRY_FORWARDS.md (open): {only_ledger}"
+        )
+    return seen_ids
+
+
+def check_ids_outside_done_steps_are_open(ledger_open_ids, ledger_all_ids):
+    """CF-122, assertion (ii). The done-steps table is historical and may name
+    a closed id — that is what a record of a past task is for. Every other
+    carry-forward id in SESSION_CONTEXT.md — the header, "Where we are",
+    "Frozen decisions in force", "Next action", the open-ids section itself —
+    must be OPEN in the ledger. A closed id has a permanent home in the ledger
+    and the journal; naming it again anywhere else in a file that is state,
+    not narrative, is exactly the restatement CF-122 closes.
+    """
+    text = read("SESSION_CONTEXT.md")
+    span = done_steps_span(text)
+    if span is None:
+        return
+    start, end = span
+    outside = text[:start] + text[end:]
+    found = re.findall(r"CF-\d+", outside)
+
+    if len(found) < MINIMUM_IDS_OUTSIDE_DONE_STEPS:
+        fail(
+            f"SESSION_CONTEXT.md: {len(found)} carry-forward id mention(s) found "
+            f"outside the done-steps table, minimum {MINIMUM_IDS_OUTSIDE_DONE_STEPS}. "
+            "The open-ids section alone always names at least one while any "
+            "carry-forward is open, so finding none means this check examined "
+            "the wrong span (PR-27)"
+        )
+        return
+
+    mentioned = set(found)
+    closed_mentions = sorted(mentioned & (ledger_all_ids - ledger_open_ids))
+    unknown_mentions = sorted(mentioned - ledger_all_ids)
+    if closed_mentions:
+        fail(
+            "SESSION_CONTEXT.md names CLOSED carry-forward id(s) outside the "
+            f"done-steps table, where only OPEN ids may appear: {closed_mentions}"
+        )
+    if unknown_mentions:
+        fail(
+            "SESSION_CONTEXT.md names carry-forward id(s) with no ledger row at "
+            f"all, outside the done-steps table: {unknown_mentions}"
+        )
+    return len(found)
 
 
 def ledger_open_rows():
@@ -184,18 +301,12 @@ def main():
         )
         sys.exit(1)
 
-    session_ids = session_open_ids()
     ledger_rows = ledger_open_rows()
     ledger_ids = set(ledger_rows.keys())
+    ledger_all_ids = set(all_rows)
 
-    only_session = sorted(session_ids - ledger_ids)
-    only_ledger = sorted(ledger_ids - session_ids)
-    if only_session or only_ledger:
-        fail(
-            "open-id mismatch between SESSION_CONTEXT.md and CARRY_FORWARDS.md — "
-            f"only in SESSION_CONTEXT.md: {only_session}; "
-            f"only in CARRY_FORWARDS.md (open): {only_ledger}"
-        )
+    seen_ids = check_open_ids_shape(ledger_ids)
+    outside_count = check_ids_outside_done_steps_are_open(ledger_ids, ledger_all_ids)
 
     gates, phase_gates = passed_moments()
     if not gates and not phase_gates:
@@ -224,7 +335,10 @@ def main():
         f"{len(all_rows)} ledger row(s), minimum {MINIMUM_LEDGER_ROWS}; every open "
         f"row names an owner; {checked} owner(s) checked against "
         f"{len(gates)} passed gate(s) {sorted(gates)} and "
-        f"{len(phase_gates)} passed phase-exit gate(s) {sorted(phase_gates)}"
+        f"{len(phase_gates)} passed phase-exit gate(s) {sorted(phase_gates)}; "
+        f"open-ids section shape-checked at {len(seen_ids)} line(s); "
+        f"{outside_count} id mention(s) outside the done-steps table, all OPEN, "
+        f"minimum {MINIMUM_IDS_OUTSIDE_DONE_STEPS}"
     )
 
 

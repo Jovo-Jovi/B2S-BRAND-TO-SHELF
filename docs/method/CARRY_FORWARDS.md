@@ -1250,6 +1250,16 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       reproduce it.
       Owner: **the P02 entry checklist for `lib/`; the task that creates each of
       `components/` and `features/` for those roots.**
+      AMENDED (P02-T02) — **`lib/` is covered.** `check-no-runtime-cdn.mjs` and
+      `check-no-hardcoded-literals.mjs` both add `lib` to `ROOTS`. Before: 4
+      files scanned (`app`: 3, `proxy.ts`: 1), floor 1. After: 7 files
+      (`lib`: 3 more), floor raised to 7 on both checks — the true count, not
+      the placeholder that let `lib/` ship unscanned in the first place. No
+      violation found under `lib/` by either check. Row stays OPEN:
+      `components/` and `features/` are not yet created, so this task's
+      write set does not reach them. Owner: **the task that creates
+      `components/`, for that root; the task that creates `features/`, for
+      that root.**
 - [x] CF-95 — The deployment and drift pipeline is wired but not live, and both
       remaining steps are owner actions rather than builder work.
       (1) `vercel git connect` failed against the repository: the Vercel GitHub
@@ -1835,7 +1845,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       that characterisation stated. The `MEMBER`-versus-`USAGE` rule is now
       mandatory in §11.0.1, with the `NOINHERIT` reason, so the next gate cannot
       ask the wrong question.
-- [ ] CF-114 — ADR-012 retired the staging environment, and three documents
+- [x] CF-114 — ADR-012 retired the staging environment, and three documents
       still describe it as one that exists. A sweep of all 110 non-vendored
       files at P01-T06-FIX found 37 matching lines in 9 files; six of the nine
       are correct — the append-only journal and `ADR.md`, `PRECEDENTS.md`'s two
@@ -1862,6 +1872,20 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       batched task across three files, PR-20 puts it in the task that opens all
       three, and fixing a third of it would leave a row that looks half-closed
       with no record of which third. Owner unchanged: the P02 entry checklist.
+      CF-114 — CLOSED (P02-T02). Two different treatments, per the row's own
+      split. `BUILD_PHASES.md`:33 "the **live** staging database" → "the
+      **live** production database"; :47 "data contract live in staging" →
+      "data contract live in production"; :51 "Supabase staging and production
+      projects" → "the Supabase production project" — B2S documents describing
+      B2S, corrected. `ARCHITECTURE.md`:118 "Types are generated from staging."
+      → "Types are generated from production." — the one sentence the standing
+      ADR-012 amendment note at :108-113 did not already cover; :104, :105,
+      :110-111, :142 and :145 untouched. `DEV_OS_REFERENCE.md`:95, :118, :205
+      — a record of BETK as it was practised, not of B2S — annotated, not
+      corrected, per new precedent PR-29: a dated blockquote naming ADR-012
+      follows each sentence, and each of the three original sentences is
+      byte-unchanged. All three files handled; the row's batching condition is
+      met.
 - [x] CF-115 — `MODULE_SPEC.md` §1 describes the application tree and nothing
       else. It names 53 paths, and the tree holds all 20 that should exist, so the
       forward direction is clean. The reverse direction is not: §1 names **no**
@@ -2008,3 +2032,16 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       its migration and on assertions that an invitation issued to an address with
       no `Member` is accepted by exactly the person who proves that address, and by
       nobody else.
+- [x] CF-122 — `SESSION_CONTEXT.md` restates carry-forward content that no check
+      asserts, and three restatements were stale at `ffa226b`: the open-ids
+      section's CF-93 line still assigned gaps 1, 2, 3, 4 and 7 to P02 after the
+      row recorded four of them closed; its CF-114 line carried
+      `BUILD_PHASES.md`:25/:37/:41, superseded at M-01 by :33/:47/:51; and the
+      "Where we are" narrative still listed CF-99 as open awaiting the owner.
+      `check_ledger.py` reconciles ids and never summaries, so the rot was
+      invisible to a green pipeline. Cause: P02-T01's Task 5 amended row substance
+      in one file and instructed "leave the rest" in another — a reviewer defect,
+      not a build one. Owner: P02-T02.
+      CLOSED (P02-T02) — the section carries ids and owners only, the narrative no
+      longer restates row contents, and two assertions in `check_ledger.py` hold
+      both properties.

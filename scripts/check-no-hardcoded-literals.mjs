@@ -1,22 +1,26 @@
 #!/usr/bin/env node
 // ARCHITECTURE.md §6 — "No brand, business or locale literal outside
 // configuration, translation resources or tokens". Scans application source
-// under app/ (excluding the message catalogs and the token stylesheet, which
-// are the named exemptions) for a hex colour, an Arabic character, a bare
-// URL or a phone-shaped digit run. Each pattern asserts the SHAPE the
-// forbidden value takes (PR-22), not a word this file is not allowed to say.
+// under app/, lib/ and the root proxy (excluding the message catalogs and the
+// token stylesheet, which are the named exemptions) for a hex colour, an
+// Arabic character, a bare URL or a phone-shaped digit run. Each pattern
+// asserts the SHAPE the forbidden value takes (PR-22), not a word this file
+// is not allowed to say.
 
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, extname, sep } from "node:path";
 
-const ROOTS = ["app", "proxy.ts"];
+const ROOTS = ["app", "proxy.ts", "lib"];
 const SCANNED_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx"]);
 const EXEMPT_PATH_SEGMENT = `${sep}dictionaries${sep}`;
 
 // PR-27 — a check states the minimum it expected to examine and fails when it
 // examined less. A root that is renamed, moved, or reduced entirely to exempt
 // files leaves this guard reporting "OK ... 0 file(s) scanned" at exit 0.
-const MINIMUM_FILES = 1;
+// CF-94 — the floor is the true count across all three roots as of the
+// commit that adds `lib/`, not the placeholder 1 that let `lib/` ship
+// unscanned in the first place.
+const MINIMUM_FILES = 7;
 
 const CHECKS = [
   { name: "hex colour", pattern: /#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3}(?:[0-9a-fA-F]{2})?)?\b/ },

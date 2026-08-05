@@ -30,7 +30,7 @@ another.
 
 **EXIT VERIFICATION.** A dedicated read-only heavyweight task producing a
 line-by-line PASS/FAIL ledger against the definition of done and the acceptance
-standards, verified against the **live** staging database and real policies by
+standards, verified against the **live** production database and real policies by
 catalog query, never against a prior summary. One hard failure blocks sign-off,
 spawns a named FIX task, and the verification is re-run in full. *Its adversarial
 probes become permanent CI checks or suite assertions in the fix task that
@@ -44,11 +44,11 @@ pull request. Branch deleted only on verified containment.
 ## The phases
 
 ### P01 — Foundation
-*No features.* Skeleton, data contract live in staging, gates.
+*No features.* Skeleton, data contract live in production, gates.
 
 `DATA_MODEL.md` authored just-in-time, landed no later than the first migration ·
 `MODULE_SPEC.md` with the folder tree · Next.js application shell with RTL and
-the token system · Supabase staging and production projects · the authoritative
+the token system · the Supabase production project · the authoritative
 schema for the tenancy spine with RLS on every table · generated types and the
 drift job · the nine CI guards from `ARCHITECTURE.md` §6 · the privileged-client
 quarantine and its guard · the RLS test harness.

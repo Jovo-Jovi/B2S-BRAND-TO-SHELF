@@ -93,6 +93,12 @@ The phase-pack prompt is the **spec of record**. It may be expanded at execution
 
 ### 3.4 PASS/FAIL ledgers and the FIX → RE-RUN pattern
 Every phase ends with a dedicated **exit-verification task** run by the heavyweight model class: a line-by-line ledger of the definition-of-done and acceptance criteria, verified against the **live systems** (staging DB, real policies via catalog queries), not just the code. One hard failure blocks sign-off and spawns a named FIX task; the exit verification is then **re-run in full** before sign-off.
+
+> **B2S annotation, 2026-08-05 — P02-T02.** The sentence above is true of
+> BETK, which had a staging database. B2S has one environment under
+> ADR-012, named production; this file records BETK's method as practised
+> and the sentence stands unchanged (PR-29).
+
 > **BETK:** Phase 02's T08 exit gate found a subtle OTP-limiter defect (19-line ledger, 18 PASS / 1 HARD FAIL) → T08-FIX → T08 RE-RUN (all 19 PASS, no regression) → sign-off. The gate's job is to *attack* the build, not to confirm it.
 
 ### 3.5 The carry-forward protocol
@@ -119,6 +125,12 @@ Generic principles, each enforced by *structure or CI* rather than discipline al
 | **Migration discipline** | One authoritative SQL source; ordered files split verbatim; one applier per environment; alignment verified after any exception | CLI-first (`db push`) as the pattern; MCP apply allowed only by explicit human authorization, with the committed file as source-of-truth — and any resulting ledger divergence repaired immediately (see incident 7) |
 | **Design ownership boundary** | The visual contract has one owner; builders compose and wire, never restyle; gaps route back to the owner | `components/ui` + `components/shared` owned by the design surface; token-only styling; land tasks are mechanical |
 | **Server/client module split is physical** | Server-only code lives in separate files, guarded, never behind runtime checks in shared modules | `posthog.ts` (client-safe) vs `posthog.server.ts` (`server-only`) after the webpack-require incident (see incident 4) |
+
+> **B2S annotation, 2026-08-05 — P02-T02.** The "Types are generated; drift
+> is a failure" row above is true of BETK, whose `types-drift` job
+> regenerated from a staging project. B2S has one environment under
+> ADR-012, named production; this file records BETK's method as practised
+> and the row stands unchanged (PR-29).
 
 ---
 
@@ -203,6 +215,12 @@ Scope creep (freeze + ODs); silent patches (carry-forward protocol); chat-memory
 6. **Stand up CI with the guards on day one** — service-import quarantine, validation coverage, types-drift, sequential blocking jobs, fail-loudly on missing secrets. Add new guards the moment a new rule is born.
 7. **Create `SESSION_CONTEXT.md` + `DEVELOPMENT_JOURNAL.md` before the first task**, with the update template and the session opener convention.
 8. **Phase 01 is foundation only** — skeleton, data contract live in staging, generated types, gates. No features.
+
+> **B2S annotation, 2026-08-05 — P02-T02.** Item 8 above is true of BETK,
+> which ran its data contract live in staging. B2S has one environment
+> under ADR-012, named production; this file records BETK's method as
+> practised and the item stands unchanged (PR-29).
+
 9. **Decide the design-system placement** (early: real components before feature pages compose them; or late: polish pass) and record it.
 10. **Write phase packs one at a time**, each generated after the prior phase's sign-off so it can absorb the carry-forwards.
 11. **Adopt the ceremony budget rule:** full ceremony for anything touching auth, authorization, money, or schema; lighter ceremony for compose-only tasks — but the ledger, the journal, and the carry-forward protocol are never skipped.

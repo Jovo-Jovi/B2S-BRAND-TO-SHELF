@@ -1,20 +1,22 @@
 #!/usr/bin/env node
 // ARCHITECTURE.md §6 — "No runtime CDN". Fonts and libraries are bundled;
 // nothing in the application source may load a script or stylesheet from an
-// external origin at request time. Scans app/ and the root proxy for a JSX
-// <script> or <link> element whose src/href resolves to an external URL.
+// external origin at request time. Scans app/, lib/ and the root proxy for a
+// JSX <script> or <link> element whose src/href resolves to an external URL.
 
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, extname } from "node:path";
 
-const ROOTS = ["app", "proxy.ts"];
+const ROOTS = ["app", "proxy.ts", "lib"];
 const EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx"]);
 
 // PR-27 — a check states the minimum it expected to examine and fails when it
 // examined less. Without this floor the guard reports "OK ... 0 file(s)" and
 // exits 0 the day a scan root is renamed or moved, which is a guard that has
-// stopped guarding while still reporting success.
-const MINIMUM_FILES = 1;
+// stopped guarding while still reporting success. CF-94 — the floor is the
+// true count across all three roots as of the commit that adds `lib/`, not
+// the placeholder 1 that let `lib/` ship unscanned in the first place.
+const MINIMUM_FILES = 7;
 
 const EXTERNAL_TAG = /<(script|link)\b[^>]*\b(?:src|href)\s*=\s*["'`]((?:https?:)?\/\/[^"'`]+)["'`]/gi;
 

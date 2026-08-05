@@ -115,7 +115,7 @@ defect.
 `service_role` exists only in Vercel environment variables, per environment. Never
 in the repository, never in a client bundle, never in a migration file (OD-G7 §9).
 
-Types are generated from staging. A diff between generated types and the committed
+Types are generated from production. A diff between generated types and the committed
 ones fails the pipeline loudly — including when the secret is absent. A job that
 skips silently is worse than one that fails.
 

@@ -242,6 +242,15 @@ A gate's rigour must not depend on whoever runs it having the same idea twice.
 Origin: OD-H11, and the two-way empty-target probe that found four checks passing
 on nothing at one gate and a fifth at the next.
 
+**PR-29 — A record of another project is annotated, never corrected.**
+`DEV_OS_REFERENCE.md` records the BETK method as it was practised, and BETK had
+a staging environment. A sentence in it that is false of B2S is still true of
+its subject; rewriting it falsifies the record rather than correcting it. Where
+a B2S decision contradicts such a document, a dated annotation names the
+decision and its scope and the original sentence stands. Extends PR-07's
+reasoning from `docs/requirements/` to any record of a project or state other
+than the current one. Origin: CF-114.
+
 ---
 
 ## 2. Environment quirks — never re-discover
