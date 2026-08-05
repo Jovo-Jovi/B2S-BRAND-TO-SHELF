@@ -1211,6 +1211,21 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       Owner: **P02 for gaps (1), (2), (3), (4) and (7); P03 for gaps (5) and
       (6)**, each at the entry checklist of its phase, so the amendment is made
       before the code that depends on it rather than after.
+      AMENDED (P02-T01) — four of the seven gaps were closed by earlier tasks and
+      this row was never amended to say so. Verified against the current document
+      rather than against this row: (1) `DATA_MODEL.md` §3's lead reads "Six tables
+      and four enums for Release 1"; (2) §2 reads "Four helper functions" and
+      tabulates `is_current_tenant_owner()`; (5) §1's departures table names
+      `operator`, `activity_event` and `consent_grant` with reasons; (7) §5 rule 3
+      reads "Every policy with a write side — INSERT, UPDATE, or ALL". Gaps (1),
+      (2), (5) and (7) are CLOSED. Gap (3) is resolved at the decision level by
+      OD-G14; its implementation is owed by the P02 task that writes session
+      resolution. Gap (4) is resolved by OD-G15 and by this task's amendment to
+      `TENANCY_MODEL.md` §3 rule 1. **Gap (6) alone remains open** — `updated_at`
+      is specified with no maintenance trigger and is inert on all six tables; the
+      schema carries exactly one trigger and it is
+      `membership_active_owner_required`. Owner: **P03**, at its entry checklist,
+      being the first phase that creates new tables under the rule.
 - [ ] CF-94 — `check-no-runtime-cdn` and `check-no-hardcoded-literals` scan `app/`
       and `proxy.ts` only, which was the whole of the application source when
       P01-T01 authored them. `lib/` exists as of P01-T02-RESUME and is not
@@ -1403,7 +1418,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       left to re-derive. `package.json` carries a comment naming CF-98 and PR-25
       beside the overrides, so the day an upstream release consumes them, the
       reason they exist is next to them.
-- [ ] CF-99 — A pull request exists on `phase/01-foundation` that the task
+- [x] CF-99 — A pull request exists on `phase/01-foundation` that the task
       forbade, and it is not the builder's. P01-T02's done-when says "No pull
       request — T03 runs the isolation proof on this branch first, and the phase
       gate follows it." No `gh pr create` was issued by this task. PR #2, base
@@ -1436,6 +1451,11 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       unchanged: `ci` is still red at `types-drift` until CF-95's secrets are
       set, and `BRANCHING.md` §3 still wants one consolidated PR at the phase
       exit gate.
+      CLOSED (P02-T01) — the owner merged PR #2 at `eda0f45`, which is the decision
+      this row waited for. `phase/01-foundation` is deleted locally and on origin on
+      verified containment: `git log main..f061489` returns 0 commits, f061489 is an
+      ancestor of `main`, and `git ls-remote` returns refs/heads/main with no phase
+      head.
 - [x] CF-100 — `DATA_MODEL.md` §3 stated "Seven tables for Release 1" while §3.7
       declares `role` an enum and explicitly not a table. The document's stated
       count contradicted its own enumeration, in the document that defines the
@@ -1519,6 +1539,18 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       so the change is visible when it is made. Owner retargeted: **P02, with
       authentication** — no longer CF-93 gap (3) alone, and no longer anything to
       do with `membership_insert_owner`, which is settled.
+      AMENDED (P02-T01) — the remainder is resolved at the decision level by OD-G14.
+      One active membership resolves implicitly, more than one requires an explicit
+      held selection, and anything else resolves null, so
+      `current_tenant_id()` no longer fails closed by absence of a rule.
+      `membership_active_is_self_only` and the invite-then-accept rule STAY, on the
+      restated ground that forcing a `Membership` onto another person is a write
+      against their identity — sufficient independent of the lockout. What remains
+      open is implementation and proof. Owner: **the P02 task that writes session
+      resolution**, closing on the isolation suite asserting a member with two
+      active memberships resolving to the selected tenant and to nothing else, an
+      unheld selection resolving null, and `SECURITY_MODEL.md` §1's availability
+      property re-proven with the second membership present.
 - [x] CF-104 — `DATA_MODEL.md` §2 narrows operator reach to "`tenant`,
       `subscription` and `activity_event` **metadata columns only**", and no
       column-level narrowing exists. Found by P01-T03 proof 7, against the live
@@ -1952,3 +1984,27 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       on the case that found it — quarantine present, emptied, exit 1 with a
       message — with the removal case re-run alongside it and still erroring, so
       detection was extended rather than moved.
+- [x] CF-120 — `SESSION_CONTEXT.md` states the decision register twice in the
+      present tense, at :228 as 79 and at :246 as 84, and only the second is true.
+      `check_stated_counts.py` asserts `DECISIONS.md` against itself and nothing
+      asserts the figure in the state file. Owner: P02-T01, batched per PR-20.
+      CLOSED (P02-T01) — the :228 bullet now states where the register was promoted
+      without restating a total, exactly one current-tense figure remains, and
+      `check_stated_counts.py` asserts it against `DECISIONS.md` §2.
+- [ ] CF-121 — The invitation model had no way to invite anyone who had not already
+      signed up, and no way to find them if they had. `member.id` references
+      `auth.users (id)` and `membership.member_id` is `not null references
+      public.member (id)`, so an invitation required an existing `Member` row. There
+      is no INSERT policy on `member` at all — self-select, colleague-select and
+      self-update, nothing else — so creating one is a privileged path no document
+      specified. `member_select_colleague` shows colleagues only, so an `Owner`
+      could not discover a stranger's `member.id` through the ordinary API. No
+      invite-by-email concept existed in the schema or in `DATA_MODEL.md`.
+      RESOLVED AT THE DESIGN LEVEL (P02-T01) by **OD-G16** — an invitation is keyed
+      to an email address and signing in through the link is the acceptance. The row
+      stays OPEN because implementation and proof are owed, on the same footing as
+      CF-103's remainder in this commit. Owner: **the P02 task that writes the
+      invitation flow**, closing on the `DATA_MODEL.md` §3 amendment landing with
+      its migration and on assertions that an invitation issued to an address with
+      no `Member` is accepted by exactly the person who proves that address, and by
+      nobody else.

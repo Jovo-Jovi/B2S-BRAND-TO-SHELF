@@ -18,7 +18,7 @@ FAIL = False
 
 EM_DASH = "\u2014"
 
-MINIMUM_ASSERTIONS = 5
+MINIMUM_ASSERTIONS = 6
 
 ASSERTIONS = 0
 
@@ -131,6 +131,50 @@ def check_decisions():
     actual = len(rows)
     if actual != stated_total:
         fail(f"{path}: stated {stated_total}, OD table rows counted {actual}")
+
+
+def check_session_context_register():
+    """CF-120: `SESSION_CONTEXT.md` stated the decision-register total twice in
+    the present tense, at two different figures, and nothing tied either one to
+    `DECISIONS.md` itself. This asserts there is exactly one present-tense
+    statement of the total left, and that it agrees with `DECISIONS.md` §2 —
+    the file that actually enumerates the register.
+    """
+    path = "SESSION_CONTEXT.md"
+    text = read(path)
+    if text is None:
+        return
+    asserted()
+
+    matches = re.findall(
+        r"`DECISIONS\.md`\s+now carries \*\*(\d+)\*\*\s+signed ODs", text
+    )
+    if len(matches) == 0:
+        fail(f"{path}: no line states the decision-register total in the "
+             f"present tense (expected exactly 1)")
+        return
+    if len(matches) > 1:
+        fail(f"{path}: {len(matches)} lines state the decision-register total "
+             f"in the present tense, expected exactly 1")
+        return
+
+    stated_total = int(matches[0])
+
+    dec_path = "docs/product/DECISIONS.md"
+    dec_text = read(dec_path)
+    if dec_text is None:
+        return
+    m = re.search(
+        r"## 2\. Decision register\s*\n+(\d+) decisions, all signed", dec_text
+    )
+    if not m:
+        fail(f"{dec_path}: could not find the stated decision total")
+        return
+    dec_total = int(m.group(1))
+
+    if stated_total != dec_total:
+        fail(f"{path}: states {stated_total} signed ODs, {dec_path} §2 states "
+             f"{dec_total} decisions — the two must agree")
 
 
 def check_calc_spec():
@@ -249,6 +293,7 @@ def check_data_model():
 def main():
     check_domain_model()
     check_decisions()
+    check_session_context_register()
     check_calc_spec()
     check_adr()
     check_data_model()

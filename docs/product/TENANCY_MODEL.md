@@ -86,8 +86,13 @@ Five roles, tenant-scoped, carried on `Membership` (OD-G2).
 
 **Rules.**
 
-1. **Every `Tenant` has exactly one `Owner` at all times.** Transfer is atomic;
-   the role cannot be vacated.
+1. **Every `Tenant` has at least one active `Owner` at all times, and may have
+   several** (OD-G15). The constraint is enforced by the
+   `membership_active_owner_required` trigger, which refuses any write leaving a
+   tenant at zero active owners. Transfer may therefore overlap rather than
+   vacate. The consequence is stated rather than left to be discovered: any
+   active `Owner` may suspend or archive another `Owner`'s `Membership`, bounded
+   only by that trigger.
 2. **Roles are additive per `Membership`, never per record.** There is no
    per-invoice or per-product permission. Record-level permissions are the
    failure mode that makes an access model unauditable.

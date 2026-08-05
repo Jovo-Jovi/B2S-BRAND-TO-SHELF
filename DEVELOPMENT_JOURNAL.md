@@ -1979,3 +1979,52 @@ a directory root has to empty the directory.
 retries. And the sandbox itself is built from `git ls-files`, which meant the two
 new checks were invisible to it until they were staged — a check proves nothing
 in a sandbox it was never copied into.
+
+2026-08-05 | Sonnet (standard) | P02 · P02-T01 — land OD-G13 to OD-G16 and reconcile the ledger | DECISIONS.md, TENANCY_MODEL.md, CARRY_FORWARDS.md, check_stated_counts.py, SESSION_CONTEXT.md | none | P02 entry preconditions, verified by query
+
+Session summary: Four signed decisions landed — OD-G13 (authentication
+providers), OD-G14 (session-to-membership binding), OD-G15 (tenant ownership
+invariant), OD-G16 (invitation keyed to an email address) — appended to
+`DECISIONS.md` §2 Group G and authored in full in §3. The register moved 84 →
+**88**, verified programmatically rather than by eye (PR-15). `TENANCY_MODEL.md`
+§3 rule 1 is amended to match OD-G15 — at least one active `Owner`, may have
+several, bounded by the `membership_active_owner_required` trigger — and
+nothing else in §3 changed.
+
+**The CF-93 reconciliation is the finding worth recording.** CF-93 is a
+reviewer-maintained row naming seven specification gaps in `DATA_MODEL.md`'s
+Platform tier, five owned by P02. Re-reading the current document rather than
+trusting the row's own text found that four of those five — (1) the table
+count, (2) the helper-function count, (5) the departures table, (7) the
+`WITH CHECK` rule — were already closed by earlier tasks (P01-T05-FIX,
+P01-T06-FIX, P01-T04) and the row was never amended to say so. `check_ledger.py`
+did not catch this, and cannot: it proves an open row's owner clause names a
+moment that has not yet passed, never that the claim the row makes is still
+true against the document it describes. A ledger can be mechanically
+well-formed — every owner reachable — and substantively stale at the same
+time, and only a re-read against the live document catches the second kind of
+error. Gap (3), the session-to-membership binding, is now resolved at the
+decision level by OD-G14, and gap (4), the ownership cardinality, by OD-G15 and
+this task's `TENANCY_MODEL.md` amendment; both still owe implementation to the
+P02 task that writes session resolution. Gap (6) alone remains open, owned by
+P03 at its entry checklist.
+
+CF-99 closed on a condition that was already spent: PR #2 merged at `eda0f45`,
+`phase/01-foundation` deleted on verified containment, reconfirmed here —
+`git log main..f061489` returns 0 commits, `f061489` is an ancestor of `main`,
+`git ls-remote` shows no phase head. CF-103 amended on the same ground as CF-93
+gap (3): OD-G14 resolves the design question the row was waiting on;
+implementation and proof are owed to the P02 task that writes session
+resolution. CF-120 opened and closed in the same task — `SESSION_CONTEXT.md`
+stated the register total twice, once stale, and `check_stated_counts.py`
+gained a sixth assertion tying the file's one remaining present-tense statement
+to `DECISIONS.md` §2, proven by five plant-and-revert cases (a wrong figure,
+zero matching lines, two matching lines, a removed target, an emptied target),
+every one reverted byte-identical to an in-memory snapshot (PR-26), taking the
+two-way empty-target set from fifteen cases to sixteen (PR-28). CF-121 opened:
+the invitation model had no way to invite or find a non-member; resolved at the
+design level by OD-G16, implementation owed to the task that writes the
+invitation flow. Ledger: 106 rows, 35 open — unchanged in count, one closed and
+one opened. All seven `docs-integrity` checks and all five `guards` green. No
+application code, no migration, no schema change; tenant isolation is N/A —
+this task touches no data path.

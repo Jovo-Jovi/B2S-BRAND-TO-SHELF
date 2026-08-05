@@ -16,7 +16,7 @@ never edited in place.
 
 ## 2. Decision register
 
-84 decisions, all signed. None open.
+88 decisions, all signed. None open.
 
 ### Group A — Product identity
 
@@ -125,6 +125,10 @@ never edited in place.
 | **G10** | **Operator sees account metadata, usage and billing only. Never tenant business data.** Support access requires ConsentGrant and is logged. Future: subscription-gated feature flags. | SIGNED |
 | **G11** | **Print masters and large assets in tenant-isolated object storage, never table rows.** Base64-in-rows is what broke the legacy tools. | SIGNED |
 | G12 | Design Assistant: R3, paid tier. May read brand config, template metadata and product names only. Never buyer, invoice, payment or financial data. | SIGNED |
+| **G13** | **Email-and-password and Google coexist as sign-in mechanisms. One email address resolves to exactly one `member.id`, whichever mechanism was used; an identity that cannot be deterministically linked fails closed. An invitation may be accepted only where the platform has established control of the invited identity — satisfied today by a verified email and nothing else. Authentication creates at most a `Member`: never a `Membership`, never a `Role`, never a `Tenant`.** | SIGNED 2026-08-04 |
+| **G14** | **The tenant a session acts in is a caller-supplied selector resolved server-side against an active `Membership` on every request. One active membership resolves implicitly; more than one requires an explicit held selection; anything else resolves null.** | SIGNED 2026-08-04 |
+| **G15** | **Every `Tenant` has at least one active `Owner` at all times. More than one is permitted.** | SIGNED 2026-08-04 |
+| **G16** | **An invitation is keyed to an email address, not to an existing `Member`. Signing in through the invitation link establishes control of the address and activates the `Membership` in the same act.** | SIGNED 2026-08-04 |
 
 ### Group H — Quality & acceptance
 
@@ -241,4 +245,97 @@ would not have happened.
 
 **Forecloses.** A gate whose rigour depends on whoever runs it remembering last
 time's ideas.
+
+### OD-G13 — Authentication providers
+**Signed 2026-08-04.**
+
+Email-and-password and Google coexist as sign-in mechanisms.
+
+**Identity invariant.** The platform never holds two `Member` identities for one
+person. Expressed so it can be asserted: one email address resolves to exactly
+one `member.id`, whichever mechanism was used. Where an authenticating identity
+cannot be deterministically linked to the existing `Member`, the flow fails
+closed — no `Member` is created, no linkage is asserted, and the person uses the
+mechanism they registered with.
+
+**Acceptance invariant.** An invitation may be accepted only where the platform
+has established control of the invited identity. Under every mechanism now in
+force that condition is satisfied by a verified email address and by nothing
+else, whether the provider asserts the verification or the email-and-password
+flow completes it. Adding a second satisfying condition requires an amendment to
+this decision.
+
+**Enforcement.** Both invariants are enforced in the data layer (ADR-003). No
+enforcement point exists today: `supabase/schema.sql` carries no verification
+concept, and `membership_accept_invitation` gates only on `member_id =
+auth.uid()` and status. The task that writes the acceptance path lands the
+mechanism and its assertions, or it does not land (OD-H9).
+
+**Authorization.** Authentication establishes identity and creates at most a
+`Member`. It never creates a `Membership`, never grants a `Role`, never confers
+authorization, and does not itself create a `Tenant`. A `Tenant` is created only
+by an explicit provisioning act on the privileged path (ADR-005), which sign-up
+may initiate immediately after but never is, creating the tenant and the caller's
+active owner `Membership` atomically and recording an `ActivityEvent`.
+
+**Forecloses.** Two `Member` rows for one person reconciled later, which is D11
+and D12 one tier down; a mechanism that confers authorization; a sign-in that
+silently provisions; an invitation claimable by asserting an address; and an
+invariant with no place to be enforced.
+
+### OD-G14 — Session-to-membership binding
+**Signed 2026-08-04.**
+
+The tenant a session acts in is supplied by the caller as a selector and resolved
+server-side against an active `Membership` for the authenticated `Member`, on
+every request. Exactly one active membership resolves implicitly; more than one
+requires an explicit selection the caller holds; no valid membership for the
+selection, or ambiguity, resolves null. Authorization derives from `Membership`
+alone (ADR-004). A stored last-selected tenant is a convenience and never
+participates in resolution.
+
+**The restrictive rule stays.** `membership_active_is_self_only` and the
+invite-then-accept rule remain in force, on the restated ground that forcing a
+`Membership` onto another person is a write against their identity — sufficient
+independent of the lockout it used to cause.
+
+**Forecloses.** A token claim as the tenant of record; a person-global binding
+shared across sessions and devices; and the removal of the restrictive rule as
+vestigial once the lockout it named is gone.
+
+### OD-G15 — Tenant ownership invariant
+**Signed 2026-08-04.**
+
+Every `Tenant` has at least one active `Owner` at all times. More than one active
+`Owner` is permitted. Any active `Owner` may suspend or archive another's
+`Membership`, bounded only by the `membership_active_owner_required` constraint
+trigger. `TENANCY_MODEL.md` §3 rule 1 is amended to match; `DATA_MODEL.md` §3.3
+and the trigger already state and enforce this and do not change.
+
+**Forecloses.** The specification-versus-implementation divergence CF-93 gap (4)
+records, and an ownership transfer that must vacate before it grants.
+
+### OD-G16 — An invitation is keyed to an email address
+**Signed 2026-08-04.**
+
+An invitation names an email address, not an existing `Member`. An `Owner` may
+issue one for a person who holds no `Member` record and whom the platform cannot
+show them. Acceptance is a single act: signing in through the invitation link
+establishes control of the address per OD-G13 and activates the `Membership` in
+the same motion. The invitee still performs the act — no `Owner` write may
+produce an active `Membership` for anyone but the writer.
+
+**Consequence, stated so it is not discovered at a gate.**
+`membership.member_id` is `not null references public.member (id)`, so an
+invitation to a person with no `Member` record cannot be a `membership` row as
+the table stands today. The shape is the build task's to choose. Whichever it
+chooses lands as a signed amendment to `DATA_MODEL.md` §3 with its migration in
+the same push (OD-H9), and if it adds an entity then `DOMAIN_MODEL.md` §1's total
+moves with it. `check_data_model_schema.py` and `check_stated_counts.py` fail the
+push otherwise.
+
+**Forecloses.** An `Owner` who must know a stranger's generated key before
+inviting them; a directory that exposes strangers so an `Owner` can find one; a
+separate prove-your-email step bolted on after acceptance; and an `Owner` who can
+make anyone active.
 
