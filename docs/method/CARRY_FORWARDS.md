@@ -42,6 +42,15 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       catch(e){} site across the three design tools. Evidence now complete across
       all five read tools. Owner unchanged: FEATURE_INVENTORY.md must-not-reproduce
       at P-07.
+      AMENDED (P02-T10) — owner: **P08**, the `FEATURE_INVENTORY.md`
+      must-not-reproduce authoring. Bucket (a) of this task's ownerless-ledger
+      triage: the row's own clause names that document, and `BUILD_PHASES.md`
+      §P08 is the only phase that names it — "`FEATURE_INVENTORY.md`,
+      `RISK_REGISTER.md` and `ACCEPTANCE.md` authored just-in-time". The
+      trailing "at P-07" cites the retired prepare-step numbering
+      (`B2S_PREPARE_PHASE.md`, superseded as a plan by `BUILD_PHASES.md`) and
+      names none of the nine phases; it is superseded here, never re-read as
+      `P07`.
 - [ ] CF-03 — Legacy catch(e){} swallowing. Owner: FEATURE_INVENTORY.md
       must-not-reproduce at P-07. Prior owner "every ported renderer" is void
       framing — nothing is ported. Evidence captured in EXTRACT_STOCK_COSTS.md
@@ -55,12 +64,19 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       followed by an **unconditional success toast** — so a `localStorage` quota
       failure is reported to the operator as `✓ تم حفظ` / `✓ Saved`. The 3
       substitute ones are the identical `_pbLG`, which converts an unreadable slot
-      list into an empty one that the next write then makes permanent. Running
+      list into an empty one that the next write then makes permanent.       Running
       total: 7+2+11 (stock-costs) + 3+2+5 (invoice-pro) + 3+0+3 (design tools).
       P-04 Part 7 enumerated every unescaped innerHTML site and every empty
       catch(e){} site across the three design tools. Evidence now complete across
       all five read tools. Owner unchanged: FEATURE_INVENTORY.md must-not-reproduce
       at P-07.
+      AMENDED (P02-T10) — owner: **P08**, the `FEATURE_INVENTORY.md`
+      must-not-reproduce authoring. Bucket (a) of this task's ownerless-ledger
+      triage, on the same support as CF-02: `BUILD_PHASES.md` §P08 reads
+      "`FEATURE_INVENTORY.md`, `RISK_REGISTER.md` and `ACCEPTANCE.md` authored
+      just-in-time" and no other phase names the document. "at P-07" cites the
+      retired prepare-step numbering and names none of the nine phases;
+      superseded, never re-read as `P07`.
 - [x] CF-04 — Older returns lack outAllocations; both shapes must render.
       Evidence complete. P-03 R4 confirms EXTRACT_STOCK_COSTS.md Part 4 on every
       point of fact, with two divergences and two completions. Owner: Gate 1 read,
@@ -77,6 +93,12 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
 - [ ] CF-05 — Print calibration unresolved until OD-5 signed
       AMENDED (P-08-PRE-FIX) — owner: PRINT_CONTRACT.md, authored just-in-time
       per OD-H7; the measurement is B2S_PREPARE_PHASE.md Step 15
+      AMENDED (P02-T10) — owner: **P06**, the `PRINT_CONTRACT.md` authoring.
+      Bucket (a) of this task's ownerless-ledger triage: the row's own clause
+      names `PRINT_CONTRACT.md`, and `BUILD_PHASES.md` §P06 names it —
+      "`CONTENT_MODEL.md`, `TEMPLATE_MODEL.md`, `PRINT_CONTRACT.md` and
+      `PRINT_PRODUCTION_SPEC.md` authored just-in-time" — with print as that
+      phase's exit standard. No other phase names the document.
 - [ ] CF-11 — REPORT.md §3.3 "design tools are independent islands" is FALSIFIED
       for the sticker tool: legacy/balance-bites-sticker.html carries the shared
       folder path (:1138), bb_filestore_v1, showDirectoryPicker, bb_stickers,
@@ -190,6 +212,16 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       The four-option OD at P-06 is unchanged.
       AMENDED (P-08-PRE-FIX) — owner: RISK_REGISTER.md, authored just-in-time per
       OD-H7; its gate is the pre-relaunch audit, B2S_PREPARE_PHASE.md §10
+      AMENDED (P02-T10) — owner: **P08**, the `RISK_REGISTER.md` authoring and
+      the pre-relaunch audit. Bucket (a) of this task's ownerless-ledger
+      triage, and both halves of the live clause resolve to the same phase:
+      `BUILD_PHASES.md` §P08 reads "`FEATURE_INVENTORY.md`, `RISK_REGISTER.md`
+      and `ACCEPTANCE.md` authored just-in-time · the operator surface,
+      metadata and usage only · the pre-relaunch audit in
+      `B2S_PREPARE_PHASE.md` §10". The row's earlier "replacement OD at P-06"
+      is superseded prepare-step numbering and is not read as `P06`. Whether
+      this repository stays public at commercial launch is a separate P09 item
+      and is not this row.
 - [ ] CF-22 — Label-editor vs sticker-tool capability delta. Owner: P-04.
       ANSWERED by P-04 Part 2: overlapping-but-neither. The label editor is a
       distinct physical output — a continuous five-segment cruciform wrap strip
@@ -199,6 +231,14 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       holding. Closes at Gate 1 on read.
       AMENDED (P-08-PRE-FIX) — owner: reviewer — verify closure against
       EXTRACT_DESIGN_TOOLS.md Part 2 at the TEMPLATE_MODEL.md authoring
+      AMENDED (P02-T10) — owner: **P06**, the reviewer verifying closure against
+      `EXTRACT_DESIGN_TOOLS.md` Part 2 at the `TEMPLATE_MODEL.md` authoring.
+      Bucket (a) of this task's ownerless-ledger triage. The actor is unchanged
+      and is still the reviewer; what the row lacked was the moment, and its own
+      clause already names it — `BUILD_PHASES.md` §P06 reads "`CONTENT_MODEL.md`,
+      `TEMPLATE_MODEL.md`, `PRINT_CONTRACT.md` and `PRINT_PRODUCTION_SPEC.md`
+      authored just-in-time", so the `TEMPLATE_MODEL.md` authoring is that phase
+      and no other.
 - [x] CF-25 — CLOSED (confirmed by P-01). `.gitattributes` exists at repo root
       with the exact required content; `git add --renormalize .` verified to
       produce zero diff. No line-ending commit needed.
@@ -235,6 +275,13 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       non-waivable by OD.
 - [ ] CF-32 — CSV import resequenced from void to post-DATA_MODEL feature. Owner:
       IMPORT_SPEC.md, P-10.
+      AMENDED (P02-T10) — owner: **P07**, the `IMPORT_SPEC.md` authoring. Bucket
+      (a) of this task's ownerless-ledger triage: `BUILD_PHASES.md` §P07 reads
+      "`IMPORT_SPEC.md` authored just-in-time · CSV import for products and
+      buyers with dry-run, per-row errors and a partial-import policy", which
+      names both the document and the feature this row is about. "P-10" cites
+      the retired prepare-step numbering and names none of the nine phases;
+      superseded, and it is not read as `P10` — there is no tenth phase.
 - [x] CF-33 — `docs/method/DEV_OS.md` §3 (renamed from `BB_DEV_OS.md` by P-01)
       defines a parity gate that is void, but P-01 explicitly changes no rule
       substance so the void gate is still live text in an in-force document.
@@ -338,6 +385,16 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       *(Text supplied by the P-03 prompt and landed verbatim. This row was opened
       empty by P-02 because the P-02 trigger message omitted the text; it is now
       filled, not re-opened.)*
+      AMENDED (P02-T10) — owner: **P08**, the same write task that lands CF-39.
+      Bucket (a) of this task's ownerless-ledger triage, and the one row in that
+      bucket resolved by a pointer rather than directly: this row's own clause
+      names its owner as "the write task that lands CF-39", and CF-39's live
+      clause in this same ledger names that task — "owner: **the next write task
+      that touches `B2S_PREPARE_PHASE.md`, which is the P08 pre-relaunch
+      audit**". Naming P08 here makes this row exactly as owned as the row its
+      own text defers to, which is the state its text specifies. "P-12" cites
+      the retired prepare-step numbering and names none of the nine phases;
+      superseded, and there is no twelfth phase to read it as.
 - [x] CF-42 — EXTRACT_STOCK_COSTS.md Part 7 gives the Arabic-only remainder of
       501 literals as category inventories rather than individual rows.
       Acceptable for UI chrome; not acceptable for literals classified as
@@ -487,6 +544,17 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       cost — belongs to `Component` cost update on purchase, deferred to R2 in
       `CALC_SPEC.md` §6. Owner: the R2 amendment to `CALC_SPEC.md`, one step
       ahead of the Costing module.
+      AMENDED (P02-T10) — owner: **Release 2**, the amendment to `CALC_SPEC.md`
+      that lands the costing method, one step ahead of the Costing module.
+      Bucket (b) of this task's ownerless-ledger triage: the row's own live
+      clause already places the remaining work in R2, and `SCOPE.md` §2 assigns
+      that release the item this row is about — "**Release 2:** boxes, cups,
+      stands, garment tickets · multi-line brand overrides · batches,
+      traceability · production runs and recipes · purchasing · multi-location ·
+      approvals · **costing** · analytics · …". The structural half is already
+      closed by `CALC_SPEC.md` R1-05, recorded above. This row is correctly
+      outside the nine-phase plan, which delivers Release 1 only, so it stays
+      NOT IN THE PLAN on the roadmap by fact rather than by omission.
 - [x] CF-48 — The producer of bb_invoice_payments is unidentified. P-03
       established invoice-pro as a strict consumer (Store.set is never called
       with that key); P-02 reported no payments producer. Payments are Release 1
@@ -847,6 +915,13 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
 - [ ] CF-69 — Invoice history is capped at 100 records with silent destruction
       (EXTRACT_INVOICE_PRO F-10, §8.2). Every historical figure the owner has
       seen is silently truncated. Owner: FEATURE_INVENTORY.md must-not-reproduce.
+      AMENDED (P02-T10) — owner: **P08**, the `FEATURE_INVENTORY.md`
+      must-not-reproduce authoring. Bucket (a) of this task's ownerless-ledger
+      triage: `BUILD_PHASES.md` §P08 reads "`FEATURE_INVENTORY.md`,
+      `RISK_REGISTER.md` and `ACCEPTANCE.md` authored just-in-time" and no other
+      phase names the document. Unlike CF-02 and CF-03 this row named no
+      prepare-step number at all — it named a document and stopped, which is why
+      it read as ownerless.
 - [x] CF-70 — Returns are valued at list price against a discounted invoice total
       (EXTRACT_INVOICE_PRO F-13, §2.9). Every net-revenue figure the business has
       relied on is overstated by the discount on returned lines. The highest-value
@@ -873,6 +948,11 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       (invoice-pro:1199), and the next save writes the empty result over real
       data (EXTRACT_INVOICE_PRO F-15). Owner: FEATURE_INVENTORY.md
       must-not-reproduce.
+      AMENDED (P02-T10) — owner: **P08**, the `FEATURE_INVENTORY.md`
+      must-not-reproduce authoring. Bucket (a) of this task's ownerless-ledger
+      triage, on the same support as CF-69: `BUILD_PHASES.md` §P08 reads
+      "`FEATURE_INVENTORY.md`, `RISK_REGISTER.md` and `ACCEPTANCE.md` authored
+      just-in-time" and no other phase names the document.
 - [ ] CF-72 — Every `bb-stock-costs.html` and `balance-bites-invoice-pro.html`
       citation in REPORT.md needs re-derivation before use. Drift is non-linear
       in both files: +140 to +1506 in stock-costs, 0 to +3035 in invoice-pro.
@@ -891,6 +971,16 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       one-line fix and a grep-able defect class, while an inline literal makes
       it undetectable. Owner: FEATURE_INVENTORY.md must-not-reproduce, and
       UX_PRINCIPLES.md as the worked justification for the no-literals rule.
+      AMENDED (P02-T10) — owner: **P08**, the `FEATURE_INVENTORY.md`
+      must-not-reproduce authoring. Bucket (a) of this task's ownerless-ledger
+      triage, with one half unowned and said so rather than hidden.
+      `BUILD_PHASES.md` §P08 reads "`FEATURE_INVENTORY.md`, `RISK_REGISTER.md`
+      and `ACCEPTANCE.md` authored just-in-time", which owns the
+      must-not-reproduce half and is the substance of the row. **The
+      `UX_PRINCIPLES.md` half has no owner**: `BUILD_PHASES.md` names that
+      document in none of the nine phases, so the worked justification for the
+      no-literals rule is owed by nobody. That is not this row's defect and is
+      not invented an owner here — it is CF-146, which also carries CF-74.
 - [ ] CF-74 — The report engine has no resource bundle outside the invoice
       template. `الإجمالي` is re-declared at bb-stock-costs.html:5652, :5743,
       :5746, :5798 and `المنتج` at :5651, :5712, :5757, :5782. Eight
@@ -2311,6 +2401,17 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       phase: B2S invoicing its own tenants, payment processing, its own tax
       position, and a currency for its own pricing. Owner: **the Release 3
       subscriptions and billing work**.
+      AMENDED (P02-T10) — owner: **Release 3**, the subscriptions and billing
+      work. Bucket (b) of this task's ownerless-ledger triage: the row's own live
+      clause already names that release, and `SCOPE.md` §2 assigns it the exact
+      items — "**Release 3:** Design Assistant · **subscriptions and billing** ·
+      advanced colour management · Operator feature flags". This row is correctly
+      outside the nine-phase plan, which delivers Release 1 only, so it stays NOT
+      IN THE PLAN on the roadmap by fact rather than by omission. The business
+      workstream the row's second half describes — B2S invoicing its own tenants,
+      payment processing, its own tax position and a currency for its own pricing
+      — is named by no release block either, and is the part that still has no
+      home anywhere.
 - [x] CF-135 — `DEV_OS.md` §2's table stated four things false at HEAD — no
       database, hand-authored types, no privileged client, authentication out of
       scope — every one delivered by P01 or signed by OD-G13. §3 was already
@@ -2450,3 +2551,201 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       staged path explicitly (PR-36) and by `git show --stat` on the
       resulting commit(s) after landing. Owner: the reviewer, to commit,
       amend or discard on their own document.
+- [x] CF-141 — `scripts/check_two_way_empty_target.py` states when it must be
+      run nowhere. P02-T09-FIX landed it permanently under PR-28 and recorded
+      why it is not wired into `docs-integrity.yml` — several premises need a
+      git shim, a scratch repository or seconds of directory copy-and-restore —
+      but recording why a probe is not automated is not the same as recording
+      when it runs, and the file was left invoked by nothing at all. A probe
+      nothing schedules and nothing obliges is a probe that runs when somebody
+      remembers, which is the exact dependency PR-28 exists to remove ("a
+      gate's rigour must not depend on whoever runs it having the same idea
+      twice"). **Deliberately NOT closed by wiring it in**: a workflow step
+      that plants and reverts real files on every push mutates the tree on
+      every push, which is a worse problem than the one it solves. CLOSED
+      (P02-T10) — the cadence is stated in two places instead: the probe's own
+      module docstring, under a `CADENCE` heading, and `SESSION_CONTEXT.md`'s
+      "Frozen decisions in force" beside the figure it produces. It runs **at
+      every phase exit gate and at every FIX task**, and **its result is cited
+      in that task's report** — the count proven, the count enumerated, every
+      `KNOWN_GAPS` entry with its reason, and any pair found passing on
+      nothing. An unreported run cannot be told apart from an absent one, which
+      is PR-21's shape. Owner: none outstanding, closed in the task that found
+      it.
+- [x] CF-142 — the proven two-way empty-target case count was published with no
+      provenance. `SESSION_CONTEXT.md` stated "**36**" and
+      `check_stated_counts.py` asserted it against
+      `scripts/check_two_way_empty_target.py`'s own `PROVEN_PAIRS` list, so the
+      figure could not drift from the probe's enumeration — but neither the
+      statement nor the check named **the task that last actually ran the
+      probe**. The two are different claims: `PROVEN_PAIRS` is a list a task
+      can extend without running anything, and the figure's meaning is
+      behaviour observed on a day by a task. Nothing between one gate and the
+      next re-establishes it, CF-141 being why. A reader could not tell whether
+      the number was proved in the previous task or eleven tasks and four new
+      checks ago, and the second case is precisely how P02-T09's 85 stayed
+      published under the wrong name for as long as it did. CLOSED (P02-T10) —
+      `check_stated_counts.py` gained `check_two_way_probe_provenance()` as an
+      eighth scan target, floor `MINIMUM_ASSERTIONS` 7 → 8, with a
+      `MINIMUM_DONE_STEPS_ROWS = 1` floor of its own on the premise it checks
+      against: the figure must be stated as "stands at **&lt;n&gt;**, last
+      proved at **&lt;task id&gt;**", exactly once, and **that id must be a
+      Step in `SESSION_CONTEXT.md`'s done-steps table** — a provenance naming a
+      task that never ran is worse than none, because it reads as evidence.
+      Proven by three plant-and-revert cases from an in-memory snapshot, never
+      `git checkout --` (PR-26): the provenance removed, the provenance stated
+      twice, and the provenance naming `P02-T99-NEVER-RAN`, which no done-steps
+      row carries. **3 of 3 caught**, each a one-line `FAIL:` at exit 1 with no
+      traceback, every revert byte-identical by SHA-256 against the snapshot,
+      and the check green again afterwards. Five new `fail()` call sites: the
+      static-assertion count moves 94 → **99**. **The proven count does not
+      move and stays 36** — the new assertion's only premise is
+      `SESSION_CONTEXT.md`, which is already a `PROVEN_PAIRS` entry for this
+      check, so no pair was added and the probe did not need re-running. Owner:
+      none outstanding, closed in the task that found it.
+- [x] CF-143 — two tracked documents reported modified against an empty
+      `git diff --stat`, and `check_roadmap.py` compares bytes with zero
+      tolerance. `docs/product/ROLE_JOURNEY.md` and
+      `docs/product/TENANCY_MODEL.md` were CRLF in the working tree while their
+      committed blobs are LF, so git reported a modification that no diff could
+      show and every command that touched them printed "CRLF will be replaced
+      by LF the next time Git touches it". Both are inputs to
+      `scripts/check_roadmap.py`, which regenerates and byte-compares with no
+      normalisation, so this is a check that flaps on an invisible cause.
+      **Two figures the supplied premise did not have, both corrected against
+      the artifact before landing (PR-33, PR-37).** First: `.gitattributes` was
+      not missing. It has existed since **P-01** and already carried
+      `* text=auto eol=lf` plus explicit `eol=lf` rows for `.html`, `.md`,
+      `.json` and `.js`; `git check-attr -a` confirms `text: set, eol: lf` on
+      the affected paths, so the normalising rule was correct and in force the
+      whole time and adding one would have been adding a second copy of a rule
+      that was already right. Second: the cause was **`core.autocrlf = true` in
+      the local git configuration** combined with a stale index stat cache, not
+      an absent attribute — `git ls-files --eol` read `i/lf w/lf` once the
+      working files were rewritten, and `git diff-files` still reported `M`
+      with a null destination hash, which is a stat mismatch and not a content
+      one. CLOSED (P02-T10) — **thirteen** tracked text files carried CRLF in
+      the working tree, not two; **twelve were renormalised** and
+      `legacy/balance-bites-sticker.html` was deliberately excluded, `AGENTS.md`
+      forbidding any edit under `legacy/`, so one latent flap survives by rule
+      and is recorded here rather than fixed. **No file's committed content
+      changed:** for all twelve, `git hash-object --no-filters <path>` after
+      the rewrite equals `git rev-parse HEAD:<path>` exactly — the raw LF bytes
+      already were the committed blob, and only the working-tree endings moved.
+      The index's stat cache was then refreshed with
+      `git update-index --really-refresh` over the twelve explicit paths, which
+      stages nothing (`git diff --cached --stat` empty afterwards).
+      `.gitattributes` extended with explicit `eol=lf` rows for the extensions
+      the repository acquired after P-01 — `.mjs`, `.ts`, `.tsx`, `.py`,
+      `.sql`, `.yml`, `.yaml`, `.css`, `.nvmrc` — which changes no behaviour,
+      `* text=auto eol=lf` having covered them, and makes the intent explicit
+      for the file types that now exist. `__pycache__/` and `*.pyc` added to
+      `.gitignore`: running the ten `docs-integrity` checks locally creates
+      `scripts/__pycache__/`, which was the only other thing standing between
+      this tree and a clean `git status`. Owner: none outstanding, closed in the
+      task that found it.
+- [x] CF-144 — a STOP condition was written around a figure the task derives
+      for itself, and a task halted on arithmetic that changed nothing.
+      P02-T09-FIX TASK 6 carried a reviewer-supplied ownerless-ledger count of
+      22 and a STOP condition requiring its four triage buckets to sum to it.
+      The task's own enumeration through `generate_roadmap.py`'s `collect()`
+      returned 20, and 21 once its own CF-140 landed in the same bucket, so the
+      condition fired and no row was triaged. The halt was correct under the
+      condition as written and the condition was the defect: **the triage is
+      identical at 20, 21 or 22**, because every row's bucket follows from that
+      row's own text and no bucket boundary moves when the total does. PR-33
+      already rules that a supplied figure about a third artifact is measured,
+      corrected, recorded beside the original and reported — a STOP condition
+      cannot be allowed to override it. CLOSED (P02-T10) on **PR-37**, landed
+      verbatim: where a prompt supplies a count the task can derive, the
+      derivation wins and the prompt's figure is reported as corrected; the
+      halt stays reserved for a divergence that makes the work unnecessary,
+      impossible or different in kind. Owner: none outstanding, closed in the
+      task that found it.
+- [x] CF-145 — the ownerless ledger triaged, the work P02-T09-FIX TASK 6 owed.
+      Derived, not read: **21** open rows carry the NOT IN THE PLAN status at
+      this task's start, enumerated through `generate_roadmap.py`'s own
+      `collect()` (PR-23) rather than by grepping rendered output — CF-02,
+      CF-03, CF-05, CF-14, CF-22, CF-32, CF-41, CF-44, CF-47, CF-51, CF-58,
+      CF-69, CF-71, CF-73, CF-74, CF-83, CF-84, CF-94, CF-97, CF-134, CF-140 —
+      and 21 + 16 PENDING A DECISION = 37 open, reconciling. Each row
+      classified from its own text and **only the phase-implied and the
+      release-placed amended**, on the ground that a row falsely assigned to a
+      phase disappears from the roadmap while remaining unowned in fact, which
+      is worse than an honest blank. **(a) ten rows name or plainly imply one of
+      the nine phases** — CF-02, CF-03, CF-14, CF-41, CF-69, CF-71 and CF-73 to
+      P08; CF-05 and CF-22 to P06; CF-32 to P07 — each amended with the
+      `BUILD_PHASES.md` sentence that supports it quoted in the row. The
+      support is a document, never a stale number: `P-07`, `P-10` and `P-12`
+      cite the retired prepare-step numbering of `B2S_PREPARE_PHASE.md`, which
+      is superseded as a plan and whose namespace is not the nine phases', so
+      none was re-read as `P07`, `P10` or `P12`. **Zero of the ten are P02**, so
+      none closes before this phase's gate. **(b) two rows are placed in a later
+      release** — CF-47 in Release 2 ("costing") and CF-134 in Release 3
+      ("subscriptions and billing"), both citing `SCOPE.md` §2's own item
+      lists. Both stay NOT IN THE PLAN on the roadmap after amendment, and
+      correctly: the nine-phase plan delivers Release 1 only, so this is a fact
+      about the plan rather than a gap in the ledger. **(c) six rows need an
+      owner decision before anyone can own them and were left untouched** —
+      CF-51 and CF-83 and CF-84, whose substance already landed as PR-06, PR-18
+      and PR-19 and which need only the authorisation to close; CF-58, retire
+      or keep `backup-browser-data.js`; CF-97, ratify or reject
+      `check_credentials.py`'s narrowing; CF-140, the reviewer's own document.
+      **(d) three rows are genuinely ownerless and were left untouched** —
+      CF-44, VOID by construction and exempt; CF-74, whose whole owner is
+      `UX_PRINCIPLES.md`, a document no phase names; and CF-94, whose text
+      deliberately splits its owner by root and argues against collapsing it,
+      naming P03 for `features/` and the design-surface catalog task, which is
+      no phase, for `components/` — a row supporting two different owners is
+      left in (d) and reported rather than picked. **10 + 2 + 6 + 3 = 21**,
+      which is the figure derived above. Ownerless count after the amendments:
+      **11**, re-derived by the same command. Owner: none outstanding, closed in
+      the task that performed the triage; the residue is carried by rows (c) and
+      (d)'s own owners and by CF-146.
+- [ ] CF-146 — `UX_PRINCIPLES.md` is owed by no phase. It is one of OD-H7's
+      just-in-time documents and `BUILD_PHASES.md` names it in none of the nine
+      phases, unlike `PRINT_CONTRACT.md` (P06), `IMPORT_SPEC.md` (P07) and
+      `FEATURE_INVENTORY.md` / `RISK_REGISTER.md` / `ACCEPTANCE.md` (P08), each
+      of which its phase names explicitly. Found while triaging the ownerless
+      ledger: **CF-74's entire owner is `UX_PRINCIPLES.md`**, which is why that
+      row stays in the genuinely-ownerless bucket, and **CF-73's second half is
+      `UX_PRINCIPLES.md` as the worked justification for the no-literals rule**,
+      which is why that row is amended to P08 for its must-not-reproduce half
+      with the other half recorded as still unowned rather than quietly folded
+      in. No owner is invented for either here. The decision is whether
+      `UX_PRINCIPLES.md` is assigned to a phase, deferred to a release, or ruled
+      out of scope; it cannot be answered from the row text of any
+      carry-forward, only by amending `BUILD_PHASES.md`, which is the
+      reviewer's document. Owner: the reviewer, at the next method amendment
+      that touches `BUILD_PHASES.md`.
+- [x] CF-147 — a done-steps row split into six columns, and both the shape check
+      and the roadmap generator let it through. `SESSION_CONTEXT.md`'s
+      P02-T09-FIX row described one of that task's new assertions by quoting a
+      markdown table fragment, backticked but containing **two unescaped `|`
+      characters**. A pipe inside a GFM table cell splits the cell whether or
+      not it sits in a code span, so the row was broken markdown as well as
+      unparseable: it yielded **six** columns instead of four, and
+      `generate_roadmap.py` — which takes `cells[0..3]` positionally — published
+      a description truncated at the first pipe and a fragment of the
+      `MINIMUM_TENANCY_SECTION3_ROLES` sentence where the commit sha belongs,
+      into **both** `docs/ROADMAP.md` and `docs/roadmap.html`. Found only because
+      this task added a row after it. **Two mechanisms let it through, and both
+      are the same bug seen from different sides.** First,
+      `check_done_steps_shape.py` tested `len(cells) < 4` — it caught a
+      *truncated* row and was blind to a *split* one, because six columns is not
+      fewer than four; the garbage then reached the commit-column assertion,
+      which is the only thing that would have named it. Second, that assertion
+      **exempts the last row** under PR-17, correctly, because a sha cannot exist
+      before the commit containing it — and P02-T09-FIX was the last row for the
+      whole of its own task, so the exemption written for the commit column
+      silently covered a defect in a different column. A row is only ever checked
+      once something lands after it. CLOSED (P02-T10) — the row reworded to carry
+      no pipe, meaning unchanged ("a bold **Role** table row in §3"); both
+      parsers now assert **exactly four** columns and name the count and the Step
+      when they do not get it, `check_done_steps_shape.py` with a `fail()` and
+      `generate_roadmap.py` with a `die()`; and the docstring records that only
+      the commit-column assertion exempts the last row, never the column count.
+      No new `fail()` call site — the condition changed, not the number of
+      assertions — so the static-assertion count stays 99, and `PROVEN_PAIRS`
+      is untouched, no premise having been added. Owner: none outstanding,
+      closed in the task that found it.

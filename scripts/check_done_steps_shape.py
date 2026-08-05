@@ -1,9 +1,20 @@
 #!/usr/bin/env python3
-"""Done-steps shape assertion. For every data row in SESSION_CONTEXT.md's
-done-steps table except the last, the commit column must be either one or
-more backticked hex shas (comma-separated if several) or the declared
-sentinel em-dash. The last row is exempt: its commit cannot exist before the
-commit that contains it (PR-17).
+"""Done-steps shape assertion. Every data row in SESSION_CONTEXT.md's done-steps
+table has exactly four columns, and for every row except the last the commit
+column must be either one or more backticked hex shas (comma-separated if
+several) or the declared sentinel em-dash. Only the **commit column** assertion
+exempts the last row: its commit cannot exist before the commit that contains it
+(PR-17). The column count is asserted on every row, last included.
+
+P02-T10 — the column count used to read "fewer than 4", which caught a truncated
+row and never a split one. A cell containing an unescaped `|` yields *more* than
+four columns, passed that test, and then presented some fragment of the
+description as the commit column. It was invisible for a whole task because the
+row carrying it was the last one, and the last row's commit column is exempt:
+P02-T09-FIX's description contained a backticked table-row fragment with two
+pipes in it, so the row split into six columns and both roadmap outputs
+published a truncated description for it. Asserting exactly four catches the
+split direction as well, on the last row too.
 
 PR-27 — this check states the minimum it expected to examine. CF-118 — a removed
 scan target is reported as one `FAIL:` line naming the file, never as a traceback:
@@ -67,8 +78,11 @@ def main():
     for i, line in enumerate(data_lines):
         is_last = i == len(data_lines) - 1
         cells = split_row(line)
-        if len(cells) < 4:
-            fail(f"{path}: malformed row (fewer than 4 columns): {line!r}")
+        if len(cells) != 4:
+            fail(f"{path}: malformed row — {len(cells)} column(s), expected "
+                 f"exactly 4 (Step, Task, Verdict, Commit). An unescaped `|` "
+                 f"inside a cell splits it, which is broken GFM as well as "
+                 f"unparseable here. Step: {cells[0]!r}")
             continue
         if is_last:
             continue

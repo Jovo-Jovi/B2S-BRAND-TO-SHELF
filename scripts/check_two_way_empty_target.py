@@ -19,6 +19,26 @@ hand at a phase exit gate, per PR-28, and `check_stated_counts.py` asserts
 enumeration on every push — cheaply, by parsing this file's source rather
 than by re-running the probe.
 
+**CADENCE — this file is invoked by no workflow, on purpose, so the cadence is
+stated rather than scheduled.** It is run by hand:
+
+  * at **every phase exit gate**, as one of that gate's five standards — every
+    check proven to error on both a removed and an emptied target; and
+  * at **every FIX task**, because a FIX task is where a check is added,
+    widened or given a new premise, and a new premise is a new pair.
+
+**Its result is cited in that task's report**: the pair count proven, the
+count enumerated, every KNOWN_GAPS entry with its reason, and any pair found
+passing on nothing. Running it and not reporting it is the same as not running
+it — PR-21's shape, since an unreported probe cannot be distinguished from an
+absent one. A task that adds or widens a check reconciles PROVEN_PAIRS in the
+same commit, or `check_stated_counts.py` fails the push on the figure.
+
+`SESSION_CONTEXT.md` states this same cadence beside the figure, and states
+the task id that last proved it. `check_stated_counts.py` asserts that the id
+is present and that it names a row of the done-steps table, so the published
+figure can never again be a number with no provenance (P02-T10).
+
 PROVEN_PAIRS is the complete, ordered list of (check, premise) pairs proven
 this task: for each, the premise was removed and the check produced a
 one-line `FAIL:` at non-zero exit with no traceback; the premise was restored

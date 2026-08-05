@@ -342,6 +342,32 @@ record. A commit message that names a task must contain only that task's work,
 and the only way to guarantee that is to name every path `git add` stages,
 never the tree's whole state. Origin: CF-140, P02-T09-FIX.
 
+**PR-37 — A STOP condition names a divergence that changes the work, never a
+figure the task derives for itself.**
+Where a prompt supplies a count the task can derive, **the derivation wins and
+the prompt's figure is reported as corrected.** A STOP condition written around
+the supplied number inverts that: it makes the prompt's arithmetic a
+precondition for work whose content does not depend on it, and the task halts on
+a number instead of doing the thing it was sent to do. At P02-T09-FIX a
+reviewer-supplied count of the ownerless ledger — 22 — was written into a
+four-buckets-must-sum-to-22 STOP condition; that task's own enumeration through
+`generate_roadmap.py`'s `collect()` returned 20, and 21 after its own CF-140
+landed in the same bucket. It halted correctly under the condition as written,
+and the triage would have been **identical at any of the three figures**: every
+row's bucket follows from that row's own text, and no bucket boundary moves when
+the total does. A round trip was spent on arithmetic that changed nothing.
+PR-33 already rules that a supplied figure about a third artifact is measured,
+corrected, recorded beside the original and reported as a deviation rather than
+halted on; **a STOP condition must not override PR-33**, and a figure the task
+derives from a committed artifact is exactly PR-33's case. The halt stays
+reserved for what PR-18 and PR-33 reserve it for: a divergence that makes the
+work unnecessary, impossible, or different in kind. A count that moves every
+time a row lands is not one — it is a measurement, and PR-23 already says who
+takes it and how. Where a prompt states such a count at all it is stamped and
+advisory (PR-18), and a bucket-sum condition is written against the figure the
+task derives, never against the figure the prompt supplies. Origin: the
+reviewer defect at P02-T09-FIX TASK 6.
+
 ---
 
 ## 2. Environment quirks — never re-discover
@@ -612,6 +638,16 @@ never the tree's whole state. Origin: CF-140, P02-T09-FIX.
   script goes in a file under `$env:TEMP` and is invoked by path. Related: an
   ad-hoc `python -c` one-liner is safe only while it contains no `<`, `>`, `(`,
   `)` or backtick.
+- Learned at P02-T10, the consequence of the entry above and the reason it is
+  worth more than a shell footnote: when a plant-and-revert probe's anchor string
+  loses its backticks this way, the plant matches nothing, the target file is
+  rewritten unchanged, the check passes, and the probe reports **MISSED** — which
+  is byte-for-byte the report a genuinely absent assertion produces. A plant that
+  fails to apply and a check that fails to fire are indistinguishable from the
+  probe's own output. Under PR-26, therefore, a MISSED result is never reported
+  until the plant has been confirmed to have applied — assert the mutated text
+  differs from the snapshot before running the check, or anchor on a substring
+  containing no backtick.
 - Learned at M-01: `shutil.rmtree` fails with `PermissionError: [WinError 5]` on a
   `.git` directory, because git marks its object files read-only and Windows
   refuses to unlink a read-only file. Pass an `onexc` handler that does

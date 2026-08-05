@@ -4,6 +4,13 @@ contents enumerate. Also enforces that every CALC_SPEC.md R1-nn block carries
 a Rounding: line, and that DATA_MODEL.md §3's table and enum counts match the
 authoritative schema.
 
+P02-T10 — a figure that no check can re-derive carries the task id that last
+proved it, and that id must be a row of SESSION_CONTEXT.md's done-steps table.
+The proven two-way empty-target case count is the one such figure here: the
+probe that produces it, scripts/check_two_way_empty_target.py, is invoked by no
+workflow by design, so nothing between one gate and the next re-establishes it.
+See check_two_way_probe_provenance().
+
 PR-27 — this check states the minimum it expected to examine and fails when it
 examined less. A missing scan target used to raise FileNotFoundError, which is
 an exit code without a message; now it is named and counted, and a run that
@@ -20,7 +27,12 @@ FAIL = False
 
 EM_DASH = "\u2014"
 
-MINIMUM_ASSERTIONS = 7  # unchanged: the split adds a statement, not a scan target
+MINIMUM_ASSERTIONS = 8  # P02-T10 adds the proven figure's provenance assertion
+
+# P02-T10 — the done-steps table is the provenance assertion's premise. A table
+# with no data rows means this check read the wrong span rather than a project
+# with no history, and a provenance id would then be unfalsifiable (PR-27).
+MINIMUM_DONE_STEPS_ROWS = 1
 
 ASSERTIONS = 0
 
@@ -316,6 +328,78 @@ def check_two_way_probe_counts():
              f"enumerates {enumerated_proven}")
 
 
+def done_step_ids(text):
+    """Every Step id in SESSION_CONTEXT.md's done-steps table. Derived from the
+    table on every run and never listed here: a list in this file would be a
+    second place to forget, which is the whole failure mode."""
+    m = re.search(r"## Done steps\n(.*?)\n## ", text, re.S)
+    if not m:
+        fail("SESSION_CONTEXT.md: could not isolate the done-steps table, which "
+             "is the premise for the proven-figure provenance assertion")
+        return set()
+    lines = [l for l in m.group(1).splitlines() if l.strip().startswith("|")]
+    ids = set()
+    for line in lines[2:]:
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if cells and cells[0]:
+            ids.add(cells[0])
+    return ids
+
+
+def check_two_way_probe_provenance():
+    """P02-T10. The proven two-way empty-target case count is a claim about
+    behaviour that was observed once, by one task, on one day — and
+    `scripts/check_two_way_empty_target.py` is invoked by no workflow, so
+    nothing re-establishes it between the gates and FIX tasks that run it by
+    hand. Stating the figure without naming the task that last proved it makes
+    it unfalsifiable prose: a reader cannot tell whether it was proved in the
+    previous task or eleven tasks and four new checks ago, and the second case
+    is exactly how P02-T09's 85 came to be published under the wrong name for
+    as long as it was.
+
+    Two assertions, and the second is the one that matters: the figure carries
+    a task id, and that id is a Step in the done-steps table. A provenance
+    naming a task that never ran is worse than no provenance at all, because it
+    reads as evidence.
+    """
+    path = "SESSION_CONTEXT.md"
+    text = read(path)
+    if text is None:
+        return
+    asserted()
+
+    matches = re.findall(
+        r"proven\s+two-way\s+empty-target\s+case\s+count\s+stands\s+at\s+"
+        r"\*\*\d+\*\*,\s+last\s+proved\s+at\s+\*\*([A-Za-z0-9-]+)\*\*",
+        text,
+    )
+    if len(matches) == 0:
+        fail(f"{path}: the proven two-way empty-target case count names no task "
+             f"that last proved it (expected exactly 1 statement of the form "
+             f"'...stands at **<n>**, last proved at **<task id>**'). The probe "
+             f"is invoked by no workflow, so a figure with no provenance is a "
+             f"claim nothing re-establishes")
+        return
+    if len(matches) > 1:
+        fail(f"{path}: {len(matches)} statements name the task that last proved "
+             f"the two-way empty-target case count, expected exactly 1")
+        return
+
+    task_id = matches[0]
+    steps = done_step_ids(text)
+    if len(steps) < MINIMUM_DONE_STEPS_ROWS:
+        fail(f"{path}: {len(steps)} done-steps row(s) found, minimum "
+             f"{MINIMUM_DONE_STEPS_ROWS}. The provenance id was not checked "
+             f"against anything, so this assertion concluded nothing while "
+             f"reporting success (PR-27)")
+        return
+    if task_id not in steps:
+        fail(f"{path}: names {task_id!r} as the task that last proved the "
+             f"two-way empty-target case count, and no done-steps row carries "
+             f"that Step id ({len(steps)} row(s) examined). A provenance naming "
+             f"a task that never ran reads as evidence and is not")
+
+
 def check_calc_spec():
     path = "docs/product/CALC_SPEC.md"
     text = read(path)
@@ -434,6 +518,7 @@ def main():
     check_decisions()
     check_session_context_register()
     check_two_way_probe_counts()
+    check_two_way_probe_provenance()
     check_calc_spec()
     check_adr()
     check_data_model()

@@ -218,9 +218,12 @@ def parse_done_steps(text):
     rows = []
     for line in lines[2:]:
         cells = [c.strip() for c in line.strip().strip("|").split("|")]
-        if len(cells) < 4:
-            die(f"{SESSION_CONTEXT_REL}: malformed done-steps row (fewer than "
-                f"4 columns): {line!r}")
+        if len(cells) != 4:
+            die(f"{SESSION_CONTEXT_REL}: malformed done-steps row — "
+                f"{len(cells)} column(s), expected exactly 4 (Step, Task, "
+                f"Verdict, Commit). An unescaped `|` inside a cell splits it, "
+                f"and this generator would otherwise publish a description "
+                f"truncated at that pipe. Step: {cells[0]!r}")
         rows.append({
             "step": cells[0],
             "task": cells[1],
