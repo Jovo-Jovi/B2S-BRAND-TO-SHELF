@@ -19,12 +19,43 @@ Reads, and reads ONLY, these committed files:
   docs/product/ROLE_JOURNEY.md  the Role/Capability/Owning phase/Note table
                                  (OD-H9 — see scripts/check_roadmap.py for the
                                  conformance assertions this document owes)
+  DEVELOPMENT_JOURNAL.md        one dated line per session (P02-T11); this
+                                 file's own header names the format —
+                                 `Date | Model | Phase/Task | Files | Issues |
+                                 Next` — and every entry, old markdown-heading
+                                 style or current single-line style, starts
+                                 with the date either bare or right after
+                                 `## `. Read only for `docs/roadmap.html`'s
+                                 progress-log summaries (Task 2): a
+                                 done-steps row has no Date column of its own,
+                                 so the date beside a task id is this file's
+                                 earliest line naming that exact id as its own
+                                 token — never a substring of a longer id
+                                 (`P02-T09` must not match inside
+                                 `P02-T09-FIX`). `docs/ROADMAP.md` does not
+                                 carry a date column either and this generator
+                                 does not add one there — see the divergence
+                                 note below.
 
 Emits, overwriting wholly:
 
   docs/ROADMAP.md    the readable roadmap
   docs/roadmap.html  the same content as a self-contained page — no external
                       stylesheet, no network reference
+
+**The two outputs deliberately differ in exactly one respect, as of
+P02-T11.** `docs/roadmap.html` folds every phase card and every progress-log
+entry behind a native `<details>`/`<summary>` disclosure, with a derived
+`<summary>` that is worth reading closed; `docs/ROADMAP.md` stays flat. This
+is not an oversight: `docs/ROADMAP.md` is the artifact `scripts/check_roadmap.py`
+byte-compares and a human diffs across a regeneration, and disclosure markup
+wrapped around every phase and every log line would add markup noise to every
+future diff for a document that has no "closed" state to begin with — a
+markdown file does not render `<details>`, so folding it there would only cost
+readability for no interactivity gained. The statuses, counts and derivations
+underneath are identical in both outputs; only the presentation differs, and
+only in the one file that is actually opened as a page rather than read as a
+diff.
 
 **Pure function of the inputs above. No commit sha, no branch name, no
 timestamp, no "generated on" line, and nothing else that changes between
@@ -99,16 +130,96 @@ CARRY_FORWARDS_REL = "docs/method/CARRY_FORWARDS.md"
 DECISIONS_REL = "docs/product/DECISIONS.md"
 SCOPE_REL = "docs/product/SCOPE.md"
 ROLE_JOURNEY_REL = "docs/product/ROLE_JOURNEY.md"
+DEVELOPMENT_JOURNAL_REL = "DEVELOPMENT_JOURNAL.md"
 
 ROADMAP_MD_REL = "docs/ROADMAP.md"
 ROADMAP_HTML_REL = "docs/roadmap.html"
 
 EM_DASH = "\u2014"
 MIDDOT = "\u00b7"
+ELLIPSIS = "\u2026"
 
 FIELD_LABELS = ["Exit standard", "Entry", "Exit, additionally"]
 
 GATE_RE = re.compile(r"^P0*(\d+)-GATE\b", re.I)
+
+# Task 2 (P02-T11) — a log summary's clause is cut at the first sentence
+# terminator, never at an arbitrary character offset: this repository's own
+# done-steps prose is written with a short declarative first sentence acting
+# as the row's title (verified across all 43 rows at authoring time), so
+# "first clause" is operationalised as "first sentence". A period inside
+# inline code (`docs/ROADMAP.md`) is never followed by whitespace before the
+# closing backtick, so it does not false-trigger this boundary.
+CLAUSE_END_RE = re.compile(r"[.!?](?=\s|$)")
+
+# The truncation length is a display constant, the same kind as the 36px tick
+# column or the 44px tap target Task 4 states outright — not a derived value.
+# Chosen so it fires on the genuinely long first sentences this table already
+# has (P-08-PRE at 144 chars, P-09-LAND-FIX2 at 166) while leaving the many
+# short ones (most rows are under 80 chars) untouched.
+MAX_LOG_SUMMARY_CLAUSE = 100
+
+# Task 2 — a log summary's date is not a column SESSION_CONTEXT.md's
+# done-steps table carries; it is derived from DEVELOPMENT_JOURNAL.md, whose
+# entries are dated one per session. Matches either the current single-line
+# convention or the earlier "## YYYY-MM-DD | ..." heading convention.
+JOURNAL_DATED_LINE_RE = re.compile(r"^(?:#+\s*)?(\d{4}-\d{2}-\d{2})\s*\|")
+
+
+def first_clause(text):
+    m = CLAUSE_END_RE.search(text)
+    return text[:m.end()] if m else text
+
+
+def truncate_at_word_boundary(text, max_len):
+    """Task 2: truncated at a word boundary with an ellipsis. Never cuts
+    mid-word — the last whitespace at or before the limit is the cut point —
+    and never truncates text that already fits."""
+    if len(text) <= max_len:
+        return text
+    cut = text.rfind(" ", 0, max_len)
+    if cut <= 0:
+        cut = max_len
+    return text[:cut].rstrip() + ELLIPSIS
+
+
+def parse_journal_dated_lines(text):
+    """Every dated line of DEVELOPMENT_JOURNAL.md, oldest first (the file is
+    append-only, so file order is chronological order). Returns (date, line)
+    pairs; 'line' is the whole line, searched later for an exact task-id
+    token."""
+    lines = []
+    for raw_line in text.split("\n"):
+        m = JOURNAL_DATED_LINE_RE.match(raw_line)
+        if m:
+            lines.append((m.group(1), raw_line))
+    if not lines:
+        die(f"{DEVELOPMENT_JOURNAL_REL}: no dated line found matching "
+            f"'YYYY-MM-DD | ...' (bare or after a markdown heading marker) — "
+            f"this generator's only source for a done-steps row's date")
+    return lines
+
+
+def _task_id_token_re(step):
+    """An exact-token match for a task id inside free-form journal prose:
+    hyphen and alnum both count as 'word' characters for this boundary, so
+    'P02-T09' does not match inside 'P02-T09-FIX' — the character
+    immediately after 'P02-T09' in that string is a hyphen, which this
+    pattern treats as adjoining, not as a boundary, so the match is refused."""
+    return re.compile(r"(?<![A-Za-z0-9-])" + re.escape(step) + r"(?![A-Za-z0-9-])")
+
+
+def task_date(step, dated_lines):
+    """The earliest DEVELOPMENT_JOURNAL.md line naming `step` as an exact
+    token. die()s rather than guessing — a date this generator cannot find is
+    a date it must not invent (Task 2's STOP condition)."""
+    pattern = _task_id_token_re(step)
+    for date, line in dated_lines:
+        if pattern.search(line):
+            return date
+    die(f"{DEVELOPMENT_JOURNAL_REL}: no dated line names done-steps Step "
+        f"{step!r} as its own task id — this generator has no other source "
+        f"for that row's date and refuses to hardcode one")
 
 
 def die(msg):
@@ -457,6 +568,7 @@ def collect():
     decisions_text = read(DECISIONS_REL)
     scope_text = read(SCOPE_REL)
     role_journey_text = read(ROLE_JOURNEY_REL)
+    journal_text = read(DEVELOPMENT_JOURNAL_REL)
 
     phases = parse_phases(phases_text)
     done_rows = parse_done_steps(session_text)
@@ -465,6 +577,10 @@ def collect():
     decisions_total = parse_decisions(decisions_text)
     releases = parse_scope_releases(scope_text)
     role_journey_rows = parse_role_journey(role_journey_text)
+
+    dated_lines = parse_journal_dated_lines(journal_text)
+    for row in done_rows:
+        row["date"] = task_date(row["step"], dated_lines)
 
     for phase in phases:
         phase["status"] = phase_status(phase["id"], done_rows, current_phase)
@@ -706,7 +822,6 @@ h2.section-heading {
 .swatch.status-gap { background: var(--gap); }
 
 .card {
-  display: flex;
   background: var(--card);
   border: 1px solid var(--rule);
   border-radius: 9px;
@@ -717,7 +832,11 @@ h2.section-heading {
 .card.status-done { border-left-color: var(--done); }
 .card.status-in-progress { border-left-color: var(--now); }
 .card.status-queued { border-left-color: var(--queued); }
-.card .tick {
+.card h3 { margin: 0 0 .4rem; font-size: 1rem; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+
+/* article.card — the role-journey cards (Task 1: left unfolded). */
+article.card { display: flex; }
+article.card .tick {
   flex: 0 0 36px;
   width: 36px;
   padding: 14px 0;
@@ -728,8 +847,69 @@ h2.section-heading {
   border-right: 1px solid var(--rule);
   background: var(--paper);
 }
-.card .body { padding: 12px 16px; flex: 1; min-width: 0; }
-.card h3 { margin: 0 0 .4rem; font-size: 1rem; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+article.card .body { padding: 12px 16px; flex: 1; min-width: 0; }
+
+/* details.card — the phase cards (Task 1: folded). No JavaScript anywhere in
+   this page: the disclosure, the chevron rotation and the focus state are
+   all native <details>/<summary> plus CSS (Task 4). */
+details.card > summary {
+  display: flex;
+  align-items: stretch;
+  min-height: 44px;
+}
+details.card > summary:focus-visible { outline-offset: -2px; }
+details.card > summary .tick {
+  flex: 0 0 36px;
+  width: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: .68rem;
+  color: var(--soft);
+  border-right: 1px solid var(--rule);
+  background: var(--paper);
+}
+details.card > summary .summary-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  padding: 10px 14px;
+}
+details.card > summary .summary-title {
+  font-size: 1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  flex-wrap: wrap;
+}
+details.card > summary .summary-count {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: .68rem;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  color: var(--soft);
+}
+details.card > .body { padding: 6px 16px 14px; }
+
+/* Shared chevron — CSS borders only, no icon font, no image (Task 4). Points
+   right (closed) and rotates to point down (open); the same two rules serve
+   both the phase cards and the progress-log entries below. */
+.chevron-wrap { flex: 0 0 auto; display: flex; align-items: center; padding: 0 14px; }
+.chevron {
+  width: 8px;
+  height: 8px;
+  border-style: solid;
+  border-color: var(--soft);
+  border-width: 0 2px 2px 0;
+  transform: rotate(-45deg);
+  transition: transform .15s ease;
+}
+details[open] > summary .chevron { transform: rotate(45deg); }
 
 .badge {
   display: inline-block;
@@ -790,8 +970,37 @@ ul.bullets li::before {
 ul.bullets.done li::before { background: var(--done); }
 .empty-state { color: var(--soft); font-style: italic; font-size: .88rem; margin: 4px 0 0; }
 
+/* summary — the base rule Task 4 states outright: no marker, pointer cursor,
+   a visible focus-visible ring since removing the marker must not remove the
+   keyboard focus indication. No :hover rule anywhere in this file — hover
+   does not exist on the device this page is read on. */
+summary { cursor: pointer; list-style: none; }
+summary::-webkit-details-marker { display: none; }
+summary::marker { content: ""; }
+summary:focus-visible {
+  outline: 2px solid var(--now);
+  outline-offset: 2px;
+}
+
 ul.progress-log, ul.cf-list, ul.role-caps { list-style: none; padding: 0; margin: 0; }
-ul.progress-log li { padding: .4rem 0; border-bottom: 1px solid var(--rule); font-size: .9rem; }
+ul.progress-log li { border-bottom: 1px solid var(--rule); font-size: .9rem; }
+ul.progress-log li:last-child { border-bottom: none; }
+ul.progress-log details { width: 100%; }
+ul.progress-log details > summary {
+  display: flex;
+  align-items: stretch;
+  min-height: 44px;
+  gap: 0;
+}
+ul.progress-log details > summary .summary-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  padding: .5rem .2rem;
+}
+ul.progress-log details > summary:focus-visible { outline-offset: -2px; }
+ul.progress-log details .log-body { padding: 0 .2rem .7rem 0; color: var(--ink); }
 ul.cf-list li {
   padding: .35rem .6rem; margin: .3rem 0;
   background: var(--card); border: 1px solid var(--rule); border-radius: 7px;
@@ -863,14 +1072,35 @@ def render_html(data):
     parts.append('<h2 class="section-heading">Phases</h2>')
     for phase in data["phases"]:
         cls = PHASE_STATUS_CLASS[phase["status"]]
-        parts.append(f'<article class="card {cls}">')
-        parts.append(f'<div class="tick">{html.escape(phase["id"])}</div>')
-        parts.append('<div class="body">')
+        # Task 3 — the one phase open by default is the current phase,
+        # derived from the same status this phase already carries. Never a
+        # hardcoded id: the day SESSION_CONTEXT.md's header moves to P03,
+        # phase_status() answers IN PROGRESS for P03 and this follows it.
+        open_attr = " open" if phase["status"] == "IN PROGRESS" else ""
+        done_count = len(phase["done_bullets"])
+        queued_count = len(phase["queued_bullets"])
         parts.append(
-            f'<h3>{html.escape(phase["id"])} '
-            f'{EM_DASH} {html.escape(phase["name"])} '
-            f'<span class="badge {cls}">{html.escape(phase["status"])}</span></h3>'
+            f'<details class="card {cls}" '
+            f'data-roadmap-phase="{html.escape(phase["id"])}"{open_attr}>'
         )
+        parts.append("<summary>")
+        parts.append(f'<span class="tick">{html.escape(phase["id"])}</span>')
+        parts.append('<span class="summary-main">')
+        parts.append(
+            f'<span class="summary-title">{html.escape(phase["id"])} '
+            f'{EM_DASH} {html.escape(phase["name"])} '
+            f'<span class="badge {cls}">{html.escape(phase["status"])}</span></span>'
+        )
+        # Task 2 — "a count of what is inside, in the shape '6 done · 4
+        # queued'", derived from the same bullet lists rendered below.
+        parts.append(
+            f'<span class="summary-count">{done_count} done '
+            f'{MIDDOT} {queued_count} queued</span>'
+        )
+        parts.append("</span>")
+        parts.append('<span class="chevron-wrap"><span class="chevron" aria-hidden="true"></span></span>')
+        parts.append("</summary>")
+        parts.append('<div class="body">')
         parts.append(paragraphs_html(phase["content"]))
         if phase["entry"]:
             parts.append(
@@ -903,7 +1133,7 @@ def render_html(data):
         parts.append('<div class="sub-label">Queued</div>')
         parts.append(bullets_html(phase["queued_bullets"], done=False))
         parts.append("</div>")
-        parts.append("</article>")
+        parts.append("</details>")
 
     parts.append('<h2 class="section-heading">Progress log</h2>')
     parts.append(
@@ -912,11 +1142,30 @@ def render_html(data):
     )
     parts.append('<ul class="progress-log">')
     for row in data["done_rows"]:
-        parts.append(
-            f"<li><b>{html.escape(row['step'])}</b> "
-            f"{EM_DASH} {inline_html(row['task'])} "
-            f"{EM_DASH} commit: {inline_html(row['commit'])}</li>"
+        # Task 2 — the log summary: task id, date, verdict, first clause
+        # truncated at a word boundary with an ellipsis, all derived from
+        # this same row (task/verdict/step) or from DEVELOPMENT_JOURNAL.md
+        # (date, attached in collect()). Never a fourth column invented.
+        clause = truncate_at_word_boundary(
+            first_clause(row["task"]), MAX_LOG_SUMMARY_CLAUSE
         )
+        parts.append(f'<li><details data-roadmap-step="{html.escape(row["step"])}">')
+        parts.append("<summary>")
+        parts.append('<span class="summary-main">')
+        parts.append(
+            f"<b>{html.escape(row['step'])}</b> "
+            f"{EM_DASH} {html.escape(row['date'])} "
+            f"{EM_DASH} {html.escape(row['verdict'])} "
+            f"{EM_DASH} {inline_html(clause)}"
+        )
+        parts.append("</span>")
+        parts.append('<span class="chevron-wrap"><span class="chevron" aria-hidden="true"></span></span>')
+        parts.append("</summary>")
+        parts.append(
+            f'<div class="log-body">{inline_html(row["task"])} '
+            f"{EM_DASH} commit: {inline_html(row['commit'])}</div>"
+        )
+        parts.append("</details></li>")
     parts.append("</ul>")
 
     parts.append('<h2 class="section-heading">Decisions</h2>')

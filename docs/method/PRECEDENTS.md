@@ -368,6 +368,34 @@ advisory (PR-18), and a bucket-sum condition is written against the figure the
 task derives, never against the figure the prompt supplies. Origin: the
 reviewer defect at P02-T09-FIX TASK 6.
 
+**PR-38 — A structural assertion added beside an existing byte-compare must be
+proven to fire with the byte-compare removed, not merely proven to fire.**
+Where a check already byte-compares a generated artifact against its own
+regeneration, a hand-edit plant that violates a newly added structural
+assertion is *also* a byte-compare mismatch, so the run still fails — for the
+pre-existing reason, possibly masking a broken new assertion entirely. At
+P02-T11, `check_roadmap.py`'s new fold-conformance "details count" assertion
+(`docs/roadmap.html`'s `<details>` total must be at least phases +
+done-steps rows) passed every on-disk plant-and-revert case only because the
+byte-compare caught each one first. One case — a whole phase's `<details>`
+block deleted — exposed why: the new tag-scanning regex matched literal
+`<details>`/`<summary>` text inside a CSS comment inside `<style>` (prose
+*describing* the fold, not markup), inflating the true count of 53 to 54 and
+handing the floor one element of slack it should never have had; deleting one
+real block dropped the file to exactly 53 — the floor itself — and the new
+assertion stayed silent while the byte-compare alone caught the plant. Proven
+only by testing `check_fold_conformance()` in isolation, in memory, against
+hand-built HTML/Markdown fragments with the byte-compare step never in the
+call path at all — the five on-disk plant-and-revert cases satisfy Task 6's
+own requirement but are insufficient on their own to prove the new assertion
+works, because every one of the five is also a byte-compare mismatch. An
+isolated pass, with the pre-existing check deliberately absent, is required
+whenever a new structural assertion is added beside a pre-existing
+byte-compare. Fixed by stripping the `<style>...</style>` block before
+tokenizing (`STYLE_BLOCK_RE`): no real disclosure markup is ever emitted
+inside `<style>`, so this is lossless for every actual `<details>` in the
+page. Origin: P02-T11, `scripts/check_roadmap.py`'s `parse_details_elements()`.
+
 ---
 
 ## 2. Environment quirks — never re-discover

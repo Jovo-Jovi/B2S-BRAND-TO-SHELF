@@ -80,6 +80,41 @@ more assertions, each naming the short side:
 MINIMUM_TENANCY_SECTION3_ROLES states the floor for the §3 table itself: an
 emptied or reshaped §3 that yields fewer than five parsed role rows would make
 every comparison above vacuous, so it is a `die()`, not a `fail()`.
+
+**The fold cannot silently flatten (P02-T11).** `docs/roadmap.html` folds every
+phase card and every progress-log entry behind a native `<details>`; nothing
+here trusts that it stayed that way. Four assertions, each naming its own
+floor per PR-27:
+
+  count      the number of `<details>` elements in `docs/roadmap.html` is at
+             least the number of phases plus the number of done-steps rows
+             (`MINIMUM_DETAILS_ELEMENTS`, itself no lower than
+             `MINIMUM_PHASES + MINIMUM_DONE_STEPS_ROWS`) — a regression that
+             quietly un-folds a card or a log entry lowers this count below
+             its own live floor and is caught here, not by eye
+  one-summary  every `<details>` carries exactly one `<summary>` — never zero
+             (a fold with nothing to show closed) and never more than one
+             (a nested disclosure this generator never emits)
+  one-open   exactly one `<details>` carries the `open` attribute, and its
+             `data-roadmap-phase` names the current phase
+             (`data["current_phase"]`) — never zero (nothing to read closed)
+             and never more than one (more than one open state is not "the
+             current phase", it is every phase)
+  flat-md    `docs/ROADMAP.md` contains no `<details>` at all — the two
+             outputs deliberately differ in this one respect (see
+             `scripts/generate_roadmap.py`'s docstring) and a `<details>`
+             found there means the markdown renderer picked up fold markup
+             the fix never intended for it
+
+`parse_details_elements()` never assumes the flat, non-nested shape this
+generator happens to emit: it walks `<details>`/`</details>`/`<summary>`/
+`</summary>` tokens in document order with an explicit stack, so a `<summary>`
+is always attributed to its own nearest-enclosing `<details>` even if nesting
+existed. `data-roadmap-phase="P0N"` is this generator's own attribute
+(`scripts/generate_roadmap.py`), added for exactly this assertion — the
+alternative, sniffing the visible id text out of the summary's rendered
+prose, would break the moment a phase name changes and cannot distinguish a
+phase card from a progress-log entry, which carries no such attribute at all.
 """
 import importlib.util
 import os
@@ -105,6 +140,22 @@ MINIMUM_ROLE_JOURNEY_ROWS = 17
 MINIMUM_TENANCY_SECTION3_ROLES = 5
 
 NAMED_NON_ENUM_ACTORS = {"Operator", "Buyer"}
+
+# P02-T11 — the fold cannot silently flatten. Every phase card and every
+# progress-log entry in docs/roadmap.html is a native <details>; ROLE_JOURNEY
+# cards, the legend and the section headings stay unfolded by the task's own
+# instruction, so the floor below is exactly (phases + done-steps rows), never
+# a bare guess — and it is itself no lower than MINIMUM_PHASES +
+# MINIMUM_DONE_STEPS_ROWS, since both of those already die() before this
+# point if the tree they count from is emptied or reshaped (PR-27).
+MINIMUM_DETAILS_ELEMENTS = MINIMUM_PHASES + MINIMUM_DONE_STEPS_ROWS
+
+DETAILS_TOKEN_RE = re.compile(
+    r"<details\b[^>]*>|</details>|<summary\b[^>]*>|</summary>", re.I
+)
+DETAILS_OPEN_ATTR_RE = re.compile(r"(?:^|\s)open(?:\s|=|/?>|$)", re.I)
+DATA_ROADMAP_PHASE_RE = re.compile(r'data-roadmap-phase="([^"]*)"')
+STYLE_BLOCK_RE = re.compile(r"<style\b[^>]*>.*?</style>", re.I | re.S)
 
 FAIL = False
 
@@ -250,6 +301,106 @@ def check_role_journey_conformance(role_journey_rows, phase_ids, enum_roles,
     return phases_ok
 
 
+def parse_details_elements(html_text):
+    """Every <details> element in `html_text`, in document order, each as
+    {"open": bool, "phase": str|None, "summary_count": int}. Stack-based
+    rather than a flat count, so a <summary> is always credited to its own
+    nearest-enclosing <details> — see the module docstring.
+
+    The <style> block is stripped first: this generator's own CSS comments
+    talk about <details>/<summary> in prose (documenting the fold itself,
+    e.g. "all native <details>/<summary> plus CSS"), and a naive tag scan
+    would count that prose as a real element. No real disclosure markup is
+    ever emitted inside <style> — CSS has no tags — so this is lossless for
+    every actual <details> in the page."""
+    html_text = STYLE_BLOCK_RE.sub("", html_text)
+    elements = []
+    stack = []
+    for m in DETAILS_TOKEN_RE.finditer(html_text):
+        tok = m.group(0)
+        low = tok.lower()
+        if low.startswith("<details"):
+            attrs = tok[len("<details"):-1]
+            phase_m = DATA_ROADMAP_PHASE_RE.search(tok)
+            node = {
+                "open": bool(DETAILS_OPEN_ATTR_RE.search(attrs)),
+                "phase": phase_m.group(1) if phase_m else None,
+                "summary_count": 0,
+            }
+            elements.append(node)
+            stack.append(node)
+        elif low == "</details>":
+            if stack:
+                stack.pop()
+        elif low.startswith("<summary"):
+            if stack:
+                stack[-1]["summary_count"] += 1
+        # </summary> carries no information this check needs.
+    return elements
+
+
+def check_fold_conformance(actual_html, actual_md, phase_count, done_steps_count,
+                            current_phase):
+    """P02-T11 — the four fold-conformance assertions, each naming its own
+    floor. Returns nothing; failures are reported through fail()."""
+    elements = parse_details_elements(actual_html)
+
+    expected_min_details = phase_count + done_steps_count
+    if expected_min_details < MINIMUM_DETAILS_ELEMENTS:
+        die(f"{ROADMAP_HTML_REL}: the dynamic floor (phases {phase_count} + "
+            f"done-steps rows {done_steps_count} = {expected_min_details}) "
+            f"fell below the static floor MINIMUM_DETAILS_ELEMENTS "
+            f"({MINIMUM_DETAILS_ELEMENTS}) — one of the two counts it is "
+            f"built from has already collapsed further than its own "
+            f"MINIMUM_PHASES/MINIMUM_DONE_STEPS_ROWS die() should allow "
+            f"(PR-27)")
+
+    total_details = len(elements)
+    if total_details < expected_min_details:
+        fail(
+            f"{ROADMAP_HTML_REL}: {total_details} <details> element(s) "
+            f"found, minimum {expected_min_details} (= {phase_count} "
+            f"phase(s) + {done_steps_count} done-steps row(s)). A phase card "
+            f"or a progress-log entry stopped being a <details> — the fold "
+            f"cannot silently flatten"
+        )
+
+    bad_summary = [
+        (i, e["summary_count"]) for i, e in enumerate(elements)
+        if e["summary_count"] != 1
+    ]
+    if bad_summary:
+        named = ", ".join(f"#{i} has {n}" for i, n in bad_summary[:10])
+        fail(
+            f"{ROADMAP_HTML_REL}: {len(bad_summary)} <details> element(s) "
+            f"do not carry exactly one <summary>: {named}"
+        )
+
+    open_elements = [e for e in elements if e["open"]]
+    if len(open_elements) != 1:
+        fail(
+            f"{ROADMAP_HTML_REL}: {len(open_elements)} <details> element(s) "
+            f"carry the open attribute, expected exactly 1 (the current "
+            f"phase, {current_phase!r})"
+        )
+    elif open_elements[0]["phase"] != current_phase:
+        fail(
+            f"{ROADMAP_HTML_REL}: the one open <details> names phase "
+            f"{open_elements[0]['phase']!r}, expected the current phase "
+            f"{current_phase!r} (SESSION_CONTEXT.md's header token)"
+        )
+
+    if "<details" in actual_md.lower():
+        fail(
+            f"{ROADMAP_MD_REL} contains <details> — the two outputs "
+            f"deliberately differ in this one respect "
+            f"(scripts/generate_roadmap.py's docstring); {ROADMAP_MD_REL} "
+            f"must stay flat"
+        )
+
+    return total_details, expected_min_details
+
+
 def load_generator():
     if not os.path.isfile(GENERATOR):
         die("scripts/generate_roadmap.py does not exist — it is this check's "
@@ -386,6 +537,13 @@ def main():
     md_ok = compare(ROADMAP_MD_REL, expected_md)
     html_ok = compare(ROADMAP_HTML_REL, expected_html)
 
+    actual_html = read_committed(ROADMAP_HTML_REL)
+    actual_md = read_committed(ROADMAP_MD_REL)
+    details_count, details_floor = check_fold_conformance(
+        actual_html, actual_md, phase_count, done_steps_count,
+        data["current_phase"],
+    )
+
     if FAIL:
         sys.exit(1)
 
@@ -402,7 +560,11 @@ def main():
         f"owning-phase references resolved; {len(section3_roles)} "
         f"{TENANCY_MODEL_REL} \u00a73 role(s) (minimum "
         f"{MINIMUM_TENANCY_SECTION3_ROLES}) named and covered both ways; "
-        f"md={md_ok}, html={html_ok}"
+        f"md={md_ok}, html={html_ok}; {details_count} <details> element(s) "
+        f"in {ROADMAP_HTML_REL} (minimum {details_floor}, itself no lower "
+        f"than {MINIMUM_DETAILS_ELEMENTS}), each with exactly one <summary>, "
+        f"exactly one open and naming the current phase {data['current_phase']!r}, "
+        f"0 <details> in {ROADMAP_MD_REL}"
     )
 
 

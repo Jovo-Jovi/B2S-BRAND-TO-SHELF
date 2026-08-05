@@ -2749,3 +2749,20 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       assertions — so the static-assertion count stays 99, and `PROVEN_PAIRS`
       is untouched, no premise having been added. Owner: none outstanding,
       closed in the task that found it.
+- [x] CF-148 — `scripts/check-data-boundary.mjs` stated no floor at all,
+      contrary to PR-27's requirement that a check state the minimum it
+      expected to examine and fail when it examined less. Without one, a scan-
+      root rename or every Supabase import silently draining out of
+      `lib/supabase/` would report "OK: 0 file(s) scanned ... all 0 Supabase
+      import site(s)" and exit 0 — a guard that stopped guarding while still
+      reporting success, the same shape of gap CF-94 already found and fixed
+      on `check-no-runtime-cdn.mjs` and `check-no-hardcoded-literals.mjs`.
+      Found at P02-T11. CLOSED (P02-T11) — `MINIMUM_FILES_SCANNED` and
+      `MINIMUM_IMPORT_SITES` added at the true counts as of this commit: 10
+      files scanned under `[app, lib, __tests__, proxy.ts]` (`features/` and
+      `components/` do not exist yet, per CF-94) and 3 Supabase import sites,
+      all inside `lib/supabase/`. Proven by plant-and-revert from an in-memory
+      snapshot: each floor bumped by one above its true count fails loudly,
+      naming the observed count and the floor; reverted, and the working-tree
+      diff confirmed clean of the plant. Owner: none outstanding, closed in
+      the task that found it.
