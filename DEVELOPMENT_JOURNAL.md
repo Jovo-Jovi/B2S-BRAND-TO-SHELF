@@ -2084,3 +2084,24 @@ count down. The correction is one digit; the finding is that the precedent
 existed and simply was not run. Recomputed here with a one-line Python
 expansion of the row's own list, pasted into the task report rather than
 eyeballed.
+
+2026-08-05 | Opus (heavyweight) | P02 · P02-T03 — P02 entry preconditions, verified by query | docs/method/CARRY_FORWARDS.md, SESSION_CONTEXT.md, DEVELOPMENT_JOURNAL.md | The suite prints two summaries and they do not carry the same number: its own proof ledger reports 31 PASS / 0 FAIL / 0 LOST while vitest reports 32 tests passed. Reconciled from the file rather than assumed — there are 32 `it()` blocks, of which 31 record a ledger line and the thirty-second is the completeness guard at :1903 that asserts no proof exited without a verdict, and which by design records nothing itself. A gate report citing vitest's figure would overstate the assertion count by one; one citing the ledger's without checking would not have noticed the guard exists | first P02 build task, opening `phase/02-tenancy-and-access`
+
+**CF-125 — the correction to the P02-T02-FIX entry above.** That entry states
+that tracing each of CF-123's six de-identified phrases against
+`SESSION_CONTEXT.md`'s own done-steps table "resolved all six without opening a
+single prior commit". **Two of the six did not resolve**, and the entry above
+stands unedited because this journal is append-only. Enumerated over the whole
+table at `ee77b62` — the commit the claim was made against — it names 49 distinct
+carry-forward ids, among them CF-95, CF-98, CF-103, CF-106, CF-115, CF-118 and
+CF-119, and it never names **CF-104, CF-105, CF-116 or CF-117**. So "of them a
+breach of `SECURITY_MODEL.md` §1" expands to CF-103, CF-104, CF-105 and CF-106,
+of which the table carries only the first and the last; and "four findings from
+the read-only gate" expands to CF-115 to CF-118, of which the table carries only
+CF-115 and CF-118. The endpoints resolve; the membership does not. What was
+verified was the group's label rather than the group, which is exactly the
+sampling failure PR-23 exists to prevent, and CF-123's own "two of those are
+unresolvable without archaeology" named it correctly. The challenge was right to
+be raised and wrong in its conclusion — and it was caught only because the
+reviewer re-derived the claim instead of accepting a prior report as evidence,
+which is the same rule this task ran under.

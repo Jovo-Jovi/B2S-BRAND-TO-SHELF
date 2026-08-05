@@ -2069,3 +2069,16 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       and compliance failed. Owner: P02-T02-FIX.
       CLOSED (P02-T02-FIX) — corrected to 18, recomputed from the row's own
       list.
+- [x] CF-125 — P02-T02-FIX's journal entry records a finding that all six
+      de-identified references in the retired "Where we are" narrative resolved
+      from the done-steps table. Two do not. At `ee77b62` that table named
+      CF-95, CF-98, CF-103, CF-106, CF-115, CF-118 and CF-119, and never CF-104,
+      CF-105, CF-116 or CF-117 — so "of them a breach of `SECURITY_MODEL.md` §1"
+      and "four findings from the read-only gate" could not be enumerated from
+      it, which is precisely what CF-123's "two of those are unresolvable"
+      named. The challenge resolved the group label rather than its membership,
+      which is the sampling failure PR-23 exists for. Raising it was correct and
+      the reviewer verified rather than assumed. Owner: P02-T03, batched into
+      its journal write per PR-20.
+      CLOSED (P02-T03) — correction appended to `DEVELOPMENT_JOURNAL.md`, naming
+      the four ids. The journal is append-only; the original entry stands.
