@@ -1,13 +1,13 @@
 # SESSION CONTEXT
 Updated: 2026-08-05 · By: Sonnet · Phase: P02
-Last task: P02-T02 · Verdict: pending. P02 entry checklist cleared, on `main`
-per BRANCHING §3.2: three staging survivors corrected, three annotated per new
-precedent PR-29, one ledger row closed; `lib/` added to two guard roots, one
-ledger row amended; `SESSION_CONTEXT.md`'s open-ids section reduced to id and
-owner only and its narrative sections stopped restating carry-forward content,
-one ledger row opened then closed with two new `check_ledger.py` assertions
-proven by plant-and-revert. Full detail in the done-steps row below and in
-`docs/method/CARRY_FORWARDS.md`.
+Last task: P02-T02-FIX · Verdict: pending. `SESSION_CONTEXT.md`'s "Where we
+are" narrative section is retired per `DEV_OS.md` §6 — its facts were already
+in `DEVELOPMENT_JOURNAL.md`, so nothing was authored, only moved;
+`scripts/check_session_context_shape.py` now holds the file to exactly five
+`## ` headings so no replacement narrative can grow back. The prior task's
+stated-count arithmetic corrected 17 → 18, recomputed programmatically. Two
+ledger rows opened then closed. Full detail in the done-steps row below and
+in `docs/method/CARRY_FORWARDS.md`.
 
 ## Read these too
 - `docs/method/PRECEDENTS.md` — binding rulings and environment quirks.
@@ -18,132 +18,6 @@ proven by plant-and-revert. Full detail in the done-steps row below and in
 
 This file carries state and open ids only. Narrative belongs in the journal.
 Keep it short: if a paragraph is growing here, it belongs elsewhere.
-
-## Where we are
-Gate 3 passed 2026-08-01 and the prepare phase is closed. Eight blocking
-documents are frozen. Architecture is decided: `ARCHITECTURE.md` and twelve
-append-only ADRs, signed by the owner — Next.js App Router on Vercel, Supabase
-Postgres, row-level tenancy with default-deny RLS as the authorization boundary,
-the privileged client physically quarantined, exact-decimal money end to end.
-`BUILD_PHASES.md` sequences eight phases delivering Release 1; one branch per
-phase per `BRANCHING.md`. P01 Foundation is in progress on `phase/01-foundation`
-— no features: application shell, `DATA_MODEL.md` authored just-in-time, the
-tenancy-spine schema with RLS on every table, generated types, and the nine CI
-guards. P01-T01 landed the shell and three guards. P01-T02 landed `DATA_MODEL.md`
-and `MODULE_SPEC.md`, **one** Supabase project under ADR-012, the Platform tier
-applied to it — six tables plus the `role` enum, RLS on all six, 16 policies,
-three helper functions, five §4 indexes, the active-owner trigger — the three
-Supabase clients with the privileged one quarantined, generated types, and two
-more guards with the drift job. Five of the nine §6 guards are live; four await
-the phase that lands their target. **Tenant isolation is now proven.** P01-T03
-ran twenty-one assertions against the live catalog and the live policies —
-DATA_MODEL §5's eight, five adversarial additions, four more the gate authored
-itself, and a verified teardown. All PASS, none LOST. Two synthetic tenants were
-seeded under ADR-012's reserved prefix and removed, with zero rows and zero
-`auth.users` left behind, proven by query. The gate produced four findings, none
-of them a breach of `SECURITY_MODEL.md` §1.
-P01-T04 closed all four and re-ran the whole gate: **31 assertions, 31 PASS, 0
-FAIL, 0 LOST**, teardown verified at zero again. The schema now carries 18
-policies and 6 functions. CF-103's exploit is closed — an owner invites, only
-the invitee accepts — and its remaining half, the session-to-membership binding,
-is retargeted to P02. Operator reach into tenant business data is behind a live
-consent grant, logged, and cannot return `payload`. `SECURITY_MODEL.md` §1 has a
-fourth guarantee, availability. **P01-GATE ran the exit verification and the
-phase FAILED it** — 17 of 23 criteria PASS, 5 FAIL, 1 unprovable as written.
-Isolation is not among the failures: re-proven here at 31 PASS, 0 FAIL, 0 LOST,
-all 18 policies reached by a firing assertion and all 24 table/operation cells
-covered. What failed is enforcement and bookkeeping — the §1 tree does not match
-the tree that exists, two guards whose targets now exist were never written, four
-RLS-bypassing roles are named in no document, eleven open rows name an owner
-whose moment has passed, and two ledger rows still name P01 as owner. All five
-are reported, none fixed. **P01-T05-FIX closed all five and did not run the gate.**
-Both missing guards exist and both are proven by planted violation, not by
-reading: `check-enum-keys` asserts the shape of all 12 values across the four
-live enums, and the HTML-injection rule is six AST selectors that catch the
-gate's own probe. `MODULE_SPEC.md` follows the tree. `SECURITY_MODEL.md` §11 is
-the bypass inventory, re-derived from the live catalog rather than copied from
-the gate report, and it carries the standing rule that every phase exit gate
-re-derives it. Twelve stale owners were retargeted, not eleven — the new
-reachable-owner assertion in `check_ledger.py` found CF-54, which the gate did
-not name — and that check is proven on three positives and three negative
-controls. The first of the two closes on a green `types-drift` and a passing
-Vercel status at two commits; **the second is deliberately left open**, because
-its four advisories re-derive unchanged and D2's own condition says so. **P01-GATE-RERUN re-ran the
-whole verification and the phase FAILED it again** — 22 of 25 criteria PASS,
-3 FAIL, every one of them re-derived here and none carried over from the first
-run. All five of the first run's failures are genuinely closed and none
-regressed. Isolation is re-proven a fourth time: 31 assertions, 31 PASS, 0 FAIL,
-0 LOST, zero tenant rows before and after by a query the suite does not run, all
-18 policies reached and all 24 table/operation cells covered. Every guard with a
-live target is proven by a planted violation and reverted, 12 of 12, tree clean
-after. What failed is three things the first run could not have caught, because
-two of the checks are new in this prompt. **§11's standing re-derivation, on its
-first execution, found six live bypass mechanisms the document does not name** —
-three `security definer` functions outside `public` and three role paths into a
-bypass role — which §11.5 makes a hard failure not waivable by OD. **Four checks
-report success on an empty set** when their scan roots are removed, which is
-PR-21's exact failure shape. **`MODULE_SPEC.md` §1 still does not name the root
-`__tests__/`**, which holds the P01 deliverable it governs. **P01-T06-FIX closed
-all three and did not run the gate.** `SECURITY_MODEL.md` §11 is now two tiers:
-§11a is B2S-owned and individually justified, §11b is platform-owned and its
-requirement is enumeration and change detection rather than justification — the
-ambiguity was the reviewer's and the remedy is structural, not a longer list. The
-re-derivation at closure exceeded the gate's own findings twice: `authenticator`
-does reach both `vault` functions, by `SET ROLE service_role`, which the gate's
-two measurements could not see; and the catalog holds ten `MEMBER` paths into a
-bypass role, not four. `cli_login_postgres` is investigated and **not dropped** —
-nothing depends on it, its password expired 2026-08-03, and revocation is
-recommended as an owner decision. The six event triggers are ruled: not a bypass,
-since no API role can issue DDL and none is `security definer`, but a
-`supabase_admin` code-execution surface, stated as one. **All thirteen sandbox
-cases now error and none reports success on an empty set** — the four named plus
-a fifth the gate's own sandbox missed, `check_ledger` on an emptied row set —
-with seven controls proving detection intact and a legitimately-zero ledger still
-green. PR-27 landed. `MODULE_SPEC.md` §1 names the root `__tests__/`; both
-staging casualties are retired and a 110-file sweep found three more survivors,
-since resolved. `DATA_MODEL.md` §3's enum count is corrected to four and
-mechanised in `check_stated_counts.py`. **The advisory pair closes** — `postcss`
-8.4.31 → 8.5.25 and `sharp` 0.34.5 → 0.35.3 by transitive override, `npm audit`
-3 high → 0, the whole pipeline green. **P01-GATE-RUN3 ran the whole verification a third time and the
-phase PASSED it** — 27 criteria, 26 PASS, one documentation correction, zero hard
-failures, nothing carried over from either earlier run and no prior report cited.
-All three of the second run's failures are genuinely closed and none of the first
-run's five regressed. Isolation is proven a fifth time: 31 assertions, 31 PASS, 0
-FAIL, 0 LOST, zero tenant rows and zero `auth.users` before and after by a query
-the suite does not run, all 18 policies reached and 24 of 24 table/operation cells
-covered. **132 live objects in schema `public` traced one by one to
-`DATA_MODEL.md` with nothing unspecified** — 6 tables, 51 columns, 12 enum values,
-25 constraints, 13 indexes, 6 functions, 1 trigger, 18 policies, 0 views, 0
-sequences — and the document landed at `22b233f`, four days ahead of the first
-migration at `f29c0d9`. §11 re-derives clean against both tiers on the three-way
-measurement §11.0.1 requires. **Every check errors on a removed target and on an
-emptied one, 13 of 13 both ways**, each stating its PR-27 floor, and
-`check_credentials` still widens to a whole-tree scan on an absent diff. 12 of 12
-guards with a live target caught a planted violation and every snapshot restored,
-tree clean after. The two outstanding guards are confirmed target-free by scan
-rather than by assumption. The single correction is `MODULE_SPEC.md` §1 in the
-reverse direction only: all 20 paths that should exist do, and §1 names **no**
-repository-root file and none of the six infrastructure directories. **The phase
-exits. PR #2 is eligible and merging it is the owner's decision.**
-
-**PR #2 is MERGED** at `eda0f45` and `main` now carries P01. `phase/01-foundation`
-is deleted locally and on origin, on `BRANCHING.md` §4's verified containment:
-`git log main..phase/01-foundation` returned empty at 0 commits after local `main`
-was fast-forwarded from `04a503b` to `eda0f45`. **M-01 then amended the method on
-`main` directly**, which `BRANCHING.md` §3.2 now admits. Four decisions are
-signed: OD-H8 puts a STANDARD-class readiness task before every heavyweight exit
-gate, OD-H9 requires a specification to land with the check that asserts it,
-OD-H10 fixes `MODULE_SPEC.md` §1 as the application tree, OD-H11 makes a gate's
-adversarial probes additive. The register is **84** ODs, verified by count. The
-lifecycle carries READINESS. Four findings from the read-only gate are opened
-and closed in the same task — §1 has its OD-H10 scope statement, `docs/ADRs/`
-is deleted, `DATA_MODEL.md` §1 names its three departures instead of
-contradicting them, and the two traceback-only checks now fail in one line
-like the other eleven. Two conformance checks are live in `docs-integrity` and
-**the probe that proves them found two things a reading would not**: a root
-dropped from §1's `In scope:` line silently narrowed the new check itself, and
-`check-service-import` reported OK over an existing-but-empty quarantine, found
-and closed in the same task. PR-28 is landed.
 
 ## Done steps
 
@@ -182,7 +56,8 @@ and closed in the same task. PR-28 is landed.
 | P01-GATE-RUN3 | Phase 01 exit verification, third run, read-only but for the ceremony. 27 criteria re-derived from the live catalog and the committed tree, citing no prior report: **26 PASS, 1 DOC CORRECTION, 0 HARD FAILURES → PASS**. `DATA_MODEL.md`'s amended criterion met in both halves — 132 live objects censused and every one traced to the document, nothing unspecified, and the document landed at `22b233f` four days ahead of the first migration at `f29c0d9`. Isolation re-run in full: 31 assertions, 31 PASS, 0 FAIL, 0 LOST, zero tenant rows and zero `auth.users` either side by an independent query, 18 policies and 24 of 24 cells covered. §11 re-derived by tier with all three reachability measurements — §11a clean, §11b matching including the two findings that exceeded the second gate. Helpers held against all six subversion vectors including a forged `request.jwt.claims`. 13 of 13 checks error on both a removed and an emptied target, each stating its PR-27 floor; `check_credentials` widens to the whole tree on an absent diff. 12 of 12 guards proven by plant-and-revert; `check-print-containment` and `check-zod-coverage` confirmed target-free by scan, owners P06 and P02. Privileged-client quarantine sole construction site, one secret read. Carry-forward audit: 35 open, 34 owner assignments reachable, 6 name a gate, 13 a phase, 15 neither and are reachable by judgement rather than mechanically. No open row's owner names P01. The correction is `MODULE_SPEC.md` §1's reverse direction. Four ids parked for the next task, none landed here | PASS | `056ee50`, `f061489`, `eda0f45` |
 | M-01 | Method amendment, on `main` per the BRANCHING §3.2 it lands. OD-H8 to OD-H11 signed and authored in §3; register 80 → **84**, verified by count. Lifecycle gains READINESS and the OD-H11 sentence. CF-115 to CF-118 each opened then closed, per PR-24: `MODULE_SPEC.md` §1 carries OD-H10's scope statement with out-of-scope as the complement of `In scope:` and eight `deferred` markers making the forward direction assertable; `docs/ADRs/` deleted and README's row repointed; `DATA_MODEL.md` §1 names its three departures, rules 1-8 byte-identical; `check_ledger.py` and `check_done_steps_shape.py` fail in one line and the latter gains a floor. Two OD-H9 conformance checks landed and wired — `check_module_spec_tree.py` and `check_data_model_schema.py` — each proven on three planted violations reverted from an in-memory snapshot, 6 of 6 caught, every revert byte-identical. The two-way probe re-run over **fifteen** cases: 30 of 30 runs error, all with a `FAIL:` line, none with a traceback, plus three controls. Two findings the probe produced and a reading did not: the new tree check passed a root dropped from its own scope line, now fixed by asserting scope against the tree block both ways; and `check-service-import` passed an emptied quarantine, landed as CF-119 and closed. PR-28 landed; CF-114's `BUILD_PHASES.md` citations amended, row left open | pending | `116d983` |
 | P02-T01 | P02 entry: land task on `main` per BRANCHING §3.2. Four signed decisions — OD-G13 to OD-G16 — appended to `DECISIONS.md` §2 Group G and authored in full in §3; register 84 → **88**, verified by count. `TENANCY_MODEL.md` §3 rule 1 amended to match OD-G15 — at least one active `Owner`, may have several — nothing else in §3 touched. Ledger reconciled per PR-24: CF-93 amended (gaps 1, 2, 5 and 7 found already closed and recorded so; gap 3 resolved at the decision level by OD-G14; gap 4 by OD-G15; gap 6 alone stays open, owner P03), CF-99 closed on the owner's merge at `eda0f45` with verified branch containment, CF-103 amended (remainder resolved at the decision level by OD-G14, implementation and proof still owed), CF-120 opened and closed in the same task, CF-121 opened (invitation-by-email resolved at the design level by OD-G16, implementation still owed). Ledger now 106 rows, 35 open. `check_stated_counts.py` gained a sixth check — `SESSION_CONTEXT.md` states the register total in the present tense exactly once and it must equal `DECISIONS.md` §2 — proven by a planted wrong figure reverted from an in-memory snapshot (PR-26) and by removed/emptied-target cases, taking the two-way empty-target set from fifteen cases to sixteen (PR-28). `SESSION_CONTEXT.md`:228 reworded to carry no bare total, closing CF-120. No application code, no migration, no schema change | pending | `917476f` |
-| P02-T02 | P02 entry checklist cleared, on `main` per BRANCHING §3.2. Three staging survivors corrected in `BUILD_PHASES.md` (:33, :47, :51 — staging → production, B2S describing B2S); one in `ARCHITECTURE.md` (:118), :104/:105/:110-111/:142/:145 confirmed untouched; three in `DEV_OS_REFERENCE.md` (:95, :118, :205) annotated dated below each, byte-unchanged, per new precedent PR-29 (a record of another project is annotated, never corrected — BETK had staging, this file records BETK). CF-114 CLOSED. `check-no-runtime-cdn.mjs` and `check-no-hardcoded-literals.mjs` add `lib` to `ROOTS`: 4 files (`app`: 3, `proxy.ts`: 1) → 7 (`lib`: 3 more), floor raised 1 → 7 on both, no violation under `lib/`. CF-94 AMENDED, stays OPEN — `components/` and `features/` still owed. CF-122 — the class of defect, not the three instances: `SESSION_CONTEXT.md`'s open-ids section rewritten to bare `- CF-nn — owner: <owner>` (34 lines, id-for-id against the ledger's 34 open rows); the "Where we are" narrative (17 distinct ids enumerated before editing: CF-93, 99, 103, 104, 105, 106, 109, 114, 115-119, 120, 121, 54, 95, 98), `Frozen decisions in force` and `Next action` scrubbed of every closed-id restatement (CF-31, 55, 95, 98, 99, 104-106, 110, 114, 115-119, 120), leaving only open ids outside the done-steps table. `check_ledger.py` gained two assertions — the open-ids section's shape and id-set equality, and every carry-forward id outside the done-steps table must be OPEN (floor 1) — each proven by plant-and-revert from an in-memory snapshot, 8 of 8 cases caught (removed target, emptied target and a content violation for each), all reverts byte-identical, no traceback. Two-way (check, premise) set: sixteen → **eighteen** (PR-28, one case per assertion added). CF-122 OPENED then CLOSED in this task. Ledger: 107 rows, 34 open, reconciling id-for-id. All twelve checks green, each stating its floor. No application code, no migration, no schema change | pending | `12ffaa9` |
+| P02-T02 | P02 entry checklist cleared, on `main` per BRANCHING §3.2. Three staging survivors corrected in `BUILD_PHASES.md` (:33, :47, :51 — staging → production, B2S describing B2S); one in `ARCHITECTURE.md` (:118), :104/:105/:110-111/:142/:145 confirmed untouched; three in `DEV_OS_REFERENCE.md` (:95, :118, :205) annotated dated below each, byte-unchanged, per new precedent PR-29 (a record of another project is annotated, never corrected — BETK had staging, this file records BETK). CF-114 CLOSED. `check-no-runtime-cdn.mjs` and `check-no-hardcoded-literals.mjs` add `lib` to `ROOTS`: 4 files (`app`: 3, `proxy.ts`: 1) → 7 (`lib`: 3 more), floor raised 1 → 7 on both, no violation under `lib/`. CF-94 AMENDED, stays OPEN — `components/` and `features/` still owed. CF-122 — the class of defect, not the three instances: `SESSION_CONTEXT.md`'s open-ids section rewritten to bare `- CF-nn — owner: <owner>` (34 lines, id-for-id against the ledger's 34 open rows); the "Where we are" narrative (18 distinct ids enumerated before editing: CF-93, 99, 103, 104, 105, 106, 109, 114, 115-119, 120, 121, 54, 95, 98), `Frozen decisions in force` and `Next action` scrubbed of every closed-id restatement (CF-31, 55, 95, 98, 99, 104-106, 110, 114, 115-119, 120), leaving only open ids outside the done-steps table. `check_ledger.py` gained two assertions — the open-ids section's shape and id-set equality, and every carry-forward id outside the done-steps table must be OPEN (floor 1) — each proven by plant-and-revert from an in-memory snapshot, 8 of 8 cases caught (removed target, emptied target and a content violation for each), all reverts byte-identical, no traceback. Two-way (check, premise) set: sixteen → **eighteen** (PR-28, one case per assertion added). CF-122 OPENED then CLOSED in this task. Ledger: 107 rows, 34 open, reconciling id-for-id. All twelve checks green, each stating its floor. No application code, no migration, no schema change | pending | `12ffaa9` |
+| P02-T02-FIX | FIX for CF-122's collision with `DEV_OS.md` §6. `SESSION_CONTEXT.md`'s "Where we are" section retired: 2 paragraphs enumerated over the whole section, not a sample (PR-23); both already recorded in `DEVELOPMENT_JOURNAL.md`'s own per-task entries (P01-T01 through P01-GATE-RUN3 at their individual dated lines, PR #2's merge and M-01 in the M-01 entry) with their real ids intact, so 0 lines were appended. The six de-identified references CF-123 names trace back to real ids by cross-reading this file's own done-steps table, which the de-identification never touched — all six resolvable, not "two...unresolvable without archaeology" as CF-123's text has it; reported as a finding, CF-123 landed unedited per PR-24. Header block and done-steps table now carry the file's whole orientation, unchanged. File: 423 → 296 lines before this row, 18 distinct ids corrected from a wrong 17 in the row above — `python` one-liner expanding `115-119` and counting the resulting set, result 18 (PR-15). `scripts/check_session_context_shape.py` landed as `docs-integrity`'s eighth check: the file's `## ` headings must be exactly the five that remain, floor 5. Proven by four plant-and-revert cases from an in-memory snapshot, never `git checkout --` (PR-26) — added heading, removed heading, removed target, emptied target — 4 of 4 caught, 0 tracebacks, every revert byte-identical, confirmed by `git diff --stat` after. Two-way (check, premise) set: eighteen → **nineteen** (PR-28, one case for the new check). CF-123 and CF-124 opened and closed in this task. Ledger: 109 rows, 34 open, reconciling id-for-id. All thirteen checks green — eight `docs-integrity`, five `guards` — each stating its floor. No application code, no migration, no schema change; tenant isolation N/A, this task touches no data path | pending | — |
 
 > Commit column: one or more comma-separated backticked shas, or `—` where no
 > single commit tracks the step (P-00 through P-01c predate the one-task-one-commit

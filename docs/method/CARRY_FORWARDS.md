@@ -2045,3 +2045,27 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       CLOSED (P02-T02) — the section carries ids and owners only, the narrative no
       longer restates row contents, and two assertions in `check_ledger.py` hold
       both properties.
+- [x] CF-123 — CF-122's second assertion is correct — `SESSION_CONTEXT.md` is state
+      and a closed id restated there is the defect the row closes — but it landed
+      against a "Where we are" section that had grown to 123 lines, and the only
+      move left was to de-identify six references: "CF-103, CF-104, CF-105 and
+      CF-106" became "of them a breach of `SECURITY_MODEL.md` §1"; "CF-95 and
+      CF-98" became "two ledger rows"; "CF-98 is deliberately left open" became
+      "the second is deliberately left open"; "CF-98 is closed" became "the
+      advisory pair closes"; "CF-115 to CF-118" became "four findings from the
+      read-only gate"; "landed as CF-119 and closed" became "found and closed in
+      the same task". Two of those are unresolvable without archaeology. Cause:
+      the reviewer wrote the rule without reading `DEV_OS.md` §6, which already
+      says this file is short by design and that a growing paragraph belongs in
+      the journal or the ledger — the section, not the check, was the defect.
+      Owner: P02-T02-FIX.
+      CLOSED (P02-T02-FIX) — the section is retired to the journal with its ids
+      restored, the check is unchanged, and `check_session_context_shape.py`
+      stops another narrative section growing in its place.
+- [x] CF-124 — The P02-T02 done-steps row states "17 distinct ids enumerated
+      before editing" against an enumeration of 18. PR-15 requires a stated
+      total its own contents enumerate to be verified programmatically before
+      landing, and it was not. No new machinery is owed: the precedent exists
+      and compliance failed. Owner: P02-T02-FIX.
+      CLOSED (P02-T02-FIX) — corrected to 18, recomputed from the row's own
+      list.

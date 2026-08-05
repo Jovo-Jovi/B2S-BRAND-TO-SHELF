@@ -2030,3 +2030,57 @@ application code, no migration, no schema change; tenant isolation is N/A —
 this task touches no data path.
 
 2026-08-05 | Sonnet (standard) | P02 · P02-T02 — clear the P02 entry checklist: staging corrections and annotations (PR-29), lib/ guard coverage, CF-122's class of defect | docs/method/BUILD_PHASES.md, docs/product/ARCHITECTURE.md, docs/method/DEV_OS_REFERENCE.md, docs/method/PRECEDENTS.md, scripts/check-no-runtime-cdn.mjs, scripts/check-no-hardcoded-literals.mjs, scripts/check_ledger.py, docs/method/CARRY_FORWARDS.md, SESSION_CONTEXT.md | The three CF-122 restatements were a symptom, not the defect: a state file that restates a source of truth goes stale the moment a commit amends the ledger row without also touching the state file, so the fix is structural — narrative sections now point to the ledger instead of repeating a row's contents or status, and check_ledger.py asserts that the open-ids section carries nothing but an id and an owner and that no closed id is named anywhere else in the file outside the done-steps table — rather than restating the three found instances more carefully | P02 live preconditions task, verified by query
+
+2026-08-05 | Sonnet (standard) | P02 · P02-T02-FIX — retire `SESSION_CONTEXT.md`'s "Where we are" narrative; correct CF-124's arithmetic; land `check_session_context_shape.py` | SESSION_CONTEXT.md, docs/method/CARRY_FORWARDS.md, scripts/check_session_context_shape.py (new), .github/workflows/docs-integrity.yml | CF-123's own text says two of the six de-identified references it lists are "unresolvable without archaeology"; all six were in fact resolved, by cross-reading this file's own done-steps table, which the earlier de-identification never touched. Landed the row unedited per PR-24 rather than rewrite a supplied ledger text, and record the finding here instead | P02 live preconditions task, verified by query, unchanged
+
+**CF-122's fix was correct and still collided with `DEV_OS.md` §6.** The
+check closes the class of restatement; it says nothing about a section's
+right to exist at all, and "Where we are" had grown to 123 lines of exactly
+the kind of narrative §6 names as belonging in the journal or the ledger. The
+retirement is a deletion, not a rewrite: every fact the section carried was
+already recorded, in more detail and with real ids, in this journal's own
+per-task entries — P01-T01 through P01-GATE-RUN3 and M-01 each have a full
+dated entry above, and none of the two paragraphs enumerated in "Where we
+are" (PR-23: the whole section, not a sample) named a fact absent from them.
+Zero lines were appended as a result; the whole of Task 1 was verifying that
+this was true, not writing new prose.
+
+**The six de-identified references are a case study in checking a claim
+before moving it.** CF-122's fix replaced six literal carry-forward ids in
+"Where we are" with generic phrases, because the row content behind them had
+since changed and restating it accurately would have meant re-deriving it.
+CF-123's text supplies the six "became" mappings and then asserts two of them
+are "unresolvable without archaeology". Tracing each phrase against this same
+file's done-steps table — which the de-identification never touched, because
+it is historical and CF-122's check exempts it — resolved all six without
+opening a single prior commit: "two ledger rows" is CF-95 and CF-98, named
+verbatim in the P01-GATE row; "the second is deliberately left open" and "the
+advisory pair closes" are CF-98 at P01-T05-FIX and P01-T06-FIX respectively,
+both named verbatim there; "four findings from the read-only gate" is CF-115
+to CF-118, named verbatim in the M-01 row; and "found and closed in the same
+task" is CF-119, named verbatim in the M-01 row itself ("landed as CF-119 and
+closed"). The task instruction (PR-24) is to land a supplied ledger row
+unedited, so CF-123's text stands as given rather than corrected — this entry
+is the record that the row's central claim was checked and found short of
+the truth, not a silent pass-through.
+
+**`check_session_context_shape.py` is a five-item allow-list, not a
+description.** It asserts that `SESSION_CONTEXT.md`'s `## ` headings are
+exactly `Read these too`, `Done steps`, `Open carry-forwards — ids only`,
+`Frozen decisions in force`, `Next action` — nothing added, nothing missing,
+nothing duplicated — so a future task that adds a sixth heading to hold a
+new narrative fails the pipeline instead of quietly recreating "Where we
+are" under a different name. Proven by four plant-and-revert cases from an
+in-memory snapshot (PR-26): an added heading, a removed heading, a removed
+target and an emptied target, 4 of 4 caught, 0 tracebacks, every revert
+byte-identical, confirmed by `git diff --stat` reporting no residual change
+afterward. It is `docs-integrity`'s eighth check; the two-way (check,
+premise) empty-target set moves from eighteen cases to nineteen (PR-28).
+
+**PR-15 failed by omission, not by a wrong formula.** P02-T02's done-steps
+row stated "17 distinct ids enumerated" against a list that expands to 18 —
+`115-119` is five ids, not one, and nobody expanded it before writing the
+count down. The correction is one digit; the finding is that the precedent
+existed and simply was not run. Recomputed here with a one-line Python
+expansion of the row's own list, pasted into the task report rather than
+eyeballed.
