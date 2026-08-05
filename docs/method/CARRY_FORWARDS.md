@@ -2138,3 +2138,76 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       its journal write per PR-20.
       CLOSED (P02-T03) — correction appended to `DEVELOPMENT_JOURNAL.md`, naming
       the four ids. The journal is append-only; the original entry stands.
+- [ ] CF-126 — Supabase Realtime does not carry request headers into its WebSocket
+      handshake, so a policy evaluated there sees no `x-b2s-tenant` selector and
+      degrades to `absent`: a caller with one active membership resolves implicitly
+      and a caller with several resolves NULL. Denial, not disclosure, and nothing
+      in this schema is subscribed today. Found by P02-T04 and recorded in the
+      migration header comment at
+      `supabase/migrations/20260805120001_session_tenant_selector.sql`:48 because
+      that task's row budget was capped at two — a reviewer prompt defect, since a
+      finding placed where `check_ledger.py` cannot reach it is not logged. Owner:
+      **the task that first subscribes to Realtime**, and the P02 exit gate, which
+      re-derives it. Stays OPEN.
+- [x] CF-127 — Two reviewer-side items were named in verdicts and never landed: the
+      project-file ruling, allocated PR-30 in conversation while P02-T04 landed a
+      different PR-30 from the branch, and P02-T04's PowerShell quirk. PR-19 holds
+      that a carry-forward named in a verdict is already open; neither was, because
+      no prompt carried them. Owner: P02-T05.
+      CLOSED (P02-T05) — PR-31 and PR-32 landed verbatim in
+      `docs/method/PRECEDENTS.md` §1, and the PowerShell `rg` quirk landed in §2
+      alongside the existing `bash -c` and `node -e` entries it belongs with.
+- [x] CF-128 — Two `x-b2s-tenant` headers comma-join into one value, which is a
+      non-match and resolves NULL. Fail-closed by construction and unproven: the
+      suite has no probe for it at f68c714. Owner: **P02-T05**, closing on assertion
+      (h). Stays OPEN until that assertion is green.
+      CLOSED (P02-T05) — assertion 26 is green. The row's own closing condition is
+      met, so it is closed here rather than carried with its condition satisfied;
+      the P02-T05 prompt's done-when line expected it still open, and that
+      discrepancy is reported rather than resolved silently. Proven twice over,
+      per PR-30: six duplicate-header pairs over HTTP by a caller holding exactly
+      one active membership, each 200/null with zero reach, and four forged
+      `request.headers` shapes in process — comma-joined, comma-and-space joined
+      and a JSON array — all null with nothing raised. The caller resolves tenant A
+      with no header and with one valid header, which is what distinguishes "the
+      selector arrived and did not match" from "the transport dropped it".
+- [ ] CF-129 — `public.provision_tenant()` is not rate-limited, and nothing else
+      bounds it. Any authenticated identity holding a live `Member` may call it as
+      often as it likes; each successful call writes one `tenant`, one `owner`
+      `active` `membership` and one `activity_event`, and there is no per-member
+      cap, no cooldown, no quota and no approval step. What that leaves reachable:
+      unbounded row growth in the tenancy spine by a single signed-in identity, and
+      slug squatting — `tenant.slug` is globally unique, so a caller can take an
+      arbitrary number of names nobody else can then use. Neither is a disclosure
+      and no isolation property is affected: every tenant so created is isolated
+      from every other, which assertions 25d and 25e prove on tenants made this
+      way. Not implemented here deliberately: no mechanism has been decided, and
+      choosing one is a stack decision this task does not hold. Owner: **the task
+      that wires the sign-up surface**, and the P02 exit gate, which re-derives it.
+- [ ] CF-130 — `provision_tenant()` validates `p_name` and `p_slug` and passes
+      `p_base_currency` and `p_default_locale` through unvalidated. `DATA_MODEL.md`
+      §3.1 fixes the shape of both in prose — a currency code and a locale — and
+      `public.tenant` carries no constraint for either, so the function is the only
+      place either could be established and it does not. A caller may therefore
+      provision a tenant whose `base_currency` is any text at all. This is a
+      requirements gap as much as a code one: no signed decision states the
+      permitted set, and D6's "no currency code outside brand configuration" points
+      at where the answer belongs rather than stating it. Found by P02-T05 while
+      writing the function; not closed here because inventing the permitted set
+      would be inventing scope. Owner: **the task that authors `BrandConfig`**,
+      which is where the currency and locale sets are decided, and the P02 exit
+      gate.
+- [x] CF-131 — Materialisation is unconditional, so proof 7's exact-set expectation
+      for `member` moved from `[]` to the operator's own id. Before this task the
+      harness seeded `public.member` for five identities and never for the operator,
+      so an operator held no `member` row and proof 7 asserted it read none. OD-G13
+      makes authentication create a Member for every identity, staff included, so
+      the operator now holds exactly one — their own, returned by
+      `member_select_self`. Recorded because it is a changed expectation inside one
+      of the 46 pre-existing assertions and a reviewer must be able to find it
+      later, not only in a task report. Owner: P02-T05.
+      CLOSED (P02-T05) — the claim proof 7 makes is unchanged: an operator reaches
+      no *tenant's* member row, and `member_select_colleague` needs a shared tenant
+      an operator does not have. The measurement is still an exact set, so the proof
+      cannot pass by reading more than one row, and no policy was altered to
+      accommodate it. `DATA_MODEL.md` §3.2 states the consequence.

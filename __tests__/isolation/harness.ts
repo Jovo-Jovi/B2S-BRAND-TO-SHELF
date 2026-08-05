@@ -221,6 +221,13 @@ export type Caller = {
   apiKey: string;
   token: string;
   headers?: Record<string, string>;
+  /**
+   * Header pairs appended rather than set, so the same name can be sent twice.
+   * CF-128 is about exactly that and a `Record` cannot express it: two
+   * `x-b2s-tenant` headers is a distinct wire shape from one, and undici joins
+   * them into a single comma-separated field value. Applied after `headers`.
+   */
+  rawHeaders?: [string, string][];
 };
 
 /**
@@ -244,6 +251,33 @@ export function selecting(
     ...caller,
     label: `${caller.label}[${headerName}=${selector === "" ? "<empty>" : selector}]`,
     headers: { ...(caller.headers ?? {}), [headerName]: selector },
+  };
+}
+
+/**
+ * The same caller sending the selector header MORE THAN ONCE — CF-128.
+ *
+ * Each pair is appended, so the request really does carry two header lines of
+ * the same name and undici joins them on the wire exactly as any HTTP client
+ * would. That is the point: the value PostgREST hands to SQL is one
+ * comma-joined string, which is a non-match against every uuid the caller
+ * holds, so the answer is null. Fail-closed by construction, and unproven until
+ * something sends it.
+ */
+export function selectingTwice(
+  caller: Caller,
+  first: string,
+  second: string,
+  headerName: string = TENANT_SELECTOR_HEADER,
+): Caller {
+  return {
+    ...caller,
+    label: `${caller.label}[${headerName}=${first} +${headerName}=${second}]`,
+    rawHeaders: [
+      ...(caller.rawHeaders ?? []),
+      [headerName, first],
+      [headerName, second],
+    ],
   };
 }
 
@@ -291,6 +325,21 @@ function parseAttempt(status: number, raw: string): Attempt {
   };
 }
 
+/**
+ * The request headers for one caller: the fixed pair PostgREST authenticates
+ * against, then whatever the caller chose to add.
+ *
+ * A `Headers` instance rather than a plain object because `rawHeaders` appends,
+ * and appending the same name twice is the whole of CF-128's wire shape. Set
+ * headers are applied first so a raw pair can add a second line beside one.
+ */
+function buildHeaders(base: Record<string, string>, caller: Caller): Headers {
+  const headers = new Headers(base);
+  for (const [name, value] of Object.entries(caller.headers ?? {})) headers.set(name, value);
+  for (const [name, value] of caller.rawHeaders ?? []) headers.append(name, value);
+  return headers;
+}
+
 async function postgrest(
   config: Config,
   caller: Caller,
@@ -299,7 +348,7 @@ async function postgrest(
   body?: unknown,
   prefer = "return=representation",
 ): Promise<Attempt> {
-  const headers: Record<string, string> = {
+  const base: Record<string, string> = {
     apikey: caller.apiKey,
     Accept: "application/json",
     // Every write returns its rows, so "refused" and "matched nothing" are
@@ -308,14 +357,16 @@ async function postgrest(
   };
   // An empty token is the unauthenticated caller: the request carries the
   // publishable key alone and PostgREST resolves it to `anon`.
-  if (caller.token !== "") headers.Authorization = `Bearer ${caller.token}`;
-  if (body !== undefined) headers["Content-Type"] = "application/json";
-  // Last, so a proof can send a selector that PostgREST will see verbatim.
-  for (const [name, value] of Object.entries(caller.headers ?? {})) headers[name] = value;
+  if (caller.token !== "") base.Authorization = `Bearer ${caller.token}`;
+  if (body !== undefined) base["Content-Type"] = "application/json";
 
   const result = await fetchResilient(
     `${config.url}/rest/v1/${path}`,
-    { method, headers, body: body === undefined ? undefined : JSON.stringify(body) },
+    {
+      method,
+      headers: buildHeaders(base, caller),
+      body: body === undefined ? undefined : JSON.stringify(body),
+    },
     `${caller.label} ${method} ${path}`,
   );
   return parseAttempt(result.status, result.body);
@@ -375,17 +426,16 @@ export function makeProbes(config: Config) {
       fn: string,
       args: Record<string, unknown> = {},
     ): Promise<{ status: number; body: string; rows: RawRow[] }> {
-      const headers: Record<string, string> = {
+      const base: Record<string, string> = {
         apikey: caller.apiKey,
         Accept: "application/json",
         "Content-Type": "application/json",
       };
-      if (caller.token !== "") headers.Authorization = `Bearer ${caller.token}`;
-      for (const [name, value] of Object.entries(caller.headers ?? {})) headers[name] = value;
+      if (caller.token !== "") base.Authorization = `Bearer ${caller.token}`;
 
       const result = await fetchResilient(
         `${config.url}/rest/v1/rpc/${fn}`,
-        { method: "POST", headers, body: JSON.stringify(args) },
+        { method: "POST", headers: buildHeaders(base, caller), body: JSON.stringify(args) },
         `${caller.label} rpc/${fn}`,
       );
 
@@ -575,15 +625,30 @@ export async function seed(config: Config, sql: SqlRunner): Promise<Fixture> {
   // memberships go in as one statement so that the deferred active-owner
   // trigger sees each tenant already holding its owner at commit.
   //
-  // §3.2 — member.id equals the Supabase Auth user id. The operator gets no
-  // member row: §3.4 makes an operator a separate, non-tenant-scoped identity.
+  // §3.2 — the `member` rows already exist by the time this runs. P02-T05's
+  // `member_materialisation` trigger on `auth.users` created one for every
+  // identity `makeIdentity` just signed in, which is the whole of OD-G13's
+  // first act, so this statement ADOPTS them rather than creating them: it
+  // stamps the reserved display_name teardown and proof 4a rely on. ON CONFLICT
+  // is not defensive vagueness — the id is the auth user id by construction, so
+  // the conflict is the expected path and an INSERT here would fail.
+  //
+  // Nothing about the trigger is proven by this succeeding, deliberately: an
+  // upsert would pass whether the trigger fired or not, which is why proof 24a
+  // asserts materialisation on a fresh identity before anything writes to it.
+  //
+  // The operator is materialised too, and there is no longer any way for it not
+  // to be — OD-G13 is unconditional. It confers nothing: an operator holds no
+  // membership, so it resolves null and reads no tenant's rows, which is what
+  // proof 7 measures.
   await sql(`
     insert into public.member (id, email, display_name) values
       (${lit(aOwner.authId)},        ${lit(aOwner.email)},        ${lit(SYNTHETIC_PREFIX + "a-owner")}),
       (${lit(aViewer.authId)},       ${lit(aViewer.email)},       ${lit(SYNTHETIC_PREFIX + "a-viewer")}),
       (${lit(bOwner.authId)},        ${lit(bOwner.email)},        ${lit(SYNTHETIC_PREFIX + "b-owner")}),
       (${lit(bViewer.authId)},       ${lit(bViewer.email)},       ${lit(SYNTHETIC_PREFIX + "b-viewer")}),
-      (${lit(unaffiliated.authId)},  ${lit(unaffiliated.email)},  ${lit(SYNTHETIC_PREFIX + "unaffiliated")});
+      (${lit(unaffiliated.authId)},  ${lit(unaffiliated.email)},  ${lit(SYNTHETIC_PREFIX + "unaffiliated")})
+    on conflict (id) do update set display_name = excluded.display_name;
 
     insert into public.operator (id, granted_at) values (${lit(operator.authId)}, now());
 
@@ -653,6 +718,20 @@ export type TeardownCounts = Record<string, number>;
  * owner impossible through any ordinary path. Disabling it needs table
  * ownership, which is why teardown is privileged SQL and not a PostgREST call.
  */
+/**
+ * The schema proof 25b's fault injection lives in. Named here rather than in the
+ * proof so that teardown can remove it unconditionally: a run that dies between
+ * creating the trigger and dropping it would otherwise leave a trigger on
+ * `activity_event` that refuses one member's writes forever, and the next run
+ * would inherit it.
+ *
+ * Outside `public` on purpose. Proofs 14, 15 and 22 census `public` and assert
+ * exact sets against it, so a fault-injection helper placed there would fail
+ * three unrelated proofs depending on which ran first — an order dependency that
+ * looks like a policy regression.
+ */
+export const FAULT_SCHEMA = "zz_test_fault";
+
 export async function teardown(config: Config, sql: SqlRunner): Promise<void> {
   const prefix = lit(`${SYNTHETIC_PREFIX}%`);
 
@@ -661,6 +740,8 @@ export async function teardown(config: Config, sql: SqlRunner): Promise<void> {
   );
 
   await sql(`
+    drop schema if exists ${FAULT_SCHEMA} cascade;
+
     alter table public.membership disable trigger membership_active_owner_required;
 
     delete from public.activity_event
@@ -704,7 +785,18 @@ export async function teardownCounts(sql: SqlRunner): Promise<TeardownCounts> {
         where email::text like ${prefix} or display_name like ${prefix})::int       as member_synthetic,
       (select count(*) from public.activity_event
         where action like ${prefix})::int                                           as activity_event_synthetic,
-      (select count(*) from auth.users where email like ${prefix})::int             as auth_users_synthetic
+      (select count(*) from auth.users where email like ${prefix})::int             as auth_users_synthetic,
+      -- Proof 25b creates a schema, a function and a trigger to force a failure
+      -- mid-provisioning. All three are counted here, because a fault injection
+      -- that outlives its proof is a live defect wearing a test's name — and the
+      -- trigger is the one that would matter, since it sits on activity_event.
+      (select count(*) from pg_namespace
+        where nspname = '${FAULT_SCHEMA}')::int                                     as fault_schema_total,
+      (select count(*) from pg_trigger t
+         join pg_class c on c.oid = t.tgrelid
+        where not t.tgisinternal
+          and c.relnamespace = 'public'::regnamespace
+          and t.tgname like ${lit(`${FAULT_SCHEMA}%`)})::int                         as fault_trigger_total
   `);
   return row;
 }
@@ -756,6 +848,12 @@ export const EXPECTED_ASSERTIONS = [
   // catches tomorrow's regression.
   "23a", "23b", "23c", "23d", "23e", "23f", "23g", "23h",
   "23i", "23j", "23k", "23l", "23m", "23n", "23o",
+  // P02-T05 — OD-G13's two acts. 24 is member materialisation, 25 is tenant
+  // provisioning, 26 is CF-128's duplicate selector header. 24c and 25f found
+  // nothing and are here anyway, per OD-H11.
+  "24a", "24b", "24c",
+  "25a", "25b", "25c", "25d", "25e", "25f",
+  "26",
   "D",
 ];
 

@@ -238,6 +238,50 @@ One company. One master `brand`. The root of every scope chain.
 No INSERT, UPDATE or DELETE policy for members — provisioning is a privileged
 path (ADR-005). **A tenant cannot create or rename a tenant through the API.**
 
+**The write path, and it is the only one.** `provision_tenant(name, slug,
+base_currency, default_locale)` — a `security definer` function owned by the
+schema owner, `EXECUTE` granted to `authenticated` and to nobody else. It is
+OD-G13's second act: it creates the `tenant`, the caller's `active` `owner`
+`membership` (§3.3) and a `tenant.provisioned` `activity_event` (§3.6) in one
+transaction, and returns the new id. The absent INSERT policy above is still
+what makes this the only path — the function stands beside that absence rather
+than relaxing it.
+
+**It is deliberately not the `service_role` client** at ADR-005's quarantine,
+and the reason is atomicity rather than taste. That client speaks PostgREST,
+where each request is its own transaction: three round trips cannot be one act,
+and a failure after the tenant insert would leave a tenant with no owner —
+which `membership_active_owner_required` would not catch, because it fires at
+the commit of a transaction that had already succeeded. The privileged client
+remains right for provisioning work that is not one statement's worth of
+writes.
+
+Three properties are structural rather than checked, and each is asserted:
+
+- **Atomic.** A plpgsql body runs inside the caller's transaction, so a raise
+  anywhere in the function leaves no tenant, no membership and no event. 25b
+  proves it by forcing a failure at the third insert and counting all three at
+  zero afterwards.
+- **The caller is the owner.** There is no member parameter. The owner is
+  `auth.uid()`, so there is no argument with which to name anyone else — 25c
+  asserts the absence rather than the refusal.
+- **A second act, never a side effect.** Nothing calls it: no trigger, no
+  default, no policy, no other function. Sign-up may call it immediately after
+  authenticating; signing in does not reach it. 25f asserts that an identity
+  which has only authenticated holds zero tenants.
+
+It validates `name` and `slug` against the shapes this section states in prose
+and the table carries no constraint for, because it is `tenant`'s only writer
+and therefore the only place that shape can be established.
+`base_currency` and `default_locale` are passed through unvalidated: this
+section states their ranges, the table constrains neither, and the gap became
+reachable for the first time when this path landed. **CF-130 owns it and it is
+not closed here.**
+
+**Not rate-limited.** Any authenticated `Member` may provision repeatedly, and
+each call is a tenant, a membership and an event. Nothing bounds that and no
+mechanism for bounding it is decided. **CF-129 owns it.**
+
 ### 3.2 `member`
 A person. Not tenant-scoped: one person may belong to several tenants over time,
 and identity is global to the platform.
@@ -254,6 +298,41 @@ and identity is global to the platform.
 `display_name` and `preferred_locale` only. Additionally SELECT where the row
 shares a `membership` tenant with the caller — colleagues are visible to each
 other, strangers are not. `email` is never updatable here; it is auth's.
+
+**The write path: authentication itself, and nothing else.** A `member` row is
+created by the `member_materialisation` trigger on `auth.users`, which calls
+`materialise_member()` — `security definer`, owned by the schema owner, granted
+`EXECUTE` to **nobody**, because a trigger function's privilege is checked when
+the trigger is created and never when it fires. There is still no INSERT policy
+and no INSERT grant on this table, so no caller acting as `authenticated`
+creates a `member` row at all, their own included. That is stronger than a
+policy restricting a caller to their own id: `id` and `email` are read out of
+the row `auth` itself just wrote, so there is no argument to forge.
+
+**One address is one `member.id`** (OD-G13's identity invariant). `email` is
+`citext unique`, so the invariant is an index rather than a rule someone
+remembers. A second authenticating identity for an address the platform already
+holds is refused inside the trigger, which aborts the transaction that was
+inserting into `auth.users` — **so the second identity is not created either.**
+No row, no linkage, no partial state, and a named error rather than a silent
+no-op. An identity carrying no address is refused on the same ground: an
+invariant keyed to an address cannot be satisfied without one. 24b asserts the
+refusal and that the row already held is unchanged, field by field, afterwards.
+
+**Materialisation grants nothing.** It creates no `membership`, no `role` and no
+`tenant`, and it writes no `activity_event` — `activity_event.tenant_id` is
+`not null` and a fresh `Member` belongs to no tenant. `current_tenant_id()`
+resolves null for them, which is §2.1's first contract row, and every policy in
+this schema reads them zero rows. 24a asserts both, on all six tables.
+`created_by` is left null: rule 4's provenance column references `member (id)`
+and no member created this row — the person did, by proving an address, which
+`id` already records.
+
+**An operator is materialised too.** OD-G13 is unconditional, so a B2S staff
+identity that signs in holds a `member` row like anyone else. It confers
+nothing — an operator holds no `membership`, resolves null, and reads no
+tenant's rows — and proof 7 measures that as an exact set including the
+operator's own row rather than as a bare zero.
 
 ### 3.3 `membership`
 Binds a `member` to a `tenant` with a `role`. The join that carries data of its
@@ -307,6 +386,17 @@ keeps suspend and archive on their own tenant's rows, because neither produces
 one. Provisioning the first `active` `owner` of a new tenant is therefore a
 privileged path (ADR-005) and could not be anything else — there is no owner yet
 to do the inviting.
+
+**That path now exists and is named.** `provision_tenant()` (§3.1) writes the
+first `owner` row in the same transaction as the `tenant` it belongs to, which
+is the case `membership_active_owner_required` was deferred to commit for: the
+constraint evaluates against a tenant that already holds its first active owner.
+It is the only writer of an `active` `owner` row for a tenant that has no
+members yet, and the invite-then-accept rule is untouched by it. The row it
+writes belongs to the caller, so it would satisfy the restrictive
+`membership_active_is_self_only` rule even where that rule applied to it — the
+privileged path needs no exemption here, which is the property that matters. An
+owner still cannot make anyone else active anywhere, by any path.
 
 **Why, and it is not tidiness.** The rule was written against a live exploit.
 An owner who can force a stranger active can force a *second* active membership
@@ -397,6 +487,20 @@ so an operator reaches it only through `operator_read_activity_event(tenant_id)`
 — live consent required, the access logged, `payload` never returned. The
 absence of an operator policy here is what makes that path the only one, and
 §2 is where the reasoning lives.
+
+**Every tenant's trail begins with its own creation.** `provision_tenant()`
+(§3.1) writes a `tenant.provisioned` event naming the caller as
+`actor_member_id`, in the same transaction as the tenant and the membership, so
+a tenant whose trail has no first event does not exist. `payload` is null there:
+every fact worth recording is already a column, and this section forbids a full
+row copy. 25a counts the event by query rather than inferring it from the
+function's return value.
+
+**Materialisation writes no event at all**, and that is a stated absence rather
+than an omission. A `Member` belongs to no tenant and `tenant_id` is `not null`,
+so a platform-global act has no tenant-scoped trail to be written to. An audit
+of who materialised when lives in `auth.users`, which is auth's record and not
+this table's.
 
 ### 3.7 `role` — not a table
 `role` is a Postgres enum, not a table. The five values are fixed by

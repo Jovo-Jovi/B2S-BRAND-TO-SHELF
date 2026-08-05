@@ -267,6 +267,26 @@ tenant selectors shaped like SQL injection were answered 403 by Cloudflare at th
 Supabase edge; the assertion that `current_tenant_id()` resolves them to null
 without raising had, for those two values, tested Cloudflare.
 
+**PR-31 — No repository document is attached as a project file.**
+The reviewer fetches the repository every session (PR-09). An attached copy is
+an unasserted restatement of a source of truth, outside the reach of every
+check, and it rots silently — at P02-T03, four of six attached files differed
+from `HEAD` and `AGENTS.md` still described a port to a stack with no database.
+Where the network is unavailable the fallback is a paste of `SESSION_CONTEXT.md`
+and `PRECEDENTS.md`, nothing more. This ruling was first allocated PR-30 in a
+verdict and never landed; P02-T04 landed a different PR-30 from the branch, and
+the repository outranks the conversation. Origin: CF-127.
+
+**PR-32 — While a phase branch is open, method arising from phase work lands on
+that branch.**
+`BRANCHING.md` §3.2 sends a decision, a precedent, a lifecycle or a conformance
+check to `main` directly. That holds when no phase branch is open. While one is,
+a rule discovered by phase work lands with the work that found it and reaches
+`main` with the phase pull request — a ledger split across two heads reconciles
+nowhere, and `check_ledger.py` would pass on both while agreeing with neither.
+P02-T04 already did this correctly with PR-30. Method unrelated to the open
+phase still lands on `main`. Refines §3.2; supersedes nothing. Origin: CF-127.
+
 ---
 
 ## 2. Environment quirks — never re-discover
@@ -568,3 +588,21 @@ without raising had, for those two values, tested Cloudflare.
   other control character with a client-side `TypeError` before any request is
   sent. A malformed-input list intended to reach a server must exclude them, or
   the probe fails in the harness and never tests anything.
+- Found at P02-T04, landed here at P02-T05: PowerShell strips the inner double
+  quotes out of a single-quoted `rg` pattern argument, so the regex reaches
+  ripgrep with a character class that was never written and the error names a
+  class the author did not type. Same family as the `bash -c` and `node -e`
+  entries above: a pattern containing quotes goes in a file and is passed with
+  `-f`, or the quotes are escaped for PowerShell first.
+- Learned at P02-T05, the same backtick trap as the `node -e` entry above but
+  reached from the other side: a backtick inside a SQL comment written in a
+  **JavaScript template literal** terminates the literal, and TypeScript reports
+  `TS1005: ',' expected` at a line that looks syntactically fine. Prose inside a
+  template literal names types in words — "of type char" — rather than quoting
+  them in backticks.
+- Learned at P02-T05, two catalog typings that cost a full suite run each:
+  `pg_policy.polcmd` is of type `"char"`, not `text`, so concatenating it has no
+  unique operator and the query fails 42725 — cast it explicitly. And
+  `pg_get_function_identity_arguments()` renders **parameter names as well as
+  types** (`p_name text, p_slug text`), not the bare type list the name suggests;
+  `proargnames` and `pronargs` are the columns for the name and arity questions.

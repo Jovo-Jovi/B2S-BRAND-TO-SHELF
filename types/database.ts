@@ -368,6 +368,15 @@ export type Database = {
           tenant_id: string
         }[]
       }
+      provision_tenant: {
+        Args: {
+          p_base_currency: string
+          p_default_locale: string
+          p_name: string
+          p_slug: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       consent_scope: "read_only"

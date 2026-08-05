@@ -20,6 +20,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   anonCaller,
   EXPECTED_ASSERTIONS,
+  FAULT_SCHEMA,
   futureIso,
   makeIdentity,
   makeProbes,
@@ -32,6 +33,7 @@ import {
   refusedByPolicy,
   seed,
   selecting,
+  selectingTwice,
   SYNTHETIC_PREFIX,
   TABLES,
   TENANT_SCOPED_TABLES,
@@ -676,14 +678,24 @@ describe("proof 7 — the operator surface", () => {
     // is not: `activity_event` lost its operator policy, so the direct table
     // read is now empty for an operator whether or not a live consent grant
     // exists, and proofs 20 and 21 cover the declared read path that replaced
-    // it. Nothing gives an operator member or membership: current_tenant_id()
-    // is null for an identity holding no membership.
+    // it. Nothing gives an operator a MEMBERSHIP: current_tenant_id() is null
+    // for an identity holding none, so `membership` and every tenant's `member`
+    // rows stay out of reach.
+    //
+    // `member` is the operator's OWN row and nobody else's. P02-T05 made
+    // materialisation unconditional (OD-G13), so a staff identity that signs in
+    // holds a `member` row like anyone else and `member_select_self` returns it.
+    // The expectation moved from `[]` to exactly that one id: the claim is
+    // unchanged — an operator reaches no TENANT's member row — and the set is
+    // still exact, so it is the measurement that was refined and not the rule
+    // that was relaxed. `member_select_colleague` needs a shared tenant and an
+    // operator has none, which is why one row is the whole of it.
     const expectations: [TableName, string[]][] = [
       ["tenant", [fixture.a.id, fixture.b.id]],
       ["activity_event", []],
       ["consent_grant", [fixture.a.consentGrantId, fixture.b.consentGrantId]],
       ["operator", [fixture.operator.authId]],
-      ["member", []],
+      ["member", [fixture.operator.authId]],
       ["membership", []],
     ];
 
@@ -1003,7 +1015,12 @@ describe("proof 15 — the roles and the function surface", () => {
       "has_live_consent_grant",
       "is_current_tenant_owner",
       "is_operator",
+      // P02-T05, OD-G13's two acts. Both are security definer with a pinned
+      // search_path like every other function here, which is what this proof
+      // asserts of the whole surface rather than of a list it knows.
+      "materialise_member",
       "operator_read_activity_event",
+      "provision_tenant",
     ];
     if (!sameSet(functions.map((f) => f.proname), expectedFunctions)) {
       failures.push(`public functions are [${functions.map((f) => f.proname).join(", ")}], expected [${expectedFunctions.join(", ")}]`);
@@ -1844,7 +1861,13 @@ describe("proof 22 — every function's EXECUTE privilege is explicit (CF-105)",
       has_live_consent_grant: "authenticated,postgres",
       is_current_tenant_owner: "authenticated,postgres",
       is_operator: "authenticated,postgres",
+      // P02-T05. materialise_member is a trigger function and is granted to
+      // nobody, for the reason enforce_tenant_active_owner is: EXECUTE is
+      // checked when the trigger is created, never when it fires, so the
+      // trigger keeps working while the function stops being an RPC endpoint.
+      materialise_member: "postgres",
       operator_read_activity_event: "authenticated,postgres",
+      provision_tenant: "authenticated,postgres",
     };
 
     for (const row of rows) {
@@ -2017,8 +2040,15 @@ describe("proof 23 — session-to-membership resolution (OD-G14, CF-93 gap 3, CF
 
     const members = [dual, single, invitee, suspended, archived, cOwner];
     await sql(`
+      -- ADOPTED, not created. P02-T05's member_materialisation trigger writes
+      -- the row inside the transaction that inserts into auth.users, so by the
+      -- time makeIdentity returns, every one of these already exists. The
+      -- display name is all this statement still contributes, and it is what
+      -- teardown finds them by. A plain INSERT here would raise 23505 on the
+      -- primary key, which is the trigger working.
       insert into public.member (id, email, display_name) values
-        ${members.map((m) => `('${m.authId}', '${m.email}', '${SYNTHETIC_PREFIX}${m.label}')`).join(",\n        ")};
+        ${members.map((m) => `('${m.authId}', '${m.email}', '${SYNTHETIC_PREFIX}${m.label}')`).join(",\n        ")}
+      on conflict (id) do update set display_name = excluded.display_name;
 
       insert into public.tenant (id, name, slug, base_currency, default_locale, status) values
         ('${tenantC.id}', '${SYNTHETIC_PREFIX}gamma', '${tenantC.slug}', 'SAR', 'en', 'active');
@@ -2726,6 +2756,1213 @@ describe("proof 23 — session-to-membership resolution (OD-G14, CF-93 gap 3, CF
       `6 (caller, tenant) pairs across anon and an unaffiliated member, over two real tenants and a third: ` +
         `${observed.join(", ")}, every one reading 0 tenant, 0 membership, 0 consent_grant and 0 activity_event ` +
         `rows; an operator selecting tenant A resolved ${operatorAnswer.body}`,
+    );
+    expect(failures).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// P02-T05 — OD-G13's two acts, and CF-128
+// ---------------------------------------------------------------------------
+
+/** current_tenant_id() as the caller sees it, plus the verbatim answer. */
+async function resolution(caller: Caller): Promise<Resolution> {
+  const answer = await probe.rpc(caller, "current_tenant_id");
+  let value: string | null = null;
+  try {
+    value = JSON.parse(answer.body === "" ? "null" : answer.body) as string | null;
+  } catch {
+    value = answer.body;
+  }
+  return { status: answer.status, body: answer.body, value };
+}
+
+/**
+ * What the caller reads on all six tables, as id sets.
+ *
+ * A refusal carrying 42501 is zero reach and lands as the empty set: anon holds
+ * no policy on any of these tables, so it is refused outright rather than
+ * filtered to nothing (proof 13). Any OTHER error lands as a marker no
+ * assertion here can mistake for an empty read, because an exception raised
+ * inside a policy must never pass as isolation working.
+ */
+async function readsAllSix(caller: Caller): Promise<Record<string, string[]>> {
+  const out: Record<string, string[]> = {};
+  for (const table of TABLES) {
+    const attempt = await probe.select(caller, table);
+    if (attempt.ok) out[table] = attempt.ids;
+    else if (attempt.code === "42501") out[table] = [];
+    else out[table] = [`UNEXPECTED:${attempt.status}:${attempt.code}:${attempt.message.slice(0, 80)}`];
+  }
+  return out;
+}
+
+/** Asserts an exact id set per table, so a row gained is as loud as one lost. */
+function readsExactly(
+  what: string,
+  seen: Record<string, string[]>,
+  expected: Partial<Record<TableName, string[]>>,
+  failures: string[],
+): void {
+  for (const table of TABLES) {
+    const want = expected[table] ?? [];
+    if (!sameSet(seen[table], want)) {
+      failures.push(
+        `${what}: read ${table} [${seen[table].join(", ")}], expected [${want.join(", ")}]`,
+      );
+    }
+  }
+}
+
+describe("proof 24 — member materialisation (OD-G13 act one, DATA_MODEL §3.2)", () => {
+  it("24a a materialised Member holds an identity and nothing else", async () => {
+    const failures: string[] = [];
+    const runId = randomUUID().slice(0, 8);
+
+    // Nothing runs between this identity being created and the read below. No
+    // seeding, no membership, no privileged insert — so whatever is in
+    // public.member for this id was put there by the trigger, inside the
+    // transaction that wrote the auth row.
+    const fresh = await makeIdentity(config, "g13-fresh", runId);
+
+    type MemberRow = {
+      email: string;
+      display_name: string | null;
+      created_by: string | null;
+      archived_at: string | null;
+    };
+    const rows = await sql<MemberRow>(`
+      select email::text as email, display_name, created_by::text as created_by,
+             archived_at::text as archived_at
+        from public.member
+       where id = '${fresh.authId}'
+    `);
+
+    if (rows.length !== 1) {
+      failures.push(
+        `a freshly authenticated identity has ${rows.length} member row(s) whose id is the identity's own, ` +
+          `expected exactly 1 — OD-G13 makes authentication create at most a Member, and at least one`,
+      );
+    } else {
+      const row = rows[0];
+      // Case-insensitively, because member.email is citext and the address is
+      // what auth wrote. The point is that it is the SAME address, not that the
+      // two strings are byte-equal.
+      if (row.email.toLowerCase() !== fresh.email.toLowerCase()) {
+        failures.push(`member.email is ${row.email}, expected the address this identity authenticated with`);
+      }
+      if (row.created_by !== null) {
+        failures.push(
+          `member.created_by is ${row.created_by}, expected null — nobody created this row, ` +
+            `the person did by proving an address, and id already records that`,
+        );
+      }
+      if (row.archived_at !== null) failures.push(`member.archived_at is ${row.archived_at}, expected null`);
+    }
+
+    // One address is one member.id (OD-G13's identity invariant), stated as a
+    // count over the whole table rather than over the row just read.
+    const [held] = await sql<{ n: number }>(
+      `select count(*)::int as n from public.member where email = '${fresh.email}'::extensions.citext`,
+    );
+    if (held.n !== 1) failures.push(`${held.n} member rows carry this address, expected exactly 1`);
+
+    // MATERIALISATION GRANTS NOTHING. Every table that could carry a grant,
+    // counted through the privileged path so no policy can hide a row.
+    const [granted] = await sql<{
+      memberships: number;
+      tenants: number;
+      events: number;
+      consents: number;
+      operators: number;
+    }>(`
+      select
+        (select count(*) from public.membership where member_id = '${fresh.authId}')::int          as memberships,
+        (select count(*) from public.tenant where created_by = '${fresh.authId}')::int             as tenants,
+        (select count(*) from public.activity_event
+          where actor_member_id = '${fresh.authId}')::int                                         as events,
+        (select count(*) from public.consent_grant
+          where granted_by = '${fresh.authId}' or created_by = '${fresh.authId}')::int            as consents,
+        (select count(*) from public.operator where id = '${fresh.authId}')::int                   as operators
+    `);
+    for (const [what, count] of Object.entries(granted)) {
+      if (count !== 0) failures.push(`materialisation left ${count} ${what} row(s) behind, expected 0`);
+    }
+
+    // §2.1's first contract row: no membership, so nothing resolves.
+    const resolved = await resolution(fresh);
+    if (resolved.value !== null) {
+      failures.push(`a member holding no membership resolved ${resolved.body}, expected null`);
+    }
+
+    // The six-table read. `member` is the caller's OWN row, returned by
+    // member_select_self, and it is not reach into any tenant — the claim is
+    // that it is ALL they have. Asserted as an exact set on every table so a
+    // seventh row appearing anywhere fails this.
+    const seen = await readsAllSix(fresh);
+    readsExactly("a fresh member", seen, { member: [fresh.authId] }, failures);
+
+    const ownership = await probe.rpc(fresh, "is_current_tenant_owner");
+    const staff = await probe.rpc(fresh, "is_operator");
+    if (ownership.body !== "false") failures.push(`is_current_tenant_owner answered ${ownership.body}, expected false`);
+    if (staff.body !== "false") failures.push(`is_operator answered ${staff.body}, expected false`);
+
+    record(
+      "24a",
+      "Authentication materialises a Member and confers nothing at all",
+      failures,
+      `one identity created and never touched again: exactly 1 member row carrying its own id and address, ` +
+        `created_by null, and 0 membership, 0 tenant, 0 activity_event, 0 consent_grant and 0 operator rows ` +
+        `referencing it. current_tenant_id() answered ${resolved.body}, is_current_tenant_owner ` +
+        `${ownership.body}, is_operator ${staff.body}. Reads across all ${TABLES.length} tables: ` +
+        `${TABLES.map((t) => `${t}=${seen[t].length}`).join(", ")} — the one row is member_select_self ` +
+        `returning the caller's own record`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("24b a second identity for a held address fails closed, and the row already held is unchanged", async () => {
+    const failures: string[] = [];
+    const observed: string[] = [];
+    const runId = randomUUID().slice(0, 8);
+
+    const held = await makeIdentity(config, "g13-held", runId);
+
+    /** The whole row as jsonb text, so "unchanged" means every column. */
+    const snapshot = async (): Promise<string> => {
+      const rows = await sql<{ row: string }>(
+        `select to_jsonb(m.*)::text as row from public.member m where m.id = '${held.authId}'`,
+      );
+      return rows[0]?.row ?? "<absent>";
+    };
+
+    const before = await snapshot();
+    if (before === "<absent>") failures.push("precondition: the first identity was not materialised at all");
+
+    // ROUTE ONE — the ordinary sign-up path, recorded and NOT counted as
+    // evidence about the trigger. auth.users carries users_email_partial_key,
+    // unique on email where is_sso_user = false, so GoTrue refuses a plain
+    // duplicate before the trigger is reached. A refusal by the layer in FRONT
+    // of the thing under test proves the layer in front (PR-30), which is
+    // precisely why routes two and three exist: they are the shapes that
+    // partial index does not cover.
+    let signupRefusal = "";
+    try {
+      // The same label and the same runId, so makeIdentity builds the same
+      // address. Nothing else about the call differs.
+      await makeIdentity(config, "g13-held", runId);
+      signupRefusal = "ACCEPTED";
+    } catch (cause) {
+      signupRefusal = (cause instanceof Error ? cause.message : String(cause)).slice(0, 120);
+    }
+    observed.push(`gotrue=${signupRefusal === "ACCEPTED" ? "ACCEPTED" : "refused"}`);
+
+    const [afterSignup] = await sql<{ n: number }>(
+      `select count(*)::int as n from public.member where email = '${held.email}'::extensions.citext`,
+    );
+    if (afterSignup.n !== 1) {
+      failures.push(`after a duplicate sign-up, ${afterSignup.n} member rows carry the address, expected exactly 1`);
+    }
+
+    // ROUTES TWO AND THREE — straight at auth.users, which is the only way to
+    // reach the trigger with an address the partial index lets through: a
+    // different case, and an SSO identity (where is_sso_user = true takes the
+    // row out of users_email_partial_key entirely).
+    const instance = "00000000-0000-0000-0000-000000000000";
+    const routes: { what: string; id: string; email: string; sso: boolean }[] = [
+      { what: "the same address in a different case", id: randomUUID(), email: held.email.toUpperCase(), sso: false },
+      { what: "the identical address as an SSO identity", id: randomUUID(), email: held.email, sso: true },
+    ];
+
+    for (const route of routes) {
+      const attempt = await sql.try(`
+        insert into auth.users (id, instance_id, aud, role, email, is_sso_user)
+        values ('${route.id}', '${instance}', 'authenticated', 'authenticated',
+                '${route.email}', ${route.sso})
+      `);
+
+      if (attempt.ok) {
+        failures.push(
+          `${route.what}: ACCEPTED — a second identity now exists for an address the platform already held, ` +
+            `which is the OD-G13 invariant broken`,
+        );
+        await sql(`
+          delete from public.member where id = '${route.id}';
+          delete from auth.users where id = '${route.id}';
+        `);
+      } else {
+        // The refusal has to be the TRIGGER's. A 23505 from an auth index would
+        // be a different mechanism answering, and would say nothing about what
+        // happens when the trigger is reached.
+        if (!/member materialisation refused/i.test(attempt.body)) {
+          failures.push(
+            `${route.what}: refused ${attempt.status} by something other than the trigger — ` +
+              `${attempt.body.slice(0, 240)}`,
+          );
+        }
+        if (!/already held by a different member/i.test(attempt.body)) {
+          failures.push(
+            `${route.what}: the trigger refused, but not as the identity invariant — ${attempt.body.slice(0, 240)}`,
+          );
+        }
+        observed.push(`${route.what}=refused ${attempt.status}`);
+      }
+
+      // NO PARTIAL STATE, in both directions. No member row for the refused id,
+      // and no auth row either: the trigger fires inside the transaction that
+      // inserts into auth.users, so a surviving auth user would mean the
+      // identity came into being without its Member.
+      const [left] = await sql<{ members: number; users: number }>(`
+        select
+          (select count(*) from public.member where id = '${route.id}')::int as members,
+          (select count(*) from auth.users where id = '${route.id}')::int    as users
+      `);
+      if (left.members !== 0) failures.push(`${route.what}: left ${left.members} member row(s) behind`);
+      if (left.users !== 0) {
+        failures.push(
+          `${route.what}: the refused auth identity persisted — the transaction did not roll back, ` +
+            `so an identity exists with no Member`,
+        );
+      }
+    }
+
+    // Still exactly one row for the address, and the one that was there is
+    // byte-identical to what it was before any of this ran. A refusal that
+    // quietly relinked or touched the original would pass every count above.
+    const [total] = await sql<{ n: number }>(
+      `select count(*)::int as n from public.member where email = '${held.email}'::extensions.citext`,
+    );
+    if (total.n !== 1) failures.push(`${total.n} member rows carry the address afterwards, expected exactly 1`);
+
+    const after = await snapshot();
+    if (after !== before) {
+      failures.push(`the member row already held changed during the refusals: before ${before} / after ${after}`);
+    }
+
+    record(
+      "24b",
+      "A second identity for a held address fails closed, with no partial write and no linkage",
+      failures,
+      `3 routes at one held address. The ordinary sign-up path was refused by auth's own partial unique index ` +
+        `before the trigger was reached, which is recorded and not counted; the two routes that index does not ` +
+        `cover — a case-differing address and an SSO identity — both reached the trigger and were refused ` +
+        `naming the OD-G13 invariant. After each, 0 member rows and 0 auth.users rows for the refused id, so ` +
+        `the auth transaction rolled back with it. Exactly 1 member row carries the address throughout and its ` +
+        `jsonb is byte-identical before and after. Observed: ${observed.join(", ")}`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("24c no authenticated caller writes a member row — their own included", async () => {
+    const failures: string[] = [];
+    const observed: string[] = [];
+
+    // The prompt's STOP condition, asserted rather than assumed: if the only
+    // mechanism that creates a member row also lets an ordinary caller name an
+    // id or an address, materialisation is not on the privileged path.
+    const [catalog] = await sql<{
+      write_policies: string;
+      authenticated_insert: boolean;
+      anon_insert: boolean;
+      authenticated_delete: boolean;
+    }>(`
+      select
+        -- polcmd is of type "char" rather than text, and concatenating the two
+        -- has no unique operator. The cast is required and is not cosmetic.
+        (select coalesce(string_agg(p.polname || '/' || p.polcmd::text, ', ' order by p.polname), '')
+           from pg_policy p
+          where p.polrelid = 'public.member'::regclass
+            and p.polcmd in ('a', '*'))                                as write_policies,
+        has_table_privilege('authenticated', 'public.member', 'INSERT') as authenticated_insert,
+        has_table_privilege('anon', 'public.member', 'INSERT')          as anon_insert,
+        has_table_privilege('authenticated', 'public.member', 'DELETE') as authenticated_delete
+    `);
+
+    if (catalog.write_policies !== "") {
+      failures.push(`public.member carries an INSERT-capable policy: ${catalog.write_policies}`);
+    }
+    if (catalog.authenticated_insert) failures.push("authenticated holds INSERT on public.member");
+    if (catalog.anon_insert) failures.push("anon holds INSERT on public.member");
+    if (catalog.authenticated_delete) failures.push("authenticated holds DELETE on public.member");
+
+    // And over the wire, because a catalog that reads clean and a request that
+    // succeeds have both happened in this repository.
+    const stranger = fixture.b.viewer.authId;
+    const invented: string[] = [];
+    const callers: Caller[] = [fixture.a.owner, fixture.unaffiliated, fixture.operator, anonCaller(config)];
+
+    for (const caller of callers) {
+      const mine = (caller as Identity).authId ?? null;
+      const freshId = randomUUID();
+      const freshEmail = `${SYNTHETIC_PREFIX}forged-${freshId.slice(0, 8)}@example.com`;
+      invented.push(freshId);
+
+      const shapes: [string, Record<string, unknown>][] = [
+        // The shape a naive `id = auth.uid()` INSERT policy would permit, and
+        // the one a client would reach for if materialisation were its job.
+        ["their own id and address", { id: mine, email: (caller as Identity).email ?? freshEmail }],
+        // The shape that would actually create a row if a grant existed.
+        ["an invented id and address", { id: freshId, email: freshEmail }],
+        // Someone else's identity, wearing a new address.
+        ["a stranger's id", { id: stranger, email: freshEmail }],
+      ];
+
+      for (const [what, payload] of shapes) {
+        const attempt = await probe.insert(caller, "member", payload);
+        if (attempt.ok) {
+          failures.push(`${caller.label} inserted a member row naming ${what}`);
+          continue;
+        }
+        // The refusal must be the GRANT's. A 23505 would mean the INSERT was
+        // authorised and only a unique key stopped it, which is a finding
+        // wearing a passing assertion's clothes.
+        if (!refusedByGrant(attempt) && !refusedByPolicy(attempt)) {
+          failures.push(
+            `${caller.label} naming ${what} was refused ${attempt.status}/${attempt.code} — ` +
+              `${attempt.message.slice(0, 140)}, which is not an authorisation refusal`,
+          );
+        }
+        observed.push(`${caller.label}:${what}=${attempt.status}/${attempt.code}`);
+      }
+    }
+
+    const [leftover] = await sql<{ n: number }>(
+      `select count(*)::int as n from public.member where id in (${invented.map((id) => `'${id}'`).join(", ")})`,
+    );
+    if (leftover.n !== 0) failures.push(`${leftover.n} of the invented member rows exist`);
+
+    record(
+      "24c",
+      "The member table has no caller-reachable write path, so materialisation is the privileged path's alone",
+      failures,
+      `no INSERT-capable policy on public.member, and neither anon nor authenticated holds INSERT or DELETE. ` +
+        `${callers.length} callers × 3 payload shapes — their own id, an invented one, and a stranger's — all ` +
+        `${callers.length * 3} refused on the grant, none on a unique key: ${observed.join(", ")}. 0 of the ` +
+        `${invented.length} invented ids exist afterwards`,
+    );
+    expect(failures).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+
+type Provisioning = { status: number; body: string; tenantId: string | null };
+
+/** What provision_tenant wrote for this member, counted past every policy. */
+type ProvisionedRows = {
+  tenants: number;
+  memberships: number;
+  active_owner: number;
+  events: number;
+  provisioned_events: number;
+};
+
+describe("proof 25 — tenant provisioning (OD-G13 act two, DATA_MODEL §3.1/§3.3/§3.6)", () => {
+  let pair: { who: Identity; slug: string; answer: Provisioning }[];
+
+  const provision = async (who: Caller, label: string, slug: string): Promise<Provisioning> => {
+    const answer = await probe.rpc(who, "provision_tenant", {
+      p_name: `${SYNTHETIC_PREFIX}${label}`,
+      p_slug: slug,
+      p_base_currency: "SAR",
+      p_default_locale: "en",
+    });
+    let tenantId: string | null = null;
+    try {
+      const parsed = JSON.parse(answer.body === "" ? "null" : answer.body) as unknown;
+      if (typeof parsed === "string") tenantId = parsed;
+    } catch {
+      // A refusal carries a Postgres error object rather than a uuid.
+    }
+    return { status: answer.status, body: answer.body, tenantId };
+  };
+
+  const provisionedRows = async (memberId: string): Promise<ProvisionedRows> => {
+    const [row] = await sql<ProvisionedRows>(`
+      select
+        (select count(*) from public.tenant t
+          where t.created_by = '${memberId}')::int                            as tenants,
+        (select count(*) from public.membership m
+          where m.member_id = '${memberId}')::int                             as memberships,
+        (select count(*) from public.membership m
+          where m.member_id = '${memberId}' and m.role = 'owner'
+            and m.status = 'active' and m.archived_at is null
+            and m.accepted_at is not null)::int                               as active_owner,
+        (select count(*) from public.activity_event e
+          where e.actor_member_id = '${memberId}')::int                       as events,
+        (select count(*) from public.activity_event e
+          where e.actor_member_id = '${memberId}'
+            and e.action = 'tenant.provisioned' and e.entity_type = 'Tenant'
+            and e.entity_id = e.tenant_id and e.payload is null)::int         as provisioned_events
+    `);
+    return row;
+  };
+
+  beforeAll(async () => {
+    const runId = randomUUID().slice(0, 8);
+
+    // Assertion (f) is about two members provisioning AT THE SAME TIME, so the
+    // two calls are issued together and the answers kept for 25d to assert.
+    // 25e then reads the two tenants this produced. Provisioning them here
+    // rather than inside either assertion keeps both first-class: neither
+    // depends on the other having run.
+    const first = await makeIdentity(config, "g13-pair-one", runId);
+    const second = await makeIdentity(config, "g13-pair-two", runId);
+    const slugs = [`${SYNTHETIC_PREFIX}pair-one-${runId}`, `${SYNTHETIC_PREFIX}pair-two-${runId}`];
+
+    const answers = await Promise.all([
+      provision(first, `pair-one-${runId}`, slugs[0]),
+      provision(second, `pair-two-${runId}`, slugs[1]),
+    ]);
+
+    pair = [
+      { who: first, slug: slugs[0], answer: answers[0] },
+      { who: second, slug: slugs[1], answer: answers[1] },
+    ];
+  }, 240_000);
+
+  it("25a provisioning writes exactly one tenant, one active owner membership and one event", async () => {
+    const failures: string[] = [];
+    const runId = randomUUID().slice(0, 8);
+    const solo = await makeIdentity(config, "g13-solo", runId);
+    const slug = `${SYNTHETIC_PREFIX}solo-${runId}`;
+
+    // The second-act rule, measured before the act: authentication wrote the
+    // Member and nothing else, so all five counts start at zero.
+    const before = await provisionedRows(solo.authId);
+    for (const [what, count] of Object.entries(before)) {
+      if (count !== 0) failures.push(`precondition: authentication alone left ${count} ${what}, expected 0`);
+    }
+
+    const answer = await provision(solo, `solo-${runId}`, slug);
+    if (answer.status !== 200) {
+      failures.push(`provisioning answered ${answer.status} ${answer.body.slice(0, 240)}, expected 200`);
+    }
+    if (answer.tenantId === null) {
+      failures.push(`provisioning returned ${answer.body.slice(0, 120)}, expected the new tenant's uuid`);
+    }
+
+    const after = await provisionedRows(solo.authId);
+    const expected: ProvisionedRows = {
+      tenants: 1,
+      memberships: 1,
+      active_owner: 1,
+      events: 1,
+      provisioned_events: 1,
+    };
+    for (const [what, want] of Object.entries(expected)) {
+      const got = (after as unknown as Record<string, number>)[what];
+      if (got !== want) failures.push(`${what} = ${got} after one provisioning call, expected ${want}`);
+    }
+
+    if (answer.tenantId !== null) {
+      // The three rows are each other's, not merely three rows. A function that
+      // wrote a membership into some other tenant would satisfy every count
+      // above.
+      const [row] = await sql<{
+        slug: string;
+        status: string;
+        created_by: string | null;
+        archived_at: string | null;
+        membership_tenant: string | null;
+        event_tenant: string | null;
+        event_operator: string | null;
+      }>(`
+        select t.slug, t.status::text as status, t.created_by::text as created_by,
+               t.archived_at::text as archived_at,
+               (select m.tenant_id::text from public.membership m
+                 where m.member_id = '${solo.authId}')                  as membership_tenant,
+               (select e.tenant_id::text from public.activity_event e
+                 where e.actor_member_id = '${solo.authId}')            as event_tenant,
+               (select e.actor_operator_id::text from public.activity_event e
+                 where e.actor_member_id = '${solo.authId}')            as event_operator
+          from public.tenant t
+         where t.id = '${answer.tenantId}'
+      `);
+
+      if (row === undefined) {
+        failures.push(`provisioning returned ${answer.tenantId} and no tenant carries that id`);
+      } else {
+        if (row.slug !== slug) failures.push(`tenant.slug is ${row.slug}, expected ${slug}`);
+        if (row.status !== "active") failures.push(`tenant.status is ${row.status}, expected active`);
+        if (row.created_by !== solo.authId) {
+          failures.push(`tenant.created_by is ${row.created_by}, expected the caller`);
+        }
+        if (row.archived_at !== null) failures.push(`tenant.archived_at is ${row.archived_at}, expected null`);
+        if (row.membership_tenant !== answer.tenantId) {
+          failures.push(`the owner membership points at ${row.membership_tenant}, expected the new tenant`);
+        }
+        if (row.event_tenant !== answer.tenantId) {
+          failures.push(`the activity_event points at ${row.event_tenant}, expected the new tenant`);
+        }
+        if (row.event_operator !== null) {
+          failures.push(`activity_event.actor_operator_id is ${row.event_operator}, expected null — a member acted`);
+        }
+      }
+    }
+
+    // And the caller now holds exactly that tenant, over the wire.
+    const resolved = await resolution(solo);
+    if (resolved.value !== answer.tenantId) {
+      failures.push(`after provisioning the caller resolved ${resolved.body}, expected the tenant just created`);
+    }
+    const seen = await readsAllSix(solo);
+    const [ownRows] = await sql<{ membership: string; event: string }>(`
+      select
+        (select m.id::text from public.membership m where m.member_id = '${solo.authId}')       as membership,
+        (select e.id::text from public.activity_event e
+          where e.actor_member_id = '${solo.authId}')                                          as event
+    `);
+    readsExactly(
+      "the provisioning caller",
+      seen,
+      {
+        tenant: answer.tenantId === null ? [] : [answer.tenantId],
+        member: [solo.authId],
+        membership: [ownRows.membership],
+        activity_event: [ownRows.event],
+      },
+      failures,
+    );
+
+    // The same slug again. The uniqueness that stops it fires on the FIRST of
+    // the three inserts, so this is the atomicity case at step one, and the
+    // counts afterwards must still read one apiece rather than one plus a
+    // stray membership.
+    const twice = await provision(solo, `solo-${runId}`, slug);
+    if (twice.status < 400) failures.push(`a duplicate slug was accepted, answering ${twice.status}`);
+    const afterTwice = await provisionedRows(solo.authId);
+    for (const [what, want] of Object.entries(expected)) {
+      const got = (afterTwice as unknown as Record<string, number>)[what];
+      if (got !== want) failures.push(`a refused duplicate changed ${what} to ${got}, expected ${want}`);
+    }
+
+    record(
+      "25a",
+      "One provisioning call writes exactly one tenant, one active owner membership and one event, and they are each other's",
+      failures,
+      `all five counts 0 before the call and 1 after: tenant created_by the caller with status active, an ` +
+        `owner/active/accepted membership pointing at that tenant, and one tenant.provisioned activity_event ` +
+        `on Tenant with entity_id = tenant_id, null payload and no operator actor. The caller then resolved ` +
+        `${resolved.body} and read exactly ${TABLES.map((t) => `${t}=${seen[t].length}`).join(", ")}. A repeat ` +
+        `of the same slug answered ${twice.status} and left all five counts at 1`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("25b a failure mid-provisioning leaves no tenant, no membership and no event", async () => {
+    const failures: string[] = [];
+    const observed: string[] = [];
+    const runId = randomUUID().slice(0, 8);
+    const faulty = await makeIdentity(config, "g13-fault", runId);
+
+    // ATOMICITY BY ROLLBACK, NOT BY INSPECTION. Reading the function and
+    // agreeing that it looks transactional is not evidence. A fault is injected
+    // AFTER the tenant insert has already succeeded, the call is made, and the
+    // tenant is then looked for. If it is there, the mechanism is not atomic.
+    //
+    // The trigger lives in its own schema and is gated on this one member's id,
+    // so it cannot touch any other row in the database while it exists. Both
+    // fault points are exercised: after the tenant (breaking the membership
+    // insert) and after tenant + membership (breaking the event insert).
+    const faultPoints: [string, string, string][] = [
+      [
+        "after the tenant insert",
+        "public.membership",
+        `new.member_id = '${faulty.authId}'`,
+      ],
+      [
+        "after the tenant and membership inserts",
+        "public.activity_event",
+        `new.actor_member_id = '${faulty.authId}'`,
+      ],
+    ];
+
+    try {
+      await sql(`
+        create schema if not exists ${FAULT_SCHEMA};
+
+        create or replace function ${FAULT_SCHEMA}.break()
+        returns trigger
+        language plpgsql
+        as $fault$
+        begin
+          raise exception 'zz-test fault injection: this write is refused on purpose'
+            using errcode = 'raise_exception';
+        end
+        $fault$;
+      `);
+
+      for (const [where, table, when] of faultPoints) {
+        const slug = `${SYNTHETIC_PREFIX}fault-${randomUUID().slice(0, 8)}`;
+
+        await sql(`
+          create trigger ${FAULT_SCHEMA}_provision_break
+          before insert on ${table}
+          for each row when (${when})
+          execute function ${FAULT_SCHEMA}.break();
+        `);
+
+        const answer = await provision(faulty, `fault-${runId}`, slug);
+
+        await sql(`drop trigger ${FAULT_SCHEMA}_provision_break on ${table};`);
+
+        if (answer.status < 400) {
+          failures.push(`${where}: provisioning answered ${answer.status} while the fault was armed`);
+        }
+        if (!/fault injection/i.test(answer.body)) {
+          failures.push(
+            `${where}: the call failed for a reason other than the injected fault — ${answer.body.slice(0, 240)}`,
+          );
+        }
+        observed.push(`${where}=${answer.status}`);
+
+        // The rollback, counted three ways. The tenant is looked for BY SLUG as
+        // well as by creator, because a tenant that survived with a null
+        // created_by would slip past the creator count.
+        const [left] = await sql<{
+          tenants: number;
+          by_slug: number;
+          memberships: number;
+          events: number;
+        }>(`
+          select
+            (select count(*) from public.tenant where created_by = '${faulty.authId}')::int      as tenants,
+            (select count(*) from public.tenant where slug = '${slug}')::int                     as by_slug,
+            (select count(*) from public.membership where member_id = '${faulty.authId}')::int   as memberships,
+            (select count(*) from public.activity_event
+              where actor_member_id = '${faulty.authId}')::int                                  as events
+        `);
+        for (const [what, count] of Object.entries(left)) {
+          if (count !== 0) {
+            failures.push(`${where}: the rollback left ${count} ${what}, expected 0 — provisioning is not atomic`);
+          }
+        }
+      }
+    } finally {
+      // A fault injection that outlives its proof is a live defect wearing a
+      // test's name. Dropped here whatever happened above, and counted again by
+      // teardown.
+      await sql(`drop schema if exists ${FAULT_SCHEMA} cascade;`);
+    }
+
+    // THE CONTROL. Without it, every zero above is satisfied by a function that
+    // is simply broken for this caller, and the assertion would pass while
+    // proving nothing about rollback.
+    const cleanSlug = `${SYNTHETIC_PREFIX}fault-clean-${runId}`;
+    const clean = await provision(faulty, `fault-clean-${runId}`, cleanSlug);
+    if (clean.status !== 200 || clean.tenantId === null) {
+      failures.push(
+        `control: with no fault armed the same caller answered ${clean.status} ${clean.body.slice(0, 200)}, ` +
+          `expected a tenant — the zero counts above prove nothing if provisioning cannot succeed`,
+      );
+    }
+    const controlRows = await provisionedRows(faulty.authId);
+    if (controlRows.tenants !== 1 || controlRows.active_owner !== 1 || controlRows.provisioned_events !== 1) {
+      failures.push(
+        `control: an unimpeded call wrote ${controlRows.tenants} tenant(s), ${controlRows.active_owner} active ` +
+          `owner membership(s) and ${controlRows.provisioned_events} event(s), expected 1 of each`,
+      );
+    }
+
+    const [residue] = await sql<{ schemas: number; triggers: number }>(`
+      select
+        (select count(*) from pg_namespace where nspname = '${FAULT_SCHEMA}')::int as schemas,
+        (select count(*) from pg_trigger t join pg_class c on c.oid = t.tgrelid
+          where not t.tgisinternal and t.tgname like '${FAULT_SCHEMA}%')::int      as triggers
+    `);
+    if (residue.schemas !== 0 || residue.triggers !== 0) {
+      failures.push(`the fault injection left ${residue.schemas} schema(s) and ${residue.triggers} trigger(s)`);
+    }
+
+    record(
+      "25b",
+      "A failure at any step of provisioning rolls the whole act back — atomicity proven by forcing one",
+      failures,
+      `2 fault points injected in turn, one after the tenant insert and one after the tenant and membership ` +
+        `inserts, each a trigger gated on this caller alone: ${observed.join(", ")}, both refused naming the ` +
+        `injected fault. After each, 0 tenants by creator, 0 by slug, 0 memberships and 0 events. The control ` +
+        `— the same caller with nothing armed — answered ${clean.status} and wrote 1 tenant, 1 active owner ` +
+        `membership and 1 event, so the zeroes are the rollback's and not a broken function's. No fault schema ` +
+        `or trigger survives`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("25c the provisioning caller cannot name anyone else as the owner", async () => {
+    const failures: string[] = [];
+    const observed: string[] = [];
+    const runId = randomUUID().slice(0, 8);
+    const namer = await makeIdentity(config, "g13-namer", runId);
+    const victim = fixture.b.viewer;
+
+    // The signature is the argument. There is no member parameter, so there is
+    // nothing to name: the owner is auth.uid(), read out of the verified token.
+    // Asserted against the catalog rather than against the migration text.
+    const [signature] = await sql<{ args: string; argnames: string; arity: number }>(`
+      select pg_get_function_identity_arguments(p.oid)                      as args,
+             coalesce(array_to_string(p.proargnames, ','), '')              as argnames,
+             p.pronargs::int                                                as arity
+        from pg_proc p
+       where p.pronamespace = 'public'::regnamespace
+         and p.proname = 'provision_tenant'
+    `);
+    // The rendered identity carries the parameter names as well as the types,
+    // so this one comparison says four arguments, all text, named these and
+    // nothing else. The arity is asserted separately because a signature that
+    // grew a fifth argument is the specific failure this proof exists to catch.
+    const expectedSignature = "p_name text, p_slug text, p_base_currency text, p_default_locale text";
+    if (signature.args !== expectedSignature) {
+      failures.push(`provision_tenant takes (${signature.args}), expected exactly (${expectedSignature})`);
+    }
+    if (signature.arity !== 4) failures.push(`provision_tenant takes ${signature.arity} arguments, expected 4`);
+    if (signature.argnames !== "p_name,p_slug,p_base_currency,p_default_locale") {
+      failures.push(`its parameters are ${signature.argnames}, expected p_name,p_slug,p_base_currency,p_default_locale`);
+    }
+    if (/member|owner|actor|creat|uid|user/i.test(signature.argnames)) {
+      failures.push(`a parameter name suggests an identity can be named: ${signature.argnames}`);
+    }
+
+    // And over the wire: six spellings of "make someone else the owner", each
+    // of which PostgREST has to reject because no such parameter exists.
+    for (const name of ["p_member_id", "member_id", "p_owner_id", "p_owner", "p_created_by", "p_actor_member_id"]) {
+      const attempt = await probe.rpc(namer, "provision_tenant", {
+        p_name: `${SYNTHETIC_PREFIX}namer`,
+        p_slug: `${SYNTHETIC_PREFIX}namer-${randomUUID().slice(0, 8)}`,
+        p_base_currency: "SAR",
+        p_default_locale: "en",
+        [name]: victim.authId,
+      });
+      if (attempt.status < 400) {
+        failures.push(`provision_tenant accepted a ${name} argument, answering ${attempt.status}`);
+      }
+      observed.push(`${name}=${attempt.status}`);
+    }
+
+    // The positive case, and the one that matters: a legitimate call while
+    // SELECTING a tenant the caller does not hold. If the selector could
+    // redirect ownership, this is where it would.
+    const slug = `${SYNTHETIC_PREFIX}namer-${runId}`;
+    const answer = await provision(selecting(namer, fixture.b.id), `namer-${runId}`, slug);
+    if (answer.status !== 200 || answer.tenantId === null) {
+      failures.push(`provisioning answered ${answer.status} ${answer.body.slice(0, 200)}, expected a tenant`);
+    }
+
+    // A uuid that matches nothing stands in when the call above failed, so this
+    // assertion still records a line rather than throwing on a malformed
+    // literal. The pushed failure above is the result in that case.
+    const created = answer.tenantId ?? randomUUID();
+    const [owners] = await sql<{ rows: string; victim_rows: number; creator: string | null }>(`
+      select
+        (select coalesce(string_agg(m.member_id::text || '/' || m.role::text, ', '), '')
+           from public.membership m where m.tenant_id = '${created}')                     as rows,
+        (select count(*) from public.membership m
+          where m.tenant_id = '${created}' and m.member_id = '${victim.authId}')::int
+                                                                                          as victim_rows,
+        (select t.created_by::text from public.tenant t where t.id = '${created}')         as creator
+    `);
+    if (owners.rows !== `${namer.authId}/owner`) {
+      failures.push(`the new tenant's memberships are [${owners.rows}], expected the caller alone as owner`);
+    }
+    if (owners.victim_rows !== 0) failures.push(`${owners.victim_rows} membership(s) were created for the named victim`);
+    if (owners.creator !== namer.authId) failures.push(`tenant.created_by is ${owners.creator}, expected the caller`);
+
+    // And the victim gained nothing they can see.
+    const victimSees = await probe.selectById(victim, "tenant", created);
+    if (!wasRefused(victimSees)) {
+      failures.push(`the named victim reads the tenant provisioned in their name (${victimSees.count} row(s))`);
+    }
+
+    record(
+      "25c",
+      "Provisioning has no owner parameter, so the only tenant a caller can create is one they own",
+      failures,
+      `the catalog shows provision_tenant(${signature.args}) — ${signature.arity} arguments, all text, none of ` +
+        `them naming a member, owner, actor or creator. 6 spellings of an owner argument all rejected: ` +
+        `${observed.join(", ")}. A legitimate call made while selecting a tenant the caller does not hold still ` +
+        `produced exactly one membership, ${owners.rows}, with created_by the caller and 0 rows for the named ` +
+        `victim, who reads nothing of it`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("25d two members provisioning at the same time each get one tenant, and only their own", async () => {
+    const failures: string[] = [];
+    const [one, two] = pair;
+
+    for (const side of pair) {
+      if (side.answer.status !== 200 || side.answer.tenantId === null) {
+        failures.push(
+          `${side.who.label} answered ${side.answer.status} ${side.answer.body.slice(0, 200)} — concurrent ` +
+            `provisioning must succeed for both callers, not one`,
+        );
+      }
+    }
+    if (one.answer.tenantId !== null && one.answer.tenantId === two.answer.tenantId) {
+      failures.push(`both callers were given the same tenant id ${one.answer.tenantId}`);
+    }
+
+    // Each wrote exactly its own three rows. Two calls in flight together must
+    // not produce four memberships, or two events on one tenant.
+    for (const side of pair) {
+      const rows = await provisionedRows(side.who.authId);
+      if (rows.tenants !== 1 || rows.active_owner !== 1 || rows.provisioned_events !== 1) {
+        failures.push(
+          `${side.who.label} holds ${rows.tenants} tenant(s), ${rows.active_owner} active owner membership(s) ` +
+            `and ${rows.provisioned_events} event(s), expected 1 of each`,
+        );
+      }
+      if (rows.memberships !== 1 || rows.events !== 1) {
+        failures.push(`${side.who.label} holds ${rows.memberships} membership(s) and ${rows.events} event(s), expected 1 each`);
+      }
+    }
+
+    // And each resolves to its own, which is the concurrency claim: neither
+    // call's session picked up the other's tenant.
+    const resolutions: string[] = [];
+    for (const side of pair) {
+      const resolved = await resolution(side.who);
+      resolutions.push(`${side.who.label}=${resolved.body}`);
+      if (resolved.value !== side.answer.tenantId) {
+        failures.push(`${side.who.label} resolved ${resolved.body}, expected the tenant it provisioned`);
+      }
+    }
+
+    const [both] = await sql<{ tenants: number; owners: number }>(`
+      select
+        (select count(*) from public.tenant
+          where slug in ('${one.slug}', '${two.slug}'))::int                    as tenants,
+        (select count(*) from public.membership m
+          join public.tenant t on t.id = m.tenant_id
+         where t.slug in ('${one.slug}', '${two.slug}'))::int                   as owners
+    `);
+    if (both.tenants !== 2) failures.push(`${both.tenants} tenants carry the two slugs, expected 2`);
+    if (both.owners !== 2) failures.push(`${both.owners} memberships exist across the two tenants, expected 2`);
+
+    record(
+      "25d",
+      "Two provisioning calls in flight together produce two separate tenants, each owned by its own caller",
+      failures,
+      `both calls issued together answered 200 with distinct tenant ids; each caller holds exactly 1 tenant, ` +
+        `1 owner/active membership and 1 event, and resolves to its own: ${resolutions.join(", ")}. Across the ` +
+        `two slugs: ${both.tenants} tenants and ${both.owners} memberships in total`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("25e a provisioned tenant is invisible to the other's owner, on all six tables and both ways", async () => {
+    const failures: string[] = [];
+    const [one, two] = pair;
+
+    if (one.answer.tenantId === null || two.answer.tenantId === null) {
+      failures.push("precondition: the two concurrent provisionings did not both produce a tenant");
+    }
+
+    // Every id belonging to each side, so the check is "reads none of the
+    // other's rows" rather than "reads few rows".
+    const rowsOf = async (memberId: string, tenantId: string | null) => {
+      const [row] = await sql<{ membership: string | null; event: string | null }>(`
+        select
+          (select m.id::text from public.membership m
+            where m.member_id = '${memberId}')                                as membership,
+          (select e.id::text from public.activity_event e
+            where e.actor_member_id = '${memberId}')                          as event
+      `);
+      return { tenant: tenantId, member: memberId, ...row };
+    };
+
+    const sides = [
+      { ...one, own: await rowsOf(one.who.authId, one.answer.tenantId) },
+      { ...two, own: await rowsOf(two.who.authId, two.answer.tenantId) },
+    ];
+
+    for (const [index, side] of sides.entries()) {
+      const other = sides[1 - index];
+      const seen = await readsAllSix(side.who);
+
+      readsExactly(
+        side.who.label,
+        seen,
+        {
+          tenant: side.own.tenant === null ? [] : [side.own.tenant],
+          member: [side.own.member],
+          membership: side.own.membership === null ? [] : [side.own.membership],
+          activity_event: side.own.event === null ? [] : [side.own.event],
+        },
+        failures,
+      );
+
+      // Stated the other way round as well, because an exact-set failure names
+      // what was read and this names WHOSE it was.
+      const foreign = [other.own.tenant, other.own.member, other.own.membership, other.own.event]
+        .filter((id): id is string => id !== null);
+      for (const table of TABLES) {
+        for (const id of foreign) {
+          if (seen[table].includes(id)) failures.push(`${side.who.label} read ${other.who.label}'s ${id} on ${table}`);
+        }
+      }
+
+      // And not as a filtered lookup either, which is the existence-oracle
+      // shape SECURITY_MODEL §1 forbids.
+      for (const table of TENANT_SCOPED_TABLES) {
+        const targeted = await probe.selectById(side.who, table, other.own.tenant ?? randomUUID());
+        if (!wasRefused(targeted)) {
+          failures.push(`${side.who.label} reached ${other.who.label}'s tenant id on ${table} by filtering for it`);
+        }
+      }
+
+      // Selecting the other's tenant explicitly resolves null rather than
+      // falling back to the one they hold.
+      const forged = await resolution(selecting(side.who, other.own.tenant ?? randomUUID()));
+      if (forged.value !== null) {
+        failures.push(`${side.who.label} selecting the other's tenant resolved ${forged.body}, expected null`);
+      }
+    }
+
+    record(
+      "25e",
+      "Tenants created by provisioning are isolated from each other exactly as seeded ones are",
+      failures,
+      `both directions across all ${TABLES.length} tables: each owner reads exactly its own tenant, its own ` +
+        `member row, its own membership and its own event, and none of the other's ${4} ids on any table. ` +
+        `Filtering for the other's tenant id on each of the ${TENANT_SCOPED_TABLES.length} tenant-scoped ` +
+        `tables returned nothing, and selecting it resolved null rather than the held tenant`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("25f provisioning is a second act: no sign-in reaches it, and no unauthenticated or memberless caller can", async () => {
+    const failures: string[] = [];
+    const observed: string[] = [];
+    const runId = randomUUID().slice(0, 8);
+
+    // NEVER A SIDE EFFECT OF AUTHENTICATION. An identity that has done nothing
+    // but sign in holds no tenant, and nothing in the schema calls the function
+    // on its behalf.
+    const signedIn = await makeIdentity(config, "g13-signin", runId);
+    const sideEffects = await provisionedRows(signedIn.authId);
+    for (const [what, count] of Object.entries(sideEffects)) {
+      if (count !== 0) {
+        failures.push(`signing in alone produced ${count} ${what} — provisioning is not supposed to be reachable implicitly`);
+      }
+    }
+    const signedInReads = await resolution(signedIn);
+    if (signedInReads.value !== null) failures.push(`a signed-in identity resolved ${signedInReads.body}, expected null`);
+
+    // Nothing calls it: no trigger, no default, no policy expression, no other
+    // function body. Asserted against the catalog, because "nothing calls it"
+    // is the whole of the second-act guarantee.
+    const [callers] = await sql<{ triggers: number; defaults: number; policies: number; bodies: string }>(`
+      select
+        (select count(*) from pg_trigger t
+          where not t.tgisinternal
+            and t.tgfoid = 'public.provision_tenant(text,text,text,text)'::regprocedure)::int as triggers,
+        (select count(*) from pg_attrdef d
+          where pg_get_expr(d.adbin, d.adrelid) like '%provision_tenant%')::int               as defaults,
+        (select count(*) from pg_policy p
+          where coalesce(pg_get_expr(p.polqual, p.polrelid), '') like '%provision_tenant%'
+             or coalesce(pg_get_expr(p.polwithcheck, p.polrelid), '') like '%provision_tenant%')::int
+                                                                                              as policies,
+        (select coalesce(string_agg(p.proname, ', ' order by p.proname), '')
+           from pg_proc p
+          where p.pronamespace = 'public'::regnamespace
+            and p.proname <> 'provision_tenant'
+            and p.prosrc like '%provision_tenant%')                                           as bodies
+    `);
+    if (callers.triggers !== 0) failures.push(`${callers.triggers} trigger(s) call provision_tenant`);
+    if (callers.defaults !== 0) failures.push(`${callers.defaults} column default(s) mention provision_tenant`);
+    if (callers.policies !== 0) failures.push(`${callers.policies} policy expression(s) mention provision_tenant`);
+    if (callers.bodies !== "") failures.push(`provision_tenant is called from ${callers.bodies}`);
+
+    // UNAUTHENTICATED, and an authenticated identity holding no live Member.
+    // The second is the second-act rule in the failure direction: provisioning
+    // consumes a Member and can never be the thing that repairs a missing one.
+    const archived = await makeIdentity(config, "g13-archived", runId);
+    await sql(`update public.member set archived_at = now() where id = '${archived.authId}'`);
+
+    const refusals: [string, Caller, RegExp | null][] = [
+      ["anon", anonCaller(config), null],
+      ["an authenticated identity whose member row is archived", archived, /holds no live member record/i],
+    ];
+
+    for (const [what, caller, expectedMessage] of refusals) {
+      const slug = `${SYNTHETIC_PREFIX}refused-${randomUUID().slice(0, 8)}`;
+      const attempt = await provision(caller, `refused-${runId}`, slug);
+      if (attempt.status < 400) failures.push(`${what} provisioned a tenant, answering ${attempt.status}`);
+      if (expectedMessage !== null && !expectedMessage.test(attempt.body)) {
+        failures.push(`${what} was refused ${attempt.status} for the wrong reason — ${attempt.body.slice(0, 200)}`);
+      }
+      const [left] = await sql<{ n: number }>(`select count(*)::int as n from public.tenant where slug = '${slug}'`);
+      if (left.n !== 0) failures.push(`${what}: a refused call left ${left.n} tenant(s) behind`);
+      observed.push(`${what}=${attempt.status}`);
+    }
+
+    // anon is not merely unproductive here, it is absent: EXECUTE was revoked
+    // as well as the body refusing.
+    const [grants] = await sql<{ anon: boolean; service: boolean; authenticated: boolean }>(`
+      select
+        has_function_privilege('anon', 'public.provision_tenant(text,text,text,text)', 'EXECUTE')          as anon,
+        has_function_privilege('service_role', 'public.provision_tenant(text,text,text,text)', 'EXECUTE')  as service,
+        has_function_privilege('authenticated', 'public.provision_tenant(text,text,text,text)', 'EXECUTE') as authenticated
+    `);
+    if (grants.anon) failures.push("anon holds EXECUTE on provision_tenant");
+    if (grants.service) failures.push("service_role holds EXECUTE on provision_tenant");
+    if (!grants.authenticated) failures.push("authenticated does not hold EXECUTE on provision_tenant");
+
+    record(
+      "25f",
+      "Provisioning is reached only by an authenticated caller who already holds a live Member, and never implicitly",
+      failures,
+      `an identity that only signed in holds 0 tenants, 0 memberships and 0 events and resolves ` +
+        `${signedInReads.body}. Nothing in the catalog calls the function: 0 triggers, 0 column defaults, ` +
+        `0 policy expressions and no other function body mentions it. Refusals: ${observed.join(", ")}, ` +
+        `neither leaving a tenant behind, and the archived-member case named the live-Member rule. EXECUTE is ` +
+        `held by authenticated alone — not anon, not service_role`,
+    );
+    expect(failures).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+
+describe("proof 26 — a duplicated tenant selector (CF-128)", () => {
+  it("26 two x-b2s-tenant headers resolve null, over HTTP and in process", async () => {
+    const failures: string[] = [];
+    const observed: string[] = [];
+
+    // The caller holds EXACTLY ONE active membership, and that is what makes
+    // this measurable. If a duplicated header were dropped somewhere in the
+    // transport, the selector would read as absent and this caller would
+    // resolve their one held tenant implicitly — so `null` proves the header
+    // arrived and was a non-match, and tenant A would prove it vanished. There
+    // is no need for an echo endpoint to see the wire shape: the two outcomes
+    // are distinguishable.
+    const single = fixture.a.owner;
+    const control = await resolution(single);
+    if (control.value !== fixture.a.id) {
+      failures.push(
+        `control: with no selector this caller resolved ${control.body}, expected tenant A — the null answers ` +
+          `below would prove nothing`,
+      );
+    }
+    const controlSelected = await resolution(selecting(single, fixture.a.id));
+    if (controlSelected.value !== fixture.a.id) {
+      failures.push(`control: one valid selector resolved ${controlSelected.body}, expected tenant A`);
+    }
+
+    const garbage = "not-a-uuid";
+    const absent = randomUUID();
+    const cases: [string, string, string][] = [
+      ["the same held tenant twice", fixture.a.id, fixture.a.id],
+      ["the held tenant then an unheld one", fixture.a.id, fixture.b.id],
+      ["an unheld tenant then the held one", fixture.b.id, fixture.a.id],
+      ["the held tenant then a nonexistent one", fixture.a.id, absent],
+      ["the held tenant then garbage", fixture.a.id, garbage],
+      ["garbage then the held tenant", garbage, fixture.a.id],
+    ];
+
+    for (const [what, first, second] of cases) {
+      const caller = selectingTwice(single, first, second);
+      const answer = await resolution(caller);
+
+      if (answer.status !== 200) {
+        failures.push(`${what}: answered ${answer.status} ${answer.body.slice(0, 200)}, expected 200 and null`);
+      }
+      if (answer.value === fixture.a.id) {
+        failures.push(
+          `${what}: FELL BACK to the caller's one held tenant — a duplicated selector must not resolve, and ` +
+            `resolving the held tenant is the behaviour OD-G14's contract forbids for any non-match`,
+        );
+      } else if (answer.value !== null) {
+        failures.push(`${what}: resolved ${answer.body}, expected null`);
+      }
+
+      // And it reads nothing. membership is excluded because
+      // membership_select_own is deliberately wider than the tenancy spine —
+      // a person always sees their own rows (DATA_MODEL §3.3) — so it is
+      // asserted as foreign rows instead.
+      const seen = await readsAllSix(caller);
+      for (const table of SELECTOR_TABLES) {
+        if (table === "membership") continue;
+        if (seen[table].length !== 0) {
+          failures.push(`${what}: read ${seen[table].length} ${table} row(s) [${seen[table].join(", ")}], expected none`);
+        }
+      }
+      const foreign = await probe.selectColumns(caller, "membership", "id,member_id,tenant_id");
+      const strangers = foreign.rows.filter((row) => row.member_id !== single.authId);
+      if (strangers.length !== 0) {
+        failures.push(`${what}: read ${strangers.length} membership row(s) belonging to another member`);
+      }
+
+      observed.push(`${what}=${answer.body}`);
+    }
+
+    // IN PROCESS, per PR-30. Over HTTP undici normalises two headers of the
+    // same name into one comma-joined field value, which is the shape CF-128
+    // names — but "the transport joined them" is an assumption until the joined
+    // value is put to the helper directly. Both shapes a header pair can take
+    // in `request.headers` are forged here: the comma-joined string PostgREST
+    // actually sets, and a JSON array, which is what a future intermediary or
+    // PostgREST version could set instead.
+    const forge = async (label: string, headers: Record<string, unknown>) => {
+      const tag = `dup${randomUUID().replace(/-/g, "").slice(0, 12)}`;
+      const json = JSON.stringify(headers);
+      const outcome = await sql.try(`
+        select res.resolved
+          from (
+            select set_config('request.jwt.claims',
+                              jsonb_build_object('sub', '${single.authId}')::text, true) as claims,
+                   set_config('request.headers', $${tag}$${json}$${tag}$, true)           as headers
+          ) cfg,
+          lateral (
+            select case when cfg.claims is not null and cfg.headers is not null
+                        then public.current_tenant_id()::text
+                   end as resolved
+          ) res
+      `);
+      return { label, outcome };
+    };
+
+    const direct = [
+      await forge("comma-joined, both held", { [TENANT_SELECTOR_HEADER]: `${fixture.a.id},${fixture.a.id}` }),
+      await forge("comma-joined, held then unheld", { [TENANT_SELECTOR_HEADER]: `${fixture.a.id},${fixture.b.id}` }),
+      await forge("comma-and-space joined", { [TENANT_SELECTOR_HEADER]: `${fixture.a.id}, ${fixture.b.id}` }),
+      await forge("a JSON array of two values", { [TENANT_SELECTOR_HEADER]: [fixture.a.id, fixture.b.id] }),
+    ];
+
+    for (const { label, outcome } of direct) {
+      if (!outcome.ok) {
+        failures.push(`${label}: the helper RAISED rather than resolving — ${outcome.body.slice(0, 200)}`);
+        continue;
+      }
+      if (outcome.body.includes(fixture.a.id) || outcome.body.includes(fixture.b.id)) {
+        failures.push(`${label}: resolved a tenant through the direct path — ${outcome.body.slice(0, 200)}`);
+      }
+      observed.push(`direct:${label}=null`);
+    }
+
+    // The control for the direct path, exactly as 23h does it: without one, a
+    // path that answered null to everything would pass this proof while
+    // exercising nothing.
+    const directControl = await forge("one valid value", { [TENANT_SELECTOR_HEADER]: fixture.a.id });
+    if (!directControl.outcome.ok || !directControl.outcome.body.includes(fixture.a.id)) {
+      failures.push(
+        `control: one valid selector through the direct path answered ` +
+          `${directControl.outcome.body.slice(0, 200)}, expected tenant A — the direct nulls prove nothing`,
+      );
+    }
+
+    record(
+      "26",
+      "A duplicated tenant selector resolves null and never falls back to the tenant the caller holds",
+      failures,
+      `${cases.length} duplicate-header pairs sent over HTTP by a caller holding exactly one active membership, ` +
+        `each answering 200/null with 0 tenant, 0 consent_grant and 0 activity_event rows and no foreign ` +
+        `membership row: ${observed.filter((o) => !o.startsWith("direct:")).join(", ")}. Because that caller ` +
+        `resolves tenant A when no header is sent and when one valid header is sent, null is the selector ` +
+        `arriving and failing to match rather than the header being dropped. In process, 4 forged shapes — ` +
+        `comma-joined, comma-and-space joined, and a JSON array — all resolved null with nothing raised, ` +
+        `while one valid value through that same path resolved tenant A`,
     );
     expect(failures).toEqual([]);
   });
