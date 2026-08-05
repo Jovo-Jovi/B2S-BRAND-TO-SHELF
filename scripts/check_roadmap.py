@@ -54,6 +54,32 @@ reality, or it does not land. Three assertions, each naming the short side:
 place in this check that departs from generate_roadmap.py's closed input list,
 because ROLE_JOURNEY.md's own conformance is a check concern, not a rendering
 concern.
+
+**ROLE_JOURNEY.md against `TENANCY_MODEL.md` §3, both ways (P02-T09-FIX).**
+The prior three assertions cross-check ROLE_JOURNEY.md against the enum alone;
+`TENANCY_MODEL.md` §3 — the Can/Cannot table a human actually reads to know
+what a role may do — was never in the loop, so the two documents could
+silently diverge from each other while each still matched the enum. Three
+more assertions, each naming the short side:
+
+  named       every enum role appears as a `| **Role** |` row in §3's
+              Can/Cannot table — an enum role §3 never names is a role with
+              no stated capability
+  covered     every role §3 names has at least one row in ROLE_JOURNEY.md —
+              mirrors the enum-coverage assertion above but sourced
+              independently from §3's own table, so a §3 edit that drops a
+              role is caught here even if the enum and ROLE_JOURNEY.md never
+              change
+  non-enum    the set of ROLE_JOURNEY.md actors outside the enum is exactly
+              {Operator, Buyer} — not a superset (an unrecognised actor is
+              already caught above) and not a subset either: a ROLE_JOURNEY.md
+              that dropped every Buyer row would still pass the "actors" and
+              "coverage" assertions above, because neither one requires a
+              named non-enum actor to be present at all
+
+MINIMUM_TENANCY_SECTION3_ROLES states the floor for the §3 table itself: an
+emptied or reshaped §3 that yields fewer than five parsed role rows would make
+every comparison above vacuous, so it is a `die()`, not a `fail()`.
 """
 import importlib.util
 import os
@@ -69,12 +95,14 @@ ROADMAP_HTML_REL = "docs/roadmap.html"
 BUILD_PHASES_REL = "docs/method/BUILD_PHASES.md"
 ROLE_JOURNEY_REL = "docs/product/ROLE_JOURNEY.md"
 SCOPE_REL = "docs/product/SCOPE.md"
+TENANCY_MODEL_REL = "docs/product/TENANCY_MODEL.md"
 
 MINIMUM_PHASES = 9
 MINIMUM_DONE_STEPS_ROWS = 1
 MINIMUM_OPEN_CARRY_FORWARDS = 1
 MINIMUM_RELEASE_BLOCKS = 3
 MINIMUM_ROLE_JOURNEY_ROWS = 17
+MINIMUM_TENANCY_SECTION3_ROLES = 5
 
 NAMED_NON_ENUM_ACTORS = {"Operator", "Buyer"}
 
@@ -116,11 +144,32 @@ def parse_role_enum(schema_text):
     return values
 
 
-def check_role_journey_conformance(role_journey_rows, phase_ids, enum_roles):
-    """OD-H9, both ways. Three assertions, each naming the short side rather
-    than the long one, per the task's own instruction. Returns True if the
-    'owning phase' assertion held — the caller must not attempt to call
-    generator.collect() when it did not, because
+def parse_tenancy_section3_roles(tenancy_text):
+    """The `| **Role** | Can | Cannot |` table under '## 3. Roles', up to the
+    next '## ' heading. Returns the role names in table order, bold markers
+    stripped. This is deliberately a second, independent parse of a second
+    document — it must not reuse ROLE_JOURNEY.md's own parser or schema.sql's
+    enum, or a divergence between the two documents could hide behind a
+    shared assumption."""
+    m = re.search(r"^## 3\. Roles\b(.*?)(?=^## )", tenancy_text, re.S | re.M)
+    if not m:
+        die(f"{TENANCY_MODEL_REL}: could not find a '## 3. Roles' section — "
+            f"this check's only source for the Can/Cannot role table")
+    section = m.group(1)
+    roles = re.findall(r"^\|\s*\*\*([A-Za-z]+)\*\*\s*\|", section, re.M)
+    if not roles:
+        die(f"{TENANCY_MODEL_REL} §3: no '| **Role** | Can | Cannot |' row "
+            f"found — this check's only source for which roles §3 documents")
+    return roles
+
+
+def check_role_journey_conformance(role_journey_rows, phase_ids, enum_roles,
+                                    section3_roles):
+    """OD-H9, both ways, plus P02-T09-FIX's three additional assertions
+    against `TENANCY_MODEL.md` §3. Six assertions total, each naming the
+    short side rather than the long one, per the task's own instruction.
+    Returns True if the 'owning phase' assertion held — the caller must not
+    attempt to call generator.collect() when it did not, because
     generate_roadmap.py's own role_journey_status() would die() on the same
     row before this check's accumulated fail()s ever reached the report."""
     enum_set = set(enum_roles)
@@ -159,6 +208,43 @@ def check_role_journey_conformance(role_journey_rows, phase_ids, enum_roles):
             f"{ROLE_JOURNEY_REL}: {len(bad_phase_rows)} row(s) name an "
             f"owning phase that does not exist in {BUILD_PHASES_REL}: "
             f"{', '.join(named)}"
+        )
+
+    # P02-T09-FIX — ROLE_JOURNEY.md against TENANCY_MODEL.md §3, both ways.
+    section3_set = {r.lower() for r in section3_roles}
+
+    unnamed_in_section3 = sorted(enum_set - section3_set)
+    if unnamed_in_section3:
+        fail(
+            f"{TENANCY_MODEL_REL} §3: {len(unnamed_in_section3)} "
+            f"`public.role` enum value(s) have no "
+            f"'| **Role** | Can | Cannot |' row at all: "
+            f"{', '.join(unnamed_in_section3)}"
+        )
+
+    uncovered_section3 = sorted(section3_set - present_roles)
+    if uncovered_section3:
+        fail(
+            f"{ROLE_JOURNEY_REL}: {len(uncovered_section3)} role(s) named in "
+            f"{TENANCY_MODEL_REL} §3 have no row at all in the table: "
+            f"{', '.join(uncovered_section3)}"
+        )
+
+    non_enum_present = present_roles - enum_set
+    expected_non_enum = {a.lower() for a in NAMED_NON_ENUM_ACTORS}
+    extra_non_enum = sorted(non_enum_present - expected_non_enum)
+    missing_non_enum = sorted(expected_non_enum - non_enum_present)
+    if extra_non_enum:
+        fail(
+            f"{ROLE_JOURNEY_REL}: {len(extra_non_enum)} non-enum actor(s) "
+            f"beyond the two named ones ({', '.join(sorted(NAMED_NON_ENUM_ACTORS))}): "
+            f"{', '.join(extra_non_enum)}"
+        )
+    if missing_non_enum:
+        fail(
+            f"{ROLE_JOURNEY_REL}: {len(missing_non_enum)} of the two named "
+            f"non-enum actor(s) has no row at all in the table: "
+            f"{', '.join(missing_non_enum)}"
         )
 
     return phases_ok
@@ -228,7 +314,17 @@ def main():
     role_journey_text = generator.read(ROLE_JOURNEY_REL)
     raw_role_rows = generator.parse_role_journey(role_journey_text)
 
-    phases_ok = check_role_journey_conformance(raw_role_rows, phase_ids, enum_roles)
+    tenancy_text = read_repo_file(TENANCY_MODEL_REL)
+    section3_roles = parse_tenancy_section3_roles(tenancy_text)
+    if len(section3_roles) < MINIMUM_TENANCY_SECTION3_ROLES:
+        die(f"{TENANCY_MODEL_REL} §3: parsed {len(section3_roles)} role row(s), "
+            f"minimum {MINIMUM_TENANCY_SECTION3_ROLES}. An emptied or "
+            f"reshaped §3 that yields fewer rows makes every comparison "
+            f"against it vacuous (PR-27)")
+
+    phases_ok = check_role_journey_conformance(
+        raw_role_rows, phase_ids, enum_roles, section3_roles
+    )
     if not phases_ok:
         # generator.collect() would die() on the very row already named above
         # (generate_roadmap.py's own role_journey_status() has no soft-fail
@@ -303,7 +399,10 @@ def main():
         f"{role_journey_row_count} role-journey row(s) (minimum "
         f"{MINIMUM_ROLE_JOURNEY_ROWS}) across {len(enum_roles)} enum role(s) "
         f"and {len(NAMED_NON_ENUM_ACTORS)} named non-enum actor(s), all "
-        f"owning-phase references resolved; md={md_ok}, html={html_ok}"
+        f"owning-phase references resolved; {len(section3_roles)} "
+        f"{TENANCY_MODEL_REL} \u00a73 role(s) (minimum "
+        f"{MINIMUM_TENANCY_SECTION3_ROLES}) named and covered both ways; "
+        f"md={md_ok}, html={html_ok}"
     )
 
 

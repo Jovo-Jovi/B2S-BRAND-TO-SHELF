@@ -1,45 +1,30 @@
 # SESSION CONTEXT
-Updated: 2026-08-05 · By: Sonnet (standard) · Phase: P02
-Last task: P02-T09 · Verdict: pending. A tooling task and one authored
-specification, no application code, no migration, no schema change.
-`docs/product/ROLE_JOURNEY.md` lands under OD-H9 — one table, Role ·
-Capability · Owning phase · Note, exactly seven actors (the five
-`public.role` enum values plus Operator and Buyer, both non-enum and named)
-— asserted both ways by three new `scripts/check_roadmap.py` assertions:
-every actor is an enum value or one of the two named, every enum value holds
-at least one row, every owning phase exists in `BUILD_PHASES.md`. Two floors
-added alongside it (PR-27): `SCOPE.md` §2's release blocks (minimum 3) and
-`ROLE_JOURNEY.md`'s rows (minimum 17), because an emptied or reshaped source
-regenerating empty on both sides would otherwise pass the byte-comparison
-over the loss. `scripts/generate_roadmap.py` gained derived phase-card
-bullets (DONE from the done-steps table, QUEUED from `BUILD_PHASES.md`'s own
-content, the exit standard and the OD-H12 entry/exit lines as tags), the
-approved token-and-layout visual language in `docs/roadmap.html` (no
-external stylesheet, font or network reference — passes `check-no-runtime-
-cdn` by construction, though that guard's own scan roots do not cover
-`docs/`), and a "Role journeys" section after the phases, one card per
-actor, capability status derived from the owning phase and the note's own
-content — never hardcoded. Purity re-proven: the generator run twice diffs
-at zero on both files. **ROW A** re-derived the two-way (check, premise)
-total by parsing every `scripts/check_*.py` file's AST and counting `Call`
-nodes named `fail` — never a textual search, which also matches the word
-inside a docstring — settling that one case means one call site, not one
-call site per file it is invoked against (P02-T08's own count broke that
-rule). Total: **85**; both of `SESSION_CONTEXT.md`'s disagreeing prior
-figures corrected to state it once, in "Frozen decisions in force", and
-`scripts/check_stated_counts.py` gained a seventh assertion holding it in
-place. Two ledger rows opened and closed in this task, ROW A and ROW B.
-Five new plant-and-revert cases beyond P02-T08's seven, all from an
-in-memory snapshot, never `git checkout --` (PR-26): a role absent from
-`ROLE_JOURNEY.md`, an unrecognised actor, a non-existent owning phase, and
-the two new floors below their minimum — **5 of 5 caught, every revert
-byte-identical**. `scripts/check_module_spec_tree.py` passed unmodified: the
-new file lands under `docs/product/`, an existing root at directory
-granularity (OD-H10), so `MODULE_SPEC.md` §1 needed no path added. Static
-conformance set: ten `docs-integrity` checks and five `guards`, fifteen
-total, unchanged in count. Ledger: 120 → 122 rows, 36 open, both new rows
-closed in the task that opened them. All fifteen checks green. Full detail
-in the done-steps row below.
+Updated: 2026-08-06 · By: Sonnet (standard) · Phase: P02
+Last task: P02-T09-FIX · Verdict: pending. A FIX task — tooling, ledger and
+one precedent, no application code, no migration, no schema change. The
+two-way empty-target probe was actually run for the first time under that
+name: 37 (check, premise) pairs enumerated across all fifteen checks, 36
+proven by dynamically removing and then emptying the premise and watching a
+one-line `FAIL:` fire both times with a byte-identical revert, zero found
+passing on nothing. `SESSION_CONTEXT.md`'s prior single figure (85) is split
+into the two things it always conflated: the static-assertion count (**94**
+`fail()` call sites) and the proven case count (**36**), each stated once and
+asserted against its own derivation in `scripts/check_stated_counts.py`. The
+probe itself landed permanently (PR-28) as
+`scripts/check_two_way_empty_target.py`. `scripts/check-no-runtime-cdn.mjs`
+widened to `docs/` and `.html` (7 → 9 files, floor raised, no violation
+found — `docs/roadmap.html` had none). `scripts/check_roadmap.py` gained
+three more assertions cross-checking `ROLE_JOURNEY.md` against
+`TENANCY_MODEL.md` §3 directly, independent of the enum. The reviewer-owned,
+pre-existing uncommitted edit to `docs/method/REVIEWER_CHAT_INSTRUCTIONS.md`
+was reported, not touched. PR-36 landed: every commit stages by explicit
+path. Two ledger rows opened and closed in this task; one opened and left
+open, owner the reviewer. **TASK 6 HALTED**: the NOT-IN-THE-PLAN carry-forward count is
+20 at this task's start (21 after CF-140), not the 22 the prompt stated —
+enumerated programmatically via `generate_roadmap.py`'s own `collect()`, per
+PR-23 — so the task's own four-bucket-sums-to-22 STOP condition fires and no
+row was triaged or amended. Ledger: 122 → 125 rows, 37 open. All fifteen
+checks green. Full detail in the done-steps row below.
 
 ## Read these too
 - `docs/method/PRECEDENTS.md` — binding rulings and environment quirks.
@@ -97,6 +82,7 @@ Keep it short: if a paragraph is growing here, it belongs elsewhere.
 | P02-T07 | Land task — OD-G17, OD-G18, OD-H12 and the plan amendment. On `phase/02-tenancy-and-access` from `022cabe`; no PR, §3 puts one at the phase exit; per PR-32/PR-34, method arising from open-branch work (OD-H12's own rows CF-129 and CF-130 exist only here) lands on the branch rather than `main`. `DECISIONS.md` §2 gains G17, G18 after G16 and H12 after H11; §3 gains three full entries; register 88 → **91**, verified by count (91 OD table rows). `BUILD_PHASES.md`: "Eight phases" → "Nine"; **P09 — Launch and operations** added after P08 in the existing shape, terminal on `SECURITY_MODEL.md` §9's pre-launch audit; P03 gains an entry line (staging and error visibility before the wizard accepts content, citing CF-109 and OD-H12); P05 gains an exit line (a backup taken and a restore rehearsed against it, citing OD-G8 and OD-H12); R1 recorded as a pilot with a real brand. `DEV_OS.md` §2 verified row by row against the live tree, not rewritten from memory: **five** of six rows were false or materially stale, not the four named — no database (14 migrations live since P01-T02), no migration discipline (same evidence, a fifth finding this task's own), hand-authored types (CLI-generated, `types-drift` wired), no privileged client (`lib/supabase/server-only/service.ts`, ADR-005), and "Auth gates, verified-phone, OAuth — out of scope for MVP" (OAuth is signed in scope by OD-G13; verified-phone alone remains out) — each corrected in place with what delivered it; the zod row restated for precision, not contradicted; §3's VOID banner and `DEV_OS_REFERENCE.md` untouched (PR-29). `SECURITY_MODEL.md` §9 gains P09 as named owner plus three items — Terms of Service, Privacy Policy, a data processing agreement template — the eight existing items unchanged. `SCOPE.md` §2 records Release 1's pilot posture beside the SIGNED line; module set and release assignments untouched. Task 7's two supplied figures ("twelve checks / sixteen cases") did **not** match the artifact: recomputed from `docs-integrity.yml` (`(Select-String -Pattern 'run: python3 scripts/').Count` → 9) and `ci.yml` (5 guard steps) against the bullet already landed at P02-T06, both already read fourteen and twenty-six and needed no correction — reported per PR-33/PR-18 rather than rewritten to match a premise the tree contradicts. `PRECEDENTS.md` gains PR-34, appended after PR-33. Ledger: CF-109 AMENDED, stays open, landing point P03's entry, owner now the P03 entry checklist; CF-129 CLOSED on OD-G18 (numbers are policy hardcoded to the free plan, implementation and the concurrency proof owed by the P02 build task amending `provision_tenant`, slug squatting unsolved); CF-130 CLOSED on OD-G17 (enforcement is in the data layer, implementation owed by the same task); CF-134 opened (the owner's paid-tier product direction, owner the Release 3 subscriptions and billing work); CF-135 opened then CLOSED in this task, one figure corrected against the artifact before landing (PR-33) — `DEV_OS.md` §2 in fact stated **five** things false, not the supplied four, the fifth being migration discipline, original wording recorded per PR-07. **37 open at `022cabe` + 1 landed open (CF-134) − 2 previously-open closed (CF-129, CF-130) = 36 open**, ledger 118 → 120 rows, reconciling id-for-id. All fourteen checks green. No application code, no migration, no schema change; tenant isolation N/A, stated explicitly — this task touches no data-access path | pending | `cd6dece` |
 | P02-T08 | `docs/ROADMAP.md` and `docs/roadmap.html`, generated and self-asserting (PR-35). On `phase/02-tenancy-and-access` from `ae3d4e2`; no PR, §3 puts one at the phase exit. Tooling only: `scripts/generate_roadmap.py` reads, and reads only, `BUILD_PHASES.md` (phase ids, names, content, exit standards, the OD-H12 entry/exit lines on P03 and P05), `SESSION_CONTEXT.md` (the done-steps table and the header's `Phase:` token), `CARRY_FORWARDS.md` (total rows, open count, open ids) `DECISIONS.md` §2 (the register total) and `SCOPE.md` §2 (the signed date and the Release 1/2/3 item lists), and emits both outputs wholly, embedding no commit sha, branch or timestamp — the one constraint that makes `scripts/check_roadmap.py`'s byte-comparison satisfiable at all, since any of those three changes at commit time. Status is derived, not hardcoded: **DONE** needs a PASS row for that phase's exit gate in the done-steps table (P01 only, at `P01-GATE-RUN3`); **IN PROGRESS** is the header's current phase (P02); everything else is **QUEUED** — stated once in the generator's own docstring so both outputs agree. A fourth colour, "needs a decision", marks an open (`- [ ]`) ledger row in the html legend and list, not a phase. `check_roadmap.py` regenerates in memory via the generator's own `collect()`/`render_markdown()`/`render_html()` and byte-compares, no normalisation; floors stated per PR-27 — minimum 9 phases parsed, minimum 1 done-steps row, minimum 1 open carry-forward — each a `die()` on an emptied or reshaped source, never a clean zero. Wired into `docs-integrity.yml` as its **tenth** step. Proven on the required plant-and-revert set from an in-memory snapshot, never `git checkout --` (PR-26): hand-edit `ROADMAP.md`, hand-edit `roadmap.html`, a phase name changed in `BUILD_PHASES.md` without regenerating, both targets removed, both targets emptied — **7 of 7 caught**, every failure a one-line `FAIL:` naming the file and the first differing line, every revert byte-identical, confirmed by `git status --porcelain` clean afterward. `check_module_spec_tree.py` run after creating the two scripts and two documents: green unmodified, because `scripts/` and `docs/` are named at directory granularity only under OD-H10 and no new directory was created, so `MODULE_SPEC.md` §1 needed no path added — reported per Task 4's own instruction rather than narrowed to force a pass that was never blocked. `PRECEDENTS.md` gains PR-35, appended verbatim after PR-34. Static conformance set: nine `docs-integrity` + five `guards` → **ten and five, fifteen total**; two-way (check, premise) set: twenty-six → **twenty-eight** (PR-28 — `check_roadmap.py` contributes two content-comparison assertions, one per generated file, mirroring `check_security_model_bypass.py`'s one-`fail()`-site-per-assertion counting; 26 + 2 = 28, case list: `docs/ROADMAP.md` diverges from its regeneration, `docs/roadmap.html` diverges from its regeneration). Task 5: no carry-forward finding surfaced that this task did not already resolve by design; none opened, ledger unchanged at 120 rows, 36 open. Regenerated a final time to include this row before commit (PR-17's follow-up commit refreshes both outputs again once this row's real sha lands). No application code, no migration, no schema change, no decision text; tenant isolation N/A, stated explicitly — this task touches no data-access path. All fifteen checks green | pending | `d45af35` |
 | P02-T09 | Roadmap phase detail, the shared visual language and role journeys. On `phase/02-tenancy-and-access` from `d45af35`; no PR, §3 puts one at the phase exit. Tooling and one authored specification: no application code, no migration, no schema change. **ROW A** (CF-136, opened then closed) — P02-T08 recorded the two-way (check, premise) total twice, disagreeing (twenty-six → twenty-eight at :25, twenty-six at :254), and the method behind twenty-eight was itself unsafe: it counted `check_roadmap.py`'s single `fail()` call site as two cases, one per generated file, contradicting P02-T06's own precedent of one case per call site. Re-derived by parsing every `scripts/check_*.py` file's AST and counting `Call` nodes named `fail` — never a textual `"fail("` search, which also matches the word inside a docstring or comment: a textual scan of `check_roadmap.py` mid-task read 7, the AST call-site count reads 4. **Total: 85** across the ten `docs-integrity` scripts; JS `guards` define no `fail` function and have never contributed to this figure. Both `SESSION_CONTEXT.md` locations corrected to state it exactly once, in "Frozen decisions in force"; `scripts/check_stated_counts.py` gained a seventh assertion (`check_two_way_probe_total`) holding the statement singular and equal to the enumeration, proven by a planted wrong figure and a removed statement, both reverted from an in-memory snapshot (PR-26). **ROW B** (CF-137, opened then closed) — `check_roadmap.py` stated floors for phases, done-steps rows and open carry-forwards but none for `SCOPE.md` §2's release blocks or `ROLE_JOURNEY.md`'s rows; an emptied or reshaped source would regenerate empty on both sides and pass the byte-comparison over the loss. `MINIMUM_RELEASE_BLOCKS = 3` and `MINIMUM_ROLE_JOURNEY_ROWS = 17` added as `die()` floors, both stated in the OK line, each proven by a below-floor case reverted from an in-memory snapshot: `SCOPE.md`'s `**Release 3:**` marker removed (2 of 3 blocks parse) and `ROLE_JOURNEY.md`'s table reduced to one row per actor (7 of 17). **TASK 2** — `docs/product/ROLE_JOURNEY.md` authored under OD-H9: one table, Role · Capability · Owning phase · Note, derived from `TENANCY_MODEL.md` §3's Can/Cannot table and `BUILD_PHASES.md`, 17 rows across exactly seven actors — the five `public.role` enum values plus **Operator** (platform-side, OD-G10, metadata only) and **Buyer** (a record, never an authenticated actor). `check_roadmap.py` gained three conformance assertions, each naming the short side: every actor is an enum value (`supabase/schema.sql`) or one of the two named non-enum actors; every enum value holds at least one row; every owning phase exists in `BUILD_PHASES.md`. **TASK 3** — phase cards in `generate_roadmap.py` gained derived bullets, never hardcoded: DONE from the done-steps rows belonging to that phase (task id and description), QUEUED from that phase's own `BUILD_PHASES.md` content (multi-line source prose collapsed to one line per bullet via `collapse_space()`), the exit standard as its own tag, and P03/P05's OD-H12 entry/exit lines tagged "moved in"; a phase with no rows in either source renders an explicit empty state. **TASK 4** — `docs/roadmap.html` rebuilt to the approved token set verbatim (`--paper` through `--new`, no invented colour): single column, 690px max-width, 20px/14px/60px body padding, white cards with a 1px rule border, 7px left colour rail, 9px radius and a 36px monospace tick column, 1.04rem/700/2px-bottom-border section headings, a monospace uppercase 999px chip legend, 7px rounded-square bullet markers, `#EEF1F4` exit-standard tags and `#F3ECFF`/`#5B2AA0` moved-in tags, system font stack for prose and `ui-monospace, "SF Mono", Menlo, Consolas` for labels/ticks/identifiers. Five statuses only: DONE green, IN PROGRESS blue, QUEUED grey, PENDING A DECISION amber, NOT IN THE PLAN magenta. No `<link>`, `<script>` or external URL of any kind — passes `check-no-runtime-cdn`'s rule by construction, though that guard's own `ROOTS`/`EXTENSIONS` do not reach `docs/*.html` at all, reported rather than silently assumed. **TASK 5** — a "Role journeys" section follows the phases in both outputs, one card per actor in `ROLE_JOURNEY.md`'s own order, each capability's status derived — **DONE** if the owning phase is done, **IN PROGRESS** if it is P02, **PENDING A DECISION** if the note names an open carry-forward or an unsigned decision, **QUEUED** otherwise — never hardcoded; no status required a column ROLE_JOURNEY.md lacked, so nothing was added and nothing was hardcoded. Operator's and Buyer's rows carry their own "**Not:**" disclaimers verbatim from the table. **TASK 6** — purity re-proven: `generate_roadmap.py` run twice back to back, `docs/ROADMAP.md` and `docs/roadmap.html` diff at zero lines both times; no sha, branch or timestamp the inputs do not already carry. **TASK 7** — five new plant-and-revert cases beyond P02-T08's seven, every one from an in-memory snapshot, never `git checkout --` (PR-26): a role absent from `ROLE_JOURNEY.md` (the `approver` enum value with zero rows), an actor neither an enum value nor one of the two named (`Approvers`), an owning phase that does not exist (`P99`), `SCOPE.md`'s release blocks below floor, and `ROLE_JOURNEY.md`'s rows below floor — **5 of 5 caught, every revert byte-identical**, confirmed by `git status --porcelain` clean afterward. **TASK 8** — `check_module_spec_tree.py` run after creating `docs/product/ROLE_JOURNEY.md`: green unmodified, `docs/product/` is an existing root named at directory granularity under OD-H10, so `MODULE_SPEC.md` §1 needed no path added. Static conformance set unchanged in count at fifteen (ten `docs-integrity`, five `guards`); the two-way (check, premise) total is the 85 ROW A re-derived, which already includes this task's own additions (Task 2's three assertions, ROW B's two floors, ROW A's own three). Ledger: 120 → 122 rows, 36 open — CF-136 and CF-137 opened and closed in this task, id-for-id. All fifteen checks green. Regenerated a final time to include this row before commit (PR-17's follow-up commit refreshes both outputs again once this row's real sha lands). No application code, no migration, no schema change; tenant isolation N/A, stated explicitly — this task touches no data-access path | pending | `dabd08f` |
+| P02-T09-FIX | Split the probe totals, guard the generated page, triage the ownerless ledger. On `phase/02-tenancy-and-access` at `3d0c7e7`; no PR, §3 puts one at the phase exit. **TASK 1** — the two-way empty-target probe re-proven, not reconstructed: 37 (check, premise) pairs enumerated across all fifteen checks (36 after `scripts/check_stated_counts.py` gained a new premise on itself, `scripts/check_two_way_empty_target.py`'s `PROVEN_PAIRS`, reconciled by adding the pair), **36 of 37 proven live** — both a removed and an emptied case producing a one-line `FAIL:` at non-zero exit with no traceback, every revert byte-identical, zero pairs found passing on nothing. One premise, `check_module_spec_tree.py`'s reverse-direction git-tracked-tree, could not be dynamically substituted on Windows (Win32 `CreateProcess` resolves a bare `git` only to `git.exe`, never a PATH-shadowing `.bat` shim — confirmed directly) and is recorded as a documented gap read by code inspection, not run. The probe landed permanently per PR-28 as `scripts/check_two_way_empty_target.py`. `check_stated_counts.py` now states and asserts two figures where it stated one: the static-assertion count (**94** `fail()` call sites, `enumerate_fail_call_sites()`) and the proven two-way empty-target case count (**36**, `enumerate_proven_two_way_pairs()` parsing the landed probe's own `PROVEN_PAIRS` length by AST), each stated exactly once, each proven by a planted wrong figure and a planted duplicate statement reverted from an in-memory snapshot (PR-26). CF-138 opened and closed. **TASK 2** — `scripts/check-no-runtime-cdn.mjs` widened: `docs` added to `ROOTS`, `.html` to `EXTENSIONS`; `docs/roadmap.html` confirmed free of `<script>`/`<link>` before widening, so the HALT-on-violation condition never applied. Before: 7 files (`app`: 3, `proxy.ts`: 1, `lib`: 3). After: 9 (`docs`: 2 — `roadmap.html` and the pre-existing `backup-browser-data.js`), floor raised to 9, proven by a removed/emptied pair on the widened roots. CF-139 opened and closed. **TASK 3** — `scripts/check_roadmap.py` gained three more conformance assertions against `TENANCY_MODEL.md` §3, independent of the enum-and-ROLE_JOURNEY.md pair Task 2 (P02-T09) already asserted: every enum role is named as a `| **Role** |` row in §3 (`MINIMUM_TENANCY_SECTION3_ROLES = 5`, a `die()` floor); every role §3 names has a `ROLE_JOURNEY.md` row; the non-enum actors present in `ROLE_JOURNEY.md` are exactly `{Operator, Buyer}`, neither more nor fewer. Three plant-and-revert cases from an in-memory snapshot, 3 of 3 caught, every revert confirmed byte-identical by `git hash-object` against `git rev-parse HEAD:`. **TASK 4** — `docs/method/REVIEWER_CHAT_INSTRUCTIONS.md`'s pre-existing uncommitted diff reported verbatim in the task report; not committed, not reverted, not staged in this task — confirmed by naming every staged path explicitly (PR-36) and by `git show --stat` on the resulting commit. CF-140 opened, left OPEN, owner the reviewer. **TASK 5** — PR-36 landed: every commit stages by explicit path, `git add -A`/`git commit -a` forbidden, origin CF-140. **TASK 6 — HALTED.** `docs/ROADMAP.md`'s NOT-IN-THE-PLAN set enumerated programmatically via `generate_roadmap.py`'s own `collect()`, not by eye (PR-23): **20** rows at the task's start, not the 22 the prompt stated; **21** after this task's own CF-140 landed into the same bucket by construction. The four-bucket STOP condition ("do not sum to 22") fires either way — no row triaged, no owner invented, no amendment made under this task. **TASK 7** — ids allocated from the live maximum, verified across every tracked file, never assumed from one document (PR-23): CF-138, CF-139, CF-140 (max was CF-137); PR-36 (max was PR-35). Zero ids for Task 1's empty-target failures (none found) and zero for Task 6's amendments (none made, task halted). **TASK 8** — roadmap regenerated: 125 carry-forward rows (37 open), all other inputs unchanged in count. Static conformance set unchanged at fifteen. All fifteen checks green. No application code, no migration, no schema change; tenant isolation N/A, stated explicitly — this task touches no data-access path. Isolation suite not run, per the task's own instruction | pending | `3d0c7e7` |
 
 > Commit column: one or more comma-separated backticked shas, or `—` where no
 > single commit tracks the step (P-00 through P-01c predate the one-task-one-commit
@@ -144,6 +130,7 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
 - CF-126 — owner: the task that first subscribes to Realtime, and the P02 exit gate, which re-derives it
 - CF-133 — owner: the owner, on SECURITY_MODEL.md §11b.4's standing recommendation, and the P02 exit gate, which re-derives §11b and re-reads this column
 - CF-134 — owner: the Release 3 subscriptions and billing work
+- CF-140 — owner: the reviewer, to commit, amend or discard on their own document
 
 ## Frozen decisions in force
 - Freeze point 2026-07-29 (`legacy/FREEZE.md`) — tools RETIRING, not port
@@ -264,23 +251,50 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
   and one that finds nothing is landed too, because a probe that passes today is
   the one that catches tomorrow's regression.
 - **The static conformance set is ten `docs-integrity` checks and five
-  `guards`, fifteen in total, as of 2026-08-05 — P02-T09.** The two-way
-  (check, premise) total stands at **85**, enumerated as one `fail()` call
-  site per assertion across every `scripts/check_*.py` (PR-23) — command:
-  parse each file's AST and count `Call` nodes whose function is the bare
-  name `fail`, never a textual `"fail("` search, which also matches the word
-  inside a docstring or comment. Re-derived at P02-T09 ROW A after the prior
-  figure disagreed with itself (this line read twenty-six, the header read
-  twenty-six → twenty-eight) and after `check_roadmap.py`'s own committed
-  source exposed the cause: P02-T08 counted two cases for `check_roadmap.py`
-  from a single call site invoked once per generated file, breaking the
-  convention P02-T06 set — one case per call site, full stop, which is what
-  `scripts/check_stated_counts.py` now asserts against the codebase on every
-  push. JS `guards` do not contribute: none defines or calls a function named
-  `fail`, so this total has never covered them: they are counted separately,
-  above, in the static conformance set. Live-catalog conformance belongs to
-  the readiness task (OD-H8) and to §11.5's re-derivation at each phase exit
-  gate, and neither is implemented as a script.
+  `guards`, fifteen in total, as of 2026-08-05 — P02-T09.** Two distinct
+  figures live where P02-T09 recorded one, split at P02-T09-FIX because they
+  measure different things and neither had ever been asserted against its
+  own derivation:
+  - The static-assertion count stands at **94** fail() call site(s),
+    enumerated as one `Call` node per assertion across every
+    `scripts/check_*.py` (PR-23) — command: parse each file's AST and count
+    `Call` nodes whose function is the bare name `fail`, never a textual
+    `"fail("` search, which also matches the word inside a docstring or
+    comment. This is a count of source code, not of proven behaviour. It was
+    85 at P02-T09 and rose to 94 at P02-T09-FIX: four new `fail()` sites in
+    `check_roadmap.py` (the new `TENANCY_MODEL.md` §3 assertions) and five
+    in `check_stated_counts.py` itself (the functions that assert this split
+    and the proven count below). `scripts/check_two_way_empty_target.py`
+    matches the same glob and contributes **0** — it reports its findings
+    with `print()`, never a function named `fail`, so landing it did not
+    silently inflate this figure. JS `guards` do not contribute either: none
+    defines or calls a function named `fail`; they are counted separately,
+    above, in the static conformance set.
+  - The proven two-way empty-target case count stands at **36**, re-proven
+    at P02-T09-FIX by actually removing and then emptying every premise the
+    fifteen checks read — thirty-seven pairs enumerated, thirty-six proven,
+    one recorded as a documented gap rather than folded into either number:
+    `check_module_spec_tree.py`'s reverse-direction premise (the live
+    tracked directory tree via `git ls-files`) cannot be substituted on
+    Windows, where a bare `git` invocation resolves only to `git.exe` and
+    never to a PATH-shadowing `.bat` shim, so the check's own `die()` calls
+    for that premise were read rather than run. Full enumeration, the gap's
+    reasoning and a re-runnable driver: `scripts/check_two_way_empty_target.py`
+    (PR-28 — this gate's probe is landed permanently, not wired into
+    `docs-integrity.yml` because several cases need seconds of directory
+    copy-and-restore per run). Before P02-T09-FIX, this number had never
+    been produced by dynamically removing or emptying a single premise: the
+    85 P02-T09 recorded was, and had always been, the assertion count above
+    under the proven count's name.
+
+  `scripts/check_stated_counts.py` asserts each figure by name against its
+  own derivation on every push — the assertion count against
+  `enumerate_fail_call_sites()`, the proven count against
+  `scripts/check_two_way_empty_target.py`'s own `PROVEN_PAIRS` list — so the
+  two can never again collapse into one number silently. Live-catalog
+  conformance belongs to the readiness task (OD-H8) and to §11.5's
+  re-derivation at each phase exit gate, and neither is implemented as a
+  script.
 - **OD-G17, OD-G18 and OD-H12 SIGNED 2026-08-05 — P02-T07.** `default_locale` is
   constrained to `en`/`ar` and `base_currency` to `EGP`/`USD`/`SAR`/`AED`/`EUR`,
   enforced by the database and not by the wizard (G17). A `Member` may own at
@@ -307,9 +321,19 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
 
 ## Next action
 **The next P02 build task, on `phase/02-tenancy-and-access`** — the branch is
-open and carries P02-T04, P02-T05, P02-T06 and P02-T07. Do not branch from
-`main` again and do not open a pull request; `BRANCHING.md` §3 puts one
-consolidated PR at the phase exit, after the gate has run on the branch.
+open and carries P02-T04 through P02-T09-FIX. Do not branch from `main` again
+and do not open a pull request; `BRANCHING.md` §3 puts one consolidated PR at
+the phase exit, after the gate has run on the branch.
+
+**P02-T09-FIX's Task 6 is still owed**: triage the ledger's NOT-IN-THE-PLAN
+carry-forwards into phase-implied, R2/R3, needs-a-decision and genuinely
+ownerless, amending only the first two. It halted because the true count is
+**21** (`docs/product/`- and `docs/method/`-rooted, enumerated via
+`generate_roadmap.py`'s own `collect()`, never by eye), not the 22 a prior
+prompt stated, and the task's own four-bucket-sums-to-22 condition could not
+be satisfied honestly. Re-run the enumeration fresh — this count moves every
+time a row lands in that bucket, as CF-140 already did this task — and triage
+against whatever it reads at execution, not against 21 or 22 as a given.
 
 Both of OD-G13's acts now exist in the database, so the invitation flow CF-121
 owns is the remaining tenancy write path, and it can assume a `Member` exists for

@@ -2365,3 +2365,88 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       and `ROLE_JOURNEY.md`'s table reduced to one row per actor, 7 of 17
       (floor catches it), each case isolated from the OD-H9 conformance
       assertions it sits beside.
+- [x] CF-138 — P02-T09's "two-way (check, premise) total" of 85 was, and had
+      always been, `enumerate_fail_call_sites()`'s AST count of `fail()` call
+      sites — a count of source code — under the name of a **proven**
+      figure: pairs actually removed and emptied and watched fail correctly,
+      both times, from an in-memory snapshot. No pair had ever been
+      dynamically tested under that name; PR-28's probe was invented and
+      described repeatedly but never actually run. Owner: this task.
+      CLOSED (P02-T09-FIX) — re-proven, not reconstructed from reports. All
+      fifteen checks' premises enumerated: 37 (check, premise) pairs, one
+      more than P02-T09-FIX's own mid-task count of 36 after
+      `scripts/check_stated_counts.py` gained a new premise on itself
+      (`scripts/check_two_way_empty_target.py`'s `PROVEN_PAIRS`), reconciled
+      by adding that pair rather than by adjusting the number to match a
+      stale expectation. 36 of 37 proven live: both a removed and an
+      emptied case produced a one-line `FAIL:` at non-zero exit with no
+      traceback, and every revert verified byte-identical (`git status
+      --porcelain` clean, `git hash-object` equal to `git rev-parse HEAD:` on
+      every touched path). Zero pairs found passing on a removed or emptied
+      target — the STOP condition for a genuine finding never fired. One
+      premise could not be dynamically substituted this session:
+      `check_module_spec_tree.py`'s reverse-direction premise, the live
+      tracked directory tree via `git ls-files`, because Win32
+      `CreateProcess` resolves a bare `git` invocation only to `git.exe` and
+      never to a PATH-shadowing `.bat` shim — confirmed directly, the shim
+      was silently bypassed and the real populated repository's tracked set
+      reached the check unchanged. Recorded as a documented gap in
+      `scripts/check_two_way_empty_target.py`'s `KNOWN_GAPS`, read by code
+      inspection (the check's own `die()` calls for a zero and a
+      below-floor tracked-directory count) rather than folded into either
+      figure by assumption. The probe itself landed permanently per PR-28 as
+      `scripts/check_two_way_empty_target.py`, re-runnable at a future gate,
+      not wired into `docs-integrity.yml` because several cases need seconds
+      of directory copy-and-restore per run. `scripts/check_stated_counts.py`
+      now states and asserts two figures where it stated one — the
+      static-assertion count (**94**, `enumerate_fail_call_sites()`, four new
+      sites from this task's own `TENANCY_MODEL.md` §3 assertions and five
+      from the new split assertions themselves) and the proven two-way
+      empty-target case count (**36**, `enumerate_proven_two_way_pairs()`
+      parsing `PROVEN_PAIRS`'s length from the landed probe's own AST, never
+      by importing and running it) — each stated exactly once and proven by
+      a planted wrong figure and a planted duplicate statement, each
+      reverted from an in-memory snapshot (PR-26), plus the landed probe's
+      own file proven as a new premise (removed and emptied, both a clean
+      one-line `FAIL:`).
+- [x] CF-139 — `scripts/check-no-runtime-cdn.mjs`'s `ROOTS`
+      (`app`, `proxy.ts`, `lib`) and `EXTENSIONS` (the four TypeScript and
+      JavaScript ones) never reached `docs/roadmap.html`, a generated static
+      page served to a browser, so it passed the no-runtime-CDN rule by
+      construction rather than by having been scanned — recorded but not
+      fixed at P02-T08 and P02-T09. Owner: this task.
+      CLOSED (P02-T09-FIX) — `docs` added to `ROOTS`, `.html` added to
+      `EXTENSIONS`. `docs/roadmap.html` contains no `<script>` or `<link>`
+      element (confirmed by grep before widening the surface, so the HALT
+      condition for a surfaced violation never applied). Before: 7 files
+      scanned (`app`: 3, `proxy.ts`: 1, `lib`: 3), floor 7. After: 9 files
+      (`docs`: 2 — `docs/roadmap.html` and one pre-existing
+      `docs/archive/2026-07/backup-browser-data.js`), floor raised to 9,
+      proven by a removed-and-emptied-target pair on the widened
+      `[app, proxy.ts, lib, docs]` roots (both a clean one-line `FAIL:`,
+      revert confirmed byte-identical).
+- [ ] CF-140 — `docs/method/REVIEWER_CHAT_INSTRUCTIONS.md` carries an
+      uncommitted modification that predates P02-T09-FIX and is not this
+      task's to commit, revert or rule on — it is reviewer-owned. Diff, in
+      full, as found at the start of this task (verbatim, `git diff --
+      docs/method/REVIEWER_CHAT_INSTRUCTIONS.md`):
+      ```
+      @@ -49,6 +49,14 @@ You own verdicts, prompt packs, document authorship, and phase sequencing.
+       - **You never emit a prompt that is not self-contained** (PR-12). Every payload a
+         prompt refers to sits inside the same fenced block. A fresh window sees only
+         the fence.
+      +-** The reviewer never assigns a CF or PR number. It describes the row; the
+      +  landing task allocates from the live maximum and reports the id back.
+      +-** One task per branch at a time. A task does not start until the previous one
+      +  is pushed and the reviewer has verified it.
+      +-** A reviewer claim about a count is computed, never read off a window. State
+      +  the command. PR-23 binds the reviewer as much as the builder.
+      +-** docs/ROADMAP.md is generated, never hand-edited, and regenerated by every
+      +  task that changes phase state.
+
+       ## The project in one paragraph
+      ```
+      No commit in this task contains this path — confirmed by naming every
+      staged path explicitly (PR-36) and by `git show --stat` on the
+      resulting commit(s) after landing. Owner: the reviewer, to commit,
+      amend or discard on their own document.

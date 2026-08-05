@@ -20,7 +20,7 @@ FAIL = False
 
 EM_DASH = "\u2014"
 
-MINIMUM_ASSERTIONS = 7
+MINIMUM_ASSERTIONS = 7  # unchanged: the split adds a statement, not a scan target
 
 ASSERTIONS = 0
 
@@ -214,14 +214,58 @@ def enumerate_fail_call_sites():
     return total, per_file
 
 
-def check_two_way_probe_total():
-    """P02-T09 ROW A. `SESSION_CONTEXT.md` recorded the two-way (check,
-    premise) total twice, at two disagreeing figures (:25 twenty-six to
-    twenty-eight, :254 twenty-six), because nothing tied either restatement
-    to the codebase the total describes. This asserts there is exactly one
-    present-tense statement of the total, and that it equals
-    `enumerate_fail_call_sites()`'s mechanical count — the same shape as
-    `check_session_context_register`'s assertion against `DECISIONS.md`.
+def enumerate_proven_two_way_pairs():
+    """P02-T09-FIX. The **proven** two-way empty-target case count, derived by
+    parsing `scripts/check_two_way_empty_target.py`'s AST for its module-level
+    `PROVEN_PAIRS` list and counting its elements — never by importing and
+    running that file, which would mutate the working tree on every push.
+    This is a distinct measurement from `enumerate_fail_call_sites()`: a
+    `fail()` call site is a static assertion in a check's source; a proven
+    pair is a (check, premise) combination this repository has actually
+    removed and emptied and watched fail correctly, both times, with a
+    byte-identical revert. P02-T09 conflated the two under one name and one
+    number (85) without ever having run the second measurement — this
+    function is what makes that no longer possible silently.
+    """
+    path = os.path.join("scripts", "check_two_way_empty_target.py")
+    if not os.path.isfile(path):
+        fail(f"{path} does not exist — this check's only source for the "
+             f"proven two-way empty-target case count (PR-27)")
+        return None
+    with open(path, "r", encoding="utf-8") as f:
+        tree = ast.parse(f.read(), filename=path)
+    for node in ast.walk(tree):
+        if (isinstance(node, ast.Assign)
+                and len(node.targets) == 1
+                and isinstance(node.targets[0], ast.Name)
+                and node.targets[0].id == "PROVEN_PAIRS"
+                and isinstance(node.value, ast.List)):
+            return len(node.value.elts)
+    fail(f"{path}: no module-level 'PROVEN_PAIRS = [...]' list found — this "
+         f"check's only source for the proven two-way empty-target case count")
+    return None
+
+
+def check_two_way_probe_counts():
+    """P02-T09-FIX. `SESSION_CONTEXT.md` recorded one number, 85, under the
+    name 'the two-way (check, premise) total', when it in fact only ever
+    measured `fail()` call sites — a static assertion count — and had never
+    been dynamically proven against a removed or emptied premise. Splits that
+    one conflated statement into the two distinct figures it was always
+    describing, each stated exactly once and each asserted against its own
+    derivation:
+
+      assertion count   — `fail()` call sites across `scripts/check_*.py`,
+                          from `enumerate_fail_call_sites()`'s AST walk
+      proven case count — (check, premise) pairs this repository has
+                          dynamically removed and emptied and watched fail
+                          correctly both times, from
+                          `enumerate_proven_two_way_pairs()`'s AST walk over
+                          `scripts/check_two_way_empty_target.py`
+
+    A number that used to be one mechanical assertion is now two, on purpose:
+    conflating a count of source code with a count of proven behaviour is
+    exactly the defect this task exists to fix.
     """
     path = "SESSION_CONTEXT.md"
     text = read(path)
@@ -229,26 +273,47 @@ def check_two_way_probe_total():
         return
     asserted()
 
-    matches = re.findall(
-        r"two-way\s+\(check,\s+premise\)\s+total\s+stands\s+at\s+\*\*(\d+)\*\*",
+    assertion_matches = re.findall(
+        r"static-assertion\s+count\s+stands\s+at\s+\*\*(\d+)\*\*\s+"
+        r"fail\(\)\s+call\s+site",
         text,
     )
-    if len(matches) == 0:
-        fail(f"{path}: no line states the two-way (check, premise) total in "
-             f"the present tense (expected exactly 1)")
+    if len(assertion_matches) == 0:
+        fail(f"{path}: no line states the static-assertion count as "
+             f"'<N> fail() call site(s)' in the present tense (expected "
+             f"exactly 1)")
+    elif len(assertion_matches) > 1:
+        fail(f"{path}: {len(assertion_matches)} lines state the "
+             f"static-assertion count, expected exactly 1")
+    else:
+        stated_assertions = int(assertion_matches[0])
+        enumerated_assertions, per_file = enumerate_fail_call_sites()
+        if stated_assertions != enumerated_assertions:
+            detail = ", ".join(f"{p}={n}" for p, n in per_file.items())
+            fail(f"{path}: states {stated_assertions} fail() call site(s), "
+                 f"enumerated {enumerated_assertions} across "
+                 f"scripts/check_*.py ({detail})")
+
+    proven_matches = re.findall(
+        r"proven\s+two-way\s+empty-target\s+case\s+count\s+stands\s+at\s+"
+        r"\*\*(\d+)\*\*",
+        text,
+    )
+    if len(proven_matches) == 0:
+        fail(f"{path}: no line states the proven two-way empty-target case "
+             f"count in the present tense (expected exactly 1)")
         return
-    if len(matches) > 1:
-        fail(f"{path}: {len(matches)} lines state the two-way (check, "
-             f"premise) total in the present tense, expected exactly 1")
+    if len(proven_matches) > 1:
+        fail(f"{path}: {len(proven_matches)} lines state the proven "
+             f"two-way empty-target case count, expected exactly 1")
         return
 
-    stated_total = int(matches[0])
-    enumerated_total, per_file = enumerate_fail_call_sites()
-
-    if stated_total != enumerated_total:
-        detail = ", ".join(f"{p}={n}" for p, n in per_file.items())
-        fail(f"{path}: states {stated_total}, enumerated {enumerated_total} "
-             f"fail() call site(s) across scripts/check_*.py ({detail})")
+    stated_proven = int(proven_matches[0])
+    enumerated_proven = enumerate_proven_two_way_pairs()
+    if enumerated_proven is not None and stated_proven != enumerated_proven:
+        fail(f"{path}: states {stated_proven} proven case(s), "
+             f"scripts/check_two_way_empty_target.py's PROVEN_PAIRS "
+             f"enumerates {enumerated_proven}")
 
 
 def check_calc_spec():
@@ -368,7 +433,7 @@ def main():
     check_domain_model()
     check_decisions()
     check_session_context_register()
-    check_two_way_probe_total()
+    check_two_way_probe_counts()
     check_calc_spec()
     check_adr()
     check_data_model()

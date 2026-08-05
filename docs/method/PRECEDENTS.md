@@ -330,6 +330,18 @@ phase state, closes a carry-forward, or adds a done-steps row regenerates both
 in the same commit. The generator embeds no commit sha, branch or timestamp,
 because a value that changes at commit time makes the check unsatisfiable.
 
+**PR-36 — Every commit stages by explicit path; `git add -A` and
+`git commit -a` are never used.**
+Both stage whatever the working tree happens to carry, including a modification
+the current task never made and never inspected. At P02-T09 the tree carried an
+uncommitted edit to `docs/method/REVIEWER_CHAT_INSTRUCTIONS.md` — a
+reviewer-owned document, not the builder's to rule on — that predated the
+session; a broad stage would have swept it into a commit whose message named
+only P02-T09's own work, with no mention of the reviewer's edit anywhere in the
+record. A commit message that names a task must contain only that task's work,
+and the only way to guarantee that is to name every path `git add` stages,
+never the tree's whole state. Origin: CF-140, P02-T09-FIX.
+
 ---
 
 ## 2. Environment quirks — never re-discover
