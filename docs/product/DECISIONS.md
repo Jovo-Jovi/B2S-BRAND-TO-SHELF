@@ -16,7 +16,7 @@ never edited in place.
 
 ## 2. Decision register
 
-88 decisions, all signed. None open.
+91 decisions, all signed. None open.
 
 ### Group A — Product identity
 
@@ -129,6 +129,8 @@ never edited in place.
 | **G14** | **The tenant a session acts in is a caller-supplied selector resolved server-side against an active `Membership` on every request. One active membership resolves implicitly; more than one requires an explicit held selection; anything else resolves null.** | SIGNED 2026-08-04 |
 | **G15** | **Every `Tenant` has at least one active `Owner` at all times. More than one is permitted.** | SIGNED 2026-08-04 |
 | **G16** | **An invitation is keyed to an email address, not to an existing `Member`. Signing in through the invitation link establishes control of the address and activates the `Membership` in the same act.** | SIGNED 2026-08-04 |
+| **G17** | **`default_locale` is constrained to `en` and `ar`. `base_currency` is constrained to `EGP`, `USD`, `SAR`, `AED`, `EUR`. Enforced by the database, never by the wizard.** | SIGNED 2026-08-05 |
+| **G18** | **A `Member` may own at most three active `Tenant`s and perform at most three provisioning acts per rolling 24 hours. Both are policy values, hardcoded to the free plan in Release 1 and supplied by `Subscription` in Release 3.** | SIGNED 2026-08-05 |
 
 ### Group H — Quality & acceptance
 
@@ -145,6 +147,7 @@ never edited in place.
 | **H9** | **A reviewer-authored specification lands with a conformance check that asserts it against reality. A specification no script can check does not land.** | SIGNED 2026-08-04 |
 | **H10** | **`MODULE_SPEC.md` §1 is the application tree. Repository-root configuration and infrastructure directories are outside its scope and are stated as such.** | SIGNED 2026-08-04 |
 | **H11** | **Every probe a gate invents becomes a permanent CI check or suite assertion. An adversarial pass is additive, never re-invented.** | SIGNED 2026-08-04 |
+| **H12** | **Nine build phases. P09 — launch and operations — is added. Staging and error visibility move into P03's entry; backup with a rehearsed restore moves into P05's exit. Release 1 is a pilot with a real brand, not a demo.** | SIGNED 2026-08-05 |
 
 ## 3. Decisions authored after the promotion
 
@@ -338,4 +341,78 @@ push otherwise.
 inviting them; a directory that exposes strangers so an `Owner` can find one; a
 separate prove-your-email step bolted on after acceptance; and an `Owner` who can
 make anyone active.
+
+### OD-G17 — Permitted locales and currencies
+**Signed 2026-08-05.**
+
+`default_locale` is constrained to **`en`** and **`ar`**, and nothing else:
+bilingual-by-rule is a standing constraint and a third locale implies a
+translation surface that does not exist. `base_currency` is constrained to the
+ISO 4217 codes **`EGP`, `USD`, `SAR`, `AED`, `EUR`** — an Egyptian base, the
+Gulf as the adjacent market for an Arabic-and-English platform, and two
+export-invoicing currencies. Both are language-neutral keys, which
+`check-enum-keys` already requires.
+
+**Enforced by the database, not by the wizard.** `provision_tenant` is granted
+to every `authenticated` caller and takes free text, so a caller with a session
+bypasses the wizard entirely. The wizard offers the same set and is a
+convenience over the constraint, never the constraint (ADR-003).
+
+Adding a member is a migration and an amendment. When P07 lands `Currency` and
+`Locale` as Settings entities per `SCOPE.md` module 18, the constraint moves
+there and this decision is superseded rather than deleted.
+
+**Forecloses.** A tenant provisioned into a locale with no translations; a
+currency `CALC_SPEC.md` was never written against; validation living only in a
+screen.
+
+### OD-G18 — Provisioning is bounded, and the bound is policy
+**Signed 2026-08-05.**
+
+A `Member` may own at most **three active `Tenant`s** and perform at most
+**three provisioning acts per rolling 24 hours**, counted from `activity_event`
+where the action is `tenant.provisioned` and the actor is the caller. No new
+table. OD-A3 makes one account one company, so three catches nothing legitimate.
+
+**Both numbers are policy, not invariant.** Release 1 hardcodes the free plan's
+values. Release 3's `Subscription`, already scoped at `SCOPE.md`:66 with
+`FeatureFlag` as its gate, supplies them per plan, so a paid tier raising the
+company limit needs no change to the provisioning path.
+
+**Three consequences, signed rather than discovered.** A count inside the
+function races under concurrency, so it requires an advisory lock on the member
+id or a partial unique index, and a concurrency assertion proving it. A refusal
+cannot be recorded, because `activity_event` is tenant-scoped and a refusal has
+no tenant; the attempt leaves no data either, and Release 1 accepts that rather
+than inventing a platform-scoped audit. Raising the cap in Release 1 is a
+migration, because OD-G10 holds `Operator` to metadata.
+
+**Not covered.** The cap bounds tenants, not slugs. Named, not solved.
+
+### OD-H12 — Nine phases, three items pulled forward, one method document at the end
+**Signed 2026-08-05.**
+
+**P09 — Launch and operations** is added, terminal: `SECURITY_MODEL.md` §9's
+pre-launch audit, which today no phase owns · observability, alerting and
+retention · service levels · capacity and load testing against OD-G1's
+thousand-tenant target · incident response and rollback · whether this
+repository stays public at commercial launch · and the legal set — Terms of
+Service, Privacy Policy and a data processing agreement, which are counsel's
+work and not a builder task.
+
+**Three items move earlier, because Release 1 is a pilot with a real brand.**
+Staging and error visibility land at **P03's entry** — the first phase where a
+person puts real content in. Backup with a **rehearsed** restore lands at
+**P05's exit** — the first phase holding money records.
+
+**The method document is authored last.** `DEV_OS.md` and `DEV_OS_REFERENCE.md`
+are retained as history. At P09's handoff, B2S authors its own method from the
+loop it actually ran — nine phases, the entry-readiness-gate lifecycle, the
+ledger, the precedent set, the four acceptance standards — rather than
+continuing to adapt a record of a different project. `DEV_OS_REFERENCE.md` is
+never rewritten (PR-29).
+
+**Forecloses.** A launch with no owner for the security audit; monitoring
+discovered when a tenant reports an outage; a backup policy with no rehearsal;
+a method document written before the method was observed.
 

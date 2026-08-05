@@ -308,6 +308,17 @@ owner and the remedy were all unaffected. Verified programmatically, not by eye:
 the new check's stated-total-versus-table-rows assertion did not fire against
 the unedited document, and does fire when the total is planted at seven.
 
+**PR-34 — A method change that must touch the ledger or the state file lands on
+the open phase branch, whatever its origin.**
+PR-32 sends method arising from phase work to the branch and leaves unrelated
+method on `main`. Origin is the wrong test where the write set decides. A row
+opened on a branch cannot be closed on `main` — it is not there — and
+`SESSION_CONTEXT.md` and `CARRY_FORWARDS.md` are written by every branch task,
+so any `main` edit to either guarantees a conflict at the phase pull request.
+Where a method change touches either file while a phase branch is open, it lands
+on the branch. Refines PR-32; supersedes nothing. Origin: OD-H12, whose rows
+CF-129 and CF-130 exist only on `phase/02-tenancy-and-access`.
+
 ---
 
 ## 2. Environment quirks — never re-discover

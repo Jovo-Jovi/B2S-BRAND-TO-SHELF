@@ -1760,6 +1760,13 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       an isolation regression introduced between gates is not caught until the
       next gate.** Owner: CF-92's reinstatement trigger — when staging exists,
       the suite becomes a required CI job on any schema-touching pull request.
+      AMENDED (P02-T07) — OD-H12 gives the reinstatement trigger a concrete
+      landing point instead of a condition with no date: staging and error
+      visibility move to **P03's entry**, the first phase where a person puts
+      real content in, because Release 1 is a pilot with a real brand and not a
+      demo. The row stays OPEN — nothing has moved this suite into CI yet — and
+      its owner is now the P03 entry checklist rather than an open-ended
+      condition. Owner: **the P03 entry checklist**, per OD-H12.
 - [x] CF-110 — P01-T03 verified `supabase/schema.sql` and the concatenated
       migrations byte-identical at 18,495 characters. After P01-T04 they are
       whitespace-normalised identical with ten blank lines differing at file
@@ -2171,7 +2178,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       and a JSON array — all null with nothing raised. The caller resolves tenant A
       with no header and with one valid header, which is what distinguishes "the
       selector arrived and did not match" from "the transport dropped it".
-- [ ] CF-129 — `public.provision_tenant()` is not rate-limited, and nothing else
+- [x] CF-129 — `public.provision_tenant()` is not rate-limited, and nothing else
       bounds it. Any authenticated identity holding a live `Member` may call it as
       often as it likes; each successful call writes one `tenant`, one `owner`
       `active` `membership` and one `activity_event`, and there is no per-member
@@ -2184,7 +2191,16 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       way. Not implemented here deliberately: no mechanism has been decided, and
       choosing one is a stack decision this task does not hold. Owner: **the task
       that wires the sign-up surface**, and the P02 exit gate, which re-derives it.
-- [ ] CF-130 — `provision_tenant()` validates `p_name` and `p_slug` and passes
+      CLOSED (P02-T07) — on OD-G18. A `Member` may own at most three active
+      `Tenant`s and perform at most three provisioning acts per rolling 24 hours,
+      counted from `activity_event`. Both numbers are **policy, hardcoded to the
+      free plan in Release 1**, not an invariant — Release 3's `Subscription`
+      supplies them per plan. Implementation and the concurrency proof (an
+      advisory lock on the member id or a partial unique index, and a
+      concurrency assertion proving it) are owed by the P02 build task that
+      amends `provision_tenant`. **Slug squatting is unsolved** — OD-G18 bounds
+      tenants, not slugs, and says so.
+- [x] CF-130 — `provision_tenant()` validates `p_name` and `p_slug` and passes
       `p_base_currency` and `p_default_locale` through unvalidated. `DATA_MODEL.md`
       §3.1 fixes the shape of both in prose — a currency code and a locale — and
       `public.tenant` carries no constraint for either, so the function is the only
@@ -2197,6 +2213,15 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       would be inventing scope. Owner: **the task that authors `BrandConfig`**,
       which is where the currency and locale sets are decided, and the P02 exit
       gate.
+      CLOSED (P02-T07) — on OD-G17. `default_locale` is constrained to `en` and
+      `ar`; `base_currency` is constrained to `EGP`, `USD`, `SAR`, `AED`, `EUR`.
+      **Enforcement is in the data layer, never the wizard** — `provision_tenant`
+      is granted to every `authenticated` caller and takes free text, so a
+      caller with a session bypasses a wizard-only check entirely. Implementation
+      — the constraint on `public.tenant` and `provision_tenant`'s validation of
+      both parameters — is owed by the same P02 build task named in CF-129's
+      closure. Superseded, not deleted, when P07 lands `Currency` and `Locale` as
+      Settings entities per `SCOPE.md` module 18.
 - [x] CF-131 — Materialisation is unconditional, so proof 7's exact-set expectation
       for `member` moved from `[]` to the operator's own id. Before this task the
       harness seeded `public.member` for five identities and never for the operator,
@@ -2278,3 +2303,32 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       re-provisioning one. Owner: **the owner, on §11b.4's standing
       recommendation**, and the P02 exit gate, which re-derives §11b and re-reads
       this column.
+- [ ] CF-134 — The owner's product direction: a paid tier raising the company
+      limit above one, and tools and presets gated behind payment. `SCOPE.md`:66-67
+      already assigns subscriptions, billing and `FeatureFlag` to Release 3 and
+      OD-G12 already names a paid tier, so this is packaging design for scoped
+      work, not new scope. It additionally implies a business workstream in no
+      phase: B2S invoicing its own tenants, payment processing, its own tax
+      position, and a currency for its own pricing. Owner: **the Release 3
+      subscriptions and billing work**.
+- [x] CF-135 — `DEV_OS.md` §2's table stated four things false at HEAD — no
+      database, hand-authored types, no privileged client, authentication out of
+      scope — every one delivered by P01 or signed by OD-G13. §3 was already
+      correctly VOID; only §2 had rotted. Owner: this task.
+      ONE FIGURE CORRECTED AGAINST THE ARTIFACT BEFORE LANDING (PR-33). The
+      supplied text read "four things false". Verified row by row against the
+      live tree at `022cabe`, the table in fact stated **five** things false: the
+      four named plus "Migration discipline; one applier per environment |
+      Deferred — no migrations until P10", falsified the same way and by the
+      same evidence as the database row — 14 migrations exist, applied through
+      the Supabase CLI against ADR-012's one environment, since P01-T02. The
+      finding and the remedy are unaffected: every one of the five is corrected
+      row by row in this task, so landing "four" would have put a false count in
+      a permanent ledger; the original wording is recorded here rather than
+      overwritten, per PR-07. A sixth row, the zod adaptation, was restated for
+      precision rather than corrected from a falsehood — it describes a plan not
+      yet reached, not a claim contradicted by the tree.
+      CLOSED (P02-T07) — §2 corrected row by row against the tree, each row
+      marked with what is in force and which phase or decision delivered it.
+      `DEV_OS_REFERENCE.md` untouched (PR-29); §3 untouched, its VOID banner
+      intact.

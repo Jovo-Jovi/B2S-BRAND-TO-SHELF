@@ -222,7 +222,8 @@ not a credential; it is disclosed, not exploitable.
 
 ## 9. Pre-launch audit
 
-Run before public launch. **An audit, not a removal** — history is permanent.
+**Owner: P09 — Launch and operations (OD-H12).** Run before public launch. **An
+audit, not a removal** — history is permanent.
 
 - [ ] Full-history secret scan, not just the working tree
 - [ ] Confirm no privileged key was ever committed — if one was, **rotate it**;
@@ -235,6 +236,10 @@ Run before public launch. **An audit, not a removal** — history is permanent.
 - [ ] Confirm every privileged-path use is quarantined and logged
 - [ ] Decide whether the repository stays public at commercial launch. If it goes
       private, understand that already-pushed content stays disclosed
+- [ ] Terms of Service published
+- [ ] Privacy Policy published
+- [ ] A data processing agreement template in place before the first
+      non-synthetic tenant
 
 ---
 
