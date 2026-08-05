@@ -207,8 +207,45 @@ export function makeSqlRunner(config: Config): SqlRunner {
 // Callers — PostgREST, exactly as a browser reaches it
 // ---------------------------------------------------------------------------
 
-/** The credential pair PostgREST evaluates a request against. */
-export type Caller = { label: string; apiKey: string; token: string };
+/**
+ * The credential pair PostgREST evaluates a request against, plus whatever
+ * extra request headers the caller chose to send.
+ *
+ * `headers` is what makes OD-G14's selector testable. It rides on the Caller
+ * rather than on each probe so that a selection applies to every request that
+ * caller makes — a read, a write and an RPC alike — which is the only way to
+ * assert that the tenant a session resolves to and the rows it reads agree.
+ */
+export type Caller = {
+  label: string;
+  apiKey: string;
+  token: string;
+  headers?: Record<string, string>;
+};
+
+/**
+ * OD-G14's transport. An ordinary request header, read server-side out of
+ * PostgREST's per-request `request.headers` setting, re-validated against
+ * `public.membership` on every call and trusted for nothing.
+ */
+export const TENANT_SELECTOR_HEADER = "x-b2s-tenant";
+
+/**
+ * The same caller, selecting a tenant. Takes the value verbatim — a proof needs
+ * to send a malformed one, an empty one and a differently-cased header name,
+ * and a helper that validated its argument could not express any of them.
+ */
+export function selecting(
+  caller: Caller,
+  selector: string,
+  headerName: string = TENANT_SELECTOR_HEADER,
+): Caller {
+  return {
+    ...caller,
+    label: `${caller.label}[${headerName}=${selector === "" ? "<empty>" : selector}]`,
+    headers: { ...(caller.headers ?? {}), [headerName]: selector },
+  };
+}
 
 export type Attempt = {
   ok: boolean;
@@ -273,6 +310,8 @@ async function postgrest(
   // publishable key alone and PostgREST resolves it to `anon`.
   if (caller.token !== "") headers.Authorization = `Bearer ${caller.token}`;
   if (body !== undefined) headers["Content-Type"] = "application/json";
+  // Last, so a proof can send a selector that PostgREST will see verbatim.
+  for (const [name, value] of Object.entries(caller.headers ?? {})) headers[name] = value;
 
   const result = await fetchResilient(
     `${config.url}/rest/v1/${path}`,
@@ -342,6 +381,7 @@ export function makeProbes(config: Config) {
         "Content-Type": "application/json",
       };
       if (caller.token !== "") headers.Authorization = `Bearer ${caller.token}`;
+      for (const [name, value] of Object.entries(caller.headers ?? {})) headers[name] = value;
 
       const result = await fetchResilient(
         `${config.url}/rest/v1/rpc/${fn}`,
@@ -481,30 +521,40 @@ export function futureIso(days: number): string {
   return new Date(Date.now() + days * 86_400_000).toISOString();
 }
 
+/**
+ * One synthetic identity, signed in. Exported so that a proof needing a
+ * membership shape the shared fixture does not carry builds its own actors
+ * instead of bending the fixture every other proof asserts exact sets against.
+ * Same reserved prefix, so the same teardown removes it.
+ */
+export async function makeIdentity(
+  config: Config,
+  label: string,
+  runId: string,
+): Promise<Identity> {
+  const auth = makeAuthAdmin(config);
+  const email = `${SYNTHETIC_PREFIX}${label}-${runId}@example.com`;
+  // Ephemeral, never written to disk and never printed.
+  const password = randomUUID();
+  const authId = await auth.createUser(email, password);
+  const token = await auth.signIn(email, password);
+  return { label, authId, email, apiKey: config.publishableKey, token };
+}
+
 /** Single-quote escaping for the literals this harness builds into SQL. */
 function lit(value: string): string {
   return `'${value.replace(/'/g, "''")}'`;
 }
 
 export async function seed(config: Config, sql: SqlRunner): Promise<Fixture> {
-  const auth = makeAuthAdmin(config);
   const runId = randomUUID().slice(0, 8);
 
-  async function makeIdentity(label: string): Promise<Identity> {
-    const email = `${SYNTHETIC_PREFIX}${label}-${runId}@example.com`;
-    // Ephemeral, never written to disk and never printed.
-    const password = randomUUID();
-    const authId = await auth.createUser(email, password);
-    const token = await auth.signIn(email, password);
-    return { label, authId, email, apiKey: config.publishableKey, token };
-  }
-
-  const aOwner = await makeIdentity("a-owner");
-  const aViewer = await makeIdentity("a-viewer");
-  const bOwner = await makeIdentity("b-owner");
-  const bViewer = await makeIdentity("b-viewer");
-  const unaffiliated = await makeIdentity("unaffiliated");
-  const operator = await makeIdentity("operator");
+  const aOwner = await makeIdentity(config, "a-owner", runId);
+  const aViewer = await makeIdentity(config, "a-viewer", runId);
+  const bOwner = await makeIdentity(config, "b-owner", runId);
+  const bViewer = await makeIdentity(config, "b-viewer", runId);
+  const unaffiliated = await makeIdentity(config, "unaffiliated", runId);
+  const operator = await makeIdentity(config, "operator", runId);
 
   const tenantA = { id: randomUUID(), slug: `${SYNTHETIC_PREFIX}alpha-${runId}` };
   const tenantB = { id: randomUUID(), slug: `${SYNTHETIC_PREFIX}beta-${runId}` };
@@ -700,6 +750,12 @@ export const EXPECTED_ASSERTIONS = [
   // P01-T04 — one line per fix, so a closed finding that reopens is louder
   // than a finding that was never tested.
   "18a", "18b", "18c", "18d", "18e", "19", "20a", "20b", "21", "22",
+  // P02-T04 — OD-G14's resolution contract, one line per row of it plus the
+  // four probes this task invented. 23l, 23m, 23n and 23o found nothing and are
+  // here anyway: OD-H11 lands a probe that passes, because that is the one that
+  // catches tomorrow's regression.
+  "23a", "23b", "23c", "23d", "23e", "23f", "23g", "23h",
+  "23i", "23j", "23k", "23l", "23m", "23n", "23o",
   "D",
 ];
 

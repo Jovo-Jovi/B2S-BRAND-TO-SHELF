@@ -1226,6 +1226,34 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       schema carries exactly one trigger and it is
       `membership_active_owner_required`. Owner: **P03**, at its entry checklist,
       being the first phase that creates new tables under the rule.
+      AMENDED (P02-T04) — **gap (3) is CLOSED**, at the implementation level and
+      not only at the decision level. The gap was that `current_tenant_id()` was
+      specified as "the `tenant_id` of the calling identity's active
+      `membership`" while §3.2 permits several and no rule chose among them.
+      There is now a rule, it is written down, and it is asserted.
+      Migration `20260805120001_session_tenant_selector` replaces the function
+      body: a caller-supplied selector arrives as the request header
+      `x-b2s-tenant`, is read out of PostgREST's per-request settings and is
+      resolved against `public.membership` on every call, with one active
+      membership resolving implicitly, an unheld or malformed selection
+      resolving null, and no fallback from a wrong explicit selection to a held
+      tenant. `DATA_MODEL.md` §2.1 carries the six-row contract as a table, and
+      §3.3's two stale paragraphs — the ones asserting the lockout and deferring
+      the binding to Phase 02 — are amended to match. The proof is proof 23 in
+      `__tests__/isolation/tenant-isolation.test.ts`, fifteen assertions, each
+      row of the contract named: **23a** (absent, exactly one → that tenant, and
+      an invited, a suspended and an archived membership each counting for
+      nothing), **23b** (absent, two → null), **23c** and **23d** (a held
+      selection resolves and the other tenant returns zero), **23e**, **23f**,
+      **23g**, **23i**, **23n** (unheld, invited, archived, nonexistent and
+      suspended selections each resolve null), **23h** (malformed resolves null
+      and raises nothing, over HTTP and inside the database), **23j** (no
+      fallback), **23k** (availability), **23l**, **23m**, **23o**. Suite: 46
+      expected, 46 PASS, 0 FAIL, 0 LOST, with all 31 prior assertions intact and
+      none weakened.
+      **Gap (6) alone remains open** and this row stays OPEN for it —
+      `updated_at` is specified with no maintenance trigger and is inert on all
+      six tables. Owner: **P03**, at its entry checklist, unchanged.
 - [ ] CF-94 — `check-no-runtime-cdn` and `check-no-hardcoded-literals` scan `app/`
       and `proxy.ts` only, which was the whole of the application source when
       P01-T01 authored them. `lib/` exists as of P01-T02-RESUME and is not
@@ -1498,7 +1526,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       obligation.
       CF-102 — CLOSED (P01-T03). An `.nvmrc` and a `package.json` `engines` field
       pin local development to the pipeline's major version.
-- [ ] CF-103 — A tenant owner can lock a member of another tenant out of that
+- [x] CF-103 — A tenant owner can lock a member of another tenant out of that
       other tenant, through the ordinary API, using only that member's `member.id`.
       Found by P01-T03 proof 17, against the live policies.
       `membership_insert_owner`'s `WITH CHECK` constrains `tenant_id` and the
@@ -1561,6 +1589,34 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       active memberships resolving to the selected tenant and to nothing else, an
       unheld selection resolving null, and `SECURITY_MODEL.md` §1's availability
       property re-proven with the second membership present.
+      CLOSED (P02-T04) — implementation landed and all three closing conditions
+      asserted, against the live policies, on the same doubly-membered state the
+      original exploit produced. Migration
+      `20260805120001_session_tenant_selector` gives `current_tenant_id()` the
+      six-row contract in `DATA_MODEL.md` §2.1, reading a per-request
+      `x-b2s-tenant` header and re-validating it against `public.membership` on
+      every call.
+      Condition 1, two active memberships resolving to the selected tenant and
+      to nothing else: **23c** selects A and reads A's row while B returns zero,
+      **23d** flips the same member to B and reads B while A returns zero. The
+      member is the one the attack creates and neither selection widens reach.
+      Condition 2, an unheld selection resolving null: **23e**, both tenants
+      returning zero rows; and **23j** for the case this row was really about,
+      one active membership plus a selector naming a tenant they do not hold,
+      which resolves null rather than falling back to the held one. **23f**,
+      **23g**, **23i** and **23n** extend it to invited, archived, nonexistent
+      and suspended selections.
+      Condition 3, `SECURITY_MODEL.md` §1's availability property re-proven with
+      the second membership present: **23k**. It takes proof 17's middle state —
+      the victim doubly-membered, resolving null with no selector — supplies the
+      selector, and recovers the resolved tenant and every own-tenant row. The
+      lockout is gone; what remains is the deliberate denial of an ambiguous
+      request, which proof 17 still pins unchanged.
+      No policy was weakened to close this: `membership_active_is_self_only`,
+      the invite-then-accept rule and every policy calling `current_tenant_id()`
+      are untouched, and proofs 4, 17 and 19 pass as written. Suite: 46 expected,
+      46 PASS, 0 FAIL, 0 LOST. Nothing of this row remains open; CF-93 gap (6)
+      is unrelated and carries on alone.
 - [x] CF-104 — `DATA_MODEL.md` §2 narrows operator reach to "`tenant`,
       `subscription` and `activity_event` **metadata columns only**", and no
       column-level narrowing exists. Found by P01-T03 proof 7, against the live

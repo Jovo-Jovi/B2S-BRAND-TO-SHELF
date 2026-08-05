@@ -1,8 +1,8 @@
 // The tenant-isolation proof — DATA_MODEL.md §5, SECURITY_MODEL.md §3, ADR-003.
 //
-// Thirteen proofs. The first eight are DATA_MODEL.md §5's checklist; the last
-// five exist because a gate that only runs its checklist is a checklist. Every
-// one of them runs against the LIVE catalog and the LIVE policies. None of them
+// Fourteen proofs. The first eight are DATA_MODEL.md §5's checklist; the rest
+// exist because a gate that only runs its checklist is a checklist. Every one
+// of them runs against the LIVE catalog and the LIVE policies. None of them
 // reads supabase/schema.sql.
 //
 // This is the one acceptance standard no OD can waive (SECURITY_MODEL.md §1).
@@ -21,6 +21,7 @@ import {
   anonCaller,
   EXPECTED_ASSERTIONS,
   futureIso,
+  makeIdentity,
   makeProbes,
   makeSqlRunner,
   printLedger,
@@ -30,16 +31,20 @@ import {
   refusedByGrant,
   refusedByPolicy,
   seed,
+  selecting,
   SYNTHETIC_PREFIX,
   TABLES,
   TENANT_SCOPED_TABLES,
   teardown,
   teardownCounts,
+  TENANT_SELECTOR_HEADER,
   type Attempt,
+  type Caller,
   type Config,
   type Fixture,
   type Identity,
   type Probes,
+  type RawRow,
   type SqlRunner,
   type TableName,
 } from "./harness";
@@ -1122,10 +1127,13 @@ describe("proof 17 — a second active membership fails closed", () => {
     // The second active membership is now seeded through the PRIVILEGED path,
     // because P01-T04 removed the API path that used to create it — that
     // removal is CF-103's exploit and proof 19 is where it is asserted. What
-    // this proof still has to say is about the helper rather than the policy:
-    // current_tenant_id() fails closed on more than one active membership, by
-    // design, and that behaviour is unchanged and is what makes the lockout
-    // possible at all. It is the half of CF-103 that stays open for Phase 02.
+    // this proof still has to say is about the helper rather than the policy,
+    // and P02-T04 changed why it matters rather than what it measures: with NO
+    // selector supplied, two active memberships still resolve to nothing, which
+    // is §2.1's third row. It is no longer a lockout, because the member now
+    // has a selector and 23k proves selecting costs them nothing — but the
+    // ambiguous path must keep denying, and this is the assertion that says so.
+    // Not one probe here was relaxed to accommodate the new behaviour.
     const probeMembershipId = randomUUID();
     await sql(`
       insert into public.membership (id, tenant_id, member_id, role, status)
@@ -1163,13 +1171,15 @@ describe("proof 17 — a second active membership fails closed", () => {
 
     record(
       "17",
-      "A second active membership denies both tenants, reversibly",
+      "A second active membership, with no selector, denies both tenants",
       failures,
-      `seeded privileged, since no API path creates one any more: the victim resolved to their own tenant, ` +
-        `then to null while doubly-membered, then to their own tenant again; in the middle state they read ` +
-        `0 tenant rows and 0 rows belonging to any other member, keeping sight only of their own ` +
-        `${during.count}, and their ${before.count} membership rows returned after removal — the helper's ` +
-        `fail-closed behaviour is unchanged and is CF-103's remaining half, retargeted to P02`,
+      `seeded privileged, since no API path creates one any more: with no selector supplied the victim resolved ` +
+        `to their own tenant, then to null while doubly-membered, then to their own tenant again; in the middle ` +
+        `state they read 0 tenant rows and 0 rows belonging to any other member, keeping sight only of their own ` +
+        `${during.count}, and their ${before.count} membership rows returned after removal. Unchanged by P02-T04 ` +
+        `and deliberately so — this is §2.1's third row, ambiguity denied rather than guessed. What changed is ` +
+        `that it is no longer a lockout: 23k takes the same middle state, supplies a selector, and reads ` +
+        `everything back`,
     );
     expect(failures).toEqual([]);
   });
@@ -1875,6 +1885,847 @@ describe("proof 22 — every function's EXECUTE privilege is explicit (CF-105)",
       failures,
       `${rows.length} functions, each ACL asserted exactly: ` +
         `${rows.map((r) => `${r.proname}=[${r.grantees}]`).join(", ")}; over the wire ${overTheWire.join(", ")}`,
+    );
+    expect(failures).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Proof 23 is P02-T04's, and it is OD-G14's resolution contract asserted row by
+// row. Until this migration a caller holding two active memberships resolved to
+// nothing, by design and for want of a decision; the decision exists now, so
+// what used to be documented fail-closed behaviour is a specification with six
+// rows and each row needs an assertion that fails if the row stops being true.
+//
+// Every actor here is built by this proof rather than taken from the shared
+// fixture, because proofs 4a and 19 assert exact row sets against that fixture
+// and a proof that needs a doubly-membered owner must not reshape theirs. Every
+// row created carries the reserved prefix or lives in a synthetic tenant, so
+// `teardown()` removes all of it and assertion D is where that is proven.
+// ---------------------------------------------------------------------------
+
+/** The tables whose contents move when the selection moves. */
+const SELECTOR_TABLES: TableName[] = ["tenant", "membership", "consent_grant", "activity_event"];
+
+type Resolution = { status: number; body: string; value: string | null };
+
+type Actors = {
+  /** Active OWNER in tenant A and in tenant B. */
+  dual: Identity;
+  /** Active OWNER in tenant A alone. */
+  single: Identity;
+  /** Active owner in A; `invited` in B. */
+  invitee: Identity;
+  /** Active owner in A; `suspended` in B. */
+  suspended: Identity;
+  /** Active owner in A; an `active` but ARCHIVED row in B. */
+  archived: Identity;
+  /** A tenant that exists and which none of the above holds. */
+  c: { id: string; slug: string; owner: Identity };
+};
+
+describe("proof 23 — session-to-membership resolution (OD-G14, CF-93 gap 3, CF-103)", () => {
+  let actor: Actors;
+
+  /** What the caller's session resolves to, and the verbatim answer it gave. */
+  const resolves = async (caller: Caller): Promise<Resolution> => {
+    const answer = await probe.rpc(caller, "current_tenant_id");
+    let value: string | null = null;
+    try {
+      value = JSON.parse(answer.body === "" ? "null" : answer.body) as string | null;
+    } catch {
+      value = answer.body;
+    }
+    return { status: answer.status, body: answer.body, value };
+  };
+
+  /**
+   * What the caller actually reads, per table, as id sets.
+   *
+   * A refusal carrying 42501 is zero reach and is recorded as the empty set.
+   * anon holds no policy on any of these tables — every policy in this schema
+   * is `to authenticated` — so it is refused outright rather than filtered to
+   * nothing, which proof 13 already establishes; counting that refusal as a row
+   * would invert the result. Any OTHER error is not a refusal and lands as a
+   * marker that no assertion here can mistake for an empty read, because an
+   * exception raised inside a policy must never pass as isolation working.
+   */
+  const reads = async (caller: Caller): Promise<Record<string, string[]>> => {
+    const out: Record<string, string[]> = {};
+    for (const table of SELECTOR_TABLES) {
+      const attempt = await probe.select(caller, table);
+      if (attempt.ok) out[table] = attempt.ids;
+      else if (attempt.code === "42501") out[table] = [];
+      else out[table] = [`UNEXPECTED:${attempt.status}:${attempt.code}:${attempt.message.slice(0, 80)}`];
+    }
+    return out;
+  };
+
+  /** Membership rows the caller can see that belong to a DIFFERENT member. */
+  const foreignMembers = async (caller: Caller, tenantId: string): Promise<RawRow[]> => {
+    const seen = await probe.selectColumns(caller, "membership", "id,member_id,tenant_id");
+    return seen.rows.filter((row) => row.tenant_id === tenantId && row.member_id !== (caller as Identity).authId);
+  };
+
+  /** Every table read empty. Used wherever the contract says the answer is null. */
+  const readsNothing = (what: string, seen: Record<string, string[]>, failures: string[]): void => {
+    for (const table of SELECTOR_TABLES) {
+      // membership_select_own is deliberately wider than the tenancy spine: a
+      // person may always see the rows that are theirs, in any tenant and any
+      // state (DATA_MODEL §3.3). Those rows are not reach into a tenant and are
+      // asserted separately, per assertion, as foreign-member rows.
+      if (table === "membership") continue;
+      if (seen[table].length !== 0) {
+        failures.push(`${what}: read ${seen[table].length} ${table} row(s) [${seen[table].join(", ")}], expected none`);
+      }
+    }
+  };
+
+  beforeAll(async () => {
+    const { a, b } = fixture;
+    const runId = randomUUID().slice(0, 8);
+
+    const dual = await makeIdentity(config, "g14-dual", runId);
+    const single = await makeIdentity(config, "g14-single", runId);
+    const invitee = await makeIdentity(config, "g14-invitee", runId);
+    const suspended = await makeIdentity(config, "g14-suspended", runId);
+    const archived = await makeIdentity(config, "g14-archived", runId);
+    const cOwner = await makeIdentity(config, "g14-c-owner", runId);
+
+    const tenantC = { id: randomUUID(), slug: `${SYNTHETIC_PREFIX}gamma-${runId}` };
+
+    // Owners rather than viewers, so consent_grant — which only an owner of the
+    // current tenant reads — moves with the selection too. That makes the proof
+    // cover is_current_tenant_owner() as well, which resolves through this same
+    // helper and would otherwise be asserted nowhere against a selection.
+    // OD-G15 permits more than one active owner per tenant.
+    const rows: [string, string, string, string, string][] = [
+      [randomUUID(), a.id, dual.authId, "active", "null"],
+      [randomUUID(), b.id, dual.authId, "active", "null"],
+      [randomUUID(), a.id, single.authId, "active", "null"],
+      [randomUUID(), a.id, invitee.authId, "active", "null"],
+      [randomUUID(), b.id, invitee.authId, "invited", "null"],
+      [randomUUID(), a.id, suspended.authId, "active", "null"],
+      [randomUUID(), b.id, suspended.authId, "suspended", "null"],
+      [randomUUID(), a.id, archived.authId, "active", "null"],
+      // `active` AND archived: the status alone is not what makes a membership
+      // held, and a row that says `active` while being archived is the case a
+      // predicate checking only `status` would get wrong.
+      [randomUUID(), b.id, archived.authId, "active", "now()"],
+      [randomUUID(), tenantC.id, cOwner.authId, "active", "null"],
+    ];
+
+    const members = [dual, single, invitee, suspended, archived, cOwner];
+    await sql(`
+      insert into public.member (id, email, display_name) values
+        ${members.map((m) => `('${m.authId}', '${m.email}', '${SYNTHETIC_PREFIX}${m.label}')`).join(",\n        ")};
+
+      insert into public.tenant (id, name, slug, base_currency, default_locale, status) values
+        ('${tenantC.id}', '${SYNTHETIC_PREFIX}gamma', '${tenantC.slug}', 'SAR', 'en', 'active');
+
+      insert into public.membership (id, tenant_id, member_id, role, status, archived_at) values
+        ${rows.map(([id, tid, mid, status, arch]) => `('${id}', '${tid}', '${mid}', 'owner', '${status}', ${arch})`).join(",\n        ")};
+    `);
+
+    actor = { dual, single, invitee, suspended, archived, c: { ...tenantC, owner: cOwner } };
+  }, 240_000);
+
+  it("23a no selector, exactly one active membership — that tenant, and only active counts", async () => {
+    const failures: string[] = [];
+    const observed: string[] = [];
+
+    // All four hold exactly one ACTIVE membership, in tenant A. Three of them
+    // also hold a second membership in tenant B that is invited, suspended or
+    // archived. If any of those counted, the caller would hold two and resolve
+    // null — so this asserts the contract's second row and the `held` predicate
+    // in the same breath.
+    const holders: [string, Identity][] = [
+      ["nothing else", actor.single],
+      ["plus an invitation in B", actor.invitee],
+      ["plus a suspended row in B", actor.suspended],
+      ["plus an archived row in B", actor.archived],
+    ];
+
+    for (const [what, who] of holders) {
+      const answer = await resolves(who);
+      observed.push(`${what}=${answer.body}`);
+      if (answer.value !== fixture.a.id) {
+        failures.push(`${who.label} (${what}) resolved ${answer.body}, expected tenant A`);
+      }
+      const seen = await reads(who);
+      if (!sameSet(seen.tenant, [fixture.a.id])) {
+        failures.push(`${who.label} (${what}) read tenant [${seen.tenant.join(", ")}], expected exactly tenant A`);
+      }
+      // The positive path, stated on its own: default-deny failing silently
+      // looks identical to correct isolation.
+      if (seen.activity_event.length === 0) {
+        failures.push(`${who.label} (${what}): POSITIVE PATH EMPTY — read no activity_event rows in the tenant they hold`);
+      }
+    }
+
+    record(
+      "23a",
+      "No selector, one active membership: that tenant resolves",
+      failures,
+      `4 callers each holding exactly one active membership resolved tenant A and read it: ${observed.join(", ")}; ` +
+        `an invited, a suspended and an archived membership in tenant B each counted for nothing`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("23b no selector, two active memberships — null, and nothing is read", async () => {
+    const failures: string[] = [];
+
+    const answer = await resolves(actor.dual);
+    if (answer.value !== null) failures.push(`the doubly-membered caller resolved ${answer.body}, expected null`);
+
+    const seen = await reads(actor.dual);
+    readsNothing("no selector, two active memberships", seen, failures);
+
+    for (const tenantId of [fixture.a.id, fixture.b.id]) {
+      const foreign = await foreignMembers(actor.dual, tenantId);
+      if (foreign.length !== 0) {
+        failures.push(`no selector: read ${foreign.length} membership row(s) belonging to another member of ${tenantId}`);
+      }
+    }
+
+    record(
+      "23b",
+      "No selector, two active memberships: null — ambiguity is denied, not guessed",
+      failures,
+      `resolved ${answer.body}; read 0 tenant, 0 consent_grant and 0 activity_event rows, and 0 membership rows ` +
+        `belonging to any other member of either tenant — the caller keeps sight of their own two rows and nothing else`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("23c selector = A: tenant A resolves and tenant B returns zero", async () => {
+    const failures: string[] = [];
+    const caller = selecting(actor.dual, fixture.a.id);
+
+    const answer = await resolves(caller);
+    if (answer.value !== fixture.a.id) failures.push(`selecting A resolved ${answer.body}, expected tenant A`);
+
+    // Calibrated against a caller who holds one membership in A and nothing
+    // else, read at this same moment: selecting a tenant must reach exactly
+    // what belonging to only that tenant reaches. A hardcoded set would go
+    // stale the moment an earlier proof writes an activity_event.
+    const selected = await reads(caller);
+    const baseline = await reads(fixture.a.owner);
+    for (const table of ["tenant", "consent_grant", "activity_event"]) {
+      if (!sameSet(selected[table], baseline[table])) {
+        failures.push(
+          `selecting A read ${table} [${sortedIds(selected[table]).join(", ")}], ` +
+            `tenant A's own owner reads [${sortedIds(baseline[table]).join(", ")}]`,
+        );
+      }
+      if (baseline[table].length > 0 && selected[table].length === 0) {
+        failures.push(`selecting A: POSITIVE PATH EMPTY on ${table}`);
+      }
+    }
+
+    const foreignB = await foreignMembers(caller, fixture.b.id);
+    if (foreignB.length !== 0) {
+      failures.push(`selecting A still read ${foreignB.length} membership row(s) of another member of tenant B`);
+    }
+    const inA = await foreignMembers(caller, fixture.a.id);
+    if (inA.length === 0) {
+      failures.push("selecting A: POSITIVE PATH EMPTY — read no colleague's membership row in the selected tenant");
+    }
+
+    record(
+      "23c",
+      "Selector = A: A resolves, B returns zero",
+      failures,
+      `resolved ${answer.body}; read exactly what tenant A's own owner reads on tenant, consent_grant and ` +
+        `activity_event (${["tenant", "consent_grant", "activity_event"].map((t) => `${t}=${selected[t].length}`).join(", ")}), ` +
+        `including ${inA.length} colleague membership row(s) in A and 0 in B`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("23d the same member, selector = B: tenant B resolves and tenant A returns zero", async () => {
+    const failures: string[] = [];
+    const caller = selecting(actor.dual, fixture.b.id);
+
+    const answer = await resolves(caller);
+    if (answer.value !== fixture.b.id) failures.push(`selecting B resolved ${answer.body}, expected tenant B`);
+
+    const selected = await reads(caller);
+    const baseline = await reads(fixture.b.owner);
+    for (const table of ["tenant", "consent_grant", "activity_event"]) {
+      if (!sameSet(selected[table], baseline[table])) {
+        failures.push(
+          `selecting B read ${table} [${sortedIds(selected[table]).join(", ")}], ` +
+            `tenant B's own owner reads [${sortedIds(baseline[table]).join(", ")}]`,
+        );
+      }
+      if (baseline[table].length > 0 && selected[table].length === 0) {
+        failures.push(`selecting B: POSITIVE PATH EMPTY on ${table}`);
+      }
+    }
+
+    const foreignA = await foreignMembers(caller, fixture.a.id);
+    if (foreignA.length !== 0) {
+      failures.push(`selecting B still read ${foreignA.length} membership row(s) of another member of tenant A`);
+    }
+    const inB = await foreignMembers(caller, fixture.b.id);
+    if (inB.length === 0) {
+      failures.push("selecting B: POSITIVE PATH EMPTY — read no colleague's membership row in the selected tenant");
+    }
+
+    record(
+      "23d",
+      "Selector = B: B resolves, A returns zero — one identity, two disjoint reaches",
+      failures,
+      `resolved ${answer.body}; read exactly what tenant B's own owner reads on tenant, consent_grant and ` +
+        `activity_event (${["tenant", "consent_grant", "activity_event"].map((t) => `${t}=${selected[t].length}`).join(", ")}), ` +
+        `including ${inB.length} colleague membership row(s) in B and 0 in A — the same session, the same token, ` +
+        `a different tenant, and no overlap with 23c`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("23e a selector naming a tenant the caller does not hold — null, and zero from every tenant", async () => {
+    const failures: string[] = [];
+    const observed: string[] = [];
+
+    // Both membership counts, because the answer must not depend on how many
+    // the caller holds: two (dual) and one (single), each selecting tenant C,
+    // which exists and which neither of them holds.
+    for (const who of [actor.dual, actor.single]) {
+      const caller = selecting(who, actor.c.id);
+      const answer = await resolves(caller);
+      observed.push(`${who.label}=${answer.body}`);
+      if (answer.value !== null) failures.push(`${who.label} selecting an unheld tenant resolved ${answer.body}, expected null`);
+
+      const seen = await reads(caller);
+      readsNothing(`${who.label} selecting an unheld tenant`, seen, failures);
+      if (seen.tenant.includes(actor.c.id)) failures.push(`${who.label} read the unheld tenant's own row`);
+
+      for (const tenantId of [fixture.a.id, fixture.b.id, actor.c.id]) {
+        const foreign = await foreignMembers(caller, tenantId);
+        if (foreign.length !== 0) {
+          failures.push(`${who.label} selecting an unheld tenant read ${foreign.length} foreign membership row(s) in ${tenantId}`);
+        }
+      }
+    }
+
+    record(
+      "23e",
+      "An unheld selection reaches nothing, at either membership count",
+      failures,
+      `tenant C exists and neither caller holds it: ${observed.join(", ")}; both read 0 tenant, 0 consent_grant ` +
+        `and 0 activity_event rows and 0 foreign membership rows in A, B or C`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("23f a selector naming a tenant where the membership is invited — null", async () => {
+    const failures: string[] = [];
+    const caller = selecting(actor.invitee, fixture.b.id);
+
+    const answer = await resolves(caller);
+    if (answer.value !== null) failures.push(`selecting a tenant that only invited them resolved ${answer.body}, expected null`);
+    if (answer.value === fixture.a.id) failures.push("FALLBACK: it resolved the tenant they do hold instead");
+
+    const seen = await reads(caller);
+    readsNothing("selecting a tenant where the membership is invited", seen, failures);
+
+    const held = await sql<{ status: string }>(
+      `select status::text as status from public.membership
+        where member_id = '${actor.invitee.authId}' and tenant_id = '${fixture.b.id}'`,
+    );
+
+    record(
+      "23f",
+      "An invitation is not a membership: selecting it resolves null",
+      failures,
+      `the row exists in tenant B with status ${held.map((r) => r.status).join("/")}; resolved ${answer.body}, ` +
+        `read 0 tenant, 0 consent_grant and 0 activity_event rows, and did not fall back to tenant A`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("23g a selector naming a tenant where the membership is archived — null", async () => {
+    const failures: string[] = [];
+    const caller = selecting(actor.archived, fixture.b.id);
+
+    const answer = await resolves(caller);
+    if (answer.value !== null) failures.push(`selecting an archived membership's tenant resolved ${answer.body}, expected null`);
+    if (answer.value === fixture.a.id) failures.push("FALLBACK: it resolved the tenant they do hold instead");
+
+    const seen = await reads(caller);
+    readsNothing("selecting a tenant where the membership is archived", seen, failures);
+
+    const held = await sql<{ status: string; archived: string | null }>(
+      `select status::text as status, archived_at::text as archived from public.membership
+        where member_id = '${actor.archived.authId}' and tenant_id = '${fixture.b.id}'`,
+    );
+    if (held.length !== 1 || held[0].status !== "active" || held[0].archived === null) {
+      failures.push(`precondition: the archived row is ${JSON.stringify(held)}, expected exactly one active-and-archived row`);
+    }
+
+    record(
+      "23g",
+      "An archived membership is not held, whatever its status column says",
+      failures,
+      `the row in tenant B reads status=${held[0]?.status} archived_at=set; resolved ${answer.body}, read 0 tenant, ` +
+        `0 consent_grant and 0 activity_event rows, and did not fall back to tenant A — a predicate testing ` +
+        `status alone would have resolved tenant B here`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("23h a malformed selector resolves null and raises nothing, on the RPC and inside a policy", async () => {
+    const failures: string[] = [];
+    const observed: string[] = [];
+
+    // The RPC answers for the helper. A table read answers for the helper as a
+    // POLICY EXPRESSION, which is the path that matters: an exception there is
+    // a failed request rather than a denied one, and every policy in this
+    // schema goes through it.
+    const malformed = [
+      "not-a-uuid",
+      "",
+      "0",
+      "null",
+      "undefined",
+      `{${randomUUID()}}`,
+      randomUUID().replace(/-/g, ""),
+      `${randomUUID()}x`,
+      "' or 1=1 --",
+      "'; drop table public.tenant; --",
+      "%s",
+      // Written as printable text on purpose. A literal control character is
+      // rejected by the HTTP client before the request is sent, which would
+      // prove something about undici rather than about the helper.
+      "\\x00",
+      "x".repeat(1024),
+    ].filter((value) => value !== "");
+
+    /**
+     * The same value, put to the helper INSIDE the database, with no network in
+     * front of it. `set_config(..., true)` is transaction-local and this is one
+     * statement, so the settings cannot escape it; the LATERAL body reads both
+     * of them, which is what forces the planner to establish them before
+     * current_tenant_id() is called rather than in whatever order it prefers.
+     *
+     * This exists because two of the values below never reach Postgres at all —
+     * see the edge classification underneath — and a probe that reports "the
+     * request was blocked" as "the helper behaved" is PR-21's failure shape.
+     */
+    const throughTheDatabase = async (value: string) => {
+      // Dollar-quoted with a random tag rather than quote-doubled. The values
+      // here are deliberately injection-shaped and this statement runs as
+      // `postgres` on the privileged path, so the quoting must not depend on
+      // standard_conforming_strings or on getting an escape right.
+      const tag = `sel${randomUUID().replace(/-/g, "").slice(0, 12)}`;
+      return sql.try(`
+        select res.resolved
+          from (
+            select set_config('request.jwt.claims',
+                              jsonb_build_object('sub', '${actor.single.authId}')::text, true) as claims,
+                   set_config('request.headers',
+                              jsonb_build_object('${TENANT_SELECTOR_HEADER}', $${tag}$${value}$${tag}$)::text, true) as headers
+          ) cfg,
+          lateral (
+            select case when cfg.claims is not null and cfg.headers is not null
+                        then public.current_tenant_id()::text
+                   end as resolved
+          ) res
+      `);
+    };
+
+    // The control. Without it a direct path that answered null to everything
+    // would pass this proof while exercising nothing.
+    const control = await throughTheDatabase(fixture.a.id);
+    if (!control.ok || !control.body.includes(fixture.a.id)) {
+      failures.push(
+        `control: a VALID selector through the direct path answered ${control.status} ${control.body.slice(0, 200)}, ` +
+          `expected tenant A — the direct path is not exercising the selector and its null answers prove nothing`,
+      );
+    }
+
+    let reachedPostgres = 0;
+    let blockedAtEdge = 0;
+
+    for (const value of malformed) {
+      const caller = selecting(actor.single, value);
+      const shown = value.length > 24 ? `${value.slice(0, 24)}...(${value.length})` : value;
+
+      // --- over HTTP, the path a real caller uses -------------------------
+      const answer = await resolves(caller);
+      let parsedBody = true;
+      try {
+        JSON.parse(answer.body === "" ? "null" : answer.body);
+      } catch {
+        parsedBody = false;
+      }
+
+      if (answer.status >= 400 && !parsedBody) {
+        // Cloudflare's WAF at the Supabase edge refuses a header value that
+        // looks like SQL injection, with 403 and an HTML page. No SQLSTATE, no
+        // PostgREST, no Postgres: the request never arrived, so this is not a
+        // result about the helper in either direction. It is counted, named,
+        // and covered by the direct path below instead of being waved through.
+        blockedAtEdge += 1;
+        observed.push(`${JSON.stringify(shown)}->EDGE ${answer.status}`);
+      } else {
+        reachedPostgres += 1;
+        if (answer.status >= 400) {
+          failures.push(`selector ${JSON.stringify(shown)}: rpc answered ${answer.status} ${answer.body} — it RAISED`);
+        }
+        if (answer.value !== null) failures.push(`selector ${JSON.stringify(shown)}: resolved ${answer.body}, expected null`);
+
+        // The RPC answers for the helper. A table read answers for the helper
+        // as a POLICY EXPRESSION, which is the path that matters: an exception
+        // there is a failed request rather than a denied one, and every policy
+        // in this schema goes through it.
+        const read = await probe.select(caller, "tenant");
+        if (!read.ok) {
+          failures.push(`selector ${JSON.stringify(shown)}: the POLICY path errored ${read.status} (${read.code}) ${read.message} — it RAISED`);
+        } else if (read.count !== 0) {
+          failures.push(`selector ${JSON.stringify(shown)}: read ${read.count} tenant row(s), expected none`);
+        }
+        observed.push(`${JSON.stringify(shown)}->${answer.status}:${answer.body}/select ${read.status}:${read.count}`);
+      }
+
+      // --- and inside the database, for every value without exception ------
+      const direct = await throughTheDatabase(value);
+      if (!direct.ok) {
+        failures.push(
+          `selector ${JSON.stringify(shown)}: the helper RAISED inside the database — ${direct.status} ${direct.body.slice(0, 200)}`,
+        );
+      } else if (!/"resolved"\s*:\s*null/.test(direct.body)) {
+        failures.push(`selector ${JSON.stringify(shown)}: the direct path resolved ${direct.body.slice(0, 200)}, expected null`);
+      }
+    }
+
+    record(
+      "23h",
+      "A malformed selector resolves null and never raises",
+      failures,
+      `${malformed.length} malformed values, each put to the helper twice — over HTTP and inside the database ` +
+        `with a forged request.headers. ${reachedPostgres} reached Postgres over HTTP and every one answered ` +
+        `200/null with an empty, unerrored policy-mediated read; ${blockedAtEdge} were refused by Cloudflare's WAF ` +
+        `at the Supabase edge with a 403 HTML page and never arrived, so HTTP proves nothing about them. All ` +
+        `${malformed.length} resolved null through the direct path with no error raised, and a valid selector ` +
+        `through that same path resolved tenant A, so the null answers are the helper's and not the path's. ` +
+        `Observed: ${observed.join(", ")}`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("23i a selector naming a tenant that does not exist — null, indistinguishable from one that does", async () => {
+    const failures: string[] = [];
+
+    const absent = randomUUID();
+    const nonexistent = selecting(actor.single, absent);
+    const unheld = selecting(actor.single, actor.c.id);
+
+    const [countRow] = await sql<{ n: number }>(`select count(*)::int as n from public.tenant where id = '${absent}'`);
+    if (countRow.n !== 0) failures.push(`precondition: the id chosen as nonexistent matches ${countRow.n} tenant row(s)`);
+
+    const answerAbsent = await resolves(nonexistent);
+    const answerUnheld = await resolves(unheld);
+
+    if (answerAbsent.value !== null) failures.push(`a nonexistent tenant resolved ${answerAbsent.body}, expected null`);
+
+    // SECURITY_MODEL.md §1's existence property, applied to the selector: "does
+    // not exist" and "exists but is not yours" must be the same answer, not two
+    // answers that happen to agree today.
+    if (answerAbsent.status !== answerUnheld.status || answerAbsent.body !== answerUnheld.body) {
+      failures.push(
+        `a nonexistent tenant answered ${answerAbsent.status}/${answerAbsent.body} and an unheld existing one ` +
+          `answered ${answerUnheld.status}/${answerUnheld.body} — the selector is an existence oracle`,
+      );
+    }
+
+    const seenAbsent = await reads(nonexistent);
+    readsNothing("selecting a nonexistent tenant", seenAbsent, failures);
+    const seenUnheld = await reads(unheld);
+    for (const table of SELECTOR_TABLES) {
+      if (!sameSet(seenAbsent[table], seenUnheld[table])) {
+        failures.push(`${table}: nonexistent read [${seenAbsent[table].join(", ")}], unheld read [${seenUnheld[table].join(", ")}]`);
+      }
+    }
+
+    record(
+      "23i",
+      "A nonexistent selection answers exactly as an unheld one does",
+      failures,
+      `nonexistent ${answerAbsent.status}/${answerAbsent.body} and unheld-but-real ${answerUnheld.status}/` +
+        `${answerUnheld.body} are byte-identical, and both read the same empty set on all ` +
+        `${SELECTOR_TABLES.length} tables — no response distinguishes the two`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("23j one active membership plus an unheld selector — null, and never the held tenant", async () => {
+    const failures: string[] = [];
+
+    // The single most important row of the contract, and the one an
+    // implementation drifts back into: a caller who holds exactly one tenant
+    // asks for a different one. Falling back to the held tenant would serve
+    // them a tenant they did not ask for, which is worse than serving nothing.
+    const caller = selecting(actor.single, fixture.b.id);
+
+    const unselected = await resolves(actor.single);
+    if (unselected.value !== fixture.a.id) {
+      failures.push(`precondition: without a selector this caller resolves ${unselected.body}, expected tenant A`);
+    }
+
+    const answer = await resolves(caller);
+    if (answer.value === fixture.a.id) {
+      failures.push("FALLBACK: an unheld selector resolved the caller's one held tenant — this is the behaviour the contract forbids");
+    }
+    if (answer.value !== null) failures.push(`resolved ${answer.body}, expected null`);
+
+    const seen = await reads(caller);
+    readsNothing("one membership plus an unheld selector", seen, failures);
+    if (seen.tenant.includes(fixture.a.id)) failures.push("FALLBACK: it read the held tenant's row");
+    if (seen.tenant.includes(fixture.b.id)) failures.push("it read the unheld tenant's row");
+
+    for (const tenantId of [fixture.a.id, fixture.b.id]) {
+      const foreign = await foreignMembers(caller, tenantId);
+      if (foreign.length !== 0) failures.push(`read ${foreign.length} foreign membership row(s) in ${tenantId}`);
+    }
+
+    record(
+      "23j",
+      "No fallback: an unheld selector never resolves the one tenant the caller holds",
+      failures,
+      `the same caller resolves ${unselected.body} with no selector and ${answer.body} when they ask for tenant B, ` +
+        `reading 0 rows of A and 0 of B — explicit beats implicit, and a wrong explicit fails closed`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("23k SECURITY_MODEL §1 availability, re-proven with a second active membership present", async () => {
+    const failures: string[] = [];
+    const victim = actor.single;
+    const selected = () => selecting(victim, fixture.a.id);
+
+    // §1's availability test, verbatim: record what a member reads, change the
+    // world, read again, and require the two to be equal on every table. What
+    // changes here is the thing that used to cause the lockout — a second
+    // active membership — and the property to re-prove is that it now costs the
+    // member nothing, provided they say which tenant they mean.
+    const stateOf = async (caller: Caller) => {
+      const seen = await reads(caller);
+      const own: Record<string, number> = {};
+      for (const table of SELECTOR_TABLES) own[table] = seen[table].length;
+      // Their own membership rows travel with them and are not tenant reach.
+      own.membership = (await foreignMembers(caller, fixture.a.id)).length;
+      return { own, resolved: (await resolves(caller)).value };
+    };
+
+    const before = await stateOf(victim);
+    const beforeSelected = await stateOf(selected());
+    if (before.resolved !== fixture.a.id) {
+      failures.push(`precondition: the member resolves ${before.resolved} before anything changes, expected tenant A`);
+    }
+    if (before.own.tenant === 0 || before.own.activity_event === 0) {
+      failures.push(`precondition: the member reads ${JSON.stringify(before.own)} — the baseline is already empty`);
+    }
+
+    const secondId = randomUUID();
+    await sql(`
+      insert into public.membership (id, tenant_id, member_id, role, status)
+      values ('${secondId}', '${fixture.b.id}', '${victim.authId}', 'owner', 'active')
+    `);
+
+    const duringImplicit = await stateOf(victim);
+    const during = await stateOf(selected());
+
+    // Ambiguity still denies when nothing is selected — that half is unchanged
+    // and is 23b. What is new is the line below it.
+    if (duringImplicit.resolved !== null) {
+      failures.push(`with two active memberships and no selector the member resolved ${duringImplicit.resolved}, expected null`);
+    }
+    if (during.resolved !== fixture.a.id) {
+      failures.push(`with two active memberships and tenant A selected the member resolved ${during.resolved} — LOCKOUT`);
+    }
+    for (const table of Object.keys(before.own)) {
+      if (during.own[table] !== beforeSelected.own[table]) {
+        failures.push(
+          `with a second membership present, selecting A reads ${during.own[table]} ${table} row(s), ` +
+            `was ${beforeSelected.own[table]} — LOCKOUT`,
+        );
+      }
+    }
+
+    await sql(`delete from public.membership where id = '${secondId}'`);
+
+    const after = await stateOf(victim);
+    if (after.resolved !== before.resolved) {
+      failures.push(`after removal the member resolves ${after.resolved}, was ${before.resolved}`);
+    }
+    for (const table of Object.keys(before.own)) {
+      if (after.own[table] !== before.own[table]) {
+        failures.push(`after removal the member reads ${after.own[table]} ${table} row(s), was ${before.own[table]}`);
+      }
+    }
+
+    record(
+      "23k",
+      "A second active membership degrades nothing the member already reached",
+      failures,
+      `baseline with one membership: resolved tenant A, ${Object.entries(before.own).map(([t, n]) => `${t}=${n}`).join(", ")}. ` +
+        `With a second active membership in tenant B present, selecting A resolves tenant A and reads ` +
+        `${Object.entries(during.own).map(([t, n]) => `${t}=${n}`).join(", ")} — equal on every table — while the ` +
+        `unselected path resolves ${duringImplicit.resolved} as 23b requires. Restored on removal. Before this ` +
+        `migration the middle state read zero everywhere, which is the CF-103 lockout`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("23l an empty or whitespace-only selector behaves as absent, in both directions", async () => {
+    const failures: string[] = [];
+    const observed: string[] = [];
+
+    // A client that has not chosen a tenant yet, or an intermediary that blanks
+    // a header it does not understand, must not lock out every one-membership
+    // caller in the platform. Absence and emptiness are the same thing, and the
+    // direction that proves it is not a leak is the doubly-membered one below.
+    for (const blank of ["", " ", "   \t  "]) {
+      const one = await resolves(selecting(actor.single, blank));
+      if (one.value !== fixture.a.id) {
+        failures.push(`a one-membership caller sending ${JSON.stringify(blank)} resolved ${one.body}, expected tenant A`);
+      }
+      const two = await resolves(selecting(actor.dual, blank));
+      if (two.value !== null) {
+        failures.push(`a two-membership caller sending ${JSON.stringify(blank)} resolved ${two.body}, expected null`);
+      }
+      observed.push(`${JSON.stringify(blank)}: one-membership=${one.body}, two-membership=${two.body}`);
+    }
+
+    record(
+      "23l",
+      "An empty selector is an absent selector, and grants nothing extra",
+      failures,
+      `${observed.join(" | ")} — a blank value resolves exactly as sending no header does, which denies the ` +
+        `ambiguous caller and does not deny the unambiguous one`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("23m the header name and the selector value are both matched case-insensitively", async () => {
+    const failures: string[] = [];
+    const observed: string[] = [];
+
+    // HTTP header names are case-insensitive by specification, and a uuid's
+    // canonical text form is lowercase. A caller who sends either in another
+    // case is not making a mistake, and resolving null for them would be an
+    // availability bug that fails closed and is therefore invisible.
+    const spellings: [string, string, string][] = [
+      ["canonical", TENANT_SELECTOR_HEADER, fixture.a.id],
+      ["header title-cased", "X-B2S-Tenant", fixture.a.id],
+      ["header upper-cased", "X-B2S-TENANT", fixture.a.id],
+      ["value upper-cased", TENANT_SELECTOR_HEADER, fixture.a.id.toUpperCase()],
+      ["both", "X-B2S-Tenant", fixture.a.id.toUpperCase()],
+    ];
+
+    for (const [what, header, value] of spellings) {
+      const caller = selecting(actor.dual, value, header);
+      const answer = await resolves(caller);
+      observed.push(`${what}=${answer.body}`);
+      if (answer.value !== fixture.a.id) failures.push(`${what}: resolved ${answer.body}, expected tenant A`);
+      const seen = await reads(caller);
+      if (!sameSet(seen.tenant, [fixture.a.id])) {
+        failures.push(`${what}: read tenant [${seen.tenant.join(", ")}], expected exactly tenant A`);
+      }
+    }
+
+    // And a header that is NOT the selector changes nothing, so the match is on
+    // the name rather than on any header carrying a uuid.
+    const decoy = selecting(actor.dual, fixture.a.id, "x-b2s-tenant-id");
+    const decoyAnswer = await resolves(decoy);
+    if (decoyAnswer.value !== null) {
+      failures.push(`a different header carrying tenant A's id resolved ${decoyAnswer.body}, expected null`);
+    }
+
+    record(
+      "23m",
+      "Case-insensitive on the header name and the value; no other header selects",
+      failures,
+      `${observed.join(", ")}; a near-miss header name resolved ${decoyAnswer.body} for the same doubly-membered ` +
+        `caller, so the selection is bound to the name and not to any header that looks like a uuid`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("23n a selector naming a tenant where the membership is suspended — null", async () => {
+    const failures: string[] = [];
+    const caller = selecting(actor.suspended, fixture.b.id);
+
+    const answer = await resolves(caller);
+    if (answer.value !== null) failures.push(`selecting a suspended membership's tenant resolved ${answer.body}, expected null`);
+    if (answer.value === fixture.a.id) failures.push("FALLBACK: it resolved the tenant they do hold instead");
+
+    const seen = await reads(caller);
+    readsNothing("selecting a tenant where the membership is suspended", seen, failures);
+
+    const held = await sql<{ status: string }>(
+      `select status::text as status from public.membership
+        where member_id = '${actor.suspended.authId}' and tenant_id = '${fixture.b.id}'`,
+    );
+    if (held.length !== 1 || held[0].status !== "suspended") {
+      failures.push(`precondition: the row is ${JSON.stringify(held)}, expected exactly one suspended row`);
+    }
+
+    record(
+      "23n",
+      "A suspended membership is not held: selecting it resolves null",
+      failures,
+      `the row exists in tenant B with status ${held.map((r) => r.status).join("/")}; resolved ${answer.body}, ` +
+        `read 0 tenant, 0 consent_grant and 0 activity_event rows, and did not fall back to tenant A — ` +
+        `suspension is the third non-active status and is the one no other proof reaches`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("23o a caller holding no membership cannot forge one with a selector", async () => {
+    const failures: string[] = [];
+    const observed: string[] = [];
+
+    // The forgery analysis, asserted rather than argued. The selector is
+    // supplied by the caller and anyone may set it to anything; what stops that
+    // mattering is that it can only narrow a set re-derived from
+    // public.membership, never add to it.
+    for (const tenantId of [fixture.a.id, fixture.b.id, actor.c.id]) {
+      for (const who of [anonCaller(config), fixture.unaffiliated]) {
+        const caller = selecting(who, tenantId);
+        const answer = await resolves(caller);
+        const acceptable = answer.value === null || (who.label === "anon" && answer.status >= 400);
+        if (!acceptable) failures.push(`${who.label} forging a selector for ${tenantId} resolved ${answer.body}`);
+        observed.push(`${who.label}->${answer.status >= 400 ? answer.status : answer.body}`);
+
+        const seen = await reads(caller);
+        readsNothing(`${who.label} forging a selector for ${tenantId}`, seen, failures);
+        if (seen.membership.length !== 0) {
+          failures.push(`${who.label} forging a selector read ${seen.membership.length} membership row(s)`);
+        }
+      }
+    }
+
+    // The operator too, whose tenant and consent_grant reads come from
+    // is_operator() and are proof 7's subject, so only the resolved id is
+    // asserted here: an operator holds no membership and therefore no selector
+    // resolves for them either.
+    const operatorAnswer = await resolves(selecting(fixture.operator, fixture.a.id));
+    if (operatorAnswer.value !== null) {
+      failures.push(`an operator selecting tenant A resolved ${operatorAnswer.body}, expected null`);
+    }
+
+    record(
+      "23o",
+      "A forged selector reaches nothing: the header narrows a set, it never adds to one",
+      failures,
+      `6 (caller, tenant) pairs across anon and an unaffiliated member, over two real tenants and a third: ` +
+        `${observed.join(", ")}, every one reading 0 tenant, 0 membership, 0 consent_grant and 0 activity_event ` +
+        `rows; an operator selecting tenant A resolved ${operatorAnswer.body}`,
     );
     expect(failures).toEqual([]);
   });

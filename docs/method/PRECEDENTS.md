@@ -251,6 +251,22 @@ decision and its scope and the original sentence stands. Extends PR-07's
 reasoning from `docs/requirements/` to any record of a project or state other
 than the current one. Origin: CF-114.
 
+**PR-30 — A negative result is evidence only if the request reached the thing
+under test.**
+"It returned nothing" and "it was never asked" are the same observation at the
+client and opposite facts about the system. A probe asserting that hostile input
+is handled safely must show the input arrived: a non-answer from an intermediary
+— a proxy, a WAF, a gateway, a client-side validation error — proves the
+intermediary's behaviour and nothing whatever about the component the proof
+names. This is PR-21's shape produced by infrastructure rather than by omission,
+and it is more dangerous because the probe genuinely ran and genuinely passed.
+Where a hostile-input proof crosses a network boundary it exercises the
+in-process path as well, and reports the two counts separately so a change in the
+intermediary cannot quietly empty the proof. Origin: P02-T04, where two malformed
+tenant selectors shaped like SQL injection were answered 403 by Cloudflare at the
+Supabase edge; the assertion that `current_tenant_id()` resolves them to null
+without raising had, for those two values, tested Cloudflare.
+
 ---
 
 ## 2. Environment quirks — never re-discover
@@ -527,3 +543,28 @@ than the current one. Origin: CF-114.
   `os.chmod(path, stat.S_IWRITE)` and retries. This bites any probe that builds a
   throwaway clone of the tree and then cleans it up, and it surfaces halfway
   through the run rather than at the start.
+- Learned at P02-T04, the concrete case behind PR-30: **Cloudflare's WAF sits in
+  front of the Supabase REST endpoint and inspects request *headers*, not just
+  bodies and query strings.** A header value shaped like SQL injection —
+  `' or 1=1--` and `'; drop table tenant;--` were the two that tripped it — is
+  answered **403 with an HTML body** and never reaches PostgREST or Postgres. It
+  arrives with no SQLSTATE and no JSON, so a harness that treats "no rows and no
+  error code" as a clean null gets a false pass. Distinguish it by
+  `content-type: text/html` on a 403. This is the same edge that produces the
+  `error code: 1010` block recorded above, reached by a different signature.
+  **It is not deterministic**: the same twelve values ran twice ten minutes
+  apart and were blocked two, then one. Assert the total, count the blocked
+  separately, and never fail a proof on which of the two a given value drew.
+- Learned at P02-T04: PostgREST exposes request headers to SQL as
+  `current_setting('request.headers', true)`, a **JSON text** that must be parsed
+  and may be `NULL` or `''`. Header **names arrive lower-cased**, but match them
+  case-insensitively anyway; a direct (non-PostgREST) connection has no such
+  setting at all, so the `missing_ok` second argument is mandatory and absence
+  must be a normal path, not an exception. Reading it does not make a function
+  volatile: the value is fixed for the duration of a statement, which is exactly
+  what `stable` promises, and `stable` is required for the planner to use the
+  function inside an RLS policy.
+- Learned at P02-T04: Node's `fetch` rejects a header value containing a NUL or
+  other control character with a client-side `TypeError` before any request is
+  sent. A malformed-input list intended to reach a server must exclude them, or
+  the probe fails in the harness and never tests anything.

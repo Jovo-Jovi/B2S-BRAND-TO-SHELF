@@ -77,10 +77,69 @@ the operator rule's predicate.
 
 | Helper | Returns |
 |---|---|
-| `current_tenant_id()` | The `tenant_id` of the calling identity's active `membership`, or null |
+| `current_tenant_id()` | The tenant this request acts in, resolved per §2.1, or null |
 | `is_operator()` | Whether the calling identity has an `operator` row |
-| `is_current_tenant_owner()` | Whether the caller's membership in their own active tenant carries role `owner` |
+| `is_current_tenant_owner()` | Whether the caller's membership in the tenant `current_tenant_id()` resolved carries role `owner` |
 | `has_live_consent_grant(tenant_id)` | Whether that tenant has a `consent_grant` that is neither revoked nor lapsed, evaluated now |
+
+### 2.1 `current_tenant_id()` — the resolution contract
+
+OD-G14. The tenant a session acts in is **supplied by the caller as a selector
+and resolved server-side against an active `Membership`, on every request.**
+This table is the specification, not an illustration of it. Each row is asserted
+by a named assertion in the tenant-isolation suite, cited in the last column.
+
+| Caller-supplied selector | Caller's active memberships | Result | Asserted by |
+|---|---|---|---|
+| absent | 0 | null | 23o |
+| absent | exactly 1 | that tenant | 23a |
+| absent | 2 or more | null | 23b |
+| present, malformed | any | null — **and it must not raise** | 23h |
+| present, names a tenant with no active membership for the caller | any | null | 23e, 23f, 23g, 23i, 23j, 23n |
+| present, names a tenant the caller holds active | any | that tenant | 23c, 23d |
+
+**Held means `status = 'active' and archived_at is null`.** A membership that is
+`invited`, `suspended` or archived is not held: it does not resolve when it is
+selected, and it does not count toward the "exactly 1" above. An `active` row
+carrying an `archived_at` is not held either — a predicate reading `status`
+alone gets that case wrong, which is why 23g exists.
+
+**Explicit beats implicit, and a wrong explicit fails closed.** A caller holding
+exactly one active membership who supplies a selector naming a tenant they do
+not hold resolves **null**. It does not fall back to the held one. Silently
+acting in a tenant the caller did not ask for is worse than acting in none, and
+23j is the assertion that stops the fallback being reintroduced as a
+convenience.
+
+**Malformed, unheld and nonexistent are one code path, not three.** The selector
+is compared against the text form of the tenants the caller holds, so a value
+that is not a uuid, a uuid naming a tenant they do not hold, and a uuid naming
+no tenant at all are the same non-match. That makes §1's existence property
+structural here rather than a matter of three branches agreeing: 23i asserts the
+nonexistent and the unheld answers are byte-identical.
+
+**The transport is an ordinary request header,** `x-b2s-tenant`, read
+server-side out of the per-request settings PostgREST exposes. OD-G14
+forecloses the two alternatives: a token claim would make the client the tenant
+of record, and a stored per-person value would be shared across every session
+and device that person has open. A header is neither — it is supplied per
+request, by the caller, and nothing persists it. The name is matched
+case-insensitively; an absent, empty or whitespace-only value is `absent`.
+
+**A forged selector is harmless, and that is structural.** The value never
+selects rows. It can only narrow the set of memberships re-derived from
+`membership` on every call, and there is no value that adds one. The most a
+caller achieves by forging it is to name a tenant they do not hold, whose answer
+is null: they lose their own reach for that request and gain nothing anywhere.
+23o asserts it from outside — anon, an unaffiliated member and an operator each
+selecting a real tenant.
+
+**The helper stays `stable`** even though it now reads a per-request value.
+`current_setting()` is itself stable and the request settings are established
+once per transaction before the statement runs, so the value cannot change
+within a statement — which is exactly what `stable` promises. `volatile` would
+be wrong in the other direction, forcing re-evaluation per row inside every
+policy that calls it.
 
 **The standard tenant policy**, applied to every tenant-scoped table:
 
@@ -249,20 +308,31 @@ one. Provisioning the first `active` `owner` of a new tenant is therefore a
 privileged path (ADR-005) and could not be anything else — there is no owner yet
 to do the inviting.
 
-**Why, and it is not tidiness.** An owner who can force a stranger active can
-force a *second* active membership onto a member of another tenant.
-`current_tenant_id()` returns null for anyone holding more than one, by design,
-so that member is locked out of the tenant they actually belong to — by a
-stranger, through the ordinary API, needing nothing but their `member.id`.
-Nothing of the victim's tenant is read, inferred or modified, so the three parts
-of `SECURITY_MODEL.md` §1 did not cover it; §1 now carries a fourth,
-availability. Found live by the P01-T03 gate and recorded as CF-103.
+**Why, and it is not tidiness.** The rule was written against a live exploit.
+An owner who can force a stranger active can force a *second* active membership
+onto a member of another tenant, and `current_tenant_id()` then returned null
+for anyone holding more than one — so that member was locked out of the tenant
+they actually belong to, by a stranger, through the ordinary API, needing
+nothing but their `member.id`. Nothing of the victim's tenant is read, inferred
+or modified, so the three parts of `SECURITY_MODEL.md` §1 did not cover it; §1
+now carries a fourth, availability. Found live by the P01-T03 gate and recorded
+as CF-103.
 
-**What this rule does not settle.** A person who accepts a second invitation
-locks *themselves* out, by their own action, for the same reason. That is the
-session-to-membership binding — `TENANCY_MODEL.md` §2 binds a session to one
-membership and this document specifies no storage for the binding — and it
-belongs with authentication in Phase 02. CF-103 stays open for that half.
+**The lockout is gone and the rule stays** (OD-G14). §2.1 resolves a selection
+rather than failing closed on ambiguity, so a second active membership no longer
+costs anyone their first: the member selects, and 23k asserts they read exactly
+what they read before it existed. The restrictive rule is not vestigial. It
+holds on the restated ground that **forcing a `Membership` onto another person
+is a write against their identity**, which is sufficient on its own and was
+always the better reason. What removing it would restore is not the lockout —
+it is an owner who can make a stranger a member of their tenant without asking.
+
+**A person who accepts a second invitation keeps both.** They resolve null while
+they name neither and either one while they name it, which is §2.1's second and
+third rows and is the whole of the session-to-membership binding
+`TENANCY_MODEL.md` §2 requires. This is no longer deferred: the migration is
+`20260805120001_session_tenant_selector`, the contract is §2.1, and CF-103 and
+CF-93 gap (3) close on it.
 
 ### 3.4 `operator`
 A B2S platform administrator. Not tenant-scoped.
