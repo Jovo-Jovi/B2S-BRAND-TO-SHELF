@@ -2332,3 +2332,36 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       marked with what is in force and which phase or decision delivered it.
       `DEV_OS_REFERENCE.md` untouched (PR-29); §3 untouched, its VOID banner
       intact.
+- [x] CF-136 — `SESSION_CONTEXT.md` recorded the two-way (check, premise)
+      total twice, at two disagreeing figures (:25 read twenty-six to
+      twenty-eight, :254 still read twenty-six), and the underlying method was
+      itself unsafe: the task text that produced twenty-eight counted
+      `check_roadmap.py` as contributing two cases from a single `fail()` call
+      site invoked once per generated file, while P02-T06 had set the
+      precedent at one case per call site. Owner: this task.
+      CLOSED (P02-T09 ROW A) — re-derived by parsing every `scripts/check_*.py`
+      file's AST and counting `Call` nodes whose function is the bare name
+      `fail`, never a textual `"fail("` search (which also matches the word
+      inside a docstring or comment — confirmed live: a textual scan of
+      `check_roadmap.py` mid-task read 7, its AST call-site count reads 4).
+      Total: **85** across the ten `docs-integrity` scripts (JS `guards`
+      define no `fail` function and have never contributed to this figure).
+      Both `SESSION_CONTEXT.md` locations corrected to state it once, in
+      "Frozen decisions in force"; `scripts/check_stated_counts.py` gained a
+      seventh check asserting the statement is singular and matches the
+      enumeration, proven by a planted wrong figure and a removed statement,
+      both reverted from an in-memory snapshot (PR-26).
+- [x] CF-137 — `scripts/check_roadmap.py` stated floors for phases,
+      done-steps rows and open carry-forwards, but none for `SCOPE.md` §2's
+      release blocks or for `ROLE_JOURNEY.md`'s rows (TASK 2, same task). A §2
+      or `ROLE_JOURNEY.md` reshaped so that fewer blocks or rows parse would
+      regenerate empty on both sides and pass the byte-comparison over the
+      loss. Owner: this task.
+      CLOSED (P02-T09 ROW B) — `MINIMUM_RELEASE_BLOCKS = 3` and
+      `MINIMUM_ROLE_JOURNEY_ROWS = 17` added as `die()` floors, both stated in
+      the OK line per PR-27, both proven by an emptied/reduced-below-floor
+      case reverted from an in-memory snapshot (PR-26): `SCOPE.md`'s
+      `**Release 3:**` marker removed (2 of 3 blocks parse, floor catches it)
+      and `ROLE_JOURNEY.md`'s table reduced to one row per actor, 7 of 17
+      (floor catches it), each case isolated from the OD-H9 conformance
+      assertions it sits beside.

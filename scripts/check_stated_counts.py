@@ -10,6 +10,8 @@ an exit code without a message; now it is named and counted, and a run that
 made fewer than MINIMUM_ASSERTIONS assertions fails whatever those assertions
 concluded.
 """
+import ast
+import glob
 import os
 import re
 import sys
@@ -18,7 +20,7 @@ FAIL = False
 
 EM_DASH = "\u2014"
 
-MINIMUM_ASSERTIONS = 6
+MINIMUM_ASSERTIONS = 7
 
 ASSERTIONS = 0
 
@@ -177,6 +179,78 @@ def check_session_context_register():
              f"{dec_total} decisions — the two must agree")
 
 
+def enumerate_fail_call_sites():
+    """The two-way (check, premise) total, re-derived (P02-T09 ROW A): one
+    case per `fail()` call site, counted by parsing each `scripts/check_*.py`
+    file's AST and counting `Call` nodes whose function is the bare name
+    `fail` — never a textual `"fail("` search, which also matches the word
+    inside a docstring or a comment and cannot be trusted (P02-T09's own
+    planted false premise: a textual scan of `check_roadmap.py` at one point
+    in this task read 7, its AST call-site count reads 4). This mirrors
+    `check_security_model_bypass.py`'s own precedent at P02-T06 (seven
+    `fail()` sites, seven cases) and settles, for every check after it, that
+    'one case per assertion' means one call site — not one call site per
+    file it is invoked against, which is how P02-T08 arrived at a count
+    `check_roadmap.py`'s own committed source no longer supports.
+
+    JS `guards` are out of scope for this figure: none defines or calls a
+    function named `fail`, so the convention this total encodes — literal
+    `fail()` call sites — has never applied to them; they are counted
+    separately, in the static conformance set, on the same header line.
+    """
+    total = 0
+    per_file = {}
+    for path in sorted(glob.glob("scripts/check_*.py")):
+        with open(path, "r", encoding="utf-8") as f:
+            tree = ast.parse(f.read(), filename=path)
+        count = sum(
+            1 for node in ast.walk(tree)
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "fail"
+        )
+        per_file[path] = count
+        total += count
+    return total, per_file
+
+
+def check_two_way_probe_total():
+    """P02-T09 ROW A. `SESSION_CONTEXT.md` recorded the two-way (check,
+    premise) total twice, at two disagreeing figures (:25 twenty-six to
+    twenty-eight, :254 twenty-six), because nothing tied either restatement
+    to the codebase the total describes. This asserts there is exactly one
+    present-tense statement of the total, and that it equals
+    `enumerate_fail_call_sites()`'s mechanical count — the same shape as
+    `check_session_context_register`'s assertion against `DECISIONS.md`.
+    """
+    path = "SESSION_CONTEXT.md"
+    text = read(path)
+    if text is None:
+        return
+    asserted()
+
+    matches = re.findall(
+        r"two-way\s+\(check,\s+premise\)\s+total\s+stands\s+at\s+\*\*(\d+)\*\*",
+        text,
+    )
+    if len(matches) == 0:
+        fail(f"{path}: no line states the two-way (check, premise) total in "
+             f"the present tense (expected exactly 1)")
+        return
+    if len(matches) > 1:
+        fail(f"{path}: {len(matches)} lines state the two-way (check, "
+             f"premise) total in the present tense, expected exactly 1")
+        return
+
+    stated_total = int(matches[0])
+    enumerated_total, per_file = enumerate_fail_call_sites()
+
+    if stated_total != enumerated_total:
+        detail = ", ".join(f"{p}={n}" for p, n in per_file.items())
+        fail(f"{path}: states {stated_total}, enumerated {enumerated_total} "
+             f"fail() call site(s) across scripts/check_*.py ({detail})")
+
+
 def check_calc_spec():
     path = "docs/product/CALC_SPEC.md"
     text = read(path)
@@ -294,6 +368,7 @@ def main():
     check_domain_model()
     check_decisions()
     check_session_context_register()
+    check_two_way_probe_total()
     check_calc_spec()
     check_adr()
     check_data_model()
