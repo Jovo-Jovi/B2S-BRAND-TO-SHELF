@@ -55,7 +55,7 @@ Everything below the boundary is tenant-scoped without exception:
 
 | Platform-scoped | Why | Contains tenant data? |
 |---|---|---|
-| `Operator` | B2S staff identity | No |
+| `Operator` | B2S platform identity | No |
 | `Member` | A person, who may belong to more than one `Tenant` | Identity only. Never business data |
 | `Subscription`, `FeatureFlag` | Commercial entitlement | Metadata only |
 | `ConsentGrant` | A tenant's grant of support access | Names one tenant; readable by that tenant |
@@ -153,6 +153,10 @@ An `Operator` action taken without a live `ConsentGrant` covering it is a breach
 not a policy exception. There is no emergency override, because an override that
 exists is an override that will be used.
 
+Becoming an Operator is not itself a break-glass act and has no API path at all
+(OD-G19). An Operator is provisioned only by migration or by direct
+administrative access to the database.
+
 ---
 
 ## 6. Data ownership, portability and deletion
@@ -199,7 +203,7 @@ scope.
 | A query that returns another tenant's rows | §2 — tenant scope is universal, exceptions are a closed list |
 | An agency blurring two clients' data | OD-A5, and the 1:1 `Tenant`:`Brand` rule |
 | A designer seeing margins | §3 — the `Designer` role boundary |
-| Support staff browsing tenant data | §5 — `ConsentGrant` required, time-boxed, logged, revocable |
+| An Operator browsing tenant data | §5 — `ConsentGrant` required, time-boxed, logged, revocable |
 | A record-level permission model nobody can audit | §3 rule 2 |
 | An orphaned tenant with no `Owner` | §3 rule 1 |
 | A new entity silently escaping tenant scope | §2 — tenant-scoped by default, exceptions require an OD |

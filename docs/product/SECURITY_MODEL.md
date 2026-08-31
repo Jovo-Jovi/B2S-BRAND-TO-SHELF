@@ -146,11 +146,19 @@ privileged path · a role definition change · any change to the `Operator` surf
 | Logging | An `ActivityEvent` for the grant and for **every access under it**, readable in full by the tenant |
 | Revocation | Immediate, by the `Owner`, at any time |
 | Emergency override | **None exists.** An override that exists is an override that will be used |
+| System-managed table | `public.operator` has no API write path. An Operator is provisioned only by migration or by direct administrative access to the database. No INSERT, UPDATE or DELETE policy exists, and no API role holds those privileges (OD-G19, assertions 10, 30a–30f) |
+
+**Provisioning is not an `ActivityEvent`.** `activity_event` is tenant-scoped and
+an Operator holds no tenant, so an operator grant cannot be logged there. The
+migration history is the immutable audit trail for operator provisioning. The
+absence of a write path is an asserted property of this system (30a–30f), not
+an omission from it.
 
 **Testable:** an `Operator` request for tenant business data with no live
 `ConsentGrant` is indistinguishable from a cross-tenant request — it returns
 nothing and reveals nothing. That is P1–P3 applied to the operator surface, and
-it is covered by P5.
+it is covered by P5. Lapse, revocation, who may create a grant, and
+tenant-scope of a grant are assertions 30g–30j.
 
 ---
 
@@ -249,13 +257,13 @@ audit, not a removal** — history is permanent.
 |---|---|
 | A tenant reading another's data | §1, proven by P1 |
 | A tenant locking another tenant's member out of their own tenant | §1 availability — the read count before equals the read count after |
-| Support staff reading a business row with no live grant, or reading one unlogged | §5, and the declared read path `DATA_MODEL.md` §2 requires |
+| An Operator reading a business row with no live grant, or reading one unlogged | §5, and the declared read path `DATA_MODEL.md` §2 requires |
 | Inferring a record's existence without reading it | §3 P2 |
 | A foreign key smuggling a foreign record into a valid write | §3 P3 |
 | Protection enabled with no rule, returning silence to everyone | §3 P4 — the positive path is mandatory |
 | An entity shipping with no isolation test | §3 P5 — untested is failed |
 | A harmless-looking rule widening reach through a broad grant | §2.4, §4.3 |
-| Support staff browsing tenant data | §5 — no ambient reach, no override |
+| An Operator browsing tenant data | §5 — no ambient reach, no override |
 | PII in a log, a filename, or a fixture | §6 |
 | An unauditable data touch | §7 |
 | A credential in a public repository | §8 |
@@ -487,6 +495,16 @@ privilege that can do exactly one thing. §11a.1 carries that containment,
 because that is where the object lives. The distinction matters at a gate: a
 review that greps for the privileged client finds every use of the key and none
 of these, and §11a.1's table is the whole of the other list.
+
+**What OD-G19's grant moves here.** `service_role` still bypasses RLS on every
+table it can read, including `public.operator`, where it retains SELECT. It no
+longer holds INSERT, UPDATE, DELETE or TRUNCATE on that table: migration
+`20260831120004_operator_no_api_write` revoked all and granted SELECT back, so
+the privileged key cannot provision an Operator through PostgREST. The remaining
+write path is table ownership (`postgres`, §11a.2), reached only by a direct
+connection — migration or the Management API — which is OD-G19's "direct
+administrative access" and not an API role. Assertions 30e and 30a–30c hold the
+grid.
 
 ---
 

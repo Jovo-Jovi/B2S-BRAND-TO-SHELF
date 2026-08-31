@@ -22,7 +22,7 @@ Five carried on `Membership` — the `public.role` enum, verbatim: **owner**,
 **manager**, **designer**, **approver**, **viewer**. Plus two that are never a
 `Membership` at all:
 
-- **Operator** — platform-side, holds no tenant `Role` (OD-G10). A B2S staff
+- **Operator** — platform-side, holds no tenant `Role` (OD-G10). A B2S platform
   identity, metadata and usage only, never tenant business data.
 - **Buyer** — a record, not an actor. It never authenticates, never holds a
   `Membership`, and never opens a session. Its row exists precisely because
@@ -48,7 +48,7 @@ Five carried on `Membership` — the `public.role` enum, verbatim: **owner**,
 | Viewer | Read-only visibility across catalog and inventory | P04 | `TENANCY_MODEL.md` §3 Can column |
 | Viewer | Read-only visibility on sales and financial records, only where explicitly granted | P05 | `TENANCY_MODEL.md` §3 Cannot column names the default exclusion ("any payment or cost figure unless explicitly granted") — the grant is the exception, not a Viewer default |
 | Operator | View account metadata and usage: tenant name, plan, `Subscription` state, member count, storage consumed, `ImportRun` counts and outcomes, error rates, last activity date, invoice count as a number | P08 | `TENANCY_MODEL.md` §5, permitted-without-consent list. The operator surface itself, metadata and usage only, is a named P08 deliverable |
-| Operator | Reach restricted to metadata only, by construction | P02 | OD-G10. "`Operator` reach limited to metadata per OD-G10" is a named P02 deliverable. **Not:** an `Operator` never reaches tenant business data — no `Buyer`, `Invoice`, `Payment`, `CreditNote`, cost or margin figure, `Product` name, `MediaAsset`, `Artwork` or `BrandProfile` value — under any circumstance, without a live `ConsentGrant` |
+| Operator | Reach restricted to metadata only, by construction | P02 | OD-G10. "`Operator` reach limited to metadata per OD-G10" is a named P02 deliverable. **Not:** an `Operator` never reaches tenant business data — no `Buyer`, `Invoice`, `Payment`, `CreditNote`, cost or margin figure, `Product` name, `MediaAsset`, `Artwork` or `BrandProfile` value — under any circumstance, without a live `ConsentGrant`; and there is no API path to become an Operator — no self-registration, invitation or public endpoint, and no API role holds INSERT, UPDATE or DELETE on `public.operator` (OD-G19) |
 | Operator | Break-glass access to a stated module, only under a live, time-boxed `ConsentGrant`, with every access logged as an `ActivityEvent` | P02 | `TENANCY_MODEL.md` §5's break-glass path; `ConsentGrant` and `ActivityEvent` are named P02 deliverables |
 | Buyer | None — a data record referenced by `SalesOrder` and `Invoice`, not a role with a capability | P05 | `TENANCY_MODEL.md` §3 does not name `Buyer` among the five roles at all; `SCOPE.md` module 13 creates the `Buyer` entity at P05. **Not:** a `Buyer` never signs in, holds no `Membership`, no `Role` and no session — misreading it as an actor is the failure this row exists to foreclose |
 

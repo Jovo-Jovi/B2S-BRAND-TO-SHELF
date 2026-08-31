@@ -61,6 +61,11 @@
 
 `ConsentGrant` exists because G10 promises admin cannot see tenant data. A promise with no mechanism is marketing. This is the mechanism, and every use of it writes an `ActivityEvent`.
 
+> **2026-08-31, P02-T13, OD-G19.** "admin" in the sentence above names Operator.
+> `GLOSSARY.md` §5 and OD-G19 forbid that word for this entity. The original
+> sentence is left standing (PR-07 / PR-29 — this file is an archived draft,
+> superseded by `GLOSSARY.md`). The live name is Operator.
+
 ## 1.4 Brand tier
 
 | Entity | Is | Never called |

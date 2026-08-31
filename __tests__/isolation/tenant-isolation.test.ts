@@ -707,7 +707,7 @@ describe("proof 7 — the operator surface", () => {
     // rows stay out of reach.
     //
     // `member` is the operator's OWN row and nobody else's. P02-T05 made
-    // materialisation unconditional (OD-G13), so a staff identity that signs in
+    // materialisation unconditional (OD-G13), so an Operator identity that signs in
     // holds a `member` row like anyone else and `member_select_self` returns it.
     // The expectation moved from `[]` to exactly that one id: the claim is
     // unchanged — an operator reaches no TENANT's member row — and the set is
@@ -2933,9 +2933,9 @@ describe("proof 24 — member materialisation (OD-G13 act one, DATA_MODEL §3.2)
     readsExactly("a fresh member", seen, { member: [fresh.authId] }, failures);
 
     const ownership = await probe.rpc(fresh, "is_current_tenant_owner");
-    const staff = await probe.rpc(fresh, "is_operator");
+    const asOperator = await probe.rpc(fresh, "is_operator");
     if (ownership.body !== "false") failures.push(`is_current_tenant_owner answered ${ownership.body}, expected false`);
-    if (staff.body !== "false") failures.push(`is_operator answered ${staff.body}, expected false`);
+    if (asOperator.body !== "false") failures.push(`is_operator answered ${asOperator.body}, expected false`);
 
     record(
       "24a",
@@ -2944,7 +2944,7 @@ describe("proof 24 — member materialisation (OD-G13 act one, DATA_MODEL §3.2)
       `one identity created and never touched again: exactly 1 member row carrying its own id and address, ` +
         `created_by null, and 0 membership, 0 tenant, 0 activity_event, 0 consent_grant and 0 operator rows ` +
         `referencing it. current_tenant_id() answered ${resolved.body}, is_current_tenant_owner ` +
-        `${ownership.body}, is_operator ${staff.body}. Reads across all ${TABLES.length} tables: ` +
+        `${ownership.body}, is_operator ${asOperator.body}. Reads across all ${TABLES.length} tables: ` +
         `${TABLES.map((t) => `${t}=${seen[t].length}`).join(", ")} — the one row is member_select_self ` +
         `returning the caller's own record`,
     );
@@ -4809,6 +4809,637 @@ describe("proof 29 — OD-G16 invitation by email, closing CF-121", () => {
       failures,
       `unaffiliated SELECT invitation id,email,tenant_id,role → ${seen.count} row(s); emails disclosed: ${emails.length}`,
     );
+    expect(failures).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// P02-T13 — OD-G19 and ConsentGrant reach. Group 30. Existing proofs 7, 10,
+// 11, 20a, 20b and 21 are unchanged: none is weakened or restated so a new
+// one can pass.
+// ---------------------------------------------------------------------------
+
+const OPERATOR_PRIVILEGES = [
+  "SELECT",
+  "INSERT",
+  "UPDATE",
+  "DELETE",
+  "TRUNCATE",
+  "REFERENCES",
+  "TRIGGER",
+] as const;
+
+/** Exact privilege grid OD-G19's migration leaves on public.operator. */
+const OPERATOR_PRIVILEGE_GRID: Record<string, Record<(typeof OPERATOR_PRIVILEGES)[number], boolean>> = {
+  anon: {
+    SELECT: false,
+    INSERT: false,
+    UPDATE: false,
+    DELETE: false,
+    TRUNCATE: false,
+    REFERENCES: false,
+    TRIGGER: false,
+  },
+  authenticated: {
+    SELECT: true,
+    INSERT: false,
+    UPDATE: false,
+    DELETE: false,
+    TRUNCATE: false,
+    REFERENCES: false,
+    TRIGGER: false,
+  },
+  service_role: {
+    SELECT: true,
+    INSERT: false,
+    UPDATE: false,
+    DELETE: false,
+    TRUNCATE: false,
+    REFERENCES: false,
+    TRIGGER: false,
+  },
+};
+
+/**
+ * operator_read_activity_event, in process, with the operator's jwt claims
+ * forged on the privileged connection. No PostgREST, no Cloudflare. The
+ * function is security definer and reads auth.uid() from request.jwt.claims,
+ * so this exercises the body the HTTP path would, without the network.
+ */
+function operatorReadInProcess(operatorId: string, tenantId: string) {
+  return sql.try(`
+    select res.id
+      from (
+        select set_config(
+                 'request.jwt.claims',
+                 jsonb_build_object('sub', '${operatorId}', 'role', 'authenticated')::text,
+                 true
+               ) as claims
+      ) cfg,
+      lateral public.operator_read_activity_event('${tenantId}'::uuid) res
+     where cfg.claims is not null
+  `);
+}
+
+async function operatorRowJson(id: string): Promise<string> {
+  const [row] = await sql<{ row: unknown }>(
+    `select to_jsonb(o) as row from public.operator o where id = '${id}'`,
+  );
+  return JSON.stringify(row?.row ?? null);
+}
+
+async function operatorCount(): Promise<number> {
+  const [row] = await sql<{ n: number }>(`select count(*)::int as n from public.operator`);
+  return row.n;
+}
+
+async function eventsOn(tenantId: string): Promise<number> {
+  const [row] = await sql<{ n: number }>(
+    `select count(*)::int as n from public.activity_event where tenant_id = '${tenantId}'`,
+  );
+  return row.n;
+}
+
+describe("proof 30 — operator is system-managed, and ConsentGrant reach (OD-G19)", () => {
+  it("30a every seeded identity is refused UPDATE on operator, and no row changes", async () => {
+    const failures: string[] = [];
+    const httpObserved: string[] = [];
+    const id = fixture.operator.authId;
+    const before = await operatorRowJson(id);
+
+    for (const identity of fixture.everyIdentity) {
+      const attempt = await probe.update(identity, "operator", id, {
+        revoked_at: new Date().toISOString(),
+      });
+      if (attempt.ok && attempt.count > 0) {
+        failures.push(`${identity.label} UPDATE operator: ACCEPTED`);
+      } else if (!refusedByGrant(attempt)) {
+        failures.push(
+          `${identity.label} UPDATE operator: "${attempt.status}/${attempt.code} ${attempt.message}", ` +
+            `expected a grant refusal — a silent no-op would mean the privilege existed and RLS hid the row`,
+        );
+      }
+      httpObserved.push(`${identity.label}=${attempt.status}/${attempt.code}`);
+    }
+
+    const after = await operatorRowJson(id);
+    if (after !== before) failures.push(`operator row changed: ${before} → ${after}`);
+
+    const [catalog] = await sql<{ authenticated_update: boolean }>(
+      `select has_table_privilege('authenticated', 'public.operator', 'UPDATE') as authenticated_update`,
+    );
+    if (catalog.authenticated_update) {
+      failures.push("in-process: authenticated holds UPDATE on public.operator");
+    }
+
+    record(
+      "30a",
+      "Every seeded identity is refused UPDATE on public.operator, and the row is unchanged",
+      failures,
+      `HTTP ${fixture.everyIdentity.length} identities, all grant-refused: ${httpObserved.join(", ")}; ` +
+        `row jsonb unchanged. In-process: authenticated UPDATE=${catalog.authenticated_update}`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("30b every seeded identity is refused DELETE on operator, and the row count is unchanged", async () => {
+    const failures: string[] = [];
+    const httpObserved: string[] = [];
+    const id = fixture.operator.authId;
+    const before = await operatorCount();
+
+    for (const identity of fixture.everyIdentity) {
+      const attempt = await probe.remove(identity, "operator", id);
+      if (attempt.ok && attempt.count > 0) {
+        failures.push(`${identity.label} DELETE operator: ACCEPTED`);
+      } else if (!refusedByGrant(attempt)) {
+        failures.push(
+          `${identity.label} DELETE operator: "${attempt.status}/${attempt.code} ${attempt.message}", ` +
+            `expected a grant refusal`,
+        );
+      }
+      httpObserved.push(`${identity.label}=${attempt.status}/${attempt.code}`);
+    }
+
+    const after = await operatorCount();
+    if (after !== before) failures.push(`operator count ${before} → ${after}`);
+    if (!(await rowExists("operator", id))) failures.push("the operator row is gone");
+
+    const [catalog] = await sql<{ authenticated_delete: boolean }>(
+      `select has_table_privilege('authenticated', 'public.operator', 'DELETE') as authenticated_delete`,
+    );
+    if (catalog.authenticated_delete) {
+      failures.push("in-process: authenticated holds DELETE on public.operator");
+    }
+
+    record(
+      "30b",
+      "Every seeded identity is refused DELETE on public.operator, and the row count is unchanged",
+      failures,
+      `HTTP ${fixture.everyIdentity.length} identities, all grant-refused: ${httpObserved.join(", ")}; ` +
+        `count ${before} → ${after}. In-process: authenticated DELETE=${catalog.authenticated_delete}`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("30c anon reaches operator for SELECT, INSERT, UPDATE and DELETE and gets nothing on all four", async () => {
+    const failures: string[] = [];
+    const httpObserved: string[] = [];
+    const anon = anonCaller(config);
+    const id = fixture.operator.authId;
+    const before = await operatorCount();
+    const beforeRow = await operatorRowJson(id);
+
+    const select = await probe.select(anon, "operator");
+    if (select.ok && select.count > 0) failures.push(`anon SELECT operator: returned ${select.count} row(s)`);
+    if (select.ok) {
+      failures.push(
+        `anon SELECT operator: HTTP ${select.status} with ${select.count} rows — a 200 empty is RLS, ` +
+          `not the grant; expected permission denied so the request is shown to have reached the table`,
+      );
+    } else if (!refusedByGrant(select)) {
+      failures.push(`anon SELECT operator: ${select.status}/${select.code} "${select.message}", expected a grant refusal`);
+    }
+    httpObserved.push(`SELECT=${select.status}/${select.code}`);
+
+    const freshId = randomUUID();
+    const insert = await probe.insert(anon, "operator", {
+      id: freshId,
+      granted_at: new Date().toISOString(),
+    });
+    if (insert.ok) {
+      failures.push("anon INSERT operator: ACCEPTED");
+      await sql(`delete from public.operator where id = '${freshId}'`);
+    } else if (!refusedByGrant(insert)) {
+      failures.push(`anon INSERT operator: ${insert.status}/${insert.code} "${insert.message}", expected a grant refusal`);
+    } else if (await rowExists("operator", freshId)) {
+      failures.push("anon INSERT operator: refused but a row persisted");
+    }
+    httpObserved.push(`INSERT=${insert.status}/${insert.code}`);
+
+    const update = await probe.update(anon, "operator", id, { revoked_at: new Date().toISOString() });
+    if (update.ok && update.count > 0) failures.push("anon UPDATE operator: ACCEPTED");
+    else if (!refusedByGrant(update)) {
+      failures.push(`anon UPDATE operator: ${update.status}/${update.code} "${update.message}", expected a grant refusal`);
+    }
+    httpObserved.push(`UPDATE=${update.status}/${update.code}`);
+
+    const remove = await probe.remove(anon, "operator", id);
+    if (remove.ok && remove.count > 0) failures.push("anon DELETE operator: ACCEPTED");
+    else if (!refusedByGrant(remove)) {
+      failures.push(`anon DELETE operator: ${remove.status}/${remove.code} "${remove.message}", expected a grant refusal`);
+    }
+    httpObserved.push(`DELETE=${remove.status}/${remove.code}`);
+
+    if ((await operatorCount()) !== before) failures.push("anon left the operator count changed");
+    if ((await operatorRowJson(id)) !== beforeRow) failures.push("anon changed the operator row");
+
+    const catalog = await sql<{
+      rolname: string;
+      sel: boolean;
+      ins: boolean;
+      upd: boolean;
+      del: boolean;
+    }>(`
+      select 'anon' as rolname,
+             has_table_privilege('anon', 'public.operator', 'SELECT') as sel,
+             has_table_privilege('anon', 'public.operator', 'INSERT') as ins,
+             has_table_privilege('anon', 'public.operator', 'UPDATE') as upd,
+             has_table_privilege('anon', 'public.operator', 'DELETE') as del
+    `);
+    const cell = catalog[0];
+    if (cell.sel || cell.ins || cell.upd || cell.del) {
+      failures.push(`in-process: anon holds a table privilege on operator: ${JSON.stringify(cell)}`);
+    }
+
+    record(
+      "30c",
+      "anon reaches public.operator for SELECT, INSERT, UPDATE and DELETE and gets nothing on all four",
+      failures,
+      `HTTP ${httpObserved.join(", ")}, all grant-refused, count unchanged at ${before}. ` +
+        `In-process: anon SELECT/INSERT/UPDATE/DELETE = ${cell.sel}/${cell.ins}/${cell.upd}/${cell.del}`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("30d public.operator carries exactly one policy, FOR SELECT, and no write policy", async () => {
+    const failures: string[] = [];
+    const rows = await sql<{ polname: string; polcmd: string; roles: string | null }>(`
+      select p.polname,
+             p.polcmd::text as polcmd,
+             (select string_agg(r.rolname, ',' order by r.rolname)
+                from unnest(p.polroles) u(oid)
+                join pg_roles r on r.oid = u.oid) as roles
+        from pg_policy p
+       where p.polrelid = 'public.operator'::regclass
+       order by p.polname
+    `);
+
+    const expected = [{ polname: "operator_select_operator", polcmd: "r", roles: "authenticated" }];
+    const actual = rows.map((row) => ({
+      polname: row.polname,
+      polcmd: row.polcmd,
+      roles: row.roles,
+    }));
+    if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+      failures.push(`policy set ${JSON.stringify(actual)}, expected ${JSON.stringify(expected)}`);
+    }
+
+    record(
+      "30d",
+      "public.operator carries exactly one policy, FOR SELECT to authenticated; no INSERT, UPDATE or DELETE policy exists",
+      failures,
+      `pg_policies exact set: ${JSON.stringify(actual)}`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("30e the privilege grid on public.operator matches OD-G19 exactly", async () => {
+    const failures: string[] = [];
+    const rows = await sql<{
+      rolname: string;
+      privilege: string;
+      held: boolean;
+    }>(`
+      select r.rolname, p.privilege,
+             has_table_privilege(r.rolname, 'public.operator', p.privilege) as held
+        from (values ('anon'), ('authenticated'), ('service_role')) as r(rolname)
+        cross join unnest(ARRAY[
+          'SELECT','INSERT','UPDATE','DELETE','TRUNCATE','REFERENCES','TRIGGER'
+        ]) as p(privilege)
+       order by r.rolname, p.privilege
+    `);
+
+    const observed: string[] = [];
+    for (const row of rows) {
+      const expected = OPERATOR_PRIVILEGE_GRID[row.rolname]?.[
+        row.privilege as (typeof OPERATOR_PRIVILEGES)[number]
+      ];
+      if (expected === undefined) {
+        failures.push(`unexpected role/privilege ${row.rolname}.${row.privilege}`);
+        continue;
+      }
+      if (row.held !== expected) {
+        failures.push(`${row.rolname}.${row.privilege} = ${row.held}, expected ${expected}`);
+      }
+      observed.push(`${row.rolname}.${row.privilege}=${row.held}`);
+    }
+
+    if (rows.length !== 3 * OPERATOR_PRIVILEGES.length) {
+      failures.push(`grid length ${rows.length}, expected ${3 * OPERATOR_PRIVILEGES.length}`);
+    }
+
+    record(
+      "30e",
+      "Privilege grid on public.operator for anon, authenticated and service_role matches OD-G19",
+      failures,
+      `expected inline: anon none; authenticated SELECT only; service_role SELECT only. ` +
+        `measured: ${observed.join(", ")}`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("30f nothing in the catalog writes public.operator", async () => {
+    const failures: string[] = [];
+    const [catalog] = await sql<{
+      triggers: number;
+      defaults: number;
+      policies: number;
+      bodies: string;
+    }>(`
+      select
+        (select count(*) from pg_trigger t
+          where t.tgrelid = 'public.operator'::regclass
+            and not t.tgisinternal)::int                                              as triggers,
+        (select count(*) from pg_attrdef d
+          where d.adrelid = 'public.operator'::regclass)::int                          as defaults,
+        (select count(*) from pg_policy p
+          where coalesce(pg_get_expr(p.polqual, p.polrelid), '') ~* 'insert\\s+into\\s+(public\\.)?operator\\b'
+             or coalesce(pg_get_expr(p.polwithcheck, p.polrelid), '') ~* 'insert\\s+into\\s+(public\\.)?operator\\b'
+             or coalesce(pg_get_expr(p.polqual, p.polrelid), '') ~* 'update\\s+(public\\.)?operator\\b'
+             or coalesce(pg_get_expr(p.polwithcheck, p.polrelid), '') ~* 'update\\s+(public\\.)?operator\\b'
+             or coalesce(pg_get_expr(p.polqual, p.polrelid), '') ~* 'delete\\s+from\\s+(public\\.)?operator\\b'
+             or coalesce(pg_get_expr(p.polwithcheck, p.polrelid), '') ~* 'delete\\s+from\\s+(public\\.)?operator\\b')::int
+                                                                                      as policies,
+        (select coalesce(string_agg(n.nspname || '.' || p.proname, ', ' order by n.nspname, p.proname), '')
+           from pg_proc p
+           join pg_namespace n on n.oid = p.pronamespace
+          where p.prosrc ~* 'insert\\s+into\\s+(public\\.)?operator\\b'
+             or p.prosrc ~* 'update\\s+(only\\s+)?(public\\.)?operator\\b'
+             or p.prosrc ~* 'delete\\s+from\\s+(only\\s+)?(public\\.)?operator\\b'
+             or p.prosrc ~* 'truncate\\s+(table\\s+)?(public\\.)?operator\\b')         as bodies
+    `);
+
+    if (catalog.triggers !== 0) failures.push(`${catalog.triggers} non-internal trigger(s) on public.operator`);
+    if (catalog.defaults !== 0) failures.push(`${catalog.defaults} column default(s) on public.operator`);
+    if (catalog.policies !== 0) failures.push(`${catalog.policies} policy expression(s) write public.operator`);
+    if (catalog.bodies !== "") failures.push(`function bodies write public.operator: ${catalog.bodies}`);
+
+    record(
+      "30f",
+      "Nothing in the catalog writes public.operator",
+      failures,
+      `0 non-internal triggers, 0 column defaults, 0 writing policy expressions, ` +
+        `0 function bodies (is_operator and operator_read_activity_event read, they do not write)`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("30g a grant whose expires_at has passed admits nothing, and nothing is logged", async () => {
+    const { a, operator } = fixture;
+    const failures: string[] = [];
+    const grantId = a.consentGrantId;
+
+    const restore = async () => {
+      await sql(
+        `update public.consent_grant set expires_at = now() + interval '1 day', revoked_at = null where id = '${grantId}'`,
+      );
+    };
+
+    try {
+      const controlHttp = await probe.rpc(operator, "operator_read_activity_event", { p_tenant_id: a.id });
+      if (controlHttp.status >= 400) {
+        failures.push(
+          `control HTTP: live grant refused ${controlHttp.status} ${controlHttp.body.slice(0, 160)} — ` +
+            `the lapse answers below would prove nothing`,
+        );
+      }
+      const controlDirect = await operatorReadInProcess(operator.authId, a.id);
+      if (!controlDirect.ok) {
+        failures.push(
+          `control in-process: live grant refused ${controlDirect.status} ${controlDirect.body.slice(0, 160)}`,
+        );
+      }
+
+      await sql(`update public.consent_grant set expires_at = now() - interval '1 hour' where id = '${grantId}'`);
+
+      const before = await eventsOn(a.id);
+      const http = await probe.rpc(operator, "operator_read_activity_event", { p_tenant_id: a.id });
+      if (http.status < 400) {
+        failures.push(`HTTP: expired grant ACCEPTED (${http.rows.length} rows)`);
+      }
+      if (!/no live consent grant/i.test(http.body)) {
+        failures.push(`HTTP: expired grant refused as "${http.body.slice(0, 160)}", expected the consent check`);
+      }
+      if ((await eventsOn(a.id)) !== before) {
+        failures.push("HTTP: an activity_event was written for a refused expired-grant read");
+      }
+
+      const direct = await operatorReadInProcess(operator.authId, a.id);
+      if (direct.ok) failures.push(`in-process: expired grant ACCEPTED — ${direct.body.slice(0, 160)}`);
+      if (!/no live consent grant/i.test(direct.body)) {
+        failures.push(`in-process: expired grant refused as "${direct.body.slice(0, 160)}", expected the consent check`);
+      }
+      if ((await eventsOn(a.id)) !== before) {
+        failures.push("in-process: an activity_event was written for a refused expired-grant read");
+      }
+
+      record(
+        "30g",
+        "A grant whose expires_at has passed admits nothing, and nothing is logged",
+        failures,
+        `control HTTP ${controlHttp.status} / in-process ${controlDirect.status}; ` +
+          `lapse HTTP ${http.status}, in-process ${direct.status}; tenant A held ${before} events throughout the refusals`,
+      );
+    } finally {
+      await restore();
+    }
+    expect(failures).toEqual([]);
+  });
+
+  it("30h revocation is immediate: the next request after revoked_at is cut, and nothing is logged for the refusal", async () => {
+    const { a, operator } = fixture;
+    const failures: string[] = [];
+    const grantId = a.consentGrantId;
+
+    const restore = async () => {
+      await sql(`update public.consent_grant set revoked_at = null where id = '${grantId}'`);
+    };
+
+    try {
+      const [live] = await sql<{ n: number }>(
+        `select count(*)::int as n from public.consent_grant
+          where id = '${grantId}' and revoked_at is null and now() < expires_at`,
+      );
+      if (live.n !== 1) failures.push("precondition: tenant A holds no live consent grant");
+
+      const admitted = await probe.rpc(operator, "operator_read_activity_event", { p_tenant_id: a.id });
+      if (admitted.status >= 400) {
+        failures.push(
+          `live grant HTTP refused ${admitted.status} ${admitted.body.slice(0, 160)} — 20b's positive path is the premise`,
+        );
+      }
+
+      await sql(`update public.consent_grant set revoked_at = now() where id = '${grantId}'`);
+
+      const before = await eventsOn(a.id);
+      const http = await probe.rpc(operator, "operator_read_activity_event", { p_tenant_id: a.id });
+      if (http.status < 400) failures.push(`HTTP after revoke: ACCEPTED (${http.rows.length} rows)`);
+      if (!/no live consent grant/i.test(http.body)) {
+        failures.push(`HTTP after revoke: "${http.body.slice(0, 160)}", expected the consent check`);
+      }
+      if ((await eventsOn(a.id)) !== before) {
+        failures.push("HTTP: an activity_event was written for a refused revoked-grant read");
+      }
+
+      const direct = await operatorReadInProcess(operator.authId, a.id);
+      if (direct.ok) failures.push(`in-process after revoke: ACCEPTED — ${direct.body.slice(0, 160)}`);
+      if (!/no live consent grant/i.test(direct.body)) {
+        failures.push(`in-process after revoke: "${direct.body.slice(0, 160)}", expected the consent check`);
+      }
+      if ((await eventsOn(a.id)) !== before) {
+        failures.push("in-process: an activity_event was written for a refused revoked-grant read");
+      }
+
+      record(
+        "30h",
+        "Revocation is immediate: setting revoked_at cuts reach on the next request, and nothing is logged for the refusal",
+        failures,
+        `admitted HTTP ${admitted.status}; after revoke HTTP ${http.status}, in-process ${direct.status}; ` +
+          `tenant A held ${before} events throughout the refusals`,
+      );
+    } finally {
+      await restore();
+    }
+    expect(failures).toEqual([]);
+  });
+
+  it("30i only a tenant Owner creates a ConsentGrant: a Viewer of the same tenant and the Owner of tenant B are refused for tenant A", async () => {
+    const { a, b } = fixture;
+    const failures: string[] = [];
+    const httpObserved: string[] = [];
+    const invented: string[] = [];
+
+    const tryInsert = async (who: Identity, label: string, payload: Record<string, unknown>) => {
+      const id = String(payload.id);
+      invented.push(id);
+      const attempt = await probe.insert(who, "consent_grant", payload);
+      if (attempt.ok) {
+        failures.push(`${label} INSERT consent_grant: ACCEPTED`);
+        await sql(`delete from public.consent_grant where id = '${id}'`);
+      } else if (await rowExists("consent_grant", id)) {
+        failures.push(`${label} INSERT consent_grant: refused but a row persisted`);
+      } else if (!refusedByPolicy(attempt) && !refusedByGrant(attempt)) {
+        failures.push(
+          `${label} INSERT consent_grant: ${attempt.status}/${attempt.code} "${attempt.message.slice(0, 140)}" ` +
+            `— not an authorisation refusal, so the request may not have reached the table`,
+        );
+      }
+      httpObserved.push(`${label}=${attempt.status}/${attempt.code}`);
+    };
+
+    await tryInsert(a.viewer, "A-viewer", {
+      id: randomUUID(),
+      tenant_id: a.id,
+      granted_by: a.viewer.authId,
+      scope: "read_only",
+      expires_at: futureIso(1),
+    });
+    await tryInsert(b.owner, "B-owner-for-A", {
+      id: randomUUID(),
+      tenant_id: a.id,
+      granted_by: b.owner.authId,
+      scope: "read_only",
+      expires_at: futureIso(1),
+    });
+
+    const leftover = await sql<{ n: number }>(
+      `select count(*)::int as n from public.consent_grant where id in (${invented.map((id) => `'${id}'`).join(", ")})`,
+    );
+    if (leftover[0].n !== 0) failures.push(`${leftover[0].n} of the invented consent_grant rows exist`);
+
+    const viewerOwner = await sql.try(`
+      select res.is_owner
+        from (
+          select set_config(
+                   'request.jwt.claims',
+                   jsonb_build_object('sub', '${a.viewer.authId}', 'role', 'authenticated')::text,
+                   true
+                 ) as claims
+        ) cfg,
+        lateral (select public.is_current_tenant_owner() as is_owner) res
+       where cfg.claims is not null
+    `);
+    const bOwnerTenant = await sql.try(`
+      select res.tid
+        from (
+          select set_config(
+                   'request.jwt.claims',
+                   jsonb_build_object('sub', '${b.owner.authId}', 'role', 'authenticated')::text,
+                   true
+                 ) as claims
+        ) cfg,
+        lateral (select public.current_tenant_id()::text as tid) res
+       where cfg.claims is not null
+    `);
+
+    if (!viewerOwner.ok || /true/i.test(viewerOwner.body)) {
+      failures.push(`in-process: A-viewer is_current_tenant_owner → ${viewerOwner.body.slice(0, 160)}, expected false`);
+    }
+    if (!bOwnerTenant.ok || bOwnerTenant.body.includes(a.id)) {
+      failures.push(`in-process: B-owner current_tenant_id resolved tenant A — ${bOwnerTenant.body.slice(0, 160)}`);
+    }
+    if (!bOwnerTenant.ok || !bOwnerTenant.body.includes(b.id)) {
+      failures.push(`in-process: B-owner current_tenant_id did not resolve tenant B — ${bOwnerTenant.body.slice(0, 160)}`);
+    }
+
+    record(
+      "30i",
+      "Only a tenant Owner creates a ConsentGrant: a Viewer of A and the Owner of B are refused for tenant A",
+      failures,
+      `HTTP ${httpObserved.join(", ")}; 0 of ${invented.length} invented rows exist. ` +
+        `In-process: A-viewer is_current_tenant_owner=${viewerOwner.body.trim()}; ` +
+        `B-owner current_tenant_id body contains B and not A`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("30j a ConsentGrant for tenant A admits no read of tenant B", async () => {
+    const { a, b, operator } = fixture;
+    const failures: string[] = [];
+
+    const restore = async () => {
+      await sql(`update public.consent_grant set revoked_at = null where id = '${b.consentGrantId}'`);
+    };
+
+    try {
+      const [aLive] = await sql<{ n: number }>(
+        `select count(*)::int as n from public.consent_grant
+          where id = '${a.consentGrantId}' and revoked_at is null and now() < expires_at`,
+      );
+      if (aLive.n !== 1) failures.push("precondition: tenant A holds no live consent grant");
+
+      await sql(`update public.consent_grant set revoked_at = now() where id = '${b.consentGrantId}'`);
+
+      const beforeB = await eventsOn(b.id);
+      const http = await probe.rpc(operator, "operator_read_activity_event", { p_tenant_id: b.id });
+      if (http.status < 400) failures.push(`HTTP read of B under A's live grant: ACCEPTED (${http.rows.length} rows)`);
+      if (!/no live consent grant/i.test(http.body)) {
+        failures.push(`HTTP: "${http.body.slice(0, 160)}", expected the consent check`);
+      }
+      if ((await eventsOn(b.id)) !== beforeB) {
+        failures.push("HTTP: an activity_event was written on B for a refused cross-tenant operator read");
+      }
+
+      const direct = await operatorReadInProcess(operator.authId, b.id);
+      if (direct.ok) failures.push(`in-process read of B under A's live grant: ACCEPTED — ${direct.body.slice(0, 160)}`);
+      if (!/no live consent grant/i.test(direct.body)) {
+        failures.push(`in-process: "${direct.body.slice(0, 160)}", expected the consent check`);
+      }
+      if ((await eventsOn(b.id)) !== beforeB) {
+        failures.push("in-process: an activity_event was written on B for a refused cross-tenant operator read");
+      }
+
+      record(
+        "30j",
+        "A ConsentGrant for tenant A admits no read of tenant B",
+        failures,
+        `A live=${aLive.n}, B revoked; HTTP ${http.status}, in-process ${direct.status}; ` +
+          `tenant B held ${beforeB} events throughout`,
+      );
+    } finally {
+      await restore();
+    }
     expect(failures).toEqual([]);
   });
 });

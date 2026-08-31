@@ -881,6 +881,14 @@ export const EXPECTED_ASSERTIONS = [
   "27a", "27b",
   "28a", "28b", "28c", "28d", "28e",
   "29a", "29b", "29c", "29d", "29e", "29f", "29g",
+  // P02-T13 — OD-G19's absence of an operator write path, and ConsentGrant
+  // reach. 30a–30f assert the write-path absence (10 covers INSERT; these
+  // cover UPDATE, DELETE, anon, the policy set, the privilege grid, and the
+  // catalog). 30g–30j close the §5 controls 20a/20b named but did not pin
+  // to their own ids: lapse, revocation, who may create a grant, and
+  // tenant-scope. All landed permanently per OD-H11.
+  "30a", "30b", "30c", "30d", "30e", "30f",
+  "30g", "30h", "30i", "30j",
   "D",
 ];
 

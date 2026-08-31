@@ -2778,3 +2778,28 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       naming the observed count and the floor; reverted, and the working-tree
       diff confirmed clean of the plant. Owner: none outstanding, closed in
       the task that found it.
+- [x] CF-149 — `scripts/check-enum-keys.mjs` stated no PR-27 floor. Its OK line
+      read "OK: 12 value(s) across 4 enumeration(s) in supabase/schema.sql are
+      language-neutral keys" and its only guard was a `valuesChecked === 0`
+      test. Every other one of the fifteen checks names a numeric minimum it
+      expected to examine. This is CF-148's class recurring on a fifth check: a
+      schema that stopped declaring enums, or a parser that stopped finding
+      them, would report success over a set of one. Found by the reviewer at
+      `cce71e7`. CLOSED (P02-T13) — `MINIMUM_VALUES_CHECKED = 12` and
+      `MINIMUM_ENUMERATIONS = 4` added at the true counts. The OK line now
+      states both floors. Proven by plant-and-revert from an in-memory
+      snapshot: each floor bumped one above truth fails naming the observed
+      count and the floor; reverted, working-tree diff clean of the plant.
+      Changed condition, not a new premise: `PROVEN_PAIRS` does not move and
+      the two-way empty-target probe was not re-run. Owner: none outstanding,
+      closed in the task that found it.
+- [ ] CF-150 — `public.consent_scope` carries exactly one value, `read_only`,
+      and `has_live_consent_grant(uuid)` takes no scope argument.
+      `TENANCY_MODEL.md` §5 requires an explicit stated scope and
+      `SECURITY_MODEL.md` §5 requires elevation to be scoped as well as
+      time-boxed. Today the scope column is recorded and enforced by nothing,
+      which is harmless only because one value makes the predicate vacuous. The
+      moment a second `consent_scope` value lands, an operator holding a narrow
+      grant reaches everything a wide one would. Owner: the task that adds a
+      second `consent_scope` value, which must make scope a predicate in the
+      same migration.

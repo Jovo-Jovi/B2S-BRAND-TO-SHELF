@@ -16,7 +16,7 @@ never edited in place.
 
 ## 2. Decision register
 
-91 decisions, all signed. None open.
+92 decisions, all signed. None open.
 
 ### Group A — Product identity
 
@@ -131,6 +131,7 @@ never edited in place.
 | **G16** | **An invitation is keyed to an email address, not to an existing `Member`. Signing in through the invitation link establishes control of the address and activates the `Membership` in the same act.** | SIGNED 2026-08-04 |
 | **G17** | **`default_locale` is constrained to `en` and `ar`. `base_currency` is constrained to `EGP`, `USD`, `SAR`, `AED`, `EUR`. Enforced by the database, never by the wizard.** | SIGNED 2026-08-05 |
 | **G18** | **A `Member` may own at most three active `Tenant`s and perform at most three provisioning acts per rolling 24 hours. Both are policy values, hardcoded to the free plan in Release 1 and supplied by `Subscription` in Release 3.** | SIGNED 2026-08-05 |
+| **G19** | **`public.operator` is a system-managed table. An Operator is provisioned only by migration or by direct administrative access to the database. No API role holds INSERT, UPDATE or DELETE on it. Operator is the least-privileged platform administrator: account metadata, usage and billing (OD-G10) and nothing else. No text in this repository may describe it as a super-admin, superuser, admin or staff role.** | SIGNED 2026-08-31 |
 
 ### Group H — Quality & acceptance
 
@@ -388,6 +389,52 @@ than inventing a platform-scoped audit. Raising the cap in Release 1 is a
 migration, because OD-G10 holds `Operator` to metadata.
 
 **Not covered.** The cap bounds tenants, not slugs. Named, not solved.
+
+### OD-G19 — Operator is system-managed, and the least privileged administrator
+**Signed 2026-08-31.**
+
+`public.operator` is a system-managed table. An Operator is provisioned only by
+migration or by direct administrative access to the database. No API role holds
+INSERT, UPDATE or DELETE on it; no policy permits any; there is no
+self-registration path, no invitation path, and no public endpoint. The
+migration history is the immutable audit trail for operator provisioning:
+`activity_event` is tenant-scoped and an Operator holds no tenant, so an
+operator grant cannot be logged there. The absence of a write path is an
+asserted property of this system, not an omission from it.
+
+Operator is the least privileged administrator in this platform. It reaches
+account metadata, usage and billing (OD-G10) and nothing else. No text
+anywhere in the repository may describe it as a super-admin, superuser,
+admin or staff role — `GLOSSARY.md` §5 already forbids those three words for
+this entity, and this decision extends the prohibition to the concept.
+
+**Catalog at signature, and the clause that was not yet true of it.** At
+`cce71e7`, before the migration this decision lands, `anon` held no privilege
+on `public.operator` and `authenticated` held SELECT only, matching the
+grants file; `service_role` held SELECT, INSERT, UPDATE, DELETE, TRUNCATE,
+REFERENCES and TRIGGER — Supabase's default table privileges, never revoked,
+because `schema.sql`'s grants block revokes from `anon` and `authenticated`
+ONLY. `service_role` is an API role and bypasses RLS besides
+(`SECURITY_MODEL.md` §11a.3), so the signed clause "no API role holds
+INSERT, UPDATE or DELETE on it" was not true of the catalog as it stood.
+Original wording of that clause, as signed: "No API role holds INSERT,
+UPDATE or DELETE on it." Measured correction: `service_role` held all seven
+table privileges, including the three named verbs and TRUNCATE as a fourth
+row-write. Resolved by migration `20260831120004_operator_no_api_write`:
+`revoke all on table public.operator from service_role` then `grant select`
+back, so the clause is literally true. TRUNCATE was revoked with the three
+named verbs rather than left standing, because a remaining row-write would
+have made the absence a list of synonyms instead of a property. The other
+resolution — narrowing the clause to `anon`/`authenticated` and carving
+`service_role` out under ADR-005 — was not taken: the isolation suite already
+provisions Operators as `postgres` through the Management API, which is this
+decision's "direct administrative access", so closing the API write did not
+require inventing one.
+
+**Forecloses.** An invitation flow, a self-registration endpoint, or a
+"just for the test suite" write path that would make the absence untrue the
+moment it existed; describing Operator as a super-admin, superuser, admin or
+staff role; logging operator provisioning on `activity_event`.
 
 ### OD-H12 — Nine phases, three items pulled forward, one method document at the end
 **Signed 2026-08-05.**

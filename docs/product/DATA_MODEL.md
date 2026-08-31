@@ -340,7 +340,7 @@ this schema reads them zero rows. 24a asserts both, on all seven tables.
 and no member created this row — the person did, by proving an address, which
 `id` already records.
 
-**An operator is materialised too.** OD-G13 is unconditional, so a B2S staff
+**An operator is materialised too.** OD-G13 is unconditional, so an Operator
 identity that signs in holds a `member` row like anyone else. It confers
 nothing — an operator holds no `membership`, resolves null, and reads no
 tenant's rows — and proof 7 measures that as an exact set including the
@@ -446,9 +446,15 @@ A B2S platform administrator. Not tenant-scoped.
 | `granted_by` | uuid null → operator | |
 | `revoked_at` | timestamptz null | |
 
-**RLS.** SELECT where `is_operator()`. No INSERT, UPDATE or DELETE policy at all
-— operator grants are a privileged path only, and there is deliberately no API
-path to become one.
+**RLS.** Exactly one policy: `operator_select_operator`, FOR SELECT to
+`authenticated`, USING `is_operator()`. No INSERT, UPDATE or DELETE policy
+exists — assertions 30d and 10. Privilege grid, asserted as an exact set by
+30e: `anon` none; `authenticated` SELECT only; `service_role` SELECT only
+(INSERT, UPDATE, DELETE and TRUNCATE revoked, OD-G19). Every seeded identity
+is refused UPDATE (30a) and DELETE (30b); `anon` is refused all four verbs
+(30c). Nothing in the catalog writes the table (30f). Operator grants are a
+privileged path only (`postgres`, via migration or the Management API); there
+is deliberately no API path to become one.
 
 ### 3.5 `consent_grant`
 A tenant's explicit, time-boxed permission for operator support access (OD-G10).
