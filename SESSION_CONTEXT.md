@@ -1,10 +1,9 @@
 # SESSION CONTEXT
-Updated: 2026-08-31 · By: Grok 4.6 (heavyweight) · Phase: P02
-Last task: P02-T13 · Verdict: PASS. OD-G19 landed; migration 18 revokes
-service_role writes on public.operator. Isolation ledger
-**80 expected — 80 PASS, 0 FAIL, 0 LOST**, all 70 retained. Ledger 133 →
-**135** rows, 37 → **38** open. Proven two-way count stays 36, last proved
-at P02-T09-FIX. Full detail in the done-steps row below.
+Updated: 2026-09-01 · By: Grok 4.6 (heavyweight) · Phase: P02
+Last task: P02-T14 · Verdict: PASS. Sign-in surface, `features/access/`,
+and `check-zod-coverage`. Isolation ledger **80 expected — 80 PASS, 0 FAIL,
+0 LOST**. Ledger 135 → **136** rows, 38 → **39** open. Proven two-way count
+36 → **37**, last proved at P02-T14. Full detail in the done-steps row below.
 
 ## Read these too
 - `docs/method/PRECEDENTS.md` — binding rulings and environment quirks.
@@ -67,6 +66,7 @@ Keep it short: if a paragraph is growing here, it belongs elsewhere.
 | P02-T11 | Fold the roadmap: collapsible phases and progress log. On `phase/02-tenancy-and-access` from `bdc82ee`; no PR, §3 puts one at the phase exit. Zero JavaScript, zero application code, no migration, no schema change. **TASKS 1-4 — every phase card and every progress-log entry in `docs/roadmap.html` folds behind native `details`/`summary` elements.** The legend, the section headings and the seven role-journey `article` cards stay unfolded — a distinct selector, `article.card`, never touched by the new `details.card` rules. Every summary value is derived, none hardcoded: each phase summary carries its id, name, status (the existing five-status vocabulary) and a "N done · M queued" count read from that phase's own done-steps rows; each log summary carries the task id, its verdict, the first clause of its description truncated at a word boundary with an ellipsis, and its date — a new derivation, the earliest `DEVELOPMENT_JOURNAL.md` line naming that exact id as its own token via a hyphen-aware boundary regex, so `P02-T09` never matches inside `P02-T09-FIX`. The one open `details` element is `data["current_phase"]`, read from this file's own header token, never hardcoded to `P02`. Styling stays inside the token set: marker suppressed both ways (`::-webkit-details-marker` and `::marker`), a CSS-border-only chevron rotating on `[open]`, 44px minimum tap height, a visible `:focus-visible` outline, no `:hover`-only affordance. **TASK 5** — `docs/ROADMAP.md` stays flat; the generator's docstring states why, in the same paragraph documenting `DEVELOPMENT_JOURNAL.md` as a new, seventh input, read only for the log summaries' dates. **TASK 6 — four new `check_roadmap.py` assertions, each with its own PR-27 floor**: the `details` element count is at least phases + done-steps rows (`MINIMUM_DETAILS_ELEMENTS`, floor 10, dynamically 53 today); every `details` element carries exactly one `summary`; exactly one `details` element carries `open` and it names the current phase; `docs/ROADMAP.md` carries none. **The five on-disk plant-and-revert cases this task ran all passed only because the pre-existing byte-compare caught them first** — one case, a whole phase's `details` block deleted, surfaced why: the new tag-scanning regex matched literal `details`/`summary` tag text inside this file's own `style` block CSS comment (prose describing the fold, not markup), inflating the true count of 53 to 54 and handing the new floor one element of slack it should never have had. Caught only by an isolated in-memory pass against `check_fold_conformance()` with the byte-compare never in the call path at all: 8 hand-built cases, 7 of 7 targeted assertions caught plus one well-formed baseline confirmed clean. Fixed by stripping `<style>...</style>` before tokenizing (`STYLE_BLOCK_RE`); no real disclosure markup is ever emitted inside `<style>`, so this is lossless. All 5 on-disk cases re-confirmed caught with the fix in place — each plant's application confirmed before trusting a MISSED — every revert byte-identical. **PR-38 landed** on this finding: a structural assertion added beside an existing byte-compare must be proven with the byte-compare removed, not merely proven to fire. **TASK 7** — `scripts/check-data-boundary.mjs` stated no floor at all. Before: "10 file(s) scanned ... all 3 Supabase import site(s)", no floor stated. `MINIMUM_FILES_SCANNED` (10) and `MINIMUM_IMPORT_SITES` (3) added at the true counts. After: the same two counts, each now stated against a floor. Both proven by plant-and-revert: a floor bumped one above truth fails loudly naming the observed count and the floor, then reverts with a clean diff. **TASK 8** — ids allocated from the live maximum, verified against both ledger files, never from this prompt, which supplied none: **CF-148** the data-boundary floor row, opened and closed in this same task; **PR-38** the byte-compare-masking finding above. **TASK 9** — both roadmap outputs regenerated; two consecutive runs diff at zero, no sha, branch or timestamp the inputs do not already carry. Static-assertion count 99 → **104**: five new `fail()` sites, all in `check_roadmap.py`'s `check_fold_conformance()`; the proven two-way empty-target count does not move and stays 36, no new premise. Ledger 132 → **133** rows, 38 open, unchanged by count since CF-148 closed in the same task it opened in. All fifteen checks green, each stating its floor. Regenerated a final time in the PR-17 follow-up once this row's real sha landed. Tests: static conformance only. **The isolation suite was not run and is not required**: this task touches no data path. Acceptance standard: none applies. **Tenant isolation: N/A, stated explicitly.** | PASS | `7dd1a53` |
 | P02-T12 | G17's constraints, G18's bounds, and the invitation flow. On `phase/02-tenancy-and-access` from `ed0e5e7`; no PR, §3 puts one at the phase exit. **Three migrations, 14 become 17**, independently revertible, `check_migration_split.py` 17 files / 1484 non-blank lines identical both ways. Part one (OD-G17): CHECK constraints `tenant_default_locale_permitted` (`en`, `ar`) and `tenant_base_currency_permitted` (`EGP`, `USD`, `SAR`, `AED`, `EUR`) — a CHECK not an enum, so P07 drops them and adds Settings FKs in one migration. Zero tenant rows confirmed by query before apply, no backfill. Proven both directions by 27a and 27b. Part two (OD-G18): `provision_tenant` takes `pg_advisory_xact_lock(1818, hashtext(caller))` before the counts; fourth owned tenant refused (28a); fourth act in 24 hours refused with zero owned (28b); an act outside the window succeeds (28c); **two concurrent RPCs against one member already owning two, Promise.all, elapsed 88ms, exactly one succeeded, owned 2 → 3** (28d); a refusal leaves no tenant, membership or event (28e). No platform-scoped audit of a refusal. Slug squatting remains unsolved, as OD-G18 states. Part three (OD-G16, closing CF-121): table `invitation` (GLOSSARY §5 names are clean), RLS tenant-scoped, no operator policy; `accept_invitation(uuid)` with no member parameter; `caller_email_is_verified()` reads `auth.users.email_confirmed_at`. Two new `security definer` functions, §11a.1 eight → **ten**, catalog eleven → **thirteen**. `membership_active_is_self_only` untouched. Assertions 29a–29g. ADR-012 independent path: `select count(*) from public.tenant` → `[{"count":0}]` and `select count(*) from auth.users` → `[{"count":0}]` before work, before apply, and after the suite. Isolation ledger: **70 expected — 70 PASS, 0 FAIL, 0 LOST**, all 56 retained, vitest 71 (completeness guard). Types regenerated by the CLI, 17742 chars, not hand-edited. Two-way empty-target probe re-run: 36 of 36 proven, enumerated 36, KNOWN_GAPS 1 (Windows `git.bat` shim on `check_module_spec_tree.py`'s reverse git-tracked-tree), zero pairs passing on nothing. Provenance left at **P02-T09-FIX**; figure unchanged so the id did not move. Prompt named Opus; this session ran as Cursor Grok 4.6. No new CF or PR id; live maxima remain CF-148 and PR-38. Ledger 133 rows, 38 → **37** open. `docs/method/REVIEWER_CHAT_INSTRUCTIONS.md` uncommitted and unstaged. Tests: the tenant-isolation suite in full. Acceptance standard: TENANT ISOLATION, not waivable. | PASS | `3ae20de` |
 | P02-T13 | ConsentGrant and Operator reach: the decision, and the absence proven. On `phase/02-tenancy-and-access` from `cce71e7`; no PR, §3 puts one at the phase exit. ADR-012 independent path (User-Agent `B2S-P02-T13-independent/1.0`, not the suite): `select count(*) from public.tenant` → `[{"count":0}]` and `select count(*) from auth.users` → `[{"count":0}]` before work, after apply, and after the suite. **OD-G19** signed 2026-08-31 as the next Group G decision: `public.operator` is a system-managed table; Operator is the least-privileged platform administrator (OD-G10) and nothing else; no text may describe it as a super-admin, superuser, admin or staff role. Catalog at `cce71e7` contradicted the signed API-role clause: `anon` none, `authenticated` SELECT only, `service_role` all seven table privileges. Resolution chosen: make the clause literally true — migration `20260831120004_operator_no_api_write`, 17 become **18**, `revoke all` then `grant select` on `public.operator` to `service_role`. TRUNCATE was revoked with INSERT, UPDATE and DELETE rather than left as a fourth row-write. `check_migration_split.py` 18 files / 1514 non-blank lines identical both ways. Types regenerated by the CLI, 17742 chars, byte-identical, not hand-edited. Proofs 30a–30j, existing 7, 10, 11, 20a, 20b and 21 unchanged. **80 expected — 80 PASS, 0 FAIL, 0 LOST**, 383s, line D all fifteen teardown counters at zero; vitest 81, the completeness guard as reconciled at P02-T03. HTTP and in-process counts reported separately on every network-crossing negative. ROLE_JOURNEY: extended the existing OD-G10 Not: clause; no new row; `MINIMUM_ROLE_JOURNEY_ROWS` stays 17. CF-149 opened and CLOSED (enum-keys floor 12 values, 4 enumerations; both floors planted one above truth and reverted; changed condition, not a new premise, `PROVEN_PAIRS` stays 36). CF-150 opened (`consent_scope` is vacuous until a second value; owner is that migration). **37 open at `cce71e7` + 1 landed open − 0 previously-open closed = 38 open**, ledger 133 → 135, reconciling id-for-id. Prompt named Opus; this session ran as Cursor Grok 4.6. `docs/method/REVIEWER_CHAT_INSTRUCTIONS.md` uncommitted and unstaged. Tests: the tenant-isolation suite in full. Acceptance standard: TENANT ISOLATION, not waivable. Money, print and feature standards: N/A. | PASS | `87af566` |
+| P02-T14 | Supabase Auth wiring: the sign-in surface, features/, and the zod guard's target. On `phase/02-tenancy-and-access` from `1da5289`; no PR, §3 puts one at the phase exit. ADR-012 independent path (User-Agent `B2S-P02-T14-independent/1.0`, not the suite): `select count(*) from public.tenant` → `[{"count":0}]` and `select count(*) from auth.users` → `[{"count":0}]` before work and after the suite. **PART 1** — no existing §1 roster folder owns sign-in. Added `features/access/` citing SCOPE.md §1 module Auth and Access and §2 "Auth, roles, tenant isolation", a documented amendment under OD-H9, landed with the directory. ROLE_JOURNEY not amended: SCOPE's module set and the role enum did not change. **PART 2** — `app/[locale]/(public)/sign-in/` and `callback/` (not under `app/api/`), both OD-G13 mechanisms. Privileged client stays quarantined. Scans of `app/`, `features/`, `lib/` and `proxy.ts`: zero `provision_tenant`, zero `accept_invitation`, zero `x-b2s-tenant`, zero `localStorage` / `sessionStorage`, zero `createSupabaseServiceRoleClient`. **PART 3** — refused-materialisation contract landed in SECURITY_MODEL.md §2 item 6 (indistinguishability; 29b applied to sign-up); display text in catalogs only; not UX_PRINCIPLES.md (CF-146). **PART 4** — `scripts/check-zod-coverage.mjs` with the first `features/access/actions.ts`: four exported mutations, each `safeParse` at entry. Structural TS AST, not a "zod" substring. Floors 1 file / 4 mutations. Wired as the sixth guard. Plant-and-revert from an in-memory snapshot, never `git checkout --`: unvalidated export, schema imported but not applied at entry, removed target, emptied target — 4 of 4 CAUGHT, each plant confirmed applied, every revert byte-identical. **PART 5** — one new pair (`check-zod-coverage.mjs`, `features/` directory). Four guards whose floors or scan roots moved are changed conditions, not new premises: literals 7→17, cdn 9→19, service-import 1→12, data-boundary files 10→20 and import sites 3→4. Probe: **37 of 37 proven**, enumerated 37, KNOWN_GAPS 1 (Windows git.bat reverse-tree on `check_module_spec_tree.py`), zero pairs passing on nothing. Provenance P02-T09-FIX → **P02-T14**. **PART 6** — SECURITY_MODEL.md §4 named re-run conditions not met (no new entity, policy, grant, privileged path, role, or Operator surface). Suite run anyway because the surface establishes the session `current_tenant_id()` reads. **80 expected — 80 PASS, 0 FAIL, 0 LOST**, 838s, line D all fifteen teardown counters at zero; vitest 81, the completeness guard as reconciled at P02-T03. No assertion added, none weakened, none lost. Group 31 not opened: the surface reaches GoTrue, not a previously unreachable data-layer path. **PART 7** — CF-151 opened, not resolved (verdict-column protocol; owner the P02 readiness task). CF-94 amended for the features/ half, stays OPEN for components/. **38 open at `1da5289` + 1 landed open − 0 previously-open closed = 39 open**, ledger 135 → 136. Static conformance set ten and five → ten and six, sixteen. Prompt named Opus; this session ran as Cursor Grok 4.6. `docs/method/REVIEWER_CHAT_INSTRUCTIONS.md` uncommitted and unstaged. Tests: unit and component for the sign-in surface, plus the tenant-isolation suite. Acceptance: FEATURES and ENTITIES against SCOPE.md §2 and MODULE_SPEC.md §1, plus TENANT ISOLATION. Money and print: N/A. | PASS | pending |
 
 > Commit column: one or more comma-separated backticked shas, or `—` where no
 > single commit tracks the step (P-00 through P-01c predate the one-task-one-commit
@@ -107,7 +107,7 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
 - CF-84 — owner: PRECEDENTS.md, PR-19
 - CF-92 — owner: the task that onboards the first non-synthetic tenant, and the Phase 02 exit gate, which must assert the row count rather than assume it
 - CF-93 — owner: P03, at its entry checklist, being the first phase that creates new tables under the rule
-- CF-94 — owner: the task that creates components/, for that root; the task that creates features/, for that root
+- CF-94 — owner: the task that creates components/, for that root
 - CF-97 — owner: reviewer, to ratify the narrowing or reject it
 - CF-109 — owner: the P03 entry checklist, per OD-H12
 - CF-126 — owner: the task that first subscribes to Realtime, and the P02 exit gate, which re-derives it
@@ -116,6 +116,7 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
 - CF-140 — owner: the reviewer, to commit, amend or discard on their own document
 - CF-146 — owner: the reviewer, at the next method amendment that touches BUILD_PHASES.md
 - CF-150 — owner: the task that adds a second consent_scope value, which must make scope a predicate in the same migration
+- CF-151 — owner: the P02 readiness task
 
 ## Frozen decisions in force
 - Freeze point 2026-07-29 (`legacy/FREEZE.md`) — tools RETIRING, not port
@@ -235,8 +236,8 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
   finds something is landed as a permanent check by the fix task that follows,
   and one that finds nothing is landed too, because a probe that passes today is
   the one that catches tomorrow's regression.
-- **The static conformance set is ten `docs-integrity` checks and five
-  `guards`, fifteen in total, as of 2026-08-05 — P02-T09.** Two distinct
+- **The static conformance set is ten `docs-integrity` checks and six
+  `guards`, sixteen in total, as of 2026-09-01 — P02-T14.** Two distinct
   figures live where P02-T09 recorded one, split at P02-T09-FIX because they
   measure different things and neither had ever been asserted against its
   own derivation:
@@ -265,12 +266,18 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
     with `print()`, never a function named `fail`, so landing it did not
     silently inflate this figure. JS `guards` do not contribute either: none
     defines or calls a function named `fail`; they are counted separately,
-    above, in the static conformance set.
-  - The proven two-way empty-target case count stands at **36**, last proved
-    at **P02-T09-FIX** — re-proven there by actually removing and then emptying
-    every premise the
-    fifteen checks read — thirty-seven pairs enumerated, thirty-six proven,
-    one recorded as a documented gap rather than folded into either number:
+    above, in the static conformance set. `check-zod-coverage.mjs`, landed
+    P02-T14, is a sixth guard and likewise contributes 0 to this figure.
+    The proven count moved at P02-T14 without adding a `fail()` site: 36 → 37,
+    one new pair for `check-zod-coverage.mjs` against `features/`. The four
+    guards whose floors or scan roots moved in the same task are changed
+    conditions, not new premises, and added no pair.
+  - The proven two-way empty-target case count stands at **37**, last proved
+    at **P02-T14** — re-proven there by actually removing and then emptying
+    every premise the sixteen checks read — thirty-eight pairs enumerated
+    (thirty-seven in `PROVEN_PAIRS` plus the one documented gap),
+    thirty-seven proven, one recorded as a documented gap rather than folded
+    into either number:
     `check_module_spec_tree.py`'s reverse-direction premise (the live
     tracked directory tree via `git ls-files`) cannot be substituted on
     Windows, where a bare `git` invocation resolves only to `git.exe` and
@@ -337,38 +344,31 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
   (PR-29).
 
 ## Next action
-**The next P02 task, on `phase/02-tenancy-and-access`** — the branch is open
-and carries P02-T04 through P02-T13. Do not branch from `main` again and do
-not open a pull request; `BRANCHING.md` §3 puts one consolidated PR at the
-phase exit, after the gate has run on the branch.
+**The P02 READINESS task (OD-H8), on `phase/02-tenancy-and-access`** — the
+branch is open and carries P02-T04 through P02-T14. Do not branch from
+`main` again and do not open a pull request; `BRANCHING.md` §3 puts one
+consolidated PR at the phase exit, after the gate has run on the branch.
 
 **P02-T09-FIX's Task 6 is discharged** — the ownerless triage ran at P02-T10.
-What remains of that bucket is not bookkeeping: **twelve rows still carry NOT
-IN THE PLAN**, and after the triage each one is honestly there rather than
-merely unamended. Two are later-release work and correctly outside a
-nine-phase plan that delivers Release 1 only. Six are waiting on an owner
-decision, three of them (CF-51, CF-83, CF-84) needing nothing but the
-authorisation to close, since their substance already landed as PR-06, PR-18
-and PR-19. Three are genuinely ownerless, and the reason two of them are is
-CF-146: `UX_PRINCIPLES.md` is one of OD-H7's just-in-time documents and
-`BUILD_PHASES.md` assigns it to none of the nine phases. **That count moves
-every time a row lands in the bucket, so re-derive it rather than citing this
-paragraph** — the command is in the P02-T10 done-steps row.
+What remains of that bucket is not bookkeeping: **re-derive the NOT IN THE
+PLAN count rather than citing a stale paragraph** — the command is in the
+P02-T10 done-steps row. CF-94's `features/` half closed in substance at
+P02-T14; the row stays open for `components/`. CF-151 is the readiness
+task's: either move the done-steps verdict column to the next land task as
+PR-17 states, or supersede that clause. Do not resolve it as a drive-by
+inside a land task that is itself writing a done-steps row.
 
 OD-G13's two acts, OD-G17's locale and currency constraints, OD-G18's
 three-tenant and three-acts-per-24h bounds (with the concurrency proof),
 OD-G16's invitation-by-email flow, and OD-G19's system-managed Operator
-table are live in the data layer. What is
-deliberately absent and must not be assumed: **no UI, route, form or client
-calls `provision_tenant()`, `accept_invitation()`, or sets the
-`x-b2s-tenant` header** — only the isolation harness does — **nothing
-persists a member's last selection**, which OD-G14 forecloses at the storage
-level, and **there is no API path to become an Operator**. A sign-up
-surface is the natural owner of the sign-in-side error contract for a
-refused materialisation: the trigger aborts the auth transaction and no
-document says what the person is shown. Supabase Auth wiring is the next
-build task; `check-zod-coverage` lands with the file that gives it a
-target, not here.
+table are live in the data layer. A sign-in surface now exists at
+`/[locale]/sign-in` (email-and-password and Google). What is still
+deliberately absent and must not be assumed: **no client calls
+`provision_tenant()`, `accept_invitation()`, or sets the `x-b2s-tenant`
+header** — only the isolation harness does — **nothing persists a member's
+last selection**, which OD-G14 forecloses at the storage level, and
+**there is no API path to become an Operator**. The refused-materialisation
+error contract lives in `SECURITY_MODEL.md` §2 item 6.
 
 The remaining P02 surface is the **READINESS task (OD-H8)** before the phase
 exit gate, then the gate itself on this branch. The gate re-derives
@@ -403,12 +403,12 @@ What P02 should know before its first task:
   for justification, §11b for enumeration and change detection. Measuring a
   function by schema `USAGE` alone answers falsely, because `authenticator` is
   `NOINHERIT`.
-- **`check-print-containment` and `check-zod-coverage` are the two guards P01
-  does not owe.** Both were confirmed target-free by scan this run: zero
-  page-geometry signals anywhere, and zero `zod` imports with every candidate
-  mutation-boundary site inside the test harness. Owners are **P06** for print,
-  whose target is `lib/print/` per `MODULE_SPEC.md` §100, and **P02** for zod,
-  whose target is the first `features/<module>/actions.ts` under ADR-010.
+- **`check-print-containment` remains the guard P01 did not owe and P02
+  does not either.** Confirmed target-free by scan: zero page-geometry
+  signals anywhere. Owner is **P06**, whose target is `lib/print/` per
+  `MODULE_SPEC.md` §1. **`check-zod-coverage` landed at P02-T14** with
+  `features/access/actions.ts`; it is the sixth guard, floors 1 file and
+  4 mutations.
 - **The open rows whose owner names neither a gate nor a phase are the
   ledger's blind spot.** `check_ledger.py` proves an owner clause is present and
   reachable; it cannot tell whether "the reviewer" or "the next repo-maintenance

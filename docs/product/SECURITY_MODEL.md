@@ -71,6 +71,18 @@ failure is not recoverable by a later fix: data disclosed is disclosed.
    reach when combined with a broad grant. Both are reviewed together, always.
 5. **Any privileged path that bypasses tenant rules is physically quarantined**,
    reachable from exactly one place, and every use writes an `ActivityEvent`.
+6. **A refused sign-up is indistinguishable from any other failed sign-up that
+   is not a validation error on the submitted fields.** `materialise_member()`
+   aborts the `auth.users` insert when the identity cannot be linked, so no
+   second identity is created (`DATA_MODEL.md` §3.2, assertion 24b). The person
+   is shown one distinct message, and the same message, whether the address is
+   already held, the identity carries no address, or sign-up failed for any
+   other non-validation reason. The message does not reveal whether the address
+   is already held. That is assertion 29b's standard applied to sign-up.
+   Validation failures on the submitted fields (an empty password, a string
+   that is not an email) may be named specifically: they describe the input,
+   not the directory. Display text lives in the message catalogs; this section
+   owns the indistinguishability contract.
 
 **§11 is the exceptions list.** Every mechanism that can bypass the data layer's
 rules is enumerated there with its reachability, and the enumeration is

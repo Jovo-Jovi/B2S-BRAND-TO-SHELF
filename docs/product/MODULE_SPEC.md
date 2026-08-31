@@ -53,7 +53,10 @@ app/                              route surface only, thin
   [locale]/
     dictionaries.ts
     dictionaries/                 locale resolution, dictionary loading
-    (public)/                     unauthenticated: sign-in, invitation accept — deferred, P02
+    (public)/                     unauthenticated
+      sign-in/                    email-and-password and Google (OD-G13)
+      callback/                   Google OAuth return
+      invitation/                 accept — deferred, P02
     (app)/                        authenticated tenant surface — deferred, P02
       onboarding/
       brand/
@@ -65,18 +68,23 @@ app/                              route surface only, thin
     (operator)/                   the B2S operator surface, OD-G10 — deferred, P08
   api/                            only where a route handler is unavoidable — deferred until one is
 
-features/                         one folder per SCOPE.md module — deferred, each lands with its module
-  onboarding/
-  brand/
-  assets/
-  packaging/
-  print/
-  catalog/
-  inventory/
-  sales/
-  import/
-  settings/
-  operator/
+features/                         one folder per SCOPE.md module
+  access/                         Auth & Access — SCOPE.md §2 "Auth, roles, tenant isolation"
+    actions.ts                    mutations, zod-validated at entry (ADR-010)
+    schema.ts                     the zod schemas for this module
+    components/                   module-private components
+    __tests__/
+  onboarding/                     deferred, P03
+  brand/                          deferred
+  assets/                         deferred
+  packaging/                      deferred
+  print/                          deferred
+  catalog/                        deferred
+  inventory/                      deferred
+  sales/                          deferred
+  import/                         deferred
+  settings/                       deferred
+  operator/                       deferred, P08
 
   each holding, as needed:
     actions.ts                    mutations, zod-validated at entry (ADR-010)
@@ -93,6 +101,7 @@ lib/
   supabase/
     client.ts                     browser client, acts as the member
     server.ts                     server client, acts as the member
+    session.ts                    session refresh, after locale normalisation
     server-only/                  QUARANTINE — ADR-005
       service.ts                  the only construction of the privileged client
   money/                          exact decimal, ADR-011 — deferred, P05

@@ -1,15 +1,15 @@
 #!/usr/bin/env node
 // ARCHITECTURE.md §6 — "No runtime CDN". Fonts and libraries are bundled;
 // nothing in the application source may load a script or stylesheet from an
-// external origin at request time. Scans app/, lib/, docs/ and the root proxy
-// for a JSX/HTML <script> or <link> element whose src/href resolves to an
-// external URL. docs/ is in scope because docs/roadmap.html is generated
+// external origin at request time. Scans app/, lib/, docs/, features/ and the
+// root proxy for a JSX/HTML <script> or <link> element whose src/href resolves
+// to an external URL. docs/ is in scope because docs/roadmap.html is generated
 // output served as a static page and is otherwise unguarded by construction.
 
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, extname } from "node:path";
 
-const ROOTS = ["app", "proxy.ts", "lib", "docs"];
+const ROOTS = ["app", "proxy.ts", "lib", "docs", "features"];
 const EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx", ".html"]);
 
 // PR-27 — a check states the minimum it expected to examine and fails when it
@@ -18,10 +18,12 @@ const EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx", ".html"]);
 // stopped guarding while still reporting success. CF-94 — the floor is the
 // true count across all three roots as of the commit that adds `lib/`, not
 // the placeholder 1 that let `lib/` ship unscanned in the first place.
-// P02-T09-FIX — docs/ and .html widen the surface to 9 as of this commit
-// (app: 3, proxy.ts: 1, lib: 3, docs: 2); the floor tracks the new count for
-// the same reason CF-94 set the old one.
-const MINIMUM_FILES = 9;
+// P02-T09-FIX — docs/ and .html widen the surface to 9 as of that commit
+// (app: 3, proxy.ts: 1, lib: 3, docs: 2). P02-T14 adds features/ and
+// raises the floor to the true count of 19. The floor tracks the new count
+// for the same reason CF-94 set the old one. Changed condition, not a new
+// premise.
+const MINIMUM_FILES = 19;
 
 const EXTERNAL_TAG = /<(script|link)\b[^>]*\b(?:src|href)\s*=\s*["'`]((?:https?:)?\/\/[^"'`]+)["'`]/gi;
 

@@ -2,5 +2,22 @@
   "shell": {
     "title": "B2S — Brand to Shelf",
     "description": "Application shell."
+  },
+  "access": {
+    "title": "Sign in",
+    "signInHeading": "Sign in with email",
+    "signUpHeading": "Sign up with email",
+    "emailLabel": "Email",
+    "passwordLabel": "Password",
+    "signInSubmit": "Sign in",
+    "signUpSubmit": "Sign up",
+    "googleSubmit": "Continue with Google",
+    "identity_refused": "This sign-up could not be completed.",
+    "sign_in_refused": "Sign-in could not be completed.",
+    "email_invalid": "Enter a valid email address.",
+    "password_required": "Enter a password.",
+    "locale_invalid": "That language is not available.",
+    "oauth_cancelled": "Google sign-in was cancelled.",
+    "input_invalid": "Check the form and try again."
   }
 }

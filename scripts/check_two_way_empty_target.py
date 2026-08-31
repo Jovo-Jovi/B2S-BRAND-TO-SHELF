@@ -108,10 +108,11 @@ PROVEN_PAIRS = [
     ("scripts/check_stated_counts.py", "scripts/check_two_way_empty_target.py (this file's own PROVEN_PAIRS)"),
     ("scripts/check-data-boundary.mjs", "lib/supabase/ (directory)"),
     ("scripts/check-enum-keys.mjs", "supabase/schema.sql"),
-    ("scripts/check-no-hardcoded-literals.mjs", "scan roots [app, proxy.ts, lib]"),
-    ("scripts/check-no-runtime-cdn.mjs", "scan roots [app, proxy.ts, lib, docs]"),
+    ("scripts/check-no-hardcoded-literals.mjs", "scan roots [app, proxy.ts, lib, features]"),
+    ("scripts/check-no-runtime-cdn.mjs", "scan roots [app, proxy.ts, lib, docs, features]"),
     ("scripts/check-service-import.mjs", "lib/supabase/server-only/ (quarantine directory)"),
     ("scripts/check-service-import.mjs", "scan roots [app, features, components]"),
+    ("scripts/check-zod-coverage.mjs", "features/ (directory)"),
 ]
 
 KNOWN_GAPS = [
@@ -483,13 +484,15 @@ def main():
     do_pair(results, "scripts/check-enum-keys.mjs",
             ["node", "scripts/check-enum-keys.mjs"], FileProbe("supabase/schema.sql"))
     do_pair(results, "scripts/check-no-hardcoded-literals.mjs",
-            ["node", "scripts/check-no-hardcoded-literals.mjs"], RootsProbe(["app", "proxy.ts", "lib"]))
+            ["node", "scripts/check-no-hardcoded-literals.mjs"], RootsProbe(["app", "proxy.ts", "lib", "features"]))
     do_pair(results, "scripts/check-no-runtime-cdn.mjs",
-            ["node", "scripts/check-no-runtime-cdn.mjs"], RootsProbe(["app", "proxy.ts", "lib", "docs"]))
+            ["node", "scripts/check-no-runtime-cdn.mjs"], RootsProbe(["app", "proxy.ts", "lib", "docs", "features"]))
     do_pair(results, "scripts/check-service-import.mjs",
             ["node", "scripts/check-service-import.mjs"], DirProbe("lib/supabase/server-only"))
     do_pair(results, "scripts/check-service-import.mjs",
             ["node", "scripts/check-service-import.mjs"], RootsProbe(["app", "features", "components"]))
+    do_pair(results, "scripts/check-zod-coverage.mjs",
+            ["node", "scripts/check-zod-coverage.mjs"], DirProbe("features"))
 
     proven = sum(1 for r in results if r["proven"])
     print(f"\n=== {proven}/{len(results)} pairs proven this run ===")

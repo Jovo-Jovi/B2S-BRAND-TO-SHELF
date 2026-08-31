@@ -1378,6 +1378,17 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       write set does not reach them. Owner: **the task that creates
       `components/`, for that root; the task that creates `features/`, for
       that root.**
+      AMENDED (P02-T14) — **`features/` is covered.** `check-no-runtime-cdn.mjs`
+      and `check-no-hardcoded-literals.mjs` both add `features` to `ROOTS`;
+      floors moved with the true counts (9 → 19 and 7 → 17).
+      `check-service-import.mjs` and `check-data-boundary.mjs` already named
+      the root; their floors moved with the files that now live under it
+      (1 → 12 scanned, and 10 → 20 files / 3 → 4 import sites). Those four
+      floor and root moves are changed conditions, not new premises, and
+      add no `PROVEN_PAIRS` entry. Row stays OPEN: `components/` belongs to
+      the design-surface catalog task, which is not this one, and closing
+      the whole row would close a half that has not happened. Owner: **the
+      task that creates `components/`, for that root.**
 - [x] CF-95 — The deployment and drift pipeline is wired but not live, and both
       remaining steps are owner actions rather than builder work.
       (1) `vercel git connect` failed against the repository: the Vercel GitHub
@@ -2803,3 +2814,20 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       grant reaches everything a wide one would. Owner: the task that adds a
       second `consent_scope` value, which must make scope a predicate in the
       same migration.
+- [ ] CF-151 — The done-steps verdict column is filled by the builder's own
+      PR-17 follow-up commit before the reviewer has issued a verdict.
+      Commit `1da5289` wrote "verdict PASS" into the P02-T13 row; `cce71e7`,
+      `ed0e5e7` and `bdc82ee` did the same for P02-T12, P02-T11 and P02-T10.
+      PR-17 rules the opposite: the sha is a value the builder cannot know
+      until after the commit, and the verdict "is the reviewer's and arrives
+      later", to be filled by the next land task carrying the reviewer's
+      verdict for the previous one. Every pre-filled verdict so far has
+      matched the reviewer's, which is precisely the danger: the record
+      cannot distinguish a verdict that was issued from one that was
+      assumed, and a FAIL would have landed in the table as a PASS until
+      the next task corrected it. That is PR-21's shape — an absent check
+      reported as a passing one — inside the state file the whole method
+      reads first. Found by the reviewer at `1da5289`. Owner: the P02
+      readiness task, which either moves the column to the next land task
+      as PR-17 states, or supersedes that clause with a new precedent
+      permitting a pre-fill and naming what corrects it on a non-PASS.

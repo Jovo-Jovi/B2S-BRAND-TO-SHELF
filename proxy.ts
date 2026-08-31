@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { defaultLocale, locales } from "./app/[locale]/dictionaries";
+import { updateSession } from "./lib/supabase/session";
 
 function detectLocale(request: NextRequest): string {
   const header = request.headers.get("accept-language");
@@ -22,23 +23,23 @@ function detectLocale(request: NextRequest): string {
   return defaultLocale;
 }
 
-// Runs before route resolution, session resolution and every authorization
-// gate — the ordering ADR-007 fixes so no later gate can be placed ahead of
-// locale normalisation.
-export function proxy(request: NextRequest) {
+// Locale is normalised BEFORE any authorization gate (ADR-007), then the
+// session is resolved. A locale redirect does not refresh the session; the
+// following request, now localized, does.
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const pathnameHasLocale = locales.some(
     (locale) => pathname === `/${locale}` || pathname.startsWith(`/${locale}/`),
   );
-  if (pathnameHasLocale) {
-    return NextResponse.next();
+  if (!pathnameHasLocale) {
+    const locale = detectLocale(request);
+    const url = request.nextUrl.clone();
+    url.pathname = `/${locale}${pathname}`;
+    return NextResponse.redirect(url);
   }
 
-  const locale = detectLocale(request);
-  const url = request.nextUrl.clone();
-  url.pathname = `/${locale}${pathname}`;
-  return NextResponse.redirect(url);
+  return updateSession(request);
 }
 
 export const config = {

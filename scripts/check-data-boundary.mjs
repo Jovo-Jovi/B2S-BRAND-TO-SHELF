@@ -23,10 +23,12 @@ const SCANNED_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx", ".mts", ".mjs"
 // check-no-hardcoded-literals. Floors below are the true counts as of this
 // commit (P02-T11, CF-148): 10 files under [app, lib, __tests__, proxy.ts]
 // (features/ and components/ do not exist yet) and 3 Supabase import sites,
-// all inside lib/supabase/. Raise both the day either count grows; never
-// lower either to make a shrinking result pass.
-const MINIMUM_FILES_SCANNED = 10;
-const MINIMUM_IMPORT_SITES = 3;
+// all inside lib/supabase/. P02-T14 creates features/ and lib/supabase/session.ts:
+// 20 files and 4 import sites. Raise both the day either count grows; never
+// lower either to make a shrinking result pass. Changed condition, not a new
+// premise: PROVEN_PAIRS does not gain a pair for this guard.
+const MINIMUM_FILES_SCANNED = 20;
+const MINIMUM_IMPORT_SITES = 4;
 
 // An import of any Supabase client package, in either module syntax.
 const SUPABASE_LIBRARY_IMPORT =
