@@ -2,7 +2,7 @@
 
 **Status:** AUTHORED, Platform tier. Precedence slot 6.
 **Authored:** 2026-08-01 by the reviewer surface.
-**Depends on:** `DOMAIN_MODEL.md` (87 entities, 9 tiers), `TENANCY_MODEL.md`,
+**Depends on:** `DOMAIN_MODEL.md` (88 entities, 9 tiers), `TENANCY_MODEL.md`,
 `SECURITY_MODEL.md`, `GLOSSARY.md`, `ARCHITECTURE.md`.
 
 > **Scope of this revision.** `DOMAIN_MODEL.md` says what exists. This says how it
@@ -164,8 +164,8 @@ business: an operator who cannot read it cannot tell whether the access they
 hold is live, revoked or lapsed. `subscription` and `feature_flag` join this
 class when billing lands.
 
-**Tenant business data — `activity_event`, and every table in every tier after
-this one.** **No operator policy on the table at all.** An operator reaches a
+**Tenant business data — `activity_event`, `invitation`, and every table in every
+tier after this one.** **No operator policy on the table at all.** An operator reaches a
 business row only through a *declared read path* — a `security definer` function
 that (1) refuses a caller who is not an operator, (2) refuses unless
 `has_live_consent_grant(tenant_id)` is true at that moment, (3) writes an
@@ -202,7 +202,7 @@ explicitly not member-writable.
 
 ## 3. The Platform tier
 
-Six tables and four enums for Release 1. §3.7 is `role`, which is an enum,
+Seven tables and four enums for Release 1. §3.7 is `role`, which is an enum,
 deliberately not a table, and the only one of the four with a subsection of its
 own. The other three — `tenant_status`, `membership_status` and `consent_scope`
 — are declared inline in the column tables of §3.1, §3.3 and §3.5. That is why
@@ -210,7 +210,7 @@ this line read "one enum" until P01-T06-FIX: every value was specified and only
 the stated total was wrong, which is PR-15's exact shape. The count is now
 asserted against `supabase/schema.sql` by `scripts/check_stated_counts.py`.
 `subscription` and `feature_flag` are Release 3 (`SCOPE.md`) and land with
-billing.
+billing. §3.8 `invitation` is the seventh table, landed with OD-G16.
 
 **The four enums:** `role` · `tenant_status` · `membership_status` ·
 `consent_scope`
@@ -229,8 +229,8 @@ One company. One master `brand`. The root of every scope chain.
 | `id` | uuid pk | |
 | `name` | text not null | The company's own name. Not an identifier |
 | `slug` | text not null unique | URL-safe, lowercase, immutable after creation |
-| `base_currency` | text not null | ISO 4217. Drives money precision, CS-03 |
-| `default_locale` | text not null | `en` or `ar` at R1 |
+| `base_currency` | text not null | ISO 4217. CHECK: `EGP`, `USD`, `SAR`, `AED`, `EUR` (OD-G17) |
+| `default_locale` | text not null | CHECK: `en`, `ar` (OD-G17). A third locale implies a translation surface that does not exist |
 | `status` | enum not null | `active`, `suspended`, `closed` |
 | provenance + `archived_at` | | per §1 |
 
@@ -273,14 +273,26 @@ Three properties are structural rather than checked, and each is asserted:
 It validates `name` and `slug` against the shapes this section states in prose
 and the table carries no constraint for, because it is `tenant`'s only writer
 and therefore the only place that shape can be established.
-`base_currency` and `default_locale` are passed through unvalidated: this
-section states their ranges, the table constrains neither, and the gap became
-reachable for the first time when this path landed. **CF-130 owns it and it is
-not closed here.**
+`base_currency` and `default_locale` are constrained on the table (OD-G17):
+`tenant_default_locale_permitted` accepts `en` and `ar`;
+`tenant_base_currency_permitted` accepts `EGP`, `USD`, `SAR`, `AED`, `EUR`.
+A CHECK, not an enum, so P07 can drop the constraint and add a foreign key to
+the Settings entities without rewriting the column. A direct `provision_tenant`
+call with any other value fails the INSERT — the wizard does not exist and is
+not the constraint (ADR-003). 27a and 27b assert both directions, rejection
+and acceptance, for each field. Zero tenant rows existed when the constraints
+landed, so there was no backfill.
 
-**Not rate-limited.** Any authenticated `Member` may provision repeatedly, and
-each call is a tenant, a membership and an event. Nothing bounds that and no
-mechanism for bounding it is decided. **CF-129 owns it.**
+**Bounded, as of OD-G18.** A Member may own at most three active `Tenant`s and
+perform at most three provisioning acts per rolling 24 hours, counted from
+`activity_event` where the action is `tenant.provisioned` and the actor is the
+caller. Both numbers are policy, hardcoded to the free plan. The race a bare
+count would lose is closed by an xact-scoped advisory lock on the member id
+(`pg_advisory_xact_lock(1818, hashtext(caller))`), proven by 28d: two
+concurrent calls against one member, exactly one succeeds. A refusal is not
+recorded — `activity_event` is tenant-scoped and a refusal has no tenant —
+and leaves no tenant, membership or event (28e). Slug squatting is unsolved:
+the cap bounds tenants, not slugs.
 
 ### 3.2 `member`
 A person. Not tenant-scoped: one person may belong to several tenants over time,
@@ -323,7 +335,7 @@ refusal and that the row already held is unchanged, field by field, afterwards.
 `tenant`, and it writes no `activity_event` — `activity_event.tenant_id` is
 `not null` and a fresh `Member` belongs to no tenant. `current_tenant_id()`
 resolves null for them, which is §2.1's first contract row, and every policy in
-this schema reads them zero rows. 24a asserts both, on all six tables.
+this schema reads them zero rows. 24a asserts both, on all seven tables.
 `created_by` is left null: rule 4's provenance column references `member (id)`
 and no member created this row — the person did, by proving an address, which
 `id` already records.
@@ -509,6 +521,64 @@ this table's.
 storage does not need a row per value. **This is a deliberate divergence between
 the domain count and the table count, recorded here so the two are never
 reconciled by mistake.**
+
+### 3.8 `invitation`
+A tenant-scoped offer addressed to an email address, not to an existing
+`Member` (OD-G16). The shape that lets an `Owner` invite a person who holds
+no `member` row and whom `member_select_colleague` would never show them.
+Acceptance is a single act: the invitee, having signed in and proven the
+address (OD-G13), activates a `Membership` in the same motion. An `Owner`
+write never produces an active `Membership` for anyone but the writer;
+`membership_active_is_self_only` is untouched.
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid pk | The capability the invitation link carries |
+| `tenant_id` | uuid not null → tenant | |
+| `email` | citext not null | The invited address. Not a `member.id` |
+| `role` | enum not null | The `role` the resulting `membership` will carry |
+| `expires_at` | timestamptz not null | A pending invitation past this instant cannot be accepted |
+| `accepted_at` | timestamptz null | Set once, by `accept_invitation`. Spent when not null |
+| `accepted_by` | uuid null → member | Null iff `accepted_at` is null |
+| provenance + `archived_at` | | per §1. Archive withdraws a pending offer |
+
+**Pending** is `accepted_at is null` and `expires_at > now()` and
+`archived_at is null`. **Spent** is `accepted_at is not null`. **Expired** is
+derived from `expires_at`. No status enum: two states the columns already
+distinguish, and a CHECK here supersedes the same way §3.1's locale and
+currency constraints do.
+
+**RLS.** SELECT where `tenant_id = current_tenant_id()`. INSERT restricted to
+the current tenant's `Owner`, and the row must land pending — `accepted_at`
+null, `archived_at` null, `expires_at` in the future. UPDATE restricted to
+the current tenant's `Owner` withdrawing a pending row (`archived_at`); the
+grant is column-scoped to `archived_at` alone, so an Owner cannot mark an
+invitation accepted, change the address, or change the role. **No DELETE
+policy. No operator policy** — `invitation` is tenant business data under
+§2's operator rule, and the invited address is not a support-session fact.
+An unaffiliated member reads nothing; an Owner of tenant A cannot read,
+alter or accept an invitation belonging to tenant B. 29c and 29g assert
+both.
+
+**The write path for acceptance, and it is the only one that produces a
+membership from an invitation.** `accept_invitation(invitation_id)` — a
+`security definer` function owned by the schema owner, `EXECUTE` granted to
+`authenticated` and to nobody else. It reads `auth.users.email_confirmed_at`
+through `caller_email_is_verified()`, matches the caller's address to the
+invitation, inserts the caller's own `active` `membership`, and spends the
+invitation, in one transaction. There is no member parameter: the member is
+`auth.uid()`. An unverified identity is refused before the invitation is
+read, so that refusal leaks nothing about whether the id exists. Every
+invitation-side refusal — missing, spent, expired, archived, addressed to
+someone else, already a member — raises the same SQLSTATE and the same
+message, which is §1's existence property holding by construction. 29a, 29b,
+29d, 29e and 29f assert the act; 29c asserts the cross-tenant half.
+
+The existing `membership_accept_invitation` policy — invite-then-accept for
+a person who already holds a `member` row — now requires
+`caller_email_is_verified()` as well. Both accept paths enforce OD-G13's
+invariant. The policy is not a way to accept an email invitation: that
+invitation is not a `membership` row.
 
 ---
 

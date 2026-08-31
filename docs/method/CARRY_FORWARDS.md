@@ -2168,7 +2168,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       CLOSED (P02-T01) — the :228 bullet now states where the register was promoted
       without restating a total, exactly one current-tense figure remains, and
       `check_stated_counts.py` asserts it against `DECISIONS.md` §2.
-- [ ] CF-121 — The invitation model had no way to invite anyone who had not already
+- [x] CF-121 — The invitation model had no way to invite anyone who had not already
       signed up, and no way to find them if they had. `member.id` references
       `auth.users (id)` and `membership.member_id` is `not null references
       public.member (id)`, so an invitation required an existing `Member` row. There
@@ -2181,10 +2181,22 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       to an email address and signing in through the link is the acceptance. The row
       stays OPEN because implementation and proof are owed, on the same footing as
       CF-103's remainder in this commit. Owner: **the P02 task that writes the
-      invitation flow**, closing on the `DATA_MODEL.md` §3 amendment landing with
+      invitation flow**,       closing on the `DATA_MODEL.md` §3 amendment landing with
       its migration and on assertions that an invitation issued to an address with
       no `Member` is accepted by exactly the person who proves that address, and by
       nobody else.
+      CLOSED (P02-T12) — OD-G16's implementation. `public.invitation` is
+      tenant-scoped and RLS-protected; `accept_invitation(uuid)` is the single
+      act that spends it; `caller_email_is_verified()` reads
+      `auth.users.email_confirmed_at` so OD-G13's invariant is enforced in the
+      data layer. Assertions **29a–29g** prove the flow: 29a is the named close
+      criterion (issued to an address with no `member` row, accepted by exactly
+      the person who proves that address, and by nobody else — the issuing
+      Owner's accept and an Owner INSERT of an `active` membership for the
+      invitee both refused). 29b unverified; 29c cross-tenant read/alter/accept;
+      29d spent replay; 29e expired; 29f exactly one active membership and no
+      other row; 29g the invited address unread by an unaffiliated member.
+      `membership_active_is_self_only` is untouched. Owner: none outstanding.
 - [x] CF-122 — `SESSION_CONTEXT.md` restates carry-forward content that no check
       asserts, and three restatements were stale at `ffa226b`: the open-ids
       section's CF-93 line still assigned gaps 1, 2, 3, 4 and 7 to P02 after the

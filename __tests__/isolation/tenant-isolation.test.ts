@@ -110,7 +110,7 @@ afterAll(async () => {
 // ---------------------------------------------------------------------------
 
 describe("proof 1 — RLS is enabled on every table", () => {
-  it("pg_class.relrowsecurity is true for all six tables, zero exceptions", async () => {
+  it("pg_class.relrowsecurity is true for every public table, zero exceptions", async () => {
     const rows = await sql<{ table_name: string; rls_enabled: boolean }>(
       `select c.relname as table_name, c.relrowsecurity as rls_enabled
          from pg_class c
@@ -256,6 +256,7 @@ describe("proof 4 — cross-tenant reach on every table, both directions", () =>
       [a.owner, "operator", []],
       [a.owner, "consent_grant", [a.consentGrantId]],
       [a.owner, "activity_event", [a.activityEventId]],
+      [a.owner, "invitation", [a.invitationId]],
 
       // Tenant A's viewer. consent_grant is owner-only by policy, so the empty
       // read there is the specified behaviour rather than a fail-closed symptom.
@@ -265,6 +266,7 @@ describe("proof 4 — cross-tenant reach on every table, both directions", () =>
       [a.viewer, "operator", []],
       [a.viewer, "consent_grant", []],
       [a.viewer, "activity_event", [a.activityEventId]],
+      [a.viewer, "invitation", [a.invitationId]],
 
       // Tenant B's owner — the mirror image.
       [b.owner, "tenant", [b.id]],
@@ -273,6 +275,7 @@ describe("proof 4 — cross-tenant reach on every table, both directions", () =>
       [b.owner, "operator", []],
       [b.owner, "consent_grant", [b.consentGrantId]],
       [b.owner, "activity_event", [b.activityEventId]],
+      [b.owner, "invitation", [b.invitationId]],
 
       // The unaffiliated member: their own member row, and nothing anywhere else.
       [unaffiliated, "tenant", []],
@@ -281,6 +284,7 @@ describe("proof 4 — cross-tenant reach on every table, both directions", () =>
       [unaffiliated, "operator", []],
       [unaffiliated, "consent_grant", []],
       [unaffiliated, "activity_event", []],
+      [unaffiliated, "invitation", []],
     ];
 
     const idsOf = (t: typeof a) => [
@@ -289,6 +293,7 @@ describe("proof 4 — cross-tenant reach on every table, both directions", () =>
       t.viewerMembershipId,
       t.consentGrantId,
       t.activityEventId,
+      t.invitationId,
       t.owner.authId,
       t.viewer.authId,
     ];
@@ -363,6 +368,16 @@ describe("proof 4 — cross-tenant reach on every table, both directions", () =>
         "activity_event",
         { id: randomUUID(), tenant_id: tenantId, actor_member_id: identity.authId, action: `${SYNTHETIC_PREFIX}probe`, entity_type: "Tenant" },
       ],
+      [
+        "invitation",
+        {
+          id: randomUUID(),
+          tenant_id: tenantId,
+          email: `${SYNTHETIC_PREFIX}probe-invite-${randomUUID().slice(0, 8)}@example.com`,
+          role: "viewer",
+          expires_at: futureIso(1),
+        },
+      ],
       ["operator", { id: randomUUID(), granted_at: new Date().toISOString() }],
     ];
 
@@ -370,9 +385,9 @@ describe("proof 4 — cross-tenant reach on every table, both directions", () =>
     // any active member may append an activity_event to it. Nothing else is
     // reachable, and provisioning a tenant or a member never is.
     const allowed: Record<string, TableName[]> = {
-      [a.owner.label]: ["membership", "consent_grant", "activity_event"],
+      [a.owner.label]: ["membership", "consent_grant", "activity_event", "invitation"],
       [a.viewer.label]: ["activity_event"],
-      [b.owner.label]: ["membership", "consent_grant", "activity_event"],
+      [b.owner.label]: ["membership", "consent_grant", "activity_event", "invitation"],
       [unaffiliated.label]: [],
     };
 
@@ -414,7 +429,7 @@ describe("proof 4 — cross-tenant reach on every table, both directions", () =>
       "4b",
       "INSERT: permitted writes land, the rest are refused",
       failures,
-      `${probes} insert probes across 4 identities x 6 tables; ${permittedLanded} permitted inserts landed and were removed`,
+      `${probes} insert probes across 4 identities x ${TABLES.length} tables; ${permittedLanded} permitted inserts landed and were removed`,
     );
     expect(failures).toEqual([]);
   });
@@ -547,6 +562,8 @@ describe("proof 4 — cross-tenant reach on every table, both directions", () =>
       ["consent_grant", b.consentGrantId],
       ["activity_event", a.activityEventId],
       ["activity_event", b.activityEventId],
+      ["invitation", a.invitationId],
+      ["invitation", b.invitationId],
     ];
 
     const failures: string[] = [];
@@ -571,7 +588,7 @@ describe("proof 4 — cross-tenant reach on every table, both directions", () =>
       "4d",
       "DELETE: refused everywhere, for every caller",
       failures,
-      `${probes} delete probes — 4 identities x ${targets.length} targets spanning all 6 tables, own and foreign; ` +
+      `${probes} delete probes — 4 identities x ${targets.length} targets spanning all ${TABLES.length} tables, own and foreign; ` +
         `every target re-read and verified still present`,
     );
     expect(failures).toEqual([]);
@@ -637,6 +654,13 @@ describe("proof 6 — no row may carry another tenant's tenant_id", () => {
         action: `${SYNTHETIC_PREFIX}cross-tenant`,
         entity_type: "Tenant",
       },
+      invitation: {
+        id: randomUUID(),
+        tenant_id: fixture.b.id,
+        email: `${SYNTHETIC_PREFIX}cross-invite-${randomUUID().slice(0, 8)}@example.com`,
+        role: "viewer",
+        expires_at: futureIso(1),
+      },
     };
 
     for (const table of TENANT_SCOPED_TABLES) {
@@ -697,6 +721,7 @@ describe("proof 7 — the operator surface", () => {
       ["operator", [fixture.operator.authId]],
       ["member", [fixture.operator.authId]],
       ["membership", []],
+      ["invitation", []],
     ];
 
     for (const [table, expected] of expectations) {
@@ -944,7 +969,7 @@ describe("proof 13 — anon reads nothing", () => {
 // ---------------------------------------------------------------------------
 
 describe("proof 14 — nothing in public bypasses RLS by construction", () => {
-  it("public holds six ordinary tables and no view, materialised view or foreign table", async () => {
+  it("public holds only ordinary tables and no view, materialised view or foreign table", async () => {
     const rows = await sql<{ relname: string; relkind: string; owner: string }>(
       `select c.relname, c.relkind::text as relkind, pg_get_userbyid(c.relowner) as owner
          from pg_class c
@@ -962,7 +987,7 @@ describe("proof 14 — nothing in public bypasses RLS by construction", () => {
       }
     }
     if (!sameSet(rows.map((r) => r.relname), [...TABLES])) {
-      failures.push(`public holds [${rows.map((r) => r.relname).join(", ")}], expected exactly the six tables`);
+      failures.push(`public holds [${rows.map((r) => r.relname).join(", ")}], expected exactly the ${TABLES.length} tables`);
     }
 
     record(
@@ -1021,6 +1046,8 @@ describe("proof 15 — the roles and the function surface", () => {
       "materialise_member",
       "operator_read_activity_event",
       "provision_tenant",
+      "caller_email_is_verified",
+      "accept_invitation",
     ];
     if (!sameSet(functions.map((f) => f.proname), expectedFunctions)) {
       failures.push(`public functions are [${functions.map((f) => f.proname).join(", ")}], expected [${expectedFunctions.join(", ")}]`);
@@ -1088,6 +1115,7 @@ describe("proof 16 — a foreign id is indistinguishable from a nonexistent one"
       ["operator", fixture.operator.authId],
       ["consent_grant", fixture.b.consentGrantId],
       ["activity_event", fixture.b.activityEventId],
+      ["invitation", fixture.b.invitationId],
     ];
 
     for (const [table, foreignId] of foreignIds) {
@@ -1868,6 +1896,8 @@ describe("proof 22 — every function's EXECUTE privilege is explicit (CF-105)",
       materialise_member: "postgres",
       operator_read_activity_event: "authenticated,postgres",
       provision_tenant: "authenticated,postgres",
+      caller_email_is_verified: "authenticated,postgres",
+      accept_invitation: "authenticated,postgres",
     };
 
     for (const row of rows) {
@@ -1928,7 +1958,7 @@ describe("proof 22 — every function's EXECUTE privilege is explicit (CF-105)",
 // ---------------------------------------------------------------------------
 
 /** The tables whose contents move when the selection moves. */
-const SELECTOR_TABLES: TableName[] = ["tenant", "membership", "consent_grant", "activity_event"];
+const SELECTOR_TABLES: TableName[] = ["tenant", "membership", "consent_grant", "activity_event", "invitation"];
 
 type Resolution = { status: number; body: string; value: string | null };
 
@@ -2778,7 +2808,7 @@ async function resolution(caller: Caller): Promise<Resolution> {
 }
 
 /**
- * What the caller reads on all six tables, as id sets.
+ * What the caller reads on every public table, as id sets.
  *
  * A refusal carrying 42501 is zero reach and lands as the empty set: anon holds
  * no policy on any of these tables, so it is refused outright rather than
@@ -3157,46 +3187,62 @@ type ProvisionedRows = {
   provisioned_events: number;
 };
 
+async function provision(
+  who: Caller,
+  label: string,
+  slug: string,
+  currency = "SAR",
+  locale = "en",
+): Promise<Provisioning> {
+  const answer = await probe.rpc(who, "provision_tenant", {
+    p_name: `${SYNTHETIC_PREFIX}${label}`,
+    p_slug: slug,
+    p_base_currency: currency,
+    p_default_locale: locale,
+  });
+  let tenantId: string | null = null;
+  try {
+    const parsed = JSON.parse(answer.body === "" ? "null" : answer.body) as unknown;
+    if (typeof parsed === "string") tenantId = parsed;
+  } catch {
+    // A refusal carries a Postgres error object rather than a uuid.
+  }
+  return { status: answer.status, body: answer.body, tenantId };
+}
+
+async function provisionedRows(memberId: string): Promise<ProvisionedRows> {
+  const [row] = await sql<ProvisionedRows>(`
+    select
+      (select count(*) from public.tenant t
+        where t.created_by = '${memberId}')::int                            as tenants,
+      (select count(*) from public.membership m
+        where m.member_id = '${memberId}')::int                             as memberships,
+      (select count(*) from public.membership m
+        where m.member_id = '${memberId}' and m.role = 'owner'
+          and m.status = 'active' and m.archived_at is null
+          and m.accepted_at is not null)::int                               as active_owner,
+      (select count(*) from public.activity_event e
+        where e.actor_member_id = '${memberId}')::int                       as events,
+      (select count(*) from public.activity_event e
+        where e.actor_member_id = '${memberId}'
+          and e.action = 'tenant.provisioned' and e.entity_type = 'Tenant'
+          and e.entity_id = e.tenant_id and e.payload is null)::int         as provisioned_events
+  `);
+  return row;
+}
+
+function rpcError(body: string): { code: string; message: string } {
+  try {
+    const parsed = JSON.parse(body) as { code?: string; message?: string };
+    return { code: parsed.code ?? "", message: parsed.message ?? body.slice(0, 300) };
+  } catch {
+    return { code: "", message: body.slice(0, 300) };
+  }
+}
+
 describe("proof 25 — tenant provisioning (OD-G13 act two, DATA_MODEL §3.1/§3.3/§3.6)", () => {
   let pair: { who: Identity; slug: string; answer: Provisioning }[];
 
-  const provision = async (who: Caller, label: string, slug: string): Promise<Provisioning> => {
-    const answer = await probe.rpc(who, "provision_tenant", {
-      p_name: `${SYNTHETIC_PREFIX}${label}`,
-      p_slug: slug,
-      p_base_currency: "SAR",
-      p_default_locale: "en",
-    });
-    let tenantId: string | null = null;
-    try {
-      const parsed = JSON.parse(answer.body === "" ? "null" : answer.body) as unknown;
-      if (typeof parsed === "string") tenantId = parsed;
-    } catch {
-      // A refusal carries a Postgres error object rather than a uuid.
-    }
-    return { status: answer.status, body: answer.body, tenantId };
-  };
-
-  const provisionedRows = async (memberId: string): Promise<ProvisionedRows> => {
-    const [row] = await sql<ProvisionedRows>(`
-      select
-        (select count(*) from public.tenant t
-          where t.created_by = '${memberId}')::int                            as tenants,
-        (select count(*) from public.membership m
-          where m.member_id = '${memberId}')::int                             as memberships,
-        (select count(*) from public.membership m
-          where m.member_id = '${memberId}' and m.role = 'owner'
-            and m.status = 'active' and m.archived_at is null
-            and m.accepted_at is not null)::int                               as active_owner,
-        (select count(*) from public.activity_event e
-          where e.actor_member_id = '${memberId}')::int                       as events,
-        (select count(*) from public.activity_event e
-          where e.actor_member_id = '${memberId}'
-            and e.action = 'tenant.provisioned' and e.entity_type = 'Tenant'
-            and e.entity_id = e.tenant_id and e.payload is null)::int         as provisioned_events
-    `);
-    return row;
-  };
 
   beforeAll(async () => {
     const runId = randomUUID().slice(0, 8);
@@ -3650,7 +3696,7 @@ describe("proof 25 — tenant provisioning (OD-G13 act two, DATA_MODEL §3.1/§3
     expect(failures).toEqual([]);
   });
 
-  it("25e a provisioned tenant is invisible to the other's owner, on all six tables and both ways", async () => {
+  it("25e a provisioned tenant is invisible to the other's owner, on every table and both ways", async () => {
     const failures: string[] = [];
     const [one, two] = pair;
 
@@ -3969,6 +4015,803 @@ describe("proof 26 — a duplicated tenant selector (CF-128)", () => {
 });
 
 // ---------------------------------------------------------------------------
+// P02-T12 — OD-G17, OD-G18, OD-G16. Every probe lands permanently (OD-H11).
+// ---------------------------------------------------------------------------
+
+describe("proof 27 — OD-G17 locale and currency, both directions", () => {
+  it(
+    "27a default_locale rejects every value outside {en, ar} and accepts both inside",
+    async () => {
+      const failures: string[] = [];
+      const runId = randomUUID().slice(0, 8);
+      const who = await makeIdentity(config, "g17-locale", runId);
+      const rejected: string[] = [];
+      const accepted: string[] = [];
+
+      const outside = ["fr", "EN", "en-GB", "", "zh"];
+      for (const [index, locale] of outside.entries()) {
+        const slug = `${SYNTHETIC_PREFIX}g17-bad-loc-${runId}-${index}`;
+        const answer = await provision(who, `g17-bad-loc-${runId}-${index}`, slug, "SAR", locale);
+        const rows = await provisionedRows(who.authId);
+        if (answer.status < 400) {
+          failures.push(`locale ${JSON.stringify(locale)}: ACCEPTED ${answer.status} ${answer.body.slice(0, 120)}`);
+        } else if (rows.tenants !== 0) {
+          failures.push(`locale ${JSON.stringify(locale)}: refused but ${rows.tenants} tenant(s) persisted`);
+        } else {
+          rejected.push(`${JSON.stringify(locale)}→${rpcError(answer.body).message.slice(0, 80)}`);
+        }
+      }
+
+      for (const locale of ["en", "ar"]) {
+        const slug = `${SYNTHETIC_PREFIX}g17-ok-loc-${locale}-${runId}`;
+        const before = await provisionedRows(who.authId);
+        const answer = await provision(who, `g17-ok-loc-${locale}-${runId}`, slug, "SAR", locale);
+        const after = await provisionedRows(who.authId);
+        if (answer.status !== 200 || answer.tenantId === null) {
+          failures.push(`locale ${locale}: POSITIVE PATH REFUSED ${answer.status} ${answer.body.slice(0, 200)}`);
+        } else if (after.tenants !== before.tenants + 1) {
+          failures.push(`locale ${locale}: tenants ${before.tenants} → ${after.tenants}, expected +1`);
+        } else {
+          const [row] = await sql<{ default_locale: string }>(
+            `select default_locale from public.tenant where id = '${answer.tenantId}'`,
+          );
+          if (row.default_locale !== locale) {
+            failures.push(`locale ${locale}: stored ${row.default_locale}`);
+          } else {
+            accepted.push(locale);
+          }
+        }
+      }
+
+      record(
+        "27a",
+        "default_locale rejects outside {en, ar} and accepts both values inside",
+        failures,
+        `${outside.length} outside values refused with 0 tenants left: ${rejected.join("; ")}. ` +
+          `Inside accepted and stored: ${accepted.join(", ")}`,
+      );
+      expect(failures).toEqual([]);
+    },
+    240_000,
+  );
+
+  it(
+    "27b base_currency rejects every value outside the five and accepts every value inside",
+    async () => {
+      const failures: string[] = [];
+      const runId = randomUUID().slice(0, 8);
+      const first = await makeIdentity(config, "g17-ccy-a", runId);
+      const second = await makeIdentity(config, "g17-ccy-b", runId);
+      const rejected: string[] = [];
+      const accepted: string[] = [];
+
+      const outside = ["GBP", "egp", "usd", "XXX"];
+      for (const [index, currency] of outside.entries()) {
+        const slug = `${SYNTHETIC_PREFIX}g17-bad-ccy-${runId}-${index}`;
+        const answer = await provision(first, `g17-bad-ccy-${runId}-${index}`, slug, currency, "en");
+        const rows = await provisionedRows(first.authId);
+        if (answer.status < 400) {
+          failures.push(`currency ${JSON.stringify(currency)}: ACCEPTED ${answer.status} ${answer.body.slice(0, 120)}`);
+        } else if (rows.tenants !== 0) {
+          failures.push(`currency ${JSON.stringify(currency)}: refused but ${rows.tenants} tenant(s) persisted`);
+        } else {
+          rejected.push(`${JSON.stringify(currency)}→${rpcError(answer.body).message.slice(0, 80)}`);
+        }
+      }
+
+      // G18 caps one member at three successful provisions. Five accepted
+      // values therefore need two members; the split is not a weakening.
+      const batches: [Identity, string[]][] = [
+        [first, ["EGP", "USD", "SAR"]],
+        [second, ["AED", "EUR"]],
+      ];
+      for (const [who, currencies] of batches) {
+        for (const currency of currencies) {
+          const slug = `${SYNTHETIC_PREFIX}g17-ok-ccy-${currency.toLowerCase()}-${runId}`;
+          const before = await provisionedRows(who.authId);
+          const answer = await provision(who, `g17-ok-ccy-${currency}-${runId}`, slug, currency, "en");
+          const after = await provisionedRows(who.authId);
+          if (answer.status !== 200 || answer.tenantId === null) {
+            failures.push(`currency ${currency}: POSITIVE PATH REFUSED ${answer.status} ${answer.body.slice(0, 200)}`);
+          } else if (after.tenants !== before.tenants + 1) {
+            failures.push(`currency ${currency}: tenants ${before.tenants} → ${after.tenants}, expected +1`);
+          } else {
+            const [row] = await sql<{ base_currency: string }>(
+              `select base_currency from public.tenant where id = '${answer.tenantId}'`,
+            );
+            if (row.base_currency !== currency) {
+              failures.push(`currency ${currency}: stored ${row.base_currency}`);
+            } else {
+              accepted.push(currency);
+            }
+          }
+        }
+      }
+
+      record(
+        "27b",
+        "base_currency rejects outside {EGP, USD, SAR, AED, EUR} and accepts every value inside",
+        failures,
+        `${outside.length} outside values refused with 0 tenants left: ${rejected.join("; ")}. ` +
+          `Inside accepted and stored: ${accepted.join(", ")}`,
+      );
+      expect(failures).toEqual([]);
+    },
+    240_000,
+  );
+});
+
+describe("proof 28 — OD-G18 bounds, including the race", () => {
+  it(
+    "28a the fourth active owned tenant is refused",
+    async () => {
+      const failures: string[] = [];
+      const runId = randomUUID().slice(0, 8);
+      const who = await makeIdentity(config, "g18-owned", runId);
+      const landed: string[] = [];
+
+      for (let n = 1; n <= 3; n += 1) {
+        const slug = `${SYNTHETIC_PREFIX}g18-owned-${runId}-${n}`;
+        const answer = await provision(who, `g18-owned-${runId}-${n}`, slug);
+        if (answer.status !== 200 || answer.tenantId === null) {
+          failures.push(`provision ${n}: REFUSED ${answer.status} ${answer.body.slice(0, 200)}`);
+        } else {
+          landed.push(answer.tenantId);
+        }
+      }
+
+      const before = await provisionedRows(who.authId);
+      const fourth = await provision(who, `g18-owned-${runId}-4`, `${SYNTHETIC_PREFIX}g18-owned-${runId}-4`);
+      const after = await provisionedRows(who.authId);
+
+      if (fourth.status < 400) {
+        failures.push(`fourth tenant: ACCEPTED ${fourth.status} ${fourth.body.slice(0, 200)}`);
+      }
+      if (after.tenants !== 3 || after.active_owner !== 3) {
+        failures.push(`after fourth: tenants=${after.tenants} active_owner=${after.active_owner}, expected 3/3`);
+      }
+      if (after.tenants !== before.tenants || after.memberships !== before.memberships) {
+        failures.push(`fourth call changed counts: ${JSON.stringify(before)} → ${JSON.stringify(after)}`);
+      }
+
+      record(
+        "28a",
+        "A fourth active owned tenant is refused",
+        failures,
+        `3 tenants landed [${landed.join(", ")}]; fourth answered ${fourth.status} ` +
+          `"${rpcError(fourth.body).message.slice(0, 120)}"; owned remains ${after.active_owner}`,
+      );
+      expect(failures).toEqual([]);
+    },
+    240_000,
+  );
+
+  it(
+    "28b the fourth provisioning act in 24 hours is refused with fewer than three owned tenants",
+    async () => {
+      const failures: string[] = [];
+      const runId = randomUUID().slice(0, 8);
+      const who = await makeIdentity(config, "g18-rate", runId);
+
+      await sql(`
+        insert into public.activity_event (tenant_id, actor_member_id, action, entity_type, entity_id, occurred_at)
+        values
+          ('${fixture.a.id}', '${who.authId}', 'tenant.provisioned', 'Tenant', '${fixture.a.id}', now()),
+          ('${fixture.a.id}', '${who.authId}', 'tenant.provisioned', 'Tenant', '${fixture.a.id}', now()),
+          ('${fixture.a.id}', '${who.authId}', 'tenant.provisioned', 'Tenant', '${fixture.a.id}', now())
+      `);
+
+      const before = await provisionedRows(who.authId);
+      if (before.tenants !== 0 || before.active_owner !== 0) {
+        failures.push(`precondition: caller already owns ${before.active_owner} tenant(s)`);
+      }
+
+      const answer = await provision(who, `g18-rate-${runId}`, `${SYNTHETIC_PREFIX}g18-rate-${runId}`);
+      const after = await provisionedRows(who.authId);
+
+      if (answer.status < 400) {
+        failures.push(`rate-limited act: ACCEPTED ${answer.status} ${answer.body.slice(0, 200)}`);
+      }
+      if (after.tenants !== 0 || after.memberships !== 0) {
+        failures.push(`rate-limited act left tenants=${after.tenants} memberships=${after.memberships}`);
+      }
+
+      record(
+        "28b",
+        "A fourth provisioning act inside 24 hours is refused even when the caller owns none",
+        failures,
+        `3 tenant.provisioned events inserted for a member who owns 0; provision answered ${answer.status} ` +
+          `"${rpcError(answer.body).message.slice(0, 120)}"; tenants=${after.tenants} memberships=${after.memberships}`,
+      );
+      expect(failures).toEqual([]);
+    },
+    240_000,
+  );
+
+  it(
+    "28c an act outside the 24-hour window succeeds",
+    async () => {
+      const failures: string[] = [];
+      const runId = randomUUID().slice(0, 8);
+      const who = await makeIdentity(config, "g18-window", runId);
+
+      await sql(`
+        insert into public.activity_event (tenant_id, actor_member_id, action, entity_type, entity_id, occurred_at)
+        values
+          ('${fixture.a.id}', '${who.authId}', 'tenant.provisioned', 'Tenant', '${fixture.a.id}', now() - interval '25 hours'),
+          ('${fixture.a.id}', '${who.authId}', 'tenant.provisioned', 'Tenant', '${fixture.a.id}', now() - interval '25 hours'),
+          ('${fixture.a.id}', '${who.authId}', 'tenant.provisioned', 'Tenant', '${fixture.a.id}', now() - interval '25 hours')
+      `);
+
+      const before = await provisionedRows(who.authId);
+      const answer = await provision(who, `g18-window-${runId}`, `${SYNTHETIC_PREFIX}g18-window-${runId}`);
+      const after = await provisionedRows(who.authId);
+
+      if (answer.status !== 200 || answer.tenantId === null) {
+        failures.push(`act outside the window: REFUSED ${answer.status} ${answer.body.slice(0, 200)}`);
+      }
+      if (after.tenants !== before.tenants + 1 || after.active_owner !== 1) {
+        failures.push(`after outside-window act: tenants=${after.tenants} active_owner=${after.active_owner}`);
+      }
+
+      record(
+        "28c",
+        "A provisioning act older than 24 hours does not consume the rolling window",
+        failures,
+        `3 events at now()-25h; provision answered ${answer.status} tenant=${answer.tenantId}; ` +
+          `owned ${before.active_owner} → ${after.active_owner}`,
+      );
+      expect(failures).toEqual([]);
+    },
+    240_000,
+  );
+
+  it(
+    "28d two concurrent calls against one member: exactly one succeeds",
+    async () => {
+      const failures: string[] = [];
+      const runId = randomUUID().slice(0, 8);
+      const who = await makeIdentity(config, "g18-race", runId);
+
+      for (const n of [1, 2]) {
+        const answer = await provision(who, `g18-race-pre-${runId}-${n}`, `${SYNTHETIC_PREFIX}g18-race-pre-${runId}-${n}`);
+        if (answer.status !== 200 || answer.tenantId === null) {
+          failures.push(`setup provision ${n}: REFUSED ${answer.status} ${answer.body.slice(0, 200)}`);
+        }
+      }
+
+      const before = await provisionedRows(who.authId);
+      if (before.active_owner !== 2) {
+        failures.push(`precondition: owned ${before.active_owner}, expected 2 so the race is at the bound`);
+      }
+
+      const startedAt = Date.now();
+      const [left, right] = await Promise.all([
+        provision(who, `g18-race-l-${runId}`, `${SYNTHETIC_PREFIX}g18-race-l-${runId}`),
+        provision(who, `g18-race-r-${runId}`, `${SYNTHETIC_PREFIX}g18-race-r-${runId}`),
+      ]);
+      const elapsedMs = Date.now() - startedAt;
+      const after = await provisionedRows(who.authId);
+
+      const successes = [left, right].filter((answer) => answer.status === 200 && answer.tenantId !== null);
+      const refusals = [left, right].filter((answer) => answer.status >= 400);
+
+      if (successes.length !== 1) {
+        failures.push(
+          `concurrent pair produced ${successes.length} success(es) and ${refusals.length} refusal(s); ` +
+            `left=${left.status} right=${right.status}; owned=${after.active_owner}`,
+        );
+      }
+      if (after.active_owner !== 3 || after.tenants !== 3) {
+        failures.push(`after the pair: tenants=${after.tenants} owned=${after.active_owner}, expected 3/3`);
+      }
+      if (successes.length === 2 && after.active_owner === 4) {
+        failures.push("the race was lost: both calls inserted, which is the bare-count failure OD-G18 names");
+      }
+
+      record(
+        "28d",
+        "Two concurrent provisioning calls against one member: exactly one succeeds",
+        failures,
+        `Promise.all of two provision_tenant RPCs for one member already owning 2, distinct slugs, ` +
+          `elapsed ${elapsedMs}ms; successes=${successes.length} (${successes.map((s) => s.tenantId).join(", ")}) ` +
+          `refusals=${refusals.length} (${refusals.map((r) => `${r.status}:${rpcError(r.body).message.slice(0, 60)}`).join("; ")}); ` +
+          `owned ${before.active_owner} → ${after.active_owner}`,
+      );
+      expect(failures).toEqual([]);
+    },
+    240_000,
+  );
+
+  it(
+    "28e a refusal leaves no tenant, membership or event",
+    async () => {
+      const failures: string[] = [];
+      const runId = randomUUID().slice(0, 8);
+      const who = await makeIdentity(config, "g18-refuse", runId);
+
+      for (let n = 1; n <= 3; n += 1) {
+        const answer = await provision(who, `g18-ref-pre-${runId}-${n}`, `${SYNTHETIC_PREFIX}g18-ref-pre-${runId}-${n}`);
+        if (answer.status !== 200) {
+          failures.push(`setup ${n}: ${answer.status} ${answer.body.slice(0, 160)}`);
+        }
+      }
+
+      const before = await provisionedRows(who.authId);
+      const [totalsBefore] = await sql<{ tenants: number; memberships: number; events: number }>(`
+        select
+          (select count(*) from public.tenant)::int as tenants,
+          (select count(*) from public.membership)::int as memberships,
+          (select count(*) from public.activity_event)::int as events
+      `);
+
+      const refused = await provision(who, `g18-ref-${runId}`, `${SYNTHETIC_PREFIX}g18-ref-${runId}`);
+      const after = await provisionedRows(who.authId);
+      const [totalsAfter] = await sql<{ tenants: number; memberships: number; events: number }>(`
+        select
+          (select count(*) from public.tenant)::int as tenants,
+          (select count(*) from public.membership)::int as memberships,
+          (select count(*) from public.activity_event)::int as events
+      `);
+
+      if (refused.status < 400) {
+        failures.push(`expected a refusal, got ${refused.status} ${refused.body.slice(0, 200)}`);
+      }
+      for (const key of ["tenants", "memberships", "active_owner", "events", "provisioned_events"] as const) {
+        if (after[key] !== before[key]) {
+          failures.push(`caller's ${key}: ${before[key]} → ${after[key]}`);
+        }
+      }
+      if (
+        totalsAfter.tenants !== totalsBefore.tenants ||
+        totalsAfter.memberships !== totalsBefore.memberships ||
+        totalsAfter.events !== totalsBefore.events
+      ) {
+        failures.push(
+          `catalog moved: tenants ${totalsBefore.tenants}→${totalsAfter.tenants}, ` +
+            `memberships ${totalsBefore.memberships}→${totalsAfter.memberships}, ` +
+            `events ${totalsBefore.events}→${totalsAfter.events}`,
+        );
+      }
+
+      record(
+        "28e",
+        "A refused provisioning call leaves no tenant, membership or event",
+        failures,
+        `fourth call answered ${refused.status} "${rpcError(refused.body).message.slice(0, 120)}"; ` +
+          `caller ${JSON.stringify(before)} unchanged; catalog tenants/memberships/events ` +
+          `${totalsBefore.tenants}/${totalsBefore.memberships}/${totalsBefore.events} unchanged`,
+      );
+      expect(failures).toEqual([]);
+    },
+    240_000,
+  );
+});
+
+describe("proof 29 — OD-G16 invitation by email, closing CF-121", () => {
+  const accept = async (who: Caller, invitationId: string) => {
+    const answer = await probe.rpc(who, "accept_invitation", { p_invitation_id: invitationId });
+    let membershipId: string | null = null;
+    try {
+      const parsed = JSON.parse(answer.body === "" ? "null" : answer.body) as unknown;
+      if (typeof parsed === "string") membershipId = parsed;
+    } catch {
+      membershipId = null;
+    }
+    return { status: answer.status, body: answer.body, membershipId, error: rpcError(answer.body) };
+  };
+
+  it(
+    "29a an invitation to an address with no member row is accepted by exactly that person",
+    async () => {
+      const failures: string[] = [];
+      const runId = randomUUID().slice(0, 8);
+      const email = `${SYNTHETIC_PREFIX}g16-accept-${runId}@example.com`;
+      const invitationId = randomUUID();
+
+      const issued = await probe.insert(fixture.a.owner, "invitation", {
+        id: invitationId,
+        tenant_id: fixture.a.id,
+        email,
+        role: "viewer",
+        expires_at: futureIso(1),
+      });
+      if (!issued.ok) {
+        failures.push(`owner INSERT invitation: REFUSED ${issued.status} (${issued.code}) ${issued.message}`);
+      }
+
+      const [membersBefore] = await sql<{ n: number }>(
+        `select count(*)::int as n from public.member where email = '${email.replace(/'/g, "''")}'`,
+      );
+      if (membersBefore.n !== 0) {
+        failures.push(`precondition: ${membersBefore.n} member row(s) already hold ${email}`);
+      }
+
+      const invitee = await makeIdentity(config, "g16-accept", runId, email);
+
+      const ownerAccept = await accept(fixture.a.owner, invitationId);
+      if (ownerAccept.status < 400) {
+        failures.push(`issuing owner accepted the invitation: ${ownerAccept.status} ${ownerAccept.body.slice(0, 160)}`);
+      }
+
+      const hijackId = randomUUID();
+      const hijack = await probe.insert(fixture.a.owner, "membership", {
+        id: hijackId,
+        tenant_id: fixture.a.id,
+        member_id: invitee.authId,
+        role: "viewer",
+        status: "active",
+      });
+      if (hijack.ok) {
+        failures.push("owner INSERT active membership for the invitee: ACCEPTED");
+        await sql(`delete from public.membership where id = '${hijackId}'`);
+      }
+
+      const accepted = await accept(invitee, invitationId);
+      if (accepted.status !== 200 || accepted.membershipId === null) {
+        failures.push(`invitee accept: ${accepted.status} ${accepted.body.slice(0, 240)}`);
+      } else {
+        const [row] = await sql<{
+          member_id: string;
+          tenant_id: string;
+          status: string;
+          role: string;
+        }>(`
+          select member_id::text, tenant_id::text, status::text, role::text
+            from public.membership where id = '${accepted.membershipId}'
+        `);
+        if (row.member_id !== invitee.authId) failures.push(`membership.member_id is ${row.member_id}`);
+        if (row.tenant_id !== fixture.a.id) failures.push(`membership.tenant_id is ${row.tenant_id}`);
+        if (row.status !== "active") failures.push(`membership.status is ${row.status}`);
+        if (row.role !== "viewer") failures.push(`membership.role is ${row.role}`);
+      }
+
+      record(
+        "29a",
+        "An invitation issued to an address with no member row is accepted by exactly the person who proves that address",
+        failures,
+        `issued to ${email} while member-count was ${membersBefore.n}; owner accept refused ${ownerAccept.status}; ` +
+          `owner active-membership insert refused ${hijack.status}; invitee accept ${accepted.status} ` +
+          `membership=${accepted.membershipId}`,
+      );
+      expect(failures).toEqual([]);
+    },
+    240_000,
+  );
+
+  it(
+    "29b an unverified identity cannot accept",
+    async () => {
+      const failures: string[] = [];
+      const runId = randomUUID().slice(0, 8);
+      const email = `${SYNTHETIC_PREFIX}g16-unverified-${runId}@example.com`;
+      const invitationId = randomUUID();
+
+      const issued = await probe.insert(fixture.a.owner, "invitation", {
+        id: invitationId,
+        tenant_id: fixture.a.id,
+        email,
+        role: "viewer",
+        expires_at: futureIso(1),
+      });
+      if (!issued.ok) failures.push(`issue: ${issued.status} ${issued.message}`);
+
+      const invitee = await makeIdentity(config, "g16-unverified", runId, email);
+      await sql(`update auth.users set email_confirmed_at = null where id = '${invitee.authId}'`);
+
+      const [confirmed] = await sql<{ v: string | null }>(
+        `select email_confirmed_at::text as v from auth.users where id = '${invitee.authId}'`,
+      );
+      if (confirmed.v !== null) failures.push(`precondition: email_confirmed_at is still ${confirmed.v}`);
+
+      const missing = await accept(invitee, randomUUID());
+      const targeted = await accept(invitee, invitationId);
+
+      if (targeted.status < 400) {
+        failures.push(`unverified accept: ACCEPTED ${targeted.status} ${targeted.body.slice(0, 160)}`);
+      }
+      if (!/verified this email address/i.test(targeted.error.message)) {
+        failures.push(`unverified message was "${targeted.error.message}", expected the verified-identity refusal`);
+      }
+      if (missing.error.code !== targeted.error.code || missing.error.message !== targeted.error.message) {
+        failures.push(
+          `unverified missing vs real diverged: ${missing.error.code}/${missing.error.message} vs ` +
+            `${targeted.error.code}/${targeted.error.message}`,
+        );
+      }
+
+      const [memberships] = await sql<{ n: number }>(
+        `select count(*)::int as n from public.membership where member_id = '${invitee.authId}'`,
+      );
+      if (memberships.n !== 0) failures.push(`unverified accept left ${memberships.n} membership row(s)`);
+
+      record(
+        "29b",
+        "An unverified identity cannot accept, and the refusal does not disclose whether the invitation exists",
+        failures,
+        `email_confirmed_at nulled after sign-in; accept of a real id and of a random id both ${targeted.status} ` +
+          `"${targeted.error.message}" (${targeted.error.code}); memberships=${memberships.n}`,
+      );
+      expect(failures).toEqual([]);
+    },
+    240_000,
+  );
+
+  it(
+    "29c tenant A's owner cannot read, alter or accept tenant B's invitation",
+    async () => {
+      const failures: string[] = [];
+      const { a, b } = fixture;
+
+      const seen = await probe.selectColumns(a.owner, "invitation", "id,email");
+      if (!seen.ids.includes(a.invitationId)) {
+        failures.push(`A-owner SELECT invitation missed own seeded row ${a.invitationId}; read [${seen.ids.join(", ")}]`);
+      }
+      if (seen.ids.includes(b.invitationId)) {
+        failures.push("A-owner SELECT invitation: LEAKED tenant B's invitation");
+      }
+
+      const beforeArchived = await columnValue("invitation", b.invitationId, "archived_at");
+      const withdraw = await probe.update(a.owner, "invitation", b.invitationId, {
+        archived_at: new Date().toISOString(),
+      });
+      const afterArchived = await columnValue("invitation", b.invitationId, "archived_at");
+      if (withdraw.count > 0) failures.push("A-owner PATCH tenant B invitation.archived_at: ACCEPTED");
+      if (afterArchived !== beforeArchived) {
+        failures.push(`A-owner PATCH changed B.archived_at from ${beforeArchived} to ${afterArchived}`);
+      }
+
+      const beforeAccepted = await columnValue("invitation", b.invitationId, "accepted_at");
+      const markSpent = await probe.update(a.owner, "invitation", b.invitationId, {
+        accepted_at: new Date().toISOString(),
+      });
+      const afterAccepted = await columnValue("invitation", b.invitationId, "accepted_at");
+      if (markSpent.ok && markSpent.count > 0) {
+        failures.push("A-owner PATCH tenant B invitation.accepted_at: ACCEPTED");
+      } else if (markSpent.ok) {
+        failures.push("A-owner PATCH accepted_at matched zero rows silently; expected a grant refusal");
+      } else if (!refusedByGrant(markSpent)) {
+        failures.push(`A-owner PATCH accepted_at refused as "${markSpent.message}", expected a grant refusal`);
+      }
+      if (afterAccepted !== beforeAccepted) {
+        failures.push(`accepted_at changed from ${beforeAccepted} to ${afterAccepted}`);
+      }
+
+      const foreign = await accept(a.owner, b.invitationId);
+      const absent = await accept(a.owner, randomUUID());
+      if (foreign.status < 400) failures.push(`A-owner accepted B's invitation: ${foreign.status}`);
+      if (foreign.error.code !== absent.error.code || foreign.error.message !== absent.error.message) {
+        failures.push(
+          `accept of B vs nonexistent diverged: ${foreign.error.code}/${foreign.error.message} vs ` +
+            `${absent.error.code}/${absent.error.message}`,
+        );
+      }
+
+      record(
+        "29c",
+        "Tenant A's Owner cannot read, alter or accept tenant B's invitation",
+        failures,
+        `SELECT ids=[${seen.ids.join(", ")}]; PATCH archived_at ${withdraw.status}/${withdraw.count}; ` +
+          `PATCH accepted_at ${markSpent.status} "${markSpent.message.slice(0, 80)}"; ` +
+          `accept B ${foreign.status} "${foreign.error.message}" identical to nonexistent`,
+      );
+      expect(failures).toEqual([]);
+    },
+    240_000,
+  );
+
+  it(
+    "29d a spent invitation cannot be replayed",
+    async () => {
+      const failures: string[] = [];
+      const runId = randomUUID().slice(0, 8);
+      const email = `${SYNTHETIC_PREFIX}g16-replay-${runId}@example.com`;
+      const invitationId = randomUUID();
+
+      const issued = await probe.insert(fixture.a.owner, "invitation", {
+        id: invitationId,
+        tenant_id: fixture.a.id,
+        email,
+        role: "viewer",
+        expires_at: futureIso(1),
+      });
+      if (!issued.ok) failures.push(`issue: ${issued.status} ${issued.message}`);
+
+      const invitee = await makeIdentity(config, "g16-replay", runId, email);
+      const first = await accept(invitee, invitationId);
+      if (first.status !== 200 || first.membershipId === null) {
+        failures.push(`first accept: ${first.status} ${first.body.slice(0, 200)}`);
+      }
+
+      const replay = await accept(invitee, invitationId);
+      if (replay.status < 400) {
+        failures.push(`replay: ACCEPTED ${replay.status} ${replay.body.slice(0, 160)}`);
+      }
+      if (replay.error.message !== "invitation acceptance refused") {
+        failures.push(`replay message "${replay.error.message}", expected the generic invitation-side refusal`);
+      }
+
+      const [count] = await sql<{ n: number }>(
+        `select count(*)::int as n from public.membership where member_id = '${invitee.authId}' and tenant_id = '${fixture.a.id}'`,
+      );
+      if (count.n !== 1) failures.push(`memberships for invitee in A: ${count.n}, expected 1`);
+
+      record(
+        "29d",
+        "A spent invitation cannot be replayed",
+        failures,
+        `first accept ${first.status} membership=${first.membershipId}; replay ${replay.status} ` +
+          `"${replay.error.message}"; memberships in A remain ${count.n}`,
+      );
+      expect(failures).toEqual([]);
+    },
+    240_000,
+  );
+
+  it(
+    "29e an expired invitation cannot be accepted",
+    async () => {
+      const failures: string[] = [];
+      const runId = randomUUID().slice(0, 8);
+      const email = `${SYNTHETIC_PREFIX}g16-expired-${runId}@example.com`;
+      const invitationId = randomUUID();
+
+      const invitee = await makeIdentity(config, "g16-expired", runId, email);
+      await sql(`
+        insert into public.invitation (id, tenant_id, email, role, expires_at, created_by)
+        values (
+          '${invitationId}',
+          '${fixture.a.id}',
+          '${email.replace(/'/g, "''")}',
+          'viewer',
+          now() - interval '1 hour',
+          '${fixture.a.owner.authId}'
+        )
+      `);
+
+      const answered = await accept(invitee, invitationId);
+      if (answered.status < 400) {
+        failures.push(`expired accept: ACCEPTED ${answered.status} ${answered.body.slice(0, 160)}`);
+      }
+      if (answered.error.message !== "invitation acceptance refused") {
+        failures.push(`expired message "${answered.error.message}", expected the generic invitation-side refusal`);
+      }
+
+      const [memberships] = await sql<{ n: number }>(
+        `select count(*)::int as n from public.membership where member_id = '${invitee.authId}'`,
+      );
+      if (memberships.n !== 0) failures.push(`expired accept left ${memberships.n} membership row(s)`);
+
+      const spent = await columnValue("invitation", invitationId, "accepted_at");
+      if (spent !== null) failures.push(`expired invitation was marked spent at ${spent}`);
+
+      record(
+        "29e",
+        "An expired invitation cannot be accepted",
+        failures,
+        `privileged insert with expires_at = now()-1h; accept ${answered.status} "${answered.error.message}"; ` +
+          `memberships=${memberships.n}; accepted_at=${spent}`,
+      );
+      expect(failures).toEqual([]);
+    },
+    240_000,
+  );
+
+  it(
+    "29f acceptance produces exactly one active membership and no other row",
+    async () => {
+      const failures: string[] = [];
+      const runId = randomUUID().slice(0, 8);
+      const email = `${SYNTHETIC_PREFIX}g16-once-${runId}@example.com`;
+      const invitationId = randomUUID();
+
+      const issued = await probe.insert(fixture.a.owner, "invitation", {
+        id: invitationId,
+        tenant_id: fixture.a.id,
+        email,
+        role: "designer",
+        expires_at: futureIso(1),
+      });
+      if (!issued.ok) failures.push(`issue: ${issued.status} ${issued.message}`);
+
+      const invitee = await makeIdentity(config, "g16-once", runId, email);
+
+      const [catalogBefore] = await sql<{
+        tenants: number;
+        memberships: number;
+        invitations: number;
+        events: number;
+      }>(`
+        select
+          (select count(*) from public.tenant)::int as tenants,
+          (select count(*) from public.membership)::int as memberships,
+          (select count(*) from public.invitation)::int as invitations,
+          (select count(*) from public.activity_event)::int as events
+      `);
+
+      const accepted = await accept(invitee, invitationId);
+      if (accepted.status !== 200 || accepted.membershipId === null) {
+        failures.push(`accept: ${accepted.status} ${accepted.body.slice(0, 200)}`);
+      }
+
+      const [catalogAfter] = await sql<{
+        tenants: number;
+        memberships: number;
+        invitations: number;
+        events: number;
+      }>(`
+        select
+          (select count(*) from public.tenant)::int as tenants,
+          (select count(*) from public.membership)::int as memberships,
+          (select count(*) from public.invitation)::int as invitations,
+          (select count(*) from public.activity_event)::int as events
+      `);
+
+      if (catalogAfter.tenants !== catalogBefore.tenants) {
+        failures.push(`tenant count ${catalogBefore.tenants} → ${catalogAfter.tenants}`);
+      }
+      if (catalogAfter.events !== catalogBefore.events) {
+        failures.push(`event count ${catalogBefore.events} → ${catalogAfter.events}`);
+      }
+      if (catalogAfter.invitations !== catalogBefore.invitations) {
+        failures.push(`invitation count ${catalogBefore.invitations} → ${catalogAfter.invitations} (spent, not duplicated)`);
+      }
+      if (catalogAfter.memberships !== catalogBefore.memberships + 1) {
+        failures.push(`membership count ${catalogBefore.memberships} → ${catalogAfter.memberships}, expected +1`);
+      }
+
+      const [mine] = await sql<{ n: number }>(`
+        select count(*)::int as n
+          from public.membership
+         where member_id = '${invitee.authId}'
+           and tenant_id = '${fixture.a.id}'
+           and status = 'active'
+           and archived_at is null
+      `);
+      if (mine.n !== 1) failures.push(`active memberships for invitee in A: ${mine.n}`);
+
+      const [inviteeTenants] = await sql<{ n: number }>(
+        `select count(*)::int as n from public.tenant where created_by = '${invitee.authId}'`,
+      );
+      if (inviteeTenants.n !== 0) failures.push(`invitee created ${inviteeTenants.n} tenant(s)`);
+
+      record(
+        "29f",
+        "Acceptance produces exactly one active membership and no other row",
+        failures,
+        `catalog tenants/events/invitations unchanged at ${catalogAfter.tenants}/${catalogAfter.events}/${catalogAfter.invitations}; ` +
+          `memberships ${catalogBefore.memberships} → ${catalogAfter.memberships}; ` +
+          `invitee's active memberships in A = ${mine.n}; tenants created by invitee = ${inviteeTenants.n}`,
+      );
+      expect(failures).toEqual([]);
+    },
+    240_000,
+  );
+
+  it("29g the invited address is not readable by an unaffiliated member", async () => {
+    const failures: string[] = [];
+    const seen = await probe.selectColumns(fixture.unaffiliated, "invitation", "id,email,tenant_id,role");
+
+    if (!seen.ok) {
+      failures.push(`unaffiliated SELECT invitation: errored ${seen.status} (${seen.code}) ${seen.message}`);
+    } else if (seen.count !== 0) {
+      failures.push(`unaffiliated read ${seen.count} invitation row(s): ${JSON.stringify(seen.rows)}`);
+    }
+
+    const emails = seen.rows.map((row) => row.email).filter((value) => value !== undefined && value !== null);
+    if (emails.length > 0) {
+      failures.push(`unaffiliated read invitation email(s): ${emails.join(", ")}`);
+    }
+
+    record(
+      "29g",
+      "The invited address is not readable by an unaffiliated member",
+      failures,
+      `unaffiliated SELECT invitation id,email,tenant_id,role → ${seen.count} row(s); emails disclosed: ${emails.length}`,
+    );
+    expect(failures).toEqual([]);
+  });
+});
 
 describe("TASK D — teardown, and prove it", () => {
   it("removes every synthetic row and verifies the absence by query", async () => {

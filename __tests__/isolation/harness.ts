@@ -51,6 +51,7 @@ export const TABLES = [
   "operator",
   "consent_grant",
   "activity_event",
+  "invitation",
 ] as const;
 
 export type TableName = (typeof TABLES)[number];
@@ -60,6 +61,7 @@ export const TENANT_SCOPED_TABLES: TableName[] = [
   "membership",
   "consent_grant",
   "activity_event",
+  "invitation",
 ];
 
 // ---------------------------------------------------------------------------
@@ -555,6 +557,7 @@ export type TenantFixture = {
   viewerMembershipId: string;
   consentGrantId: string;
   activityEventId: string;
+  invitationId: string;
 };
 
 export type Fixture = {
@@ -581,9 +584,10 @@ export async function makeIdentity(
   config: Config,
   label: string,
   runId: string,
+  address?: string,
 ): Promise<Identity> {
   const auth = makeAuthAdmin(config);
-  const email = `${SYNTHETIC_PREFIX}${label}-${runId}@example.com`;
+  const email = address ?? `${SYNTHETIC_PREFIX}${label}-${runId}@example.com`;
   // Ephemeral, never written to disk and never printed.
   const password = randomUUID();
   const authId = await auth.createUser(email, password);
@@ -618,6 +622,8 @@ export async function seed(config: Config, sql: SqlRunner): Promise<Fixture> {
   const consentB = randomUUID();
   const eventA = randomUUID();
   const eventB = randomUUID();
+  const invitationA = randomUUID();
+  const invitationB = randomUUID();
 
   // Seeded through the privileged SQL path rather than through PostgREST,
   // because there is deliberately no INSERT policy on `tenant` at all:
@@ -669,6 +675,10 @@ export async function seed(config: Config, sql: SqlRunner): Promise<Fixture> {
     insert into public.activity_event (id, tenant_id, actor_member_id, action, entity_type, entity_id) values
       (${lit(eventA)}, ${lit(tenantA.id)}, ${lit(aOwner.authId)}, ${lit(SYNTHETIC_PREFIX + "seeded")}, 'Tenant', ${lit(tenantA.id)}),
       (${lit(eventB)}, ${lit(tenantB.id)}, ${lit(bOwner.authId)}, ${lit(SYNTHETIC_PREFIX + "seeded")}, 'Tenant', ${lit(tenantB.id)});
+
+    insert into public.invitation (id, tenant_id, email, role, expires_at, created_by) values
+      (${lit(invitationA)}, ${lit(tenantA.id)}, ${lit(`${SYNTHETIC_PREFIX}invite-a-${runId}@example.com`)}, 'viewer', now() + interval '7 days', ${lit(aOwner.authId)}),
+      (${lit(invitationB)}, ${lit(tenantB.id)}, ${lit(`${SYNTHETIC_PREFIX}invite-b-${runId}@example.com`)}, 'viewer', now() + interval '7 days', ${lit(bOwner.authId)});
   `);
 
   return {
@@ -683,6 +693,7 @@ export async function seed(config: Config, sql: SqlRunner): Promise<Fixture> {
       viewerMembershipId: memberships.aViewer,
       consentGrantId: consentA,
       activityEventId: eventA,
+      invitationId: invitationA,
     },
     b: {
       label: "B",
@@ -694,6 +705,7 @@ export async function seed(config: Config, sql: SqlRunner): Promise<Fixture> {
       viewerMembershipId: memberships.bViewer,
       consentGrantId: consentB,
       activityEventId: eventB,
+      invitationId: invitationB,
     },
     unaffiliated,
     operator,
@@ -744,6 +756,10 @@ export async function teardown(config: Config, sql: SqlRunner): Promise<void> {
 
     alter table public.membership disable trigger membership_active_owner_required;
 
+    delete from public.invitation
+     where tenant_id in (select id from public.tenant where slug like ${prefix})
+        or email::text like ${prefix};
+
     delete from public.activity_event
      where tenant_id in (select id from public.tenant where slug like ${prefix});
 
@@ -778,6 +794,7 @@ export async function teardownCounts(sql: SqlRunner): Promise<TeardownCounts> {
       (select count(*) from public.operator)::int                                   as operator_total,
       (select count(*) from public.consent_grant)::int                              as consent_grant_total,
       (select count(*) from public.activity_event)::int                             as activity_event_total,
+      (select count(*) from public.invitation)::int                                 as invitation_total,
       (select count(*) from auth.users)::int                                        as auth_users_total,
       (select count(*) from public.tenant
         where slug like ${prefix} or name like ${prefix})::int                      as tenant_synthetic,
@@ -785,6 +802,10 @@ export async function teardownCounts(sql: SqlRunner): Promise<TeardownCounts> {
         where email::text like ${prefix} or display_name like ${prefix})::int       as member_synthetic,
       (select count(*) from public.activity_event
         where action like ${prefix})::int                                           as activity_event_synthetic,
+      (select count(*) from public.invitation i
+        where i.email::text like ${prefix}
+           or i.tenant_id in (select id from public.tenant where slug like ${prefix}))::int
+                                                                                    as invitation_synthetic,
       (select count(*) from auth.users where email like ${prefix})::int             as auth_users_synthetic,
       -- Proof 25b creates a schema, a function and a trigger to force a failure
       -- mid-provisioning. All three are counted here, because a fault injection
@@ -854,6 +875,12 @@ export const EXPECTED_ASSERTIONS = [
   "24a", "24b", "24c",
   "25a", "25b", "25c", "25d", "25e", "25f",
   "26",
+  // P02-T12 — OD-G17, OD-G18, OD-G16. 27 is locale/currency both directions,
+  // 28 is the two bounds including a real concurrency assertion, 29 is the
+  // invitation-by-email flow. All landed permanently per OD-H11.
+  "27a", "27b",
+  "28a", "28b", "28c", "28d", "28e",
+  "29a", "29b", "29c", "29d", "29e", "29f", "29g",
   "D",
 ];
 

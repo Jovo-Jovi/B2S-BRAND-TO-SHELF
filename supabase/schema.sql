@@ -6,11 +6,12 @@
 -- "===== migration:" markers below. Nothing is reinterpreted between the two.
 --
 -- Scope of this revision: the Platform tier only. DATA_MODEL.md §3 specifies
--- SIX tables (§3.1 tenant, §3.2 member, §3.3 membership, §3.4 operator,
--- §3.5 consent_grant, §3.6 activity_event) and ONE enum that is deliberately
--- not a table (§3.7 role). §3's lead sentence counts seven Release 1 Platform
--- entities, of which role is stored as an enum; §3.7 records that divergence as
--- deliberate and asks that the two counts never be reconciled by mistake.
+-- SEVEN tables (§3.1 tenant, §3.2 member, §3.3 membership, §3.4 operator,
+-- §3.5 consent_grant, §3.6 activity_event, §3.8 invitation) and ONE enum that
+-- is deliberately not a table (§3.7 role). §3's lead sentence counts eight
+-- Release 1 Platform entities, of which role is stored as an enum; §3.7
+-- records that divergence as deliberate and asks that the two counts never be
+-- reconciled by mistake.
 --
 -- Statement order below is driven by foreign-key dependency, not by DATA_MODEL's
 -- presentation order: member precedes tenant because tenant.created_by
@@ -1232,3 +1233,445 @@ revoke execute on function public.provision_tenant(text, text, text, text) from 
 -- but absent. service_role receives nothing because it bypasses RLS and would
 -- gain nothing from a definer function it could out-write directly.
 grant execute on function public.provision_tenant(text, text, text, text) to authenticated;
+
+-- ===== migration: 20260831120001_tenant_locale_and_currency_constraints =====
+
+-- OD-G17. `tenant.default_locale` accepts only `en` and `ar`; `tenant.base_currency`
+-- accepts only `EGP`, `USD`, `SAR`, `AED`, `EUR`. Enforced on the table, not in
+-- a wizard that does not exist (ADR-003): `provision_tenant` is granted to every
+-- authenticated caller and takes free text, so a CHECK on `public.tenant` is the
+-- constraint a direct call cannot walk around.
+--
+-- WHY A CHECK AND NOT AN ENUM. `check-enum-keys` would accept these values —
+-- they are already language-neutral keys — but P07 lands `Currency` and `Locale`
+-- as Settings entities per SCOPE.md module 18, and OD-G17 is then superseded
+-- rather than deleted. Dropping a CHECK and adding a foreign key is one
+-- migration (`alter table public.tenant drop constraint
+-- tenant_default_locale_permitted` / `tenant_base_currency_permitted`, then
+-- `alter table ... add constraint ... foreign key`). Replacing an enum column
+-- with a foreign key is a rewrite of the column. The CHECK is the shape that
+-- supersedes cleanly.
+--
+-- Zero tenant rows exist at apply time, so there is no backfill. Confirmed by
+-- query before this migration is applied, not assumed from a prior report.
+--
+-- Independently revertible: drop the two constraints. The function body is not
+-- touched here, so a revert cannot leave a validating function pointing at
+-- constraints that no longer exist.
+
+alter table public.tenant
+  add constraint tenant_default_locale_permitted
+    check (default_locale in ('en', 'ar'));
+
+alter table public.tenant
+  add constraint tenant_base_currency_permitted
+    check (base_currency in ('EGP', 'USD', 'SAR', 'AED', 'EUR'));
+
+-- ===== migration: 20260831120002_provision_tenant_bounds =====
+
+-- OD-G18. A Member may own at most three active Tenants and perform at most
+-- three provisioning acts per rolling 24 hours, counted from activity_event
+-- where the action is tenant.provisioned and the actor is the caller. Both
+-- numbers are policy, hardcoded to the free plan in Release 1. No new table.
+--
+-- THE RACE IS THE POINT. A bare count inside the function lets two simultaneous
+-- calls both pass: each reads 2, each inserts, the member owns 4. An
+-- xact-scoped advisory lock on the member id serialises provisioning for that
+-- member, so the waiter sees the first call's committed row. 1818 is a lock
+-- namespace derived from OD-G18, not a bound. hashtext(member id) is the key.
+-- A partial unique index cannot express "at most three" or a rolling window,
+-- which is why the lock is the mechanism and not an index.
+--
+-- A refusal is not recorded. activity_event is tenant-scoped and a refusal has
+-- no tenant; OD-G18 accepts that rather than inventing a platform-scoped audit.
+-- The attempt leaves no tenant, no membership and no event, which is what the
+-- function's existing atomicity already guarantees on any raise.
+--
+-- Independently revertible: this is a CREATE OR REPLACE of provision_tenant.
+-- Reverting it restores the unbounded body from migration 14; the G17 CHECKs
+-- in migration 15 stay, because they live on the table. Raising the cap in
+-- Release 1 is a migration, because OD-G10 holds Operator to metadata.
+-- Slug squatting is unsolved — OD-G18 bounds tenants, not slugs, and says so.
+
+create or replace function public.provision_tenant(
+  p_name           text,
+  p_slug           text,
+  p_base_currency  text,
+  p_default_locale text
+)
+returns uuid
+language plpgsql
+volatile
+security definer
+set search_path = ''
+as $$
+declare
+  v_caller uuid := auth.uid();
+  v_tenant uuid;
+  v_owned  integer;
+  v_recent integer;
+begin
+  if v_caller is null then
+    raise exception
+      'tenant provisioning refused: the caller is not an authenticated identity'
+      using errcode = 'insufficient_privilege';
+  end if;
+
+  -- The second-act rule, enforced. Authentication materialises the Member;
+  -- this path consumes one and never creates one. An authenticated identity
+  -- with no live `member` row cannot provision, which also means this function
+  -- can never be the thing that repairs a failed materialisation — the two acts
+  -- stay separate in the failure direction too.
+  if not exists (
+    select 1
+      from public.member m
+     where m.id = v_caller
+       and m.archived_at is null
+  ) then
+    raise exception
+      'tenant provisioning refused: the caller holds no live member record'
+      using errcode = 'insufficient_privilege',
+            hint = 'OD-G13 makes provisioning a second act. Authentication materialises the Member first.';
+  end if;
+
+  -- OD-G18. Taken before the counts so a concurrent caller for the same member
+  -- blocks here rather than both reading a stale total. Released at commit or
+  -- rollback, so a refused call does not hold the lock past its own raise.
+  perform pg_advisory_xact_lock(1818, hashtext(v_caller::text));
+
+  select count(*)::integer
+    into v_owned
+    from public.membership m
+   where m.member_id = v_caller
+     and m.role = 'owner'
+     and m.status = 'active'
+     and m.archived_at is null;
+
+  if v_owned >= 3 then
+    raise exception
+      'tenant provisioning refused: a member may own at most three active tenants'
+      using errcode = 'check_violation';
+  end if;
+
+  select count(*)::integer
+    into v_recent
+    from public.activity_event e
+   where e.actor_member_id = v_caller
+     and e.action = 'tenant.provisioned'
+     and e.occurred_at > now() - interval '24 hours';
+
+  if v_recent >= 3 then
+    raise exception
+      'tenant provisioning refused: at most three provisioning acts are permitted per 24 hours'
+      using errcode = 'check_violation';
+  end if;
+
+  -- §3.1 fixes the shape of name and slug in prose and the table carries no
+  -- constraint for either, so this is the only place that shape can be
+  -- established — this function is the only writer `tenant` has. Locale and
+  -- currency are constrained on the table (OD-G17, migration 15); a value
+  -- outside either set fails the INSERT below, which is the enforcement the
+  -- wizard is not.
+  if p_name is null or btrim(p_name) = '' then
+    raise exception
+      'tenant provisioning refused: a tenant must carry a name'
+      using errcode = 'check_violation';
+  end if;
+
+  if p_slug is null or p_slug !~ '^[a-z0-9]+(-[a-z0-9]+)*$' then
+    raise exception
+      'tenant provisioning refused: slug must be lowercase and URL-safe, alphanumeric groups joined by single hyphens'
+      using errcode = 'check_violation';
+  end if;
+
+  insert into public.tenant
+    (name, slug, base_currency, default_locale, status, created_by)
+  values
+    (btrim(p_name), p_slug, p_base_currency, p_default_locale, 'active', v_caller)
+  returning id into v_tenant;
+
+  -- OD-G15: at least one active owner, and the caller is it. `accepted_at` is
+  -- set because there was no invitation to accept — the caller is the tenant's
+  -- origin, not an invitee, and leaving it null would model a pending offer
+  -- nobody made.
+  insert into public.membership
+    (tenant_id, member_id, role, status, accepted_at, created_by)
+  values
+    (v_tenant, v_caller, 'owner', 'active', now(), v_caller);
+
+  -- §3.6 — the audit trail's first row for this tenant. `payload` stays null:
+  -- every fact worth recording is already a column, and §3.6 forbids a full row
+  -- copy there. This row is also OD-G18's rate-limit source.
+  insert into public.activity_event
+    (tenant_id, actor_member_id, action, entity_type, entity_id)
+  values
+    (v_tenant, v_caller, 'tenant.provisioned', 'Tenant', v_tenant);
+
+  return v_tenant;
+end
+$$;
+
+-- CREATE OR REPLACE preserves a function's ACL. Restated because "should be"
+-- is not an assertion, and proof 22 checks the resulting privilege set either
+-- way. CF-105's standing obligation.
+revoke execute on function public.provision_tenant(text, text, text, text) from public;
+revoke execute on function public.provision_tenant(text, text, text, text) from anon;
+revoke execute on function public.provision_tenant(text, text, text, text) from service_role;
+grant  execute on function public.provision_tenant(text, text, text, text) to authenticated;
+
+-- ===== migration: 20260831120003_invitation_by_email =====
+
+-- OD-G16, closing CF-121. An invitation names an email address, not an existing
+-- Member. membership.member_id is not null references public.member(id), so an
+-- invitation to a person with no member row cannot be a membership row as the
+-- table stands. The shape chosen here is a tenant-scoped invitation table:
+-- the Owner writes an offer addressed to an email; the invitee, having signed
+-- in and proven that address (OD-G13), activates a Membership in the same
+-- motion. No Owner write produces an active Membership for anyone but the
+-- writer; membership_active_is_self_only is untouched.
+--
+-- Names (GLOSSARY.md §5): invitation, email, role, expires_at, accepted_at,
+-- accepted_by, accept_invitation, caller_email_is_verified. None is a
+-- forbidden noun.
+--
+-- Single-use and expiry are columns, not a status enum: pending is
+-- accepted_at is null and expires_at > now() and archived_at is null; spent
+-- is accepted_at is not null; expired is derived from expires_at. A CHECK
+-- here supersedes the same way G17 does, and adding an enum would be a fifth
+-- type for two states the columns already distinguish.
+--
+-- Acceptance cannot be a policy. The invitee holds no membership in the
+-- inviting tenant, so current_tenant_id() does not resolve it and RLS would
+-- hide the row. accept_invitation(uuid) is security definer so it can read
+-- the invitation, confirm the caller's verified email matches, insert the
+-- caller's own active membership, and spend the invitation, in one
+-- transaction. member_id is auth.uid(); there is no member parameter.
+--
+-- OD-G13's acceptance invariant — control of the invited identity, satisfied
+-- today by a verified email and nothing else — had no enforcement point.
+-- caller_email_is_verified() reads auth.users.email_confirmed_at. The existing
+-- membership_accept_invitation policy (invite-then-accept for a person who
+-- already holds a member row) gains it as well, so both accept paths enforce
+-- the same invariant. An unverified identity cannot accept by any path.
+--
+-- Existence (SECURITY_MODEL.md §1): every invitation-side refusal of
+-- accept_invitation — missing, spent, expired, archived, email mismatch,
+-- already a member — raises the same SQLSTATE and the same message, so a
+-- guessed uuid belonging to another tenant is indistinguishable from one that
+-- does not exist.
+--
+-- Independently revertible: drop the policies, the grants, the two functions,
+-- and the table. membership_accept_invitation is dropped and recreated; a
+-- revert restores the prior definition from migration 1 of the invite
+-- lifecycle.
+
+-- §3.8 invitation — a tenant-scoped offer addressed to an email. Follows
+-- §1 rules 1-4 (tenant_id, generated key, archived_at, provenance). No
+-- departure from §1.
+create table public.invitation (
+  id           uuid primary key default gen_random_uuid(),
+  tenant_id    uuid not null references public.tenant (id),
+  email        extensions.citext not null,
+  role         public.role not null,
+  expires_at   timestamptz not null,
+  accepted_at  timestamptz,
+  accepted_by  uuid references public.member (id),
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now(),
+  created_by   uuid references public.member (id),
+  archived_at  timestamptz,
+  constraint invitation_email_present check (length(btrim(email::text)) > 0),
+  constraint invitation_accepted_by_when_spent check (
+    (accepted_at is null) = (accepted_by is null)
+  )
+);
+
+comment on table public.invitation is
+  'OD-G16. Tenant-scoped offer addressed to an email. Spent by accept_invitation; withdrawn by archived_at.';
+
+alter table public.invitation enable row level security;
+
+-- Default privileges grant table-wide UPDATE to authenticated. The revoke is
+-- the same load-bearing one every later table repeats (migration 7).
+revoke all on table public.invitation from anon;
+revoke all on table public.invitation from authenticated;
+
+grant select, insert on public.invitation to authenticated;
+-- Owners may withdraw a pending invitation. They cannot mark it accepted,
+-- change the address, or change the role: those columns are absent from the
+-- grant, which is what makes single-use structural rather than trusted.
+grant update (archived_at) on public.invitation to authenticated;
+
+-- Tenant business data under §2's operator rule: no operator policy. An
+-- operator reaches no invitation row, which is what keeps the invited
+-- address out of a support session.
+create policy invitation_select_tenant on public.invitation
+  for select to authenticated
+  using ( tenant_id = public.current_tenant_id() );
+
+create policy invitation_insert_owner on public.invitation
+  for insert to authenticated
+  with check (
+    tenant_id = public.current_tenant_id()
+    and public.is_current_tenant_owner()
+    and accepted_at is null
+    and accepted_by is null
+    and archived_at is null
+    and expires_at > now()
+  );
+
+create policy invitation_withdraw_owner on public.invitation
+  for update to authenticated
+  using (
+    tenant_id = public.current_tenant_id()
+    and public.is_current_tenant_owner()
+    and accepted_at is null
+  )
+  with check (
+    tenant_id = public.current_tenant_id()
+    and public.is_current_tenant_owner()
+    and accepted_at is null
+    and accepted_by is null
+  );
+
+-- OD-G13. Reads auth.users.email_confirmed_at, which no authenticated caller
+-- can select. Stable: the confirmation timestamp does not change inside a
+-- statement. Granted to authenticated so the membership_accept_invitation
+-- policy can name it; the function returns false for a null auth.uid() rather
+-- than raising, so an unauthenticated evaluation is a denial, not an error.
+create or replace function public.caller_email_is_verified()
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1
+      from auth.users u
+     where u.id = auth.uid()
+       and u.email_confirmed_at is not null
+  )
+$$;
+
+-- The existing invite-then-accept path, same invariant. An invitee whose
+-- email is not confirmed cannot move their own row to active. Fixture
+-- identities used by proofs 18c and 19 are created with email_confirm true,
+-- so those assertions are unchanged.
+drop policy membership_accept_invitation on public.membership;
+
+create policy membership_accept_invitation on public.membership
+  for update to authenticated
+  using (
+    member_id = auth.uid()
+    and status = 'invited'
+    and archived_at is null
+    and public.caller_email_is_verified()
+  )
+  with check (
+    member_id = auth.uid()
+    and status = 'active'
+    and public.caller_email_is_verified()
+  );
+
+-- OD-G16's single act: prove the address and activate the Membership.
+-- member_id is auth.uid(); there is no argument that names anyone else.
+-- SELECT ... FOR UPDATE serialises two accepts of the same invitation so the
+-- second sees accepted_at already set.
+create or replace function public.accept_invitation(p_invitation_id uuid)
+returns uuid
+language plpgsql
+volatile
+security definer
+set search_path = ''
+as $$
+declare
+  v_caller uuid := auth.uid();
+  v_inv    public.invitation%rowtype;
+  v_email  extensions.citext;
+  v_membership uuid;
+begin
+  if v_caller is null then
+    raise exception
+      'invitation acceptance refused: the caller is not an authenticated identity'
+      using errcode = 'insufficient_privilege';
+  end if;
+
+  if not exists (
+    select 1
+      from public.member m
+     where m.id = v_caller
+       and m.archived_at is null
+  ) then
+    raise exception
+      'invitation acceptance refused: the caller holds no live member record'
+      using errcode = 'insufficient_privilege';
+  end if;
+
+  -- OD-G13: control of the invited identity, satisfied by a verified email
+  -- and nothing else. Checked before the invitation is read, so an unverified
+  -- caller learns nothing about whether the id exists.
+  if not public.caller_email_is_verified() then
+    raise exception
+      'invitation acceptance refused: the caller has not verified this email address'
+      using errcode = 'insufficient_privilege';
+  end if;
+
+  select u.email::extensions.citext
+    into v_email
+    from auth.users u
+   where u.id = v_caller;
+
+  select *
+    into v_inv
+    from public.invitation i
+   where i.id = p_invitation_id
+   for update;
+
+  -- SECURITY_MODEL.md §1 existence. Missing, spent, expired, archived, and
+  -- addressed-to-someone-else are one refusal. A guessed uuid that belongs to
+  -- another tenant is indistinguishable from one that does not exist.
+  if v_inv.id is null
+     or v_inv.archived_at is not null
+     or v_inv.accepted_at is not null
+     or v_inv.expires_at <= now()
+     or v_inv.email <> v_email then
+    raise exception
+      'invitation acceptance refused'
+      using errcode = 'insufficient_privilege';
+  end if;
+
+  begin
+    insert into public.membership
+      (tenant_id, member_id, role, status, invited_by, accepted_at, created_by)
+    values
+      (v_inv.tenant_id, v_caller, v_inv.role, 'active', v_inv.created_by, now(), v_caller)
+    returning id into v_membership;
+  exception
+    when unique_violation then
+      raise exception
+        'invitation acceptance refused'
+        using errcode = 'insufficient_privilege';
+  end;
+
+  update public.invitation
+     set accepted_at = now(),
+         accepted_by = v_caller,
+         updated_at = now()
+   where id = v_inv.id;
+
+  return v_membership;
+end
+$$;
+
+-- CF-105's standing obligation: every new public function is revoked from
+-- public, anon and service_role, then granted only to the caller that needs it.
+revoke execute on function public.caller_email_is_verified() from public;
+revoke execute on function public.caller_email_is_verified() from anon;
+revoke execute on function public.caller_email_is_verified() from service_role;
+grant  execute on function public.caller_email_is_verified() to authenticated;
+
+revoke execute on function public.accept_invitation(uuid) from public;
+revoke execute on function public.accept_invitation(uuid) from anon;
+revoke execute on function public.accept_invitation(uuid) from service_role;
+grant  execute on function public.accept_invitation(uuid) to authenticated;

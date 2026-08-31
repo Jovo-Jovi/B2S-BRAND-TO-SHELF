@@ -106,7 +106,7 @@ fail-closed-and-silent.**
 **P5 — Every rule is exercised.** No entity type ships without P1–P4 covering it.
 An entity with no isolation test is treated as having failed, not as untested.
 *Evidence:* a coverage assertion mapping every entity in `DOMAIN_MODEL.md` §2 to
-its four tests. **87 entities, 4 properties.**
+its four tests. **88 entities, 4 properties.**
 
 ---
 
@@ -119,7 +119,7 @@ never proven. It closes here, with this definition.
 
 1. **P1–P5 green against the live environment**, not against a local stub and not
    against code review. Rules are read from the live catalog, not from source.
-2. **A coverage report** mapping all 87 entities to their four properties, with no
+2. **A coverage report** mapping all 88 entities to their four properties, with no
    gaps and no exemptions.
 3. **A written adversarial review** of the rule set and the grant set *together*,
    by the heavyweight model class, asking what combination widens reach.
@@ -348,9 +348,9 @@ entry here that the project did not deliberately create is a hard failure.
 #### 11a.1 `security definer` functions in `public`
 
 A `security definer` function executes with its owner's privileges and therefore
-reads past the caller's policies by design. **Eight exist in schema `public`**,
+reads past the caller's policies by design. **Ten exist in schema `public`**,
 all owned by `postgres`, and all with `search_path` pinned to the empty string.
-The live catalog holds **eleven** in total; the other three are Supabase's own
+The live catalog holds **thirteen** in total; the other three are Supabase's own
 and are enumerated in §11b.1. Stating the count without stating the tier is the
 defect §11.0 exists to close.
 
@@ -368,16 +368,19 @@ the function read theirs instead.
 | `operator_read_activity_event(uuid)` | `''` | The one declared operator read path. Refuses without a live grant, writes the log before returning, and omits `payload` from its return type |
 | `materialise_member()` | `''` | Writes the `member` row for a new identity, from a trigger on `auth.users`. `member` carries no INSERT policy at all and GoTrue's `supabase_auth_admin` holds no INSERT privilege on it, so there is no non-definer path by which authentication could create one. It holds no grant, so it is not an endpoint — see below |
 | `provision_tenant(text, text, text, text)` | `''` | Writes a `tenant`, its first active owner `membership` and the `activity_event` in one transaction. `tenant` carries no INSERT policy and `authenticated` holds no INSERT privilege on it; and the caller cannot yet be an owner of a tenant that does not exist, so `membership_insert_owner` would refuse the second row even where the privilege exists. Granted to every `authenticated` caller — the containment is below |
+| `caller_email_is_verified()` | `''` | Reads `auth.users.email_confirmed_at`. No `authenticated` caller can select that column, and OD-G13's acceptance invariant is satisfied today by a verified email and nothing else, so a policy on `membership` and a function that spends an `invitation` both need a definer to ask. Returns false for a null `auth.uid()` rather than raising, so an unauthenticated evaluation is a denial, not an error. Granted to `authenticated` because `membership_accept_invitation` names it |
+| `accept_invitation(uuid)` | `''` | OD-G16's single act: read an invitation the invitee cannot see (they hold no membership in the inviting tenant, so RLS would hide the row), confirm the caller's verified email matches, insert the caller's own `active` `membership`, and spend the invitation, in one transaction. There is no member parameter — the member is `auth.uid()` — so an Owner cannot produce an active Membership for anyone but themselves through this path either. Granted to every `authenticated` caller; the containment is the same shape as `provision_tenant`'s: the only identity the caller can name is their own |
 
 `EXECUTE` on a `public` function defaults to `PUBLIC`, which makes it an RPC
 endpoint any anonymous caller can reach — CF-105 records why: `revoke all on all
-tables` does not cover functions. All eight are therefore revoked from `public`,
+tables` does not cover functions. All ten are therefore revoked from `public`,
 `anon` and `service_role`, and what remains is not uniform:
 
-- **Six are granted to `authenticated`**, and to nothing else:
+- **Eight are granted to `authenticated`**, and to nothing else:
   `current_tenant_id()`, `is_operator()`, `is_current_tenant_owner()`,
-  `has_live_consent_grant(uuid)`, `operator_read_activity_event(uuid)` and
-  `provision_tenant(text, text, text, text)`.
+  `has_live_consent_grant(uuid)`, `operator_read_activity_event(uuid)`,
+  `provision_tenant(text, text, text, text)`, `caller_email_is_verified()` and
+  `accept_invitation(uuid)`.
 - **Two are granted to nobody at all.** `enforce_tenant_active_owner()` and
   `materialise_member()` are trigger functions, and a trigger function's
   `EXECUTE` privilege is checked when the trigger is created, never when it
@@ -390,43 +393,66 @@ what that leaves reachable.** It is the first function here that both writes to
 the tenancy spine and is callable by anyone signed in, so the grant is stated
 with its limits rather than inferred from the function's name.
 
-A hostile authenticated caller **can**: create tenants, as many as they like,
-because nothing rate-limits it (CF-129); take any unused `slug`, which is
-globally unique, and so deny that name to everyone else (CF-129); and set
-`base_currency` and `default_locale` to any text at all, because neither is
-validated here and `tenant` carries no constraint for either (CF-130).
+A hostile authenticated caller **can**: create up to three active tenants and
+perform up to three provisioning acts per rolling 24 hours (OD-G18, proven by
+28a–28e, including two concurrent calls of which exactly one succeeds); take
+any unused `slug`, which is globally unique, and so deny that name to everyone
+else — the cap bounds tenants, not slugs, and OD-G18 names that as unsolved.
 
 A hostile authenticated caller **cannot**: name anybody else as the owner —
 there is no member parameter, the owner is `auth.uid()`, and naming a stranger
 would need an argument this signature does not have; call it without an
 authenticated identity, refused with `insufficient_privilege` on a null
 `auth.uid()`; call it holding no live `member` row, refused the same way, so a
-failed materialisation cannot be repaired through this path either; read or
-write any row other than the three it creates, because those three inserts are
-the only statements in the body that touch the spine; or carry the definer
-context any further, because the function returns a uuid and every read the
-caller makes afterwards goes back through RLS as `authenticated`.
+failed materialisation cannot be repaired through this path either; provision
+a fourth active tenant or a fourth act inside 24 hours; set `base_currency` or
+`default_locale` to a value outside OD-G17's sets — the table CHECKs refuse
+the INSERT; read or write any row other than the three it creates, because
+those three inserts are the only statements in the body that touch the spine;
+or carry the definer context any further, because the function returns a uuid
+and every read the caller makes afterwards goes back through RLS as
+`authenticated`.
 
 The shape is the one P02-T04 used for the `x-b2s-tenant` selector: the privilege
 is real, and what bounds it is that the only thing the caller can name is
-something they will own. What is left over is volume, not reach — which is why
-CF-129 and CF-130 are open rows about growth and validation and neither is an
-isolation finding. Assertions 25a to 25f prove the reach half, including two
-tenants provisioned this way isolated from each other across all six tables in
-both directions.
+something they will own. Volume is now bounded by OD-G18; validation of locale
+and currency is now the table's (OD-G17). Assertions 25a to 25f prove the reach
+half, including two tenants provisioned this way isolated from each other
+across all seven tables in both directions. Assertions 27a, 27b and 28a–28e
+prove the bounds.
+
+**`accept_invitation` is granted to every `authenticated` caller, and this
+states what that leaves reachable.** It is the second function that writes to
+the tenancy spine and is callable by anyone signed in.
+
+A hostile authenticated caller **can**: accept an invitation addressed to an
+email they have verified, which creates one `active` `membership` for
+themselves in that tenant and spends the invitation.
+
+A hostile authenticated caller **cannot**: accept an invitation addressed to
+anyone else — the function matches `auth.users.email` to `invitation.email`
+and a mismatch is the same refusal as a missing id; accept without a verified
+email, refused before the invitation is read; accept a spent or expired or
+archived invitation; produce an active membership for anyone but themselves —
+there is no member parameter; read another tenant's invitation through this
+function in a way that distinguishes "does not exist" from "exists but is not
+yours" — every invitation-side refusal is one SQLSTATE and one message; or
+carry the definer context past the return, which is a membership uuid.
+
+Assertions 29a–29g prove both halves.
 
 #### 11a.2 Table ownership
 
-All six `public` tables are owned by `postgres`. A table's owner is exempt from
+All seven `public` tables are owned by `postgres`. A table's owner is exempt from
 its own row-level policies unless the table is declared `FORCE ROW LEVEL
-SECURITY`, and none of the six is. Ownership is therefore a real bypass and is
+SECURITY`, and none of the seven is. Ownership is therefore a real bypass and is
 listed here as one.
 
 It is not reachable through PostgREST. The API connects as `authenticator`,
 which is not `postgres` and — per §11b.3, measured transitively with `MEMBER` —
 cannot `SET ROLE` to it. Reaching the owner needs a direct Postgres connection
 with the `postgres` credential, which lives outside the application entirely.
-RLS is enabled on all six tables; `FORCE` is what would additionally bind the
+RLS is enabled on all seven tables; `FORCE` is what would additionally bind the
 owner, and its absence is the reason this row exists rather than a defect to fix
 here.
 
@@ -475,7 +501,7 @@ object is not a failure; an unlisted one is.
 
 #### 11b.1 `security definer` functions outside `public`
 
-**Three exist outside schema `public`**, against §11a.1's eight. All owned by
+**Three exist outside schema `public`**, against §11a.1's ten. All owned by
 `supabase_admin`, all with `search_path` pinned to the empty string — the same
 control §11a.1 relies on, applied by the platform rather than by us. Re-measured
 against the live catalog at P02-T06: the same three functions, the same owners,
