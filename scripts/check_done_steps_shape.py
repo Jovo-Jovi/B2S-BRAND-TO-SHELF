@@ -6,6 +6,16 @@ several) or the declared sentinel em-dash. Only the **commit column** assertion
 exempts the last row: its commit cannot exist before the commit that contains it
 (PR-17). The column count is asserted on every row, last included.
 
+P02-READINESS / CF-151 — the **verdict column** is asserted on every row,
+last included. A non-last row must hold a real verdict (`PASS`, `FAIL`, or
+the historical token `pending`). The last row may hold those or the declared
+placeholder em-dash: the follow-up commit fills the sha only, and the next
+land task writes the reviewer's actual verdict. `pending` is kept as an
+allowed non-last value so existing rows are not rewritten (PR-07 applied to
+this project's own history). The placeholder on a non-last row is a defect:
+it means the land task that added the next row did not fill the reviewer's
+verdict, which is the mechanism that makes a pre-filled PASS unfalsifiable.
+
 P02-T10 — the column count used to read "fewer than 4", which caught a truncated
 row and never a split one. A cell containing an unescaped `|` yields *more* than
 four columns, passed that test, and then presented some fragment of the
@@ -29,6 +39,11 @@ FAIL = False
 
 EM_DASH = "\u2014"
 SHA_CELL = re.compile(r"^(`[0-9a-f]{7,40}`)(,\s*`[0-9a-f]{7,40}`)*$")
+
+# CF-151 — real verdicts, plus the historical token that pre-resolution rows
+# already carry. The last row may also hold EM_DASH as the declared placeholder.
+REAL_VERDICTS = frozenset({"PASS", "FAIL", "pending"})
+VERDICT_PLACEHOLDER = EM_DASH
 
 MINIMUM_DONE_STEPS_ROWS = 1
 
@@ -84,8 +99,19 @@ def main():
                  f"inside a cell splits it, which is broken GFM as well as "
                  f"unparseable here. Step: {cells[0]!r}")
             continue
+        verdict_cell = cells[2]
         if is_last:
+            allowed_last = REAL_VERDICTS | {VERDICT_PLACEHOLDER}
+            if verdict_cell not in allowed_last:
+                fail(f"{path}: last-row verdict is {verdict_cell!r}, expected "
+                     f"PASS, FAIL, pending, or the placeholder '{EM_DASH}' "
+                     f"(CF-151). Step: {cells[0]!r}")
             continue
+        if verdict_cell not in REAL_VERDICTS:
+            fail(f"{path}: non-last verdict is {verdict_cell!r}, expected "
+                 f"PASS, FAIL, or pending (CF-151). A leftover placeholder "
+                 f"means the next land task did not write the reviewer's "
+                 f"verdict. Step: {cells[0]!r}")
         commit_cell = cells[3]
         if commit_cell == EM_DASH or SHA_CELL.match(commit_cell):
             continue
@@ -94,7 +120,8 @@ def main():
     if FAIL:
         sys.exit(1)
     print(f"OK: {len(data_lines)} done-steps rows checked, minimum "
-          f"{MINIMUM_DONE_STEPS_ROWS}, commit column well-formed")
+          f"{MINIMUM_DONE_STEPS_ROWS}, commit column well-formed, "
+          f"verdict column well-formed")
 
 
 if __name__ == "__main__":

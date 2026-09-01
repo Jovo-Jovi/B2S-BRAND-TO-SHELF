@@ -2814,7 +2814,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       grant reaches everything a wide one would. Owner: the task that adds a
       second `consent_scope` value, which must make scope a predicate in the
       same migration.
-- [ ] CF-151 — The done-steps verdict column is filled by the builder's own
+- [x] CF-151 — The done-steps verdict column is filled by the builder's own
       PR-17 follow-up commit before the reviewer has issued a verdict.
       Commit `1da5289` wrote "verdict PASS" into the P02-T13 row; `cce71e7`,
       `ed0e5e7` and `bdc82ee` did the same for P02-T12, P02-T11 and P02-T10.
@@ -2831,3 +2831,16 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       readiness task, which either moves the column to the next land task
       as PR-17 states, or supersedes that clause with a new precedent
       permitting a pre-fill and naming what corrects it on a non-PASS.
+      CLOSED (P02-READINESS) — first branch taken, not a new precedent.
+      The follow-up commit fills the sha only. The last row's verdict cell
+      is the declared placeholder em-dash until the next land task writes
+      the reviewer's actual verdict. `check_done_steps_shape.py` asserts
+      a non-last verdict is PASS, FAIL or the historical token pending
+      (existing rows are not rewritten) and the last row's is those or the
+      placeholder; a leftover placeholder on a non-last row fails, which is
+      the mechanism that corrects a missed fill. Floor unchanged at 1 row
+      (PR-27). Proven from an in-memory snapshot on a temp copy, never
+      `git checkout --` (PR-26): non-last BOGUS, last BOGUS, non-last
+      leftover placeholder — 3 of 3 CAUGHT; last-row placeholder CLEAN;
+      every restore SHA-256-identical. Two new `fail()` sites; static-assertion
+      count 104 → 106; no new premise, PROVEN_PAIRS stays 37.
