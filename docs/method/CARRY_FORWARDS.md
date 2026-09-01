@@ -1261,6 +1261,15 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       the first real tenant is onboarded. Owner: the task that onboards the first
       non-synthetic tenant, and the Phase 02 exit gate, which must assert the row
       count rather than assume it.
+      AMENDED (P02-GATE) — asserted rather than assumed. Independent
+      Management API path, User-Agent `B2S-P02-GATE-independent/1.0`:
+      `select count(*) from public.tenant` → `[{"count":0}]` and
+      `select count(*) from auth.users` → `[{"count":0}]` before work
+      (2026-09-01T22:28:33.761041Z), after the isolation suite
+      (2026-09-01T22:47:49.126352Z), and after adversarial probes plus
+      teardown (2026-09-01T22:53:03.970932Z). The Phase 02 exit gate has
+      run, so it is no longer a live owner. Stays OPEN. Owner: the task
+      that onboards the first non-synthetic tenant.
 - [ ] CF-93 — Seven specification gaps in `DATA_MODEL.md`'s Platform tier, found by
       building it at P01-T02-RESUME. None was resolved by invention: each was
       implemented on the narrowest reading available and is recorded here for the
@@ -2315,6 +2324,15 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       finding placed where `check_ledger.py` cannot reach it is not logged. Owner:
       **the task that first subscribes to Realtime**, and the P02 exit gate, which
       re-derives it. Stays OPEN.
+      AMENDED (P02-GATE) — re-derived live: publication `supabase_realtime`
+      exists, `puballtables=false`, `table_count=0`,
+      `realtime.subscription` count=0. Nothing is subscribed. A policy
+      evaluated on a Realtime handshake still sees no selector and
+      degrades to `absent` (one membership implicit, several NULL) —
+      denial, not disclosure. The finding is in this ledger, so
+      `check_ledger.py` can reach it. The P02 exit gate has run, so it is
+      no longer a live owner. Stays OPEN. Owner: the task that first
+      subscribes to Realtime.
 - [x] CF-127 — Two reviewer-side items were named in verdicts and never landed: the
       project-file ruling, allocated PR-30 in conversation while P02-T04 landed a
       different PR-30 from the branch, and P02-T04's PowerShell quirk. PR-19 holds
@@ -2462,6 +2480,14 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       re-provisioning one. Owner: **the owner, on §11b.4's standing
       recommendation**, and the P02 exit gate, which re-derives §11b and re-reads
       this column.
+      AMENDED (P02-GATE) — `VALID UNTIL 2026-08-31 12:20:44.294064+00`,
+      measured `2026-09-01 22:57:58.093096+00`, `expired=true`. Later than
+      P02-T06's `2026-08-05 14:04:09.794236+00`, as a subsequent `db push`
+      forecasts. Relations, schemas, functions, types, databases, table
+      privileges, default ACLs, `pg_shdepend` rows, sessions and comments
+      all 0. The P02 exit gate has run, so it is no longer a live owner.
+      Stays OPEN. Owner: the owner, on SECURITY_MODEL.md §11b.4's standing
+      recommendation.
 - [ ] CF-134 — The owner's product direction: a paid tier raising the company
       limit above one, and tools and presets gated behind payment. `SCOPE.md`:66-67
       already assigns subscriptions, billing and `FeatureFlag` to Release 3 and
@@ -2927,3 +2953,28 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       bumped one above truth fails; both reverted SHA-256-identical, never
       `git checkout --` (PR-26). Two new `fail()` sites. Owner: none
       outstanding, closed in the task that found it.
+- [ ] CF-154 — Four concurrent `provision_tenant` RPCs from a member owning
+      zero tenants: exactly three succeeded, one refused SQLSTATE 23514
+      "a member may own at most three active tenants", owned=3 after,
+      teardown returned tenant=0 and auth.users=0. The suite asserts 28d
+      (a concurrent pair against a member already owning two) and 28a
+      (a sequential fourth). This from-zero quartet is not an assertion.
+      Found at P02-GATE. Owner: **the first task that amends
+      `__tests__/isolation/` after P02**, landing it permanently per OD-H11.
+- [ ] CF-155 — `SECURITY_MODEL.md` §11b.5 states the six event-trigger
+      functions carry an unpinned `search_path`. Live catalog at P02-GATE:
+      all six have `proconfig=['search_path=""']` (pinned). Owner, schema,
+      reachability and membership are unchanged, so this is not a §11 hard
+      failure and not an unnamed mechanism. Found at P02-GATE. Owner: **the
+      next `SECURITY_MODEL.md` amendment**.
+- [ ] CF-156 — `DECISIONS.md`'s preamble still reads "The 84 signed
+      operational decisions"; §2 states 92, and `check_stated_counts.py`
+      asserts the §2 figure. Found at P02-GATE. Owner: **the next
+      `DECISIONS.md` write**.
+- [ ] CF-157 — `TENANCY_MODEL.md` §3 Manager Can lists purchasing as a
+      distinct business operation. `ROLE_JOURNEY.md` has Manager rows for
+      catalog and inventory, sales, and CSV import, and none for
+      purchasing. Purchasing is SCOPE module 12, Release 2, so no
+      nine-phase owning phase exists; the gap is still a capability with
+      no row. Found at P02-GATE. Owner: **the next `ROLE_JOURNEY.md`
+      amendment**.
