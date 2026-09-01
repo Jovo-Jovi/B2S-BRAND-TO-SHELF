@@ -16,6 +16,10 @@ examined less. A missing scan target used to raise FileNotFoundError, which is
 an exit code without a message; now it is named and counted, and a run that
 made fewer than MINIMUM_ASSERTIONS assertions fails whatever those assertions
 concluded.
+
+P02-T15 — check_rules_file_guards() is the ninth scan target: the two always-on
+rules files' Hard-rules tables must be identical, and every `scripts/` path they
+cite must exist and be invoked by a workflow.
 """
 import ast
 import glob
@@ -27,7 +31,7 @@ FAIL = False
 
 EM_DASH = "\u2014"
 
-MINIMUM_ASSERTIONS = 8  # P02-T10 adds the proven figure's provenance assertion
+MINIMUM_ASSERTIONS = 9  # P02-T15 adds the always-on rules-file guard-path assertion
 
 # P02-T10 — the done-steps table is the provenance assertion's premise. A table
 # with no data rows means this check read the wrong span rather than a project
@@ -513,6 +517,148 @@ def check_data_model():
                  f"document never names it")
 
 
+RULES_FILES = (
+    "AGENTS.md",
+    os.path.join(".cursor", "rules", "b2s-devos.mdc"),
+)
+
+# P02-T15 / CF-75. The two always-on files must cite the same rule set, and
+# every `scripts/` path they name must exist and be invoked by a workflow. A
+# renamed guard in a hand-edited rules file is how CF-75's drift recurs.
+MINIMUM_RULES_FILES = 2
+MINIMUM_GUARD_PATHS = 7
+
+SCRIPT_PATH_RE = re.compile(r"`(scripts/[^`\s]+)`")
+WORKFLOW_RUN_RE = re.compile(
+    r"(?m)^\s+run:\s+(?:python3|node)\s+(scripts/[A-Za-z0-9_.-]+)"
+)
+HARD_RULES_HEADING_RE = re.compile(
+    r"(?m)^##[^\n]*Hard rules[^\n]*\n(.*?)(?=\n## |\Z)",
+    re.S,
+)
+TABLE_ROW_RE = re.compile(r"^\|.+\|\s*$")
+TABLE_SEP_RE = re.compile(r"^\|[\s:|-]+\|\s*$")
+
+
+def markdown_tables(section):
+    """Every markdown table in a section, as a list of rows of cells.
+    Shape, not a string scan: a header row, a separator row, then data rows.
+    A pipe inside a cell still splits, which is GFM, and these tables do not
+    contain one."""
+    tables = []
+    lines = section.splitlines()
+    i = 0
+    while i < len(lines):
+        if (TABLE_ROW_RE.match(lines[i])
+                and i + 1 < len(lines)
+                and TABLE_SEP_RE.match(lines[i + 1])):
+            rows = []
+            while i < len(lines) and TABLE_ROW_RE.match(lines[i]):
+                if not TABLE_SEP_RE.match(lines[i]):
+                    cells = [c.strip() for c in
+                             lines[i].strip().strip("|").split("|")]
+                    rows.append(tuple(cells))
+                i += 1
+            tables.append(tuple(rows))
+        else:
+            i += 1
+    return tables
+
+
+def invoked_script_paths():
+    """Every `scripts/<file>` a workflow invokes via `run: python3` or
+    `run: node`. Shape: a YAML `run:` line, not a comment and not a string
+    scan of the workflow file as a whole."""
+    found = set()
+    for path in glob.glob(os.path.join(".github", "workflows", "*.yml")):
+        with open(path, "r", encoding="utf-8") as f:
+            text = f.read()
+        for m in WORKFLOW_RUN_RE.finditer(text):
+            found.add(m.group(1).replace("\\", "/"))
+    return found
+
+
+def check_rules_file_guards():
+    """P02-T15 / CF-75. The two always-on rules files drifted from
+    ARCHITECTURE.md once already, which is why CF-75 exists. Asserts, by
+    shape and not by string scan (PR-22):
+
+      1. each file has a Hard-rules section containing markdown tables
+      2. the two files' tables are identical to each other
+      3. every `scripts/` path cited in those tables exists as a file
+         under `scripts/`
+      4. every such path is invoked by a workflow `run:` line
+
+    A rules file that cites a guard that was renamed fails the push. Paths
+    that are not `scripts/` paths — a lint rule, a job name, NOT YET
+    ENFORCED, a precedent id — are not this assertion's subject.
+    """
+    parsed = []
+    for path in RULES_FILES:
+        text = read(path)
+        if text is None:
+            continue
+        m = HARD_RULES_HEADING_RE.search(text)
+        if not m:
+            fail(f"{path}: no heading matching 'Hard rules', so there is no "
+                 f"rule set to assert against the other always-on file")
+            continue
+        tables = markdown_tables(m.group(1))
+        if not tables:
+            fail(f"{path}: Hard-rules section contains no markdown table, so "
+                 f"there is no rule set to compare")
+            continue
+        parsed.append((path, tables))
+
+    asserted()
+
+    if len(parsed) < MINIMUM_RULES_FILES:
+        fail(f"{len(parsed)} always-on rules file(s) produced a parseable "
+             f"Hard-rules table, minimum {MINIMUM_RULES_FILES}. A guard-path "
+             f"assertion over fewer files than it names has not run (PR-27)")
+        return
+
+    tables_a = parsed[0][1]
+    tables_b = parsed[1][1]
+    if tables_a != tables_b:
+        fail(f"{parsed[0][0]} and {parsed[1][0]} Hard-rules tables are not "
+             f"identical. CF-75: the two files are the same rules in two "
+             f"activation syntaxes and changing one alone is a defect. "
+             f"{parsed[0][0]} has {len(tables_a)} table(s), "
+             f"{parsed[1][0]} has {len(tables_b)}")
+        return
+
+    cited = []
+    seen = set()
+    for table in tables_a:
+        for row in table:
+            for cell in row:
+                for m in SCRIPT_PATH_RE.finditer(cell):
+                    p = m.group(1).replace("\\", "/")
+                    if p not in seen:
+                        seen.add(p)
+                        cited.append(p)
+
+    if len(cited) < MINIMUM_GUARD_PATHS:
+        fail(f"{len(cited)} distinct `scripts/` path(s) cited in the "
+             f"always-on rules files, minimum {MINIMUM_GUARD_PATHS}. A "
+             f"renamed or deleted citation would drop this silently "
+             f"(PR-27). Cited: {cited}")
+        return
+
+    invoked = invoked_script_paths()
+    for path in cited:
+        if not os.path.isfile(path):
+            fail(f"always-on rules files cite {path}, which does not exist "
+                 f"under scripts/. A renamed guard must fail the push "
+                 f"(CF-75)")
+            continue
+        if path not in invoked:
+            fail(f"always-on rules files cite {path}, which exists but is "
+                 f"invoked by no workflow `run:` line. A guard that is not "
+                 f"in CI is not a guard (PR-21)")
+
+
 def main():
     check_domain_model()
     check_decisions()
@@ -522,6 +668,7 @@ def main():
     check_calc_spec()
     check_adr()
     check_data_model()
+    check_rules_file_guards()
 
     if FAIL:
         sys.exit(1)

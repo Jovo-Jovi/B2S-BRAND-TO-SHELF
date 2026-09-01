@@ -12,7 +12,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
 
 ---
 
-- [ ] CF-01 — Reinstate deferred Dev OS security/migration rule layer at P10
+- [x] CF-01 — Reinstate deferred Dev OS security/migration rule layer at P10
       AMENDED (P-08-PRE-FIX) — owner: ARCHITECTURE.md, immediately after Gate 3
       — the P10 it named does not exist in this plan
       AMENDED (P01-T05-FIX) — the owner has passed. `ARCHITECTURE.md` was
@@ -22,6 +22,17 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       rule layer subject by subject as each arrives, rather than in one pass —
       the layer was deferred because its mechanism was undecided, and mechanisms
       are decided one at a time.
+      CLOSED (P02-T15) — arrived subjects landed into both always-on files with
+      their guard or precedent: migration discipline (ADR-006, ADR-012,
+      `scripts/check_migration_split.py`), privileged-client quarantine
+      (ADR-005, `scripts/check-service-import.mjs`), staging discipline (PR-36),
+      types-drift (ADR-002, ARCHITECTURE.md §5, the `types-drift` job). Deferred
+      remainder named in both files with a live owner and the mechanism each
+      waits on: print-engine containment (P06, `lib/print/` per MODULE_SPEC.md
+      §1), design-surface folder paths (the task that creates `components/`,
+      CF-94), exact-decimal money (the first module that holds money, a CI
+      guard asserting ADR-011). No folder path, library or guard name was
+      invented. Owner: none outstanding.
 - [ ] CF-02 — Unescaped innerHTML in all legacy tools. Owner: FEATURE_INVENTORY.md
       must-not-reproduce at P-07. Prior owner "every ported renderer" is void
       framing — nothing is ported. Evidence captured in EXTRACT_STOCK_COSTS.md
@@ -99,7 +110,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       "`CONTENT_MODEL.md`, `TEMPLATE_MODEL.md`, `PRINT_CONTRACT.md` and
       `PRINT_PRODUCTION_SPEC.md` authored just-in-time" — with print as that
       phase's exit standard. No other phase names the document.
-- [ ] CF-11 — REPORT.md §3.3 "design tools are independent islands" is FALSIFIED
+- [x] CF-11 — REPORT.md §3.3 "design tools are independent islands" is FALSIFIED
       for the sticker tool: legacy/balance-bites-sticker.html carries the shared
       folder path (:1138), bb_filestore_v1, showDirectoryPicker, bb_stickers,
       BBLabelDB, bbbacklabel. Mechanism undocumented. Owner: **P-04 Part 8, closes
@@ -138,6 +149,19 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       AMENDED (P01-T05-FIX) — the owner has passed: "before Gate 3" names a gate
       that closed on 2026-08-01. Owner: **the `REPORT.md` annotation task at
       P02**, batched with CF-72 per PR-20 — one task, one round trip, both rows.
+      CLOSED (P02-T15) — `REPORT.md` §3.3 annotated, original sentence standing
+      (PR-07, PR-29). The annotation cites `EXTRACT_DESIGN_TOOLS.md` §8.7 by
+      name as the six-point re-derivation and does not paraphrase it weaker:
+      the axis §3.3 chose was wrong; the real division is tools that opted into
+      the shared folder (invoice-pro, bb-stock-costs, sticker) against tools
+      that did not (label-editor, stand, carton). The §8.5 incidental glob hit
+      from invoice-pro.html was confirmed against `EXTRACT_INVOICE_PRO.md` at
+      `:3712` and `:3716-3717` (`_PBK = 'bbinv'`, key `bbinv_pb`), also the
+      table at `:136` and the entries at `:278` and `:629`. Gate 1's journal
+      and the P-02-FIX done-steps row do not record a separate confirmation
+      step; the named extract already holds it. `EXTRACT_DESIGN_TOOLS.md`
+      §8.5 was not annotated as an open question. `legacy/` was not read.
+      Owner: none outstanding.
 - [x] CF-12 — REPORT.md §1 and inventory.json meta line counts are wrong by ~3,953
       lines (stock 5577→7084, invoice-pro 3498→4284, sticker 3701 unlisted;
       total 14529→~18482). Owner: reviewer, closes at Gate 1.
@@ -953,7 +977,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       triage, on the same support as CF-69: `BUILD_PHASES.md` §P08 reads
       "`FEATURE_INVENTORY.md`, `RISK_REGISTER.md` and `ACCEPTANCE.md` authored
       just-in-time" and no other phase names the document.
-- [ ] CF-72 — Every `bb-stock-costs.html` and `balance-bites-invoice-pro.html`
+- [x] CF-72 — Every `bb-stock-costs.html` and `balance-bites-invoice-pro.html`
       citation in REPORT.md needs re-derivation before use. Drift is non-linear
       in both files: +140 to +1506 in stock-costs, 0 to +3035 in invoice-pro.
       UNIFICATION.md and PHASE_PLAN.md inherit the same stale numbers and are
@@ -964,6 +988,15 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       AMENDED (P01-T05-FIX) — the owner has passed: "before Gate 3" names a gate
       that closed on 2026-08-01. Owner: **the `REPORT.md` annotation task at
       P02**, batched with CF-11 per PR-20 — one task, one round trip, both rows.
+      CLOSED (P02-T15) — a single banner at the head of `REPORT.md` states that
+      no line number in this document may be cited without re-derivation
+      against the extract that owns that file. Enumerated programmatically
+      (Python `re.findall` over `REPORT.md` excluding the CF-72 banner
+      blockquote): 15 `bb-stock-costs.html` hits and 9
+      `balance-bites-invoice-pro.html` hits. Per-citation annotation of every
+      hit was not required. `UNIFICATION.md` and `PHASE_PLAN.md` remain VOID
+      at `docs/archive/2026-07/`, banners ARCHIVED 2026-07-30, untouched.
+      Owner: none outstanding.
 - [ ] CF-73 — bb-stock-costs.html:5645 contains `مرtجع كامل` — a Latin `t`
       where `ت` belongs. Every printed sales report containing a full return
       has shipped corrupted text, invisibly, for the life of the tool. This is
@@ -990,7 +1023,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       Arabic string is ever an identifier, and TranslationEntry is the only
       home for display text. The single-declaration-site requirement remains.
       Owner: UX_PRINCIPLES.md.
-- [ ] CF-75 — AGENTS.md and .cursor/rules/b2s-devos.mdc carried folder paths
+- [x] CF-75 — AGENTS.md and .cursor/rules/b2s-devos.mdc carried folder paths
       (`src/data/adapters/`, `src/print/`, `components/ui/`,
       `components/shared/`) and a named library (`zod`) in always-on rules,
       ahead of ARCHITECTURE.md. Rewritten by P-05-PRE to state principle and
@@ -1005,6 +1038,19 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       drift from each other — `AGENTS.md` and `.cursor/rules/b2s-devos.mdc` are
       the same rules in two activation syntaxes and changing one alone is a
       defect by `AGENTS.md`'s own preamble.
+      CLOSED (P02-T15) — both always-on files restored in one pass. The Guard
+      column names each enforcing script or says NOT YET ENFORCED with a
+      named owner. Print has no guard file in `scripts/` and is not invoked
+      by a workflow; owner P06. HTML-injection is the lint rule
+      `b2s/no-html-injection-sink` in `eslint.config.mjs`, invoked by
+      `npm run lint`, not a missing `scripts/` file. `scripts/check_stated_counts.py`
+      gained `check_rules_file_guards` as its ninth scan target: the two
+      files' Hard-rules tables must be identical, every cited `scripts/` path
+      must exist and be invoked by a workflow `run:` line, floor
+      `MINIMUM_GUARD_PATHS = 7`. Proven by plant-and-revert from an in-memory
+      snapshot: renamed path, tables differ, exists-but-not-invoked, floor
+      one above truth; 4 of 4 CAUGHT, every revert SHA-256-identical. Owner:
+      none outstanding.
 - [x] CF-76 — GLOSSARY.md changed eight things against VOCABULARY_DRAFT.md, each
       forced by extract evidence: a sixteenth collision (`preset` names both a
       colour theme and a print margin set); `PrintPreset` renamed `PrintProfile`
@@ -2844,3 +2890,40 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       leftover placeholder — 3 of 3 CAUGHT; last-row placeholder CLEAN;
       every restore SHA-256-identical. Two new `fail()` sites; static-assertion
       count 104 → 106; no new premise, PROVEN_PAIRS stays 37.
+- [x] CF-152 — `scripts/check_migration_split.py` stated no PR-27 floor. Its
+      OK line read "OK: 18 migration(s) concatenate to schema.sql from its first
+      marker, 1514 non-blank lines identical on both sides" and the file
+      contained no minimum, no `MINIMUM_` constant and no count guard of any
+      kind. It was the last of the sixteen without one; CF-148 closed
+      check-data-boundary and CF-149 closed check-enum-keys on the same
+      defect. It is not vacuous — `PROVEN_PAIRS` carries both its premises and
+      both are proven live — but a run over zero migrations reconciling to an
+      emptied `schema.sql` would report success. The reviewer asserted at
+      P02-T13 and again at P02-T14 that every check stated a floor; both
+      assertions were wrong, and the readiness report found it because it
+      was told to report the actual answer rather than confirm the supplied
+      one. Found at P02-READINESS. CLOSED (P02-T15) — `MINIMUM_MIGRATIONS = 18`
+      and `MINIMUM_NON_BLANK_LINES = 1514` added at the true counts. The OK
+      line now states both floors. Proven by plant-and-revert from an
+      in-memory snapshot: each floor bumped one above truth fails naming the
+      observed count and the floor; reverted SHA-256-identical, never
+      `git checkout --` (PR-26). Changed condition, not a new premise:
+      `PROVEN_PAIRS` does not move and the two-way empty-target probe was not
+      re-run. Owner: none outstanding, closed in the task that found it.
+- [x] CF-153 — The CF-151 verdict assertion in
+      `scripts/check_done_steps_shape.py` permitted `pending` on any non-last
+      row, for ever. `pending` means precisely "no verdict has been issued",
+      which is the state CF-151 exists to make impossible to leave behind, so
+      the check forbade a leftover em-dash and permitted the token that means
+      the same thing. Twenty-five historical rows carry it (the prompt
+      supplied 23; derivation is 25) and PR-07 forbids rewriting them.
+      Found at P02-READINESS. CLOSED (P02-T15) — the allowance is frozen to
+      the Step ids that already hold `pending`, not to the token.
+      `ALLOWED_PENDING_STEPS` pins that closed list of 25 ids, derived by
+      parsing `SESSION_CONTEXT.md`'s done-steps table; `MINIMUM_PENDING_STEPS
+      = 25`. A new row written with `pending` fails. Proven by plant-and-revert
+      from an in-memory snapshot: P02-T10's PASS cell rewritten to `pending`
+      fails naming the Step as not in the closed list; the list-length floor
+      bumped one above truth fails; both reverted SHA-256-identical, never
+      `git checkout --` (PR-26). Two new `fail()` sites. Owner: none
+      outstanding, closed in the task that found it.

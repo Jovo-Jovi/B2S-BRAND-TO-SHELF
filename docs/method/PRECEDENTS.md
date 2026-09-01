@@ -737,3 +737,11 @@ page. Origin: P02-T11, `scripts/check_roadmap.py`'s `parse_details_elements()`.
   `pg_get_function_identity_arguments()` renders **parameter names as well as
   types** (`p_name text, p_slug text`), not the bare type list the name suggests;
   `proargnames` and `pronargs` are the columns for the name and arity questions.
+- Learned at P02-T15: `scripts/check_stated_counts.py`'s rules-file assertion
+  compares the two always-on Hard-rules tables first and returns on inequality,
+  so a plant that mutates only `AGENTS.md` never reaches the exists-or-invoked
+  checks. Proving a renamed or uninvoked `scripts/` path therefore requires
+  planting the same string in both files; otherwise identity fails first and
+  the probe reports a catch of the wrong assertion. Companion to PR-38
+  (a structural assertion beside an existing compare must be proven with the
+  compare removed) and to the P02-T10 MISSED-until-the-plant-applied rule.

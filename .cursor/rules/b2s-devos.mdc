@@ -30,25 +30,47 @@ STOP and flag before: changing any entity in DATA_MODEL.md; changing
 BrandConfig; changing the print engine or any @page rule; adding a dependency;
 touching the shared component library; editing test/fixtures/golden.
 
-## Hard rules — principles now, enforcement at Gate 3
-Signed decisions, in force today. The enforcement mechanism for each — guard
-scripts, folder boundaries, libraries — is authored in ARCHITECTURE.md after
-Gate 3. Do not invent a folder path or a dependency to satisfy a rule here.
-- No hex colour, brand string, currency code, URL, phone, or Arabic UI literal
-  outside brand configuration, translation resources, or design tokens. (D6, D7)
-- Persistence is reached through one declared boundary, never touched directly
-  from feature code. (G11)
-- No runtime CDN dependency. Fonts and libraries are bundled. (E11 determinism)
-- Print output is produced by one engine. Nothing else emits page geometry.
-  (E11, CF-64)
-- Every import, brand-configuration write and inbound record is
-  schema-validated before it reaches storage. (C14, G6)
-- No user-derived value reaches an HTML-injection sink. (CF-02)
-- Every enumeration stores a language-neutral key; display text lives in
-  translation resources. (D6, D7, CF-65)
+## Hard rules — principles now, enforcement named
+These are signed decisions and are in force today. The mechanism that enforces
+each one is named in the Guard column, derived from `scripts/` and
+`.github/workflows/`. Where no guard exists, the row says NOT YET ENFORCED and
+names the owner. Do not invent a folder path, a library or a guard name to
+satisfy a rule here.
 
-Each becomes a CI guard the moment its mechanism is decided. If a rule blocks
-you, the rule is right — stop and flag for an ADR.
+| Rule | Signed by | Guard |
+|---|---|---|
+| No hex colour, brand string, currency code, URL, phone, or Arabic UI literal outside brand configuration, translation resources, or design tokens | D6, D7 | `scripts/check-no-hardcoded-literals.mjs` (`.github/workflows/ci.yml`) |
+| Persistence is reached through one declared boundary, never touched directly from feature code | G11 | `scripts/check-data-boundary.mjs` (`.github/workflows/ci.yml`) |
+| No runtime CDN dependency. Fonts and libraries are bundled | E11 determinism | `scripts/check-no-runtime-cdn.mjs` (`.github/workflows/ci.yml`) |
+| Print output is produced by one engine. Nothing else emits page geometry | E11, and CF-64's cross-tool overwrite | NOT YET ENFORCED — owner P06 (`lib/print/` per `MODULE_SPEC.md` §1); no guard file exists in `scripts/` and no workflow invokes one |
+| Every import, brand-configuration write and inbound record is schema-validated before it reaches storage | C14, G6 | `scripts/check-zod-coverage.mjs` (`.github/workflows/ci.yml`) |
+| No user-derived value reaches an HTML-injection sink | CF-02 | lint rule `b2s/no-html-injection-sink` in `eslint.config.mjs`, invoked by the `lint` job (`npm run lint`) in `.github/workflows/ci.yml` |
+| Every enumeration stores a language-neutral key. Display text lives in translation resources | D6, D7, CF-65 | `scripts/check-enum-keys.mjs` (`.github/workflows/ci.yml`) |
+
+### Arrived security and migration subjects (CF-01)
+
+Mechanisms that have been decided. Each names its guard or precedent. Subjects
+whose mechanism is still undecided are in the deferred table below, not here.
+
+| Subject | Mechanism | Guard or precedent |
+|---|---|---|
+| Migration discipline: one authoritative SQL source, migrations split verbatim in source order, one applier per environment, one environment | ADR-006, ADR-012 | `scripts/check_migration_split.py` (`.github/workflows/docs-integrity.yml`) |
+| Privileged-client quarantine: the `service_role` client is constructed in one server-only module | ADR-005 | `scripts/check-service-import.mjs` (`.github/workflows/ci.yml`) |
+| Staging discipline: every commit stages by explicit path; `git add -A` and `git commit -a` are never used | PR-36 | PR-36 |
+| Generated types match the live schema; an absent secret fails the job rather than skipping | ADR-002, ARCHITECTURE.md §5 | `types-drift` job in `.github/workflows/ci.yml` |
+
+### Deferred security and migration subjects (CF-01)
+
+No mechanism is invented here. Each waits on what is named.
+
+| Subject | Owner | Waits on |
+|---|---|---|
+| Print-engine containment (page geometry emitted only by the print engine) | P06 | `lib/print/` per `MODULE_SPEC.md` §1, and a guard file in `scripts/` invoked by a workflow |
+| Design-surface folder paths (`components/` and the shared library) | the task that creates `components/` (CF-94) | a decided path; CF-75 forbids inventing one |
+| Exact-decimal money in application code (no JavaScript number holds a money value) | the first module that holds money | a CI guard asserting ADR-011; none exists today |
+
+Each becomes a CI guard the moment its mechanism is decided. If a rule appears to
+block you, **the rule is right** — stop and flag for an ADR.
 
 ## This is a greenfield build that harvests requirements
 Six HTML tools are being RETIRED, not ported. No code is reused and no output of
