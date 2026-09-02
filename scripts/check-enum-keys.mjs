@@ -23,6 +23,16 @@ const SCHEMA = "supabase/schema.sql";
 // A language-neutral key. Not a locale, not a label, not a sentence.
 const KEY = /^[a-z][a-z0-9_]*$/;
 
+// PR-27 / CF-149. A schema that stopped declaring enums, or a parser that
+// stopped finding them, used to report success over a set of one: the only
+// guard was `valuesChecked === 0` at the bottom. Floors are the true counts
+// as of P02-T13: 12 values across 4 enumerations in supabase/schema.sql.
+// Raise both the day either count grows; never lower either to make a
+// shrinking result pass. Changed condition, not a new premise: PROVEN_PAIRS
+// does not move.
+const MINIMUM_VALUES_CHECKED = 12;
+const MINIMUM_ENUMERATIONS = 4;
+
 let violations = 0;
 
 function fail(message) {
@@ -176,12 +186,24 @@ if (valuesChecked === 0) {
   process.exit(1);
 }
 
+if (valuesChecked < MINIMUM_VALUES_CHECKED) {
+  fail(
+    `examined ${valuesChecked} enumeration value(s) in ${SCHEMA}, minimum ${MINIMUM_VALUES_CHECKED}`,
+  );
+}
+if (typesSeen.size < MINIMUM_ENUMERATIONS) {
+  fail(
+    `examined ${typesSeen.size} enumeration(s) in ${SCHEMA}, minimum ${MINIMUM_ENUMERATIONS}`,
+  );
+}
+
 if (violations > 0) {
-  console.error(`FAIL: ${violations} enumeration value(s) are not language-neutral keys`);
+  console.error(`FAIL: ${violations} enumeration check(s) failed`);
   process.exit(1);
 }
 
 console.log(
   `OK: ${valuesChecked} value(s) across ${typesSeen.size} enumeration(s) in ${SCHEMA} ` +
-    `are language-neutral keys [${[...typesSeen].join(", ")}]`,
+    `are language-neutral keys [${[...typesSeen].join(", ")}] ` +
+    `(floor ${MINIMUM_VALUES_CHECKED} values, ${MINIMUM_ENUMERATIONS} enumerations)`,
 );

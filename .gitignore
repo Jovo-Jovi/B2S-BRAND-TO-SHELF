@@ -14,5 +14,9 @@ next-env.d.ts
 # vitest / coverage
 /coverage/
 
+# python bytecode, produced by running the docs-integrity checks locally
+__pycache__/
+*.pyc
+
 # vercel
 .vercel

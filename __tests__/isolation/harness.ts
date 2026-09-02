@@ -51,6 +51,7 @@ export const TABLES = [
   "operator",
   "consent_grant",
   "activity_event",
+  "invitation",
 ] as const;
 
 export type TableName = (typeof TABLES)[number];
@@ -60,6 +61,7 @@ export const TENANT_SCOPED_TABLES: TableName[] = [
   "membership",
   "consent_grant",
   "activity_event",
+  "invitation",
 ];
 
 // ---------------------------------------------------------------------------
@@ -207,8 +209,79 @@ export function makeSqlRunner(config: Config): SqlRunner {
 // Callers — PostgREST, exactly as a browser reaches it
 // ---------------------------------------------------------------------------
 
-/** The credential pair PostgREST evaluates a request against. */
-export type Caller = { label: string; apiKey: string; token: string };
+/**
+ * The credential pair PostgREST evaluates a request against, plus whatever
+ * extra request headers the caller chose to send.
+ *
+ * `headers` is what makes OD-G14's selector testable. It rides on the Caller
+ * rather than on each probe so that a selection applies to every request that
+ * caller makes — a read, a write and an RPC alike — which is the only way to
+ * assert that the tenant a session resolves to and the rows it reads agree.
+ */
+export type Caller = {
+  label: string;
+  apiKey: string;
+  token: string;
+  headers?: Record<string, string>;
+  /**
+   * Header pairs appended rather than set, so the same name can be sent twice.
+   * CF-128 is about exactly that and a `Record` cannot express it: two
+   * `x-b2s-tenant` headers is a distinct wire shape from one, and undici joins
+   * them into a single comma-separated field value. Applied after `headers`.
+   */
+  rawHeaders?: [string, string][];
+};
+
+/**
+ * OD-G14's transport. An ordinary request header, read server-side out of
+ * PostgREST's per-request `request.headers` setting, re-validated against
+ * `public.membership` on every call and trusted for nothing.
+ */
+export const TENANT_SELECTOR_HEADER = "x-b2s-tenant";
+
+/**
+ * The same caller, selecting a tenant. Takes the value verbatim — a proof needs
+ * to send a malformed one, an empty one and a differently-cased header name,
+ * and a helper that validated its argument could not express any of them.
+ */
+export function selecting(
+  caller: Caller,
+  selector: string,
+  headerName: string = TENANT_SELECTOR_HEADER,
+): Caller {
+  return {
+    ...caller,
+    label: `${caller.label}[${headerName}=${selector === "" ? "<empty>" : selector}]`,
+    headers: { ...(caller.headers ?? {}), [headerName]: selector },
+  };
+}
+
+/**
+ * The same caller sending the selector header MORE THAN ONCE — CF-128.
+ *
+ * Each pair is appended, so the request really does carry two header lines of
+ * the same name and undici joins them on the wire exactly as any HTTP client
+ * would. That is the point: the value PostgREST hands to SQL is one
+ * comma-joined string, which is a non-match against every uuid the caller
+ * holds, so the answer is null. Fail-closed by construction, and unproven until
+ * something sends it.
+ */
+export function selectingTwice(
+  caller: Caller,
+  first: string,
+  second: string,
+  headerName: string = TENANT_SELECTOR_HEADER,
+): Caller {
+  return {
+    ...caller,
+    label: `${caller.label}[${headerName}=${first} +${headerName}=${second}]`,
+    rawHeaders: [
+      ...(caller.rawHeaders ?? []),
+      [headerName, first],
+      [headerName, second],
+    ],
+  };
+}
 
 export type Attempt = {
   ok: boolean;
@@ -254,6 +327,21 @@ function parseAttempt(status: number, raw: string): Attempt {
   };
 }
 
+/**
+ * The request headers for one caller: the fixed pair PostgREST authenticates
+ * against, then whatever the caller chose to add.
+ *
+ * A `Headers` instance rather than a plain object because `rawHeaders` appends,
+ * and appending the same name twice is the whole of CF-128's wire shape. Set
+ * headers are applied first so a raw pair can add a second line beside one.
+ */
+function buildHeaders(base: Record<string, string>, caller: Caller): Headers {
+  const headers = new Headers(base);
+  for (const [name, value] of Object.entries(caller.headers ?? {})) headers.set(name, value);
+  for (const [name, value] of caller.rawHeaders ?? []) headers.append(name, value);
+  return headers;
+}
+
 async function postgrest(
   config: Config,
   caller: Caller,
@@ -262,7 +350,7 @@ async function postgrest(
   body?: unknown,
   prefer = "return=representation",
 ): Promise<Attempt> {
-  const headers: Record<string, string> = {
+  const base: Record<string, string> = {
     apikey: caller.apiKey,
     Accept: "application/json",
     // Every write returns its rows, so "refused" and "matched nothing" are
@@ -271,12 +359,16 @@ async function postgrest(
   };
   // An empty token is the unauthenticated caller: the request carries the
   // publishable key alone and PostgREST resolves it to `anon`.
-  if (caller.token !== "") headers.Authorization = `Bearer ${caller.token}`;
-  if (body !== undefined) headers["Content-Type"] = "application/json";
+  if (caller.token !== "") base.Authorization = `Bearer ${caller.token}`;
+  if (body !== undefined) base["Content-Type"] = "application/json";
 
   const result = await fetchResilient(
     `${config.url}/rest/v1/${path}`,
-    { method, headers, body: body === undefined ? undefined : JSON.stringify(body) },
+    {
+      method,
+      headers: buildHeaders(base, caller),
+      body: body === undefined ? undefined : JSON.stringify(body),
+    },
     `${caller.label} ${method} ${path}`,
   );
   return parseAttempt(result.status, result.body);
@@ -336,16 +428,16 @@ export function makeProbes(config: Config) {
       fn: string,
       args: Record<string, unknown> = {},
     ): Promise<{ status: number; body: string; rows: RawRow[] }> {
-      const headers: Record<string, string> = {
+      const base: Record<string, string> = {
         apikey: caller.apiKey,
         Accept: "application/json",
         "Content-Type": "application/json",
       };
-      if (caller.token !== "") headers.Authorization = `Bearer ${caller.token}`;
+      if (caller.token !== "") base.Authorization = `Bearer ${caller.token}`;
 
       const result = await fetchResilient(
         `${config.url}/rest/v1/rpc/${fn}`,
-        { method: "POST", headers, body: JSON.stringify(args) },
+        { method: "POST", headers: buildHeaders(base, caller), body: JSON.stringify(args) },
         `${caller.label} rpc/${fn}`,
       );
 
@@ -465,6 +557,7 @@ export type TenantFixture = {
   viewerMembershipId: string;
   consentGrantId: string;
   activityEventId: string;
+  invitationId: string;
 };
 
 export type Fixture = {
@@ -481,30 +574,41 @@ export function futureIso(days: number): string {
   return new Date(Date.now() + days * 86_400_000).toISOString();
 }
 
+/**
+ * One synthetic identity, signed in. Exported so that a proof needing a
+ * membership shape the shared fixture does not carry builds its own actors
+ * instead of bending the fixture every other proof asserts exact sets against.
+ * Same reserved prefix, so the same teardown removes it.
+ */
+export async function makeIdentity(
+  config: Config,
+  label: string,
+  runId: string,
+  address?: string,
+): Promise<Identity> {
+  const auth = makeAuthAdmin(config);
+  const email = address ?? `${SYNTHETIC_PREFIX}${label}-${runId}@example.com`;
+  // Ephemeral, never written to disk and never printed.
+  const password = randomUUID();
+  const authId = await auth.createUser(email, password);
+  const token = await auth.signIn(email, password);
+  return { label, authId, email, apiKey: config.publishableKey, token };
+}
+
 /** Single-quote escaping for the literals this harness builds into SQL. */
 function lit(value: string): string {
   return `'${value.replace(/'/g, "''")}'`;
 }
 
 export async function seed(config: Config, sql: SqlRunner): Promise<Fixture> {
-  const auth = makeAuthAdmin(config);
   const runId = randomUUID().slice(0, 8);
 
-  async function makeIdentity(label: string): Promise<Identity> {
-    const email = `${SYNTHETIC_PREFIX}${label}-${runId}@example.com`;
-    // Ephemeral, never written to disk and never printed.
-    const password = randomUUID();
-    const authId = await auth.createUser(email, password);
-    const token = await auth.signIn(email, password);
-    return { label, authId, email, apiKey: config.publishableKey, token };
-  }
-
-  const aOwner = await makeIdentity("a-owner");
-  const aViewer = await makeIdentity("a-viewer");
-  const bOwner = await makeIdentity("b-owner");
-  const bViewer = await makeIdentity("b-viewer");
-  const unaffiliated = await makeIdentity("unaffiliated");
-  const operator = await makeIdentity("operator");
+  const aOwner = await makeIdentity(config, "a-owner", runId);
+  const aViewer = await makeIdentity(config, "a-viewer", runId);
+  const bOwner = await makeIdentity(config, "b-owner", runId);
+  const bViewer = await makeIdentity(config, "b-viewer", runId);
+  const unaffiliated = await makeIdentity(config, "unaffiliated", runId);
+  const operator = await makeIdentity(config, "operator", runId);
 
   const tenantA = { id: randomUUID(), slug: `${SYNTHETIC_PREFIX}alpha-${runId}` };
   const tenantB = { id: randomUUID(), slug: `${SYNTHETIC_PREFIX}beta-${runId}` };
@@ -518,6 +622,8 @@ export async function seed(config: Config, sql: SqlRunner): Promise<Fixture> {
   const consentB = randomUUID();
   const eventA = randomUUID();
   const eventB = randomUUID();
+  const invitationA = randomUUID();
+  const invitationB = randomUUID();
 
   // Seeded through the privileged SQL path rather than through PostgREST,
   // because there is deliberately no INSERT policy on `tenant` at all:
@@ -525,15 +631,30 @@ export async function seed(config: Config, sql: SqlRunner): Promise<Fixture> {
   // memberships go in as one statement so that the deferred active-owner
   // trigger sees each tenant already holding its owner at commit.
   //
-  // §3.2 — member.id equals the Supabase Auth user id. The operator gets no
-  // member row: §3.4 makes an operator a separate, non-tenant-scoped identity.
+  // §3.2 — the `member` rows already exist by the time this runs. P02-T05's
+  // `member_materialisation` trigger on `auth.users` created one for every
+  // identity `makeIdentity` just signed in, which is the whole of OD-G13's
+  // first act, so this statement ADOPTS them rather than creating them: it
+  // stamps the reserved display_name teardown and proof 4a rely on. ON CONFLICT
+  // is not defensive vagueness — the id is the auth user id by construction, so
+  // the conflict is the expected path and an INSERT here would fail.
+  //
+  // Nothing about the trigger is proven by this succeeding, deliberately: an
+  // upsert would pass whether the trigger fired or not, which is why proof 24a
+  // asserts materialisation on a fresh identity before anything writes to it.
+  //
+  // The operator is materialised too, and there is no longer any way for it not
+  // to be — OD-G13 is unconditional. It confers nothing: an operator holds no
+  // membership, so it resolves null and reads no tenant's rows, which is what
+  // proof 7 measures.
   await sql(`
     insert into public.member (id, email, display_name) values
       (${lit(aOwner.authId)},        ${lit(aOwner.email)},        ${lit(SYNTHETIC_PREFIX + "a-owner")}),
       (${lit(aViewer.authId)},       ${lit(aViewer.email)},       ${lit(SYNTHETIC_PREFIX + "a-viewer")}),
       (${lit(bOwner.authId)},        ${lit(bOwner.email)},        ${lit(SYNTHETIC_PREFIX + "b-owner")}),
       (${lit(bViewer.authId)},       ${lit(bViewer.email)},       ${lit(SYNTHETIC_PREFIX + "b-viewer")}),
-      (${lit(unaffiliated.authId)},  ${lit(unaffiliated.email)},  ${lit(SYNTHETIC_PREFIX + "unaffiliated")});
+      (${lit(unaffiliated.authId)},  ${lit(unaffiliated.email)},  ${lit(SYNTHETIC_PREFIX + "unaffiliated")})
+    on conflict (id) do update set display_name = excluded.display_name;
 
     insert into public.operator (id, granted_at) values (${lit(operator.authId)}, now());
 
@@ -554,6 +675,10 @@ export async function seed(config: Config, sql: SqlRunner): Promise<Fixture> {
     insert into public.activity_event (id, tenant_id, actor_member_id, action, entity_type, entity_id) values
       (${lit(eventA)}, ${lit(tenantA.id)}, ${lit(aOwner.authId)}, ${lit(SYNTHETIC_PREFIX + "seeded")}, 'Tenant', ${lit(tenantA.id)}),
       (${lit(eventB)}, ${lit(tenantB.id)}, ${lit(bOwner.authId)}, ${lit(SYNTHETIC_PREFIX + "seeded")}, 'Tenant', ${lit(tenantB.id)});
+
+    insert into public.invitation (id, tenant_id, email, role, expires_at, created_by) values
+      (${lit(invitationA)}, ${lit(tenantA.id)}, ${lit(`${SYNTHETIC_PREFIX}invite-a-${runId}@example.com`)}, 'viewer', now() + interval '7 days', ${lit(aOwner.authId)}),
+      (${lit(invitationB)}, ${lit(tenantB.id)}, ${lit(`${SYNTHETIC_PREFIX}invite-b-${runId}@example.com`)}, 'viewer', now() + interval '7 days', ${lit(bOwner.authId)});
   `);
 
   return {
@@ -568,6 +693,7 @@ export async function seed(config: Config, sql: SqlRunner): Promise<Fixture> {
       viewerMembershipId: memberships.aViewer,
       consentGrantId: consentA,
       activityEventId: eventA,
+      invitationId: invitationA,
     },
     b: {
       label: "B",
@@ -579,6 +705,7 @@ export async function seed(config: Config, sql: SqlRunner): Promise<Fixture> {
       viewerMembershipId: memberships.bViewer,
       consentGrantId: consentB,
       activityEventId: eventB,
+      invitationId: invitationB,
     },
     unaffiliated,
     operator,
@@ -603,6 +730,20 @@ export type TeardownCounts = Record<string, number>;
  * owner impossible through any ordinary path. Disabling it needs table
  * ownership, which is why teardown is privileged SQL and not a PostgREST call.
  */
+/**
+ * The schema proof 25b's fault injection lives in. Named here rather than in the
+ * proof so that teardown can remove it unconditionally: a run that dies between
+ * creating the trigger and dropping it would otherwise leave a trigger on
+ * `activity_event` that refuses one member's writes forever, and the next run
+ * would inherit it.
+ *
+ * Outside `public` on purpose. Proofs 14, 15 and 22 census `public` and assert
+ * exact sets against it, so a fault-injection helper placed there would fail
+ * three unrelated proofs depending on which ran first — an order dependency that
+ * looks like a policy regression.
+ */
+export const FAULT_SCHEMA = "zz_test_fault";
+
 export async function teardown(config: Config, sql: SqlRunner): Promise<void> {
   const prefix = lit(`${SYNTHETIC_PREFIX}%`);
 
@@ -611,7 +752,13 @@ export async function teardown(config: Config, sql: SqlRunner): Promise<void> {
   );
 
   await sql(`
+    drop schema if exists ${FAULT_SCHEMA} cascade;
+
     alter table public.membership disable trigger membership_active_owner_required;
+
+    delete from public.invitation
+     where tenant_id in (select id from public.tenant where slug like ${prefix})
+        or email::text like ${prefix};
 
     delete from public.activity_event
      where tenant_id in (select id from public.tenant where slug like ${prefix});
@@ -647,6 +794,7 @@ export async function teardownCounts(sql: SqlRunner): Promise<TeardownCounts> {
       (select count(*) from public.operator)::int                                   as operator_total,
       (select count(*) from public.consent_grant)::int                              as consent_grant_total,
       (select count(*) from public.activity_event)::int                             as activity_event_total,
+      (select count(*) from public.invitation)::int                                 as invitation_total,
       (select count(*) from auth.users)::int                                        as auth_users_total,
       (select count(*) from public.tenant
         where slug like ${prefix} or name like ${prefix})::int                      as tenant_synthetic,
@@ -654,7 +802,22 @@ export async function teardownCounts(sql: SqlRunner): Promise<TeardownCounts> {
         where email::text like ${prefix} or display_name like ${prefix})::int       as member_synthetic,
       (select count(*) from public.activity_event
         where action like ${prefix})::int                                           as activity_event_synthetic,
-      (select count(*) from auth.users where email like ${prefix})::int             as auth_users_synthetic
+      (select count(*) from public.invitation i
+        where i.email::text like ${prefix}
+           or i.tenant_id in (select id from public.tenant where slug like ${prefix}))::int
+                                                                                    as invitation_synthetic,
+      (select count(*) from auth.users where email like ${prefix})::int             as auth_users_synthetic,
+      -- Proof 25b creates a schema, a function and a trigger to force a failure
+      -- mid-provisioning. All three are counted here, because a fault injection
+      -- that outlives its proof is a live defect wearing a test's name — and the
+      -- trigger is the one that would matter, since it sits on activity_event.
+      (select count(*) from pg_namespace
+        where nspname = '${FAULT_SCHEMA}')::int                                     as fault_schema_total,
+      (select count(*) from pg_trigger t
+         join pg_class c on c.oid = t.tgrelid
+        where not t.tgisinternal
+          and c.relnamespace = 'public'::regnamespace
+          and t.tgname like ${lit(`${FAULT_SCHEMA}%`)})::int                         as fault_trigger_total
   `);
   return row;
 }
@@ -700,6 +863,32 @@ export const EXPECTED_ASSERTIONS = [
   // P01-T04 — one line per fix, so a closed finding that reopens is louder
   // than a finding that was never tested.
   "18a", "18b", "18c", "18d", "18e", "19", "20a", "20b", "21", "22",
+  // P02-T04 — OD-G14's resolution contract, one line per row of it plus the
+  // four probes this task invented. 23l, 23m, 23n and 23o found nothing and are
+  // here anyway: OD-H11 lands a probe that passes, because that is the one that
+  // catches tomorrow's regression.
+  "23a", "23b", "23c", "23d", "23e", "23f", "23g", "23h",
+  "23i", "23j", "23k", "23l", "23m", "23n", "23o",
+  // P02-T05 — OD-G13's two acts. 24 is member materialisation, 25 is tenant
+  // provisioning, 26 is CF-128's duplicate selector header. 24c and 25f found
+  // nothing and are here anyway, per OD-H11.
+  "24a", "24b", "24c",
+  "25a", "25b", "25c", "25d", "25e", "25f",
+  "26",
+  // P02-T12 — OD-G17, OD-G18, OD-G16. 27 is locale/currency both directions,
+  // 28 is the two bounds including a real concurrency assertion, 29 is the
+  // invitation-by-email flow. All landed permanently per OD-H11.
+  "27a", "27b",
+  "28a", "28b", "28c", "28d", "28e",
+  "29a", "29b", "29c", "29d", "29e", "29f", "29g",
+  // P02-T13 — OD-G19's absence of an operator write path, and ConsentGrant
+  // reach. 30a–30f assert the write-path absence (10 covers INSERT; these
+  // cover UPDATE, DELETE, anon, the policy set, the privilege grid, and the
+  // catalog). 30g–30j close the §5 controls 20a/20b named but did not pin
+  // to their own ids: lapse, revocation, who may create a grant, and
+  // tenant-scope. All landed permanently per OD-H11.
+  "30a", "30b", "30c", "30d", "30e", "30f",
+  "30g", "30h", "30i", "30j",
   "D",
 ];
 

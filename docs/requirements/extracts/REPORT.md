@@ -3,6 +3,15 @@
 > NOT a parity target. Where this conflicts with a frozen document in
 > docs/product/, the frozen document wins.
 
+> **2026-09-01, P02-T15, CF-72.** No line number in this document may be cited
+> without re-derivation against the extract that owns that file. Drift into
+> `bb-stock-costs.html` and `balance-bites-invoice-pro.html` is non-linear
+> (+140 to +1506 and 0 to +3035); no offset repairs a citation. The original
+> citations stand (PR-07, PR-29). Enumerated at this annotation:
+> 15 `bb-stock-costs.html` hits and 9 `balance-bites-invoice-pro.html` hits.
+> Line counts into the three frozen design tools are exact and are not this
+> banner's subject.
+
 # Balance Bites — Template Audit Report
 
 > **Scope:** Static analysis only. No source files were modified. This report documents six single-file HTML business tools built for **Balance Bites** (an Egyptian healthy-snacks brand, bilingual AR/EN, gold + dark-brown identity) ahead of unifying them into one white-label web app.
@@ -466,6 +475,14 @@ Each row is a subsystem re-implemented independently in multiple files. "Impls" 
   - a **shared set of JSON keys**: invoice-pro writes `bb_products`, `bb_invoices`, `bb_inv2`, `bb_categories`, `bb_color_presets` (its `MANAGED`, `:953`); stock reads them as `READ_KEYS` (`:1016`) and writes back `bb_pending_invoices`, which invoice-pro re-reads as "prep drafts" (`invoice-pro:646-658`). So the coupling is **bidirectional** via `bb_pending_invoices`.
 - **What breaks if a schema changes:** if invoice-pro changes the `Product` or `Invoice` shape, Stock & Costs' COGS, profit, and stock-value math (which destructure `packType`, `weight`, `unitPrice`, `items[]`, `invoiceNumber`) break silently — there is no shared type or version check. If the folder path (`bb-stock-costs.html:1012`) or the persisted handle is lost, sync silently stops (empty `catch`).
 - **Design tools are independent islands.** Carton, stand, and the two label tools share **no runtime data** with each other or with the business tools; they only share *copied* branding constants and *duplicated* preset/theme code. Changing one cannot break another today — but it also means branding must be re-entered in every tool.
+
+  > **2026-09-01, P02-T15, CF-11.** FALSIFIED. The original sentence stands
+  > (PR-07, PR-29). `EXTRACT_DESIGN_TOOLS.md` §8.7 re-derives the coupling
+  > map in six numbered points and is the evidence; this annotation does
+  > not replace it. The axis §3.3 chose was wrong. The real division is
+  > tools that opted into the shared folder — invoice-pro, bb-stock-costs,
+  > sticker — against tools that did not — label-editor, stand, carton —
+  > a line running through the design family rather than around it.
 
 ### 3.4 Are any two files versions of the same tool?
 

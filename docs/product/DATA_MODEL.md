@@ -2,7 +2,7 @@
 
 **Status:** AUTHORED, Platform tier. Precedence slot 6.
 **Authored:** 2026-08-01 by the reviewer surface.
-**Depends on:** `DOMAIN_MODEL.md` (87 entities, 9 tiers), `TENANCY_MODEL.md`,
+**Depends on:** `DOMAIN_MODEL.md` (88 entities, 9 tiers), `TENANCY_MODEL.md`,
 `SECURITY_MODEL.md`, `GLOSSARY.md`, `ARCHITECTURE.md`.
 
 > **Scope of this revision.** `DOMAIN_MODEL.md` says what exists. This says how it
@@ -77,10 +77,69 @@ the operator rule's predicate.
 
 | Helper | Returns |
 |---|---|
-| `current_tenant_id()` | The `tenant_id` of the calling identity's active `membership`, or null |
+| `current_tenant_id()` | The tenant this request acts in, resolved per §2.1, or null |
 | `is_operator()` | Whether the calling identity has an `operator` row |
-| `is_current_tenant_owner()` | Whether the caller's membership in their own active tenant carries role `owner` |
+| `is_current_tenant_owner()` | Whether the caller's membership in the tenant `current_tenant_id()` resolved carries role `owner` |
 | `has_live_consent_grant(tenant_id)` | Whether that tenant has a `consent_grant` that is neither revoked nor lapsed, evaluated now |
+
+### 2.1 `current_tenant_id()` — the resolution contract
+
+OD-G14. The tenant a session acts in is **supplied by the caller as a selector
+and resolved server-side against an active `Membership`, on every request.**
+This table is the specification, not an illustration of it. Each row is asserted
+by a named assertion in the tenant-isolation suite, cited in the last column.
+
+| Caller-supplied selector | Caller's active memberships | Result | Asserted by |
+|---|---|---|---|
+| absent | 0 | null | 23o |
+| absent | exactly 1 | that tenant | 23a |
+| absent | 2 or more | null | 23b |
+| present, malformed | any | null — **and it must not raise** | 23h |
+| present, names a tenant with no active membership for the caller | any | null | 23e, 23f, 23g, 23i, 23j, 23n |
+| present, names a tenant the caller holds active | any | that tenant | 23c, 23d |
+
+**Held means `status = 'active' and archived_at is null`.** A membership that is
+`invited`, `suspended` or archived is not held: it does not resolve when it is
+selected, and it does not count toward the "exactly 1" above. An `active` row
+carrying an `archived_at` is not held either — a predicate reading `status`
+alone gets that case wrong, which is why 23g exists.
+
+**Explicit beats implicit, and a wrong explicit fails closed.** A caller holding
+exactly one active membership who supplies a selector naming a tenant they do
+not hold resolves **null**. It does not fall back to the held one. Silently
+acting in a tenant the caller did not ask for is worse than acting in none, and
+23j is the assertion that stops the fallback being reintroduced as a
+convenience.
+
+**Malformed, unheld and nonexistent are one code path, not three.** The selector
+is compared against the text form of the tenants the caller holds, so a value
+that is not a uuid, a uuid naming a tenant they do not hold, and a uuid naming
+no tenant at all are the same non-match. That makes §1's existence property
+structural here rather than a matter of three branches agreeing: 23i asserts the
+nonexistent and the unheld answers are byte-identical.
+
+**The transport is an ordinary request header,** `x-b2s-tenant`, read
+server-side out of the per-request settings PostgREST exposes. OD-G14
+forecloses the two alternatives: a token claim would make the client the tenant
+of record, and a stored per-person value would be shared across every session
+and device that person has open. A header is neither — it is supplied per
+request, by the caller, and nothing persists it. The name is matched
+case-insensitively; an absent, empty or whitespace-only value is `absent`.
+
+**A forged selector is harmless, and that is structural.** The value never
+selects rows. It can only narrow the set of memberships re-derived from
+`membership` on every call, and there is no value that adds one. The most a
+caller achieves by forging it is to name a tenant they do not hold, whose answer
+is null: they lose their own reach for that request and gain nothing anywhere.
+23o asserts it from outside — anon, an unaffiliated member and an operator each
+selecting a real tenant.
+
+**The helper stays `stable`** even though it now reads a per-request value.
+`current_setting()` is itself stable and the request settings are established
+once per transaction before the statement runs, so the value cannot change
+within a statement — which is exactly what `stable` promises. `volatile` would
+be wrong in the other direction, forcing re-evaluation per row inside every
+policy that calls it.
 
 **The standard tenant policy**, applied to every tenant-scoped table:
 
@@ -105,8 +164,8 @@ business: an operator who cannot read it cannot tell whether the access they
 hold is live, revoked or lapsed. `subscription` and `feature_flag` join this
 class when billing lands.
 
-**Tenant business data — `activity_event`, and every table in every tier after
-this one.** **No operator policy on the table at all.** An operator reaches a
+**Tenant business data — `activity_event`, `invitation`, and every table in every
+tier after this one.** **No operator policy on the table at all.** An operator reaches a
 business row only through a *declared read path* — a `security definer` function
 that (1) refuses a caller who is not an operator, (2) refuses unless
 `has_live_consent_grant(tenant_id)` is true at that moment, (3) writes an
@@ -143,7 +202,7 @@ explicitly not member-writable.
 
 ## 3. The Platform tier
 
-Six tables and four enums for Release 1. §3.7 is `role`, which is an enum,
+Seven tables and four enums for Release 1. §3.7 is `role`, which is an enum,
 deliberately not a table, and the only one of the four with a subsection of its
 own. The other three — `tenant_status`, `membership_status` and `consent_scope`
 — are declared inline in the column tables of §3.1, §3.3 and §3.5. That is why
@@ -151,7 +210,7 @@ this line read "one enum" until P01-T06-FIX: every value was specified and only
 the stated total was wrong, which is PR-15's exact shape. The count is now
 asserted against `supabase/schema.sql` by `scripts/check_stated_counts.py`.
 `subscription` and `feature_flag` are Release 3 (`SCOPE.md`) and land with
-billing.
+billing. §3.8 `invitation` is the seventh table, landed with OD-G16.
 
 **The four enums:** `role` · `tenant_status` · `membership_status` ·
 `consent_scope`
@@ -170,14 +229,70 @@ One company. One master `brand`. The root of every scope chain.
 | `id` | uuid pk | |
 | `name` | text not null | The company's own name. Not an identifier |
 | `slug` | text not null unique | URL-safe, lowercase, immutable after creation |
-| `base_currency` | text not null | ISO 4217. Drives money precision, CS-03 |
-| `default_locale` | text not null | `en` or `ar` at R1 |
+| `base_currency` | text not null | ISO 4217. CHECK: `EGP`, `USD`, `SAR`, `AED`, `EUR` (OD-G17) |
+| `default_locale` | text not null | CHECK: `en`, `ar` (OD-G17). A third locale implies a translation surface that does not exist |
 | `status` | enum not null | `active`, `suspended`, `closed` |
 | provenance + `archived_at` | | per §1 |
 
 **RLS.** SELECT where `id = current_tenant_id()` or `is_operator()`.
 No INSERT, UPDATE or DELETE policy for members — provisioning is a privileged
 path (ADR-005). **A tenant cannot create or rename a tenant through the API.**
+
+**The write path, and it is the only one.** `provision_tenant(name, slug,
+base_currency, default_locale)` — a `security definer` function owned by the
+schema owner, `EXECUTE` granted to `authenticated` and to nobody else. It is
+OD-G13's second act: it creates the `tenant`, the caller's `active` `owner`
+`membership` (§3.3) and a `tenant.provisioned` `activity_event` (§3.6) in one
+transaction, and returns the new id. The absent INSERT policy above is still
+what makes this the only path — the function stands beside that absence rather
+than relaxing it.
+
+**It is deliberately not the `service_role` client** at ADR-005's quarantine,
+and the reason is atomicity rather than taste. That client speaks PostgREST,
+where each request is its own transaction: three round trips cannot be one act,
+and a failure after the tenant insert would leave a tenant with no owner —
+which `membership_active_owner_required` would not catch, because it fires at
+the commit of a transaction that had already succeeded. The privileged client
+remains right for provisioning work that is not one statement's worth of
+writes.
+
+Three properties are structural rather than checked, and each is asserted:
+
+- **Atomic.** A plpgsql body runs inside the caller's transaction, so a raise
+  anywhere in the function leaves no tenant, no membership and no event. 25b
+  proves it by forcing a failure at the third insert and counting all three at
+  zero afterwards.
+- **The caller is the owner.** There is no member parameter. The owner is
+  `auth.uid()`, so there is no argument with which to name anyone else — 25c
+  asserts the absence rather than the refusal.
+- **A second act, never a side effect.** Nothing calls it: no trigger, no
+  default, no policy, no other function. Sign-up may call it immediately after
+  authenticating; signing in does not reach it. 25f asserts that an identity
+  which has only authenticated holds zero tenants.
+
+It validates `name` and `slug` against the shapes this section states in prose
+and the table carries no constraint for, because it is `tenant`'s only writer
+and therefore the only place that shape can be established.
+`base_currency` and `default_locale` are constrained on the table (OD-G17):
+`tenant_default_locale_permitted` accepts `en` and `ar`;
+`tenant_base_currency_permitted` accepts `EGP`, `USD`, `SAR`, `AED`, `EUR`.
+A CHECK, not an enum, so P07 can drop the constraint and add a foreign key to
+the Settings entities without rewriting the column. A direct `provision_tenant`
+call with any other value fails the INSERT — the wizard does not exist and is
+not the constraint (ADR-003). 27a and 27b assert both directions, rejection
+and acceptance, for each field. Zero tenant rows existed when the constraints
+landed, so there was no backfill.
+
+**Bounded, as of OD-G18.** A Member may own at most three active `Tenant`s and
+perform at most three provisioning acts per rolling 24 hours, counted from
+`activity_event` where the action is `tenant.provisioned` and the actor is the
+caller. Both numbers are policy, hardcoded to the free plan. The race a bare
+count would lose is closed by an xact-scoped advisory lock on the member id
+(`pg_advisory_xact_lock(1818, hashtext(caller))`), proven by 28d: two
+concurrent calls against one member, exactly one succeeds. A refusal is not
+recorded — `activity_event` is tenant-scoped and a refusal has no tenant —
+and leaves no tenant, membership or event (28e). Slug squatting is unsolved:
+the cap bounds tenants, not slugs.
 
 ### 3.2 `member`
 A person. Not tenant-scoped: one person may belong to several tenants over time,
@@ -195,6 +310,41 @@ and identity is global to the platform.
 `display_name` and `preferred_locale` only. Additionally SELECT where the row
 shares a `membership` tenant with the caller — colleagues are visible to each
 other, strangers are not. `email` is never updatable here; it is auth's.
+
+**The write path: authentication itself, and nothing else.** A `member` row is
+created by the `member_materialisation` trigger on `auth.users`, which calls
+`materialise_member()` — `security definer`, owned by the schema owner, granted
+`EXECUTE` to **nobody**, because a trigger function's privilege is checked when
+the trigger is created and never when it fires. There is still no INSERT policy
+and no INSERT grant on this table, so no caller acting as `authenticated`
+creates a `member` row at all, their own included. That is stronger than a
+policy restricting a caller to their own id: `id` and `email` are read out of
+the row `auth` itself just wrote, so there is no argument to forge.
+
+**One address is one `member.id`** (OD-G13's identity invariant). `email` is
+`citext unique`, so the invariant is an index rather than a rule someone
+remembers. A second authenticating identity for an address the platform already
+holds is refused inside the trigger, which aborts the transaction that was
+inserting into `auth.users` — **so the second identity is not created either.**
+No row, no linkage, no partial state, and a named error rather than a silent
+no-op. An identity carrying no address is refused on the same ground: an
+invariant keyed to an address cannot be satisfied without one. 24b asserts the
+refusal and that the row already held is unchanged, field by field, afterwards.
+
+**Materialisation grants nothing.** It creates no `membership`, no `role` and no
+`tenant`, and it writes no `activity_event` — `activity_event.tenant_id` is
+`not null` and a fresh `Member` belongs to no tenant. `current_tenant_id()`
+resolves null for them, which is §2.1's first contract row, and every policy in
+this schema reads them zero rows. 24a asserts both, on all seven tables.
+`created_by` is left null: rule 4's provenance column references `member (id)`
+and no member created this row — the person did, by proving an address, which
+`id` already records.
+
+**An operator is materialised too.** OD-G13 is unconditional, so an Operator
+identity that signs in holds a `member` row like anyone else. It confers
+nothing — an operator holds no `membership`, resolves null, and reads no
+tenant's rows — and proof 7 measures that as an exact set including the
+operator's own row rather than as a bare zero.
 
 ### 3.3 `membership`
 Binds a `member` to a `tenant` with a `role`. The join that carries data of its
@@ -249,20 +399,42 @@ one. Provisioning the first `active` `owner` of a new tenant is therefore a
 privileged path (ADR-005) and could not be anything else — there is no owner yet
 to do the inviting.
 
-**Why, and it is not tidiness.** An owner who can force a stranger active can
-force a *second* active membership onto a member of another tenant.
-`current_tenant_id()` returns null for anyone holding more than one, by design,
-so that member is locked out of the tenant they actually belong to — by a
-stranger, through the ordinary API, needing nothing but their `member.id`.
-Nothing of the victim's tenant is read, inferred or modified, so the three parts
-of `SECURITY_MODEL.md` §1 did not cover it; §1 now carries a fourth,
-availability. Found live by the P01-T03 gate and recorded as CF-103.
+**That path now exists and is named.** `provision_tenant()` (§3.1) writes the
+first `owner` row in the same transaction as the `tenant` it belongs to, which
+is the case `membership_active_owner_required` was deferred to commit for: the
+constraint evaluates against a tenant that already holds its first active owner.
+It is the only writer of an `active` `owner` row for a tenant that has no
+members yet, and the invite-then-accept rule is untouched by it. The row it
+writes belongs to the caller, so it would satisfy the restrictive
+`membership_active_is_self_only` rule even where that rule applied to it — the
+privileged path needs no exemption here, which is the property that matters. An
+owner still cannot make anyone else active anywhere, by any path.
 
-**What this rule does not settle.** A person who accepts a second invitation
-locks *themselves* out, by their own action, for the same reason. That is the
-session-to-membership binding — `TENANCY_MODEL.md` §2 binds a session to one
-membership and this document specifies no storage for the binding — and it
-belongs with authentication in Phase 02. CF-103 stays open for that half.
+**Why, and it is not tidiness.** The rule was written against a live exploit.
+An owner who can force a stranger active can force a *second* active membership
+onto a member of another tenant, and `current_tenant_id()` then returned null
+for anyone holding more than one — so that member was locked out of the tenant
+they actually belong to, by a stranger, through the ordinary API, needing
+nothing but their `member.id`. Nothing of the victim's tenant is read, inferred
+or modified, so the three parts of `SECURITY_MODEL.md` §1 did not cover it; §1
+now carries a fourth, availability. Found live by the P01-T03 gate and recorded
+as CF-103.
+
+**The lockout is gone and the rule stays** (OD-G14). §2.1 resolves a selection
+rather than failing closed on ambiguity, so a second active membership no longer
+costs anyone their first: the member selects, and 23k asserts they read exactly
+what they read before it existed. The restrictive rule is not vestigial. It
+holds on the restated ground that **forcing a `Membership` onto another person
+is a write against their identity**, which is sufficient on its own and was
+always the better reason. What removing it would restore is not the lockout —
+it is an owner who can make a stranger a member of their tenant without asking.
+
+**A person who accepts a second invitation keeps both.** They resolve null while
+they name neither and either one while they name it, which is §2.1's second and
+third rows and is the whole of the session-to-membership binding
+`TENANCY_MODEL.md` §2 requires. This is no longer deferred: the migration is
+`20260805120001_session_tenant_selector`, the contract is §2.1, and CF-103 and
+CF-93 gap (3) close on it.
 
 ### 3.4 `operator`
 A B2S platform administrator. Not tenant-scoped.
@@ -274,9 +446,15 @@ A B2S platform administrator. Not tenant-scoped.
 | `granted_by` | uuid null → operator | |
 | `revoked_at` | timestamptz null | |
 
-**RLS.** SELECT where `is_operator()`. No INSERT, UPDATE or DELETE policy at all
-— operator grants are a privileged path only, and there is deliberately no API
-path to become one.
+**RLS.** Exactly one policy: `operator_select_operator`, FOR SELECT to
+`authenticated`, USING `is_operator()`. No INSERT, UPDATE or DELETE policy
+exists — assertions 30d and 10. Privilege grid, asserted as an exact set by
+30e: `anon` none; `authenticated` SELECT only; `service_role` SELECT only
+(INSERT, UPDATE, DELETE and TRUNCATE revoked, OD-G19). Every seeded identity
+is refused UPDATE (30a) and DELETE (30b); `anon` is refused all four verbs
+(30c). Nothing in the catalog writes the table (30f). Operator grants are a
+privileged path only (`postgres`, via migration or the Management API); there
+is deliberately no API path to become one.
 
 ### 3.5 `consent_grant`
 A tenant's explicit, time-boxed permission for operator support access (OD-G10).
@@ -328,6 +506,20 @@ so an operator reaches it only through `operator_read_activity_event(tenant_id)`
 absence of an operator policy here is what makes that path the only one, and
 §2 is where the reasoning lives.
 
+**Every tenant's trail begins with its own creation.** `provision_tenant()`
+(§3.1) writes a `tenant.provisioned` event naming the caller as
+`actor_member_id`, in the same transaction as the tenant and the membership, so
+a tenant whose trail has no first event does not exist. `payload` is null there:
+every fact worth recording is already a column, and this section forbids a full
+row copy. 25a counts the event by query rather than inferring it from the
+function's return value.
+
+**Materialisation writes no event at all**, and that is a stated absence rather
+than an omission. A `Member` belongs to no tenant and `tenant_id` is `not null`,
+so a platform-global act has no tenant-scoped trail to be written to. An audit
+of who materialised when lives in `auth.users`, which is auth's record and not
+this table's.
+
 ### 3.7 `role` — not a table
 `role` is a Postgres enum, not a table. The five values are fixed by
 `TENANCY_MODEL.md` §3 and are not tenant-configurable at Release 1.
@@ -335,6 +527,64 @@ absence of an operator policy here is what makes that path the only one, and
 storage does not need a row per value. **This is a deliberate divergence between
 the domain count and the table count, recorded here so the two are never
 reconciled by mistake.**
+
+### 3.8 `invitation`
+A tenant-scoped offer addressed to an email address, not to an existing
+`Member` (OD-G16). The shape that lets an `Owner` invite a person who holds
+no `member` row and whom `member_select_colleague` would never show them.
+Acceptance is a single act: the invitee, having signed in and proven the
+address (OD-G13), activates a `Membership` in the same motion. An `Owner`
+write never produces an active `Membership` for anyone but the writer;
+`membership_active_is_self_only` is untouched.
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid pk | The capability the invitation link carries |
+| `tenant_id` | uuid not null → tenant | |
+| `email` | citext not null | The invited address. Not a `member.id` |
+| `role` | enum not null | The `role` the resulting `membership` will carry |
+| `expires_at` | timestamptz not null | A pending invitation past this instant cannot be accepted |
+| `accepted_at` | timestamptz null | Set once, by `accept_invitation`. Spent when not null |
+| `accepted_by` | uuid null → member | Null iff `accepted_at` is null |
+| provenance + `archived_at` | | per §1. Archive withdraws a pending offer |
+
+**Pending** is `accepted_at is null` and `expires_at > now()` and
+`archived_at is null`. **Spent** is `accepted_at is not null`. **Expired** is
+derived from `expires_at`. No status enum: two states the columns already
+distinguish, and a CHECK here supersedes the same way §3.1's locale and
+currency constraints do.
+
+**RLS.** SELECT where `tenant_id = current_tenant_id()`. INSERT restricted to
+the current tenant's `Owner`, and the row must land pending — `accepted_at`
+null, `archived_at` null, `expires_at` in the future. UPDATE restricted to
+the current tenant's `Owner` withdrawing a pending row (`archived_at`); the
+grant is column-scoped to `archived_at` alone, so an Owner cannot mark an
+invitation accepted, change the address, or change the role. **No DELETE
+policy. No operator policy** — `invitation` is tenant business data under
+§2's operator rule, and the invited address is not a support-session fact.
+An unaffiliated member reads nothing; an Owner of tenant A cannot read,
+alter or accept an invitation belonging to tenant B. 29c and 29g assert
+both.
+
+**The write path for acceptance, and it is the only one that produces a
+membership from an invitation.** `accept_invitation(invitation_id)` — a
+`security definer` function owned by the schema owner, `EXECUTE` granted to
+`authenticated` and to nobody else. It reads `auth.users.email_confirmed_at`
+through `caller_email_is_verified()`, matches the caller's address to the
+invitation, inserts the caller's own `active` `membership`, and spends the
+invitation, in one transaction. There is no member parameter: the member is
+`auth.uid()`. An unverified identity is refused before the invitation is
+read, so that refusal leaks nothing about whether the id exists. Every
+invitation-side refusal — missing, spent, expired, archived, addressed to
+someone else, already a member — raises the same SQLSTATE and the same
+message, which is §1's existence property holding by construction. 29a, 29b,
+29d, 29e and 29f assert the act; 29c asserts the cross-tenant half.
+
+The existing `membership_accept_invitation` policy — invite-then-accept for
+a person who already holds a `member` row — now requires
+`caller_email_is_verified()` as well. Both accept paths enforce OD-G13's
+invariant. The policy is not a way to accept an email invitation: that
+invitation is not a `membership` row.
 
 ---
 

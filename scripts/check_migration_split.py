@@ -27,6 +27,14 @@ MIGRATIONS = os.path.join(REPO, "supabase", "migrations", "*.sql")
 
 MARKER = re.compile(r"^-- ===== migration: (.+?) =====\s*$", re.M)
 
+# P02-T15 / CF-152. A run over zero migrations reconciling to an emptied
+# schema.sql would report success: the identity comparison is vacuously true
+# of two empty strings. Both floors are the true counts at the commit that
+# landed them. Changed condition, not a new premise: PROVEN_PAIRS does not
+# move (schema.sql and supabase/migrations/ are already this check's pair).
+MINIMUM_MIGRATIONS = 18
+MINIMUM_NON_BLANK_LINES = 1514
+
 
 def fail(message):
     print(f"FAIL: {message}")
@@ -133,9 +141,24 @@ def main():
         print(f"  ({label} line {extra[0] + (offset if longer is left else 0)})")
         sys.exit(1)
 
+    if len(paths) < MINIMUM_MIGRATIONS:
+        fail(
+            f"{len(paths)} migration(s) concatenate, minimum {MINIMUM_MIGRATIONS}. "
+            f"A split that examined fewer files than the floor is not a check "
+            f"(PR-27)"
+        )
+    if len(left) < MINIMUM_NON_BLANK_LINES:
+        fail(
+            f"{len(left)} non-blank line(s) identical on both sides, minimum "
+            f"{MINIMUM_NON_BLANK_LINES}. A split that examined fewer lines than "
+            f"the floor is not a check (PR-27)"
+        )
+
     print(
         f"OK: {len(paths)} migration(s) concatenate to schema.sql from its first "
-        f"marker, {len(left)} non-blank lines identical on both sides"
+        f"marker, {len(left)} non-blank lines identical on both sides, "
+        f"minimum {MINIMUM_MIGRATIONS} migration(s), minimum "
+        f"{MINIMUM_NON_BLANK_LINES} non-blank line(s)"
     )
 
 

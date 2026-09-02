@@ -2,5 +2,22 @@
   "shell": {
     "title": "B2S — من العلامة إلى الرف",
     "description": "غلاف التطبيق."
+  },
+  "access": {
+    "title": "تسجيل الدخول",
+    "signInHeading": "تسجيل الدخول بالبريد الإلكتروني",
+    "signUpHeading": "إنشاء حساب بالبريد الإلكتروني",
+    "emailLabel": "البريد الإلكتروني",
+    "passwordLabel": "كلمة المرور",
+    "signInSubmit": "تسجيل الدخول",
+    "signUpSubmit": "إنشاء حساب",
+    "googleSubmit": "المتابعة عبر Google",
+    "identity_refused": "تعذر إكمال إنشاء الحساب.",
+    "sign_in_refused": "تعذر إكمال تسجيل الدخول.",
+    "email_invalid": "أدخل عنوان بريد إلكتروني صالحاً.",
+    "password_required": "أدخل كلمة المرور.",
+    "locale_invalid": "هذه اللغة غير متاحة.",
+    "oauth_cancelled": "تم إلغاء تسجيل الدخول عبر Google.",
+    "input_invalid": "تحقق من النموذج ثم أعد المحاولة."
   }
 }

@@ -26,16 +26,16 @@ Counted even though they look derivative: `StockLevel` (a derived projection wit
 its own identity per variant-location pair, materialised for query) and
 `ArtworkVersion` (immutable, independently referenced by `PrintJob`).
 
-**Total: 87 entities across 9 tiers.** Where a later document disagrees with this
+**Total: 88 entities across 9 tiers.** Where a later document disagrees with this
 count, this document wins and the other is amended.
 
 ---
 
 ## 2. The entity set
 
-### 2.1 Platform tier — 9
+### 2.1 Platform tier — 10
 `Tenant` · `Member` · `Membership` · `Role` · `Operator` · `ConsentGrant` ·
-`ActivityEvent` · `Subscription` · `FeatureFlag`
+`ActivityEvent` · `Invitation` · `Subscription` · `FeatureFlag`
 
 ### 2.2 Brand tier — 9
 `Brand` · `BrandLine` · `BrandProfile` · `BrandTheme` · `LogoVariant` ·

@@ -36,10 +36,17 @@ jobs:
         run: python3 scripts/check_migration_split.py
 
       # OD-H9 — a reviewer-authored specification lands with the check that
-      # asserts it against reality. These two are the static half; the assertions
-      # that need the live database belong to the readiness task (OD-H8).
+      # asserts it against reality. These three are the static half; the
+      # assertions that need the live database belong to the readiness task
+      # (OD-H8) and to §11.5's re-derivation at each phase exit gate.
       - name: MODULE_SPEC §1 tree conformance (OD-H10, CF-115)
         run: python3 scripts/check_module_spec_tree.py
 
       - name: DATA_MODEL §3 against the authoritative schema
         run: python3 scripts/check_data_model_schema.py
+
+      - name: SECURITY_MODEL §11a.1 bypass inventory against the schema (CF-132)
+        run: python3 scripts/check_security_model_bypass.py
+
+      - name: docs/ROADMAP.md and docs/roadmap.html are generated (PR-35)
+        run: python3 scripts/check_roadmap.py

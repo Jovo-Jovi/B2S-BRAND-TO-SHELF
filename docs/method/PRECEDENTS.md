@@ -251,6 +251,151 @@ decision and its scope and the original sentence stands. Extends PR-07's
 reasoning from `docs/requirements/` to any record of a project or state other
 than the current one. Origin: CF-114.
 
+**PR-30 — A negative result is evidence only if the request reached the thing
+under test.**
+"It returned nothing" and "it was never asked" are the same observation at the
+client and opposite facts about the system. A probe asserting that hostile input
+is handled safely must show the input arrived: a non-answer from an intermediary
+— a proxy, a WAF, a gateway, a client-side validation error — proves the
+intermediary's behaviour and nothing whatever about the component the proof
+names. This is PR-21's shape produced by infrastructure rather than by omission,
+and it is more dangerous because the probe genuinely ran and genuinely passed.
+Where a hostile-input proof crosses a network boundary it exercises the
+in-process path as well, and reports the two counts separately so a change in the
+intermediary cannot quietly empty the proof. Origin: P02-T04, where two malformed
+tenant selectors shaped like SQL injection were answered 403 by Cloudflare at the
+Supabase edge; the assertion that `current_tenant_id()` resolves them to null
+without raising had, for those two values, tested Cloudflare.
+
+**PR-31 — No repository document is attached as a project file.**
+The reviewer fetches the repository every session (PR-09). An attached copy is
+an unasserted restatement of a source of truth, outside the reach of every
+check, and it rots silently — at P02-T03, four of six attached files differed
+from `HEAD` and `AGENTS.md` still described a port to a stack with no database.
+Where the network is unavailable the fallback is a paste of `SESSION_CONTEXT.md`
+and `PRECEDENTS.md`, nothing more. This ruling was first allocated PR-30 in a
+verdict and never landed; P02-T04 landed a different PR-30 from the branch, and
+the repository outranks the conversation. Origin: CF-127.
+
+**PR-32 — While a phase branch is open, method arising from phase work lands on
+that branch.**
+`BRANCHING.md` §3.2 sends a decision, a precedent, a lifecycle or a conformance
+check to `main` directly. That holds when no phase branch is open. While one is,
+a rule discovered by phase work lands with the work that found it and reaches
+`main` with the phase pull request — a ledger split across two heads reconciles
+nowhere, and `check_ledger.py` would pass on both while agreeing with neither.
+P02-T04 already did this correctly with PR-30. Method unrelated to the open
+phase still lands on `main`. Refines §3.2; supersedes nothing. Origin: CF-127.
+
+**PR-33 — A supplied figure is verified against the artifact before it is
+landed, and a correction that changes nothing is a correction, not a halt.**
+PR-24 makes a prompt carry the full text of every carry-forward it names, and
+PR-15 and PR-18 make a stated figure verifiable and a divergence a halt. Between
+them sits a case neither answers: prose the builder is asked to land verbatim,
+carrying a count **about a third artifact**, where the count is wrong and the
+finding survives being corrected. Landing it verbatim puts a false figure in a
+permanent record that every later reader will trust; halting spends a round trip
+on a number that changes nothing about what the task should do. Neither is
+right. The builder measures the figure against the artifact, lands the measured
+one, records the supplied wording immediately beside it so the record still
+shows what was claimed and by whom, and reports the correction as a deviation.
+**The halt is reserved for a divergence that changes the task** — a premise that
+makes the work unnecessary, impossible, or different in kind — which is what
+PR-18 is for and what this does not weaken. Origin: P02-T06, where CF-132's
+supplied text read "stated six and enumerated five" and §11a.1's table held six
+rows; the section was short of the schema by two either way, so the finding, the
+owner and the remedy were all unaffected. Verified programmatically, not by eye:
+the new check's stated-total-versus-table-rows assertion did not fire against
+the unedited document, and does fire when the total is planted at seven.
+
+**PR-34 — A method change that must touch the ledger or the state file lands on
+the open phase branch, whatever its origin.**
+PR-32 sends method arising from phase work to the branch and leaves unrelated
+method on `main`. Origin is the wrong test where the write set decides. A row
+opened on a branch cannot be closed on `main` — it is not there — and
+`SESSION_CONTEXT.md` and `CARRY_FORWARDS.md` are written by every branch task,
+so any `main` edit to either guarantees a conflict at the phase pull request.
+Where a method change touches either file while a phase branch is open, it lands
+on the branch. Refines PR-32; supersedes nothing. Origin: OD-H12, whose rows
+CF-129 and CF-130 exist only on `phase/02-tenancy-and-access`.
+
+**PR-35 — `docs/ROADMAP.md` and `docs/roadmap.html` are generated, never edited.**
+A roadmap that restates `BUILD_PHASES.md`, the ledger and the done-steps table
+is a second copy of four sources of truth, and a second copy rots — CF-122 and
+CF-93 are the same disease at smaller scale. Both files are emitted by
+`scripts/generate_roadmap.py` from committed inputs alone, and
+`scripts/check_roadmap.py` fails any push where either differs from its own
+regeneration. A hand edit is a defect, not a shortcut. Every task that changes
+phase state, closes a carry-forward, or adds a done-steps row regenerates both
+in the same commit. The generator embeds no commit sha, branch or timestamp,
+because a value that changes at commit time makes the check unsatisfiable.
+
+**PR-36 — Every commit stages by explicit path; `git add -A` and
+`git commit -a` are never used.**
+Both stage whatever the working tree happens to carry, including a modification
+the current task never made and never inspected. At P02-T09 the tree carried an
+uncommitted edit to `docs/method/REVIEWER_CHAT_INSTRUCTIONS.md` — a
+reviewer-owned document, not the builder's to rule on — that predated the
+session; a broad stage would have swept it into a commit whose message named
+only P02-T09's own work, with no mention of the reviewer's edit anywhere in the
+record. A commit message that names a task must contain only that task's work,
+and the only way to guarantee that is to name every path `git add` stages,
+never the tree's whole state. Origin: CF-140, P02-T09-FIX.
+
+**PR-37 — A STOP condition names a divergence that changes the work, never a
+figure the task derives for itself.**
+Where a prompt supplies a count the task can derive, **the derivation wins and
+the prompt's figure is reported as corrected.** A STOP condition written around
+the supplied number inverts that: it makes the prompt's arithmetic a
+precondition for work whose content does not depend on it, and the task halts on
+a number instead of doing the thing it was sent to do. At P02-T09-FIX a
+reviewer-supplied count of the ownerless ledger — 22 — was written into a
+four-buckets-must-sum-to-22 STOP condition; that task's own enumeration through
+`generate_roadmap.py`'s `collect()` returned 20, and 21 after its own CF-140
+landed in the same bucket. It halted correctly under the condition as written,
+and the triage would have been **identical at any of the three figures**: every
+row's bucket follows from that row's own text, and no bucket boundary moves when
+the total does. A round trip was spent on arithmetic that changed nothing.
+PR-33 already rules that a supplied figure about a third artifact is measured,
+corrected, recorded beside the original and reported as a deviation rather than
+halted on; **a STOP condition must not override PR-33**, and a figure the task
+derives from a committed artifact is exactly PR-33's case. The halt stays
+reserved for what PR-18 and PR-33 reserve it for: a divergence that makes the
+work unnecessary, impossible, or different in kind. A count that moves every
+time a row lands is not one — it is a measurement, and PR-23 already says who
+takes it and how. Where a prompt states such a count at all it is stamped and
+advisory (PR-18), and a bucket-sum condition is written against the figure the
+task derives, never against the figure the prompt supplies. Origin: the
+reviewer defect at P02-T09-FIX TASK 6.
+
+**PR-38 — A structural assertion added beside an existing byte-compare must be
+proven to fire with the byte-compare removed, not merely proven to fire.**
+Where a check already byte-compares a generated artifact against its own
+regeneration, a hand-edit plant that violates a newly added structural
+assertion is *also* a byte-compare mismatch, so the run still fails — for the
+pre-existing reason, possibly masking a broken new assertion entirely. At
+P02-T11, `check_roadmap.py`'s new fold-conformance "details count" assertion
+(`docs/roadmap.html`'s `<details>` total must be at least phases +
+done-steps rows) passed every on-disk plant-and-revert case only because the
+byte-compare caught each one first. One case — a whole phase's `<details>`
+block deleted — exposed why: the new tag-scanning regex matched literal
+`<details>`/`<summary>` text inside a CSS comment inside `<style>` (prose
+*describing* the fold, not markup), inflating the true count of 53 to 54 and
+handing the floor one element of slack it should never have had; deleting one
+real block dropped the file to exactly 53 — the floor itself — and the new
+assertion stayed silent while the byte-compare alone caught the plant. Proven
+only by testing `check_fold_conformance()` in isolation, in memory, against
+hand-built HTML/Markdown fragments with the byte-compare step never in the
+call path at all — the five on-disk plant-and-revert cases satisfy Task 6's
+own requirement but are insufficient on their own to prove the new assertion
+works, because every one of the five is also a byte-compare mismatch. An
+isolated pass, with the pre-existing check deliberately absent, is required
+whenever a new structural assertion is added beside a pre-existing
+byte-compare. Fixed by stripping the `<style>...</style>` block before
+tokenizing (`STYLE_BLOCK_RE`): no real disclosure markup is ever emitted
+inside `<style>`, so this is lossless for every actual `<details>` in the
+page. Origin: P02-T11, `scripts/check_roadmap.py`'s `parse_details_elements()`.
+
 ---
 
 ## 2. Environment quirks — never re-discover
@@ -521,9 +666,82 @@ than the current one. Origin: CF-114.
   script goes in a file under `$env:TEMP` and is invoked by path. Related: an
   ad-hoc `python -c` one-liner is safe only while it contains no `<`, `>`, `(`,
   `)` or backtick.
+- Learned at P02-T10, the consequence of the entry above and the reason it is
+  worth more than a shell footnote: when a plant-and-revert probe's anchor string
+  loses its backticks this way, the plant matches nothing, the target file is
+  rewritten unchanged, the check passes, and the probe reports **MISSED** — which
+  is byte-for-byte the report a genuinely absent assertion produces. A plant that
+  fails to apply and a check that fails to fire are indistinguishable from the
+  probe's own output. Under PR-26, therefore, a MISSED result is never reported
+  until the plant has been confirmed to have applied — assert the mutated text
+  differs from the snapshot before running the check, or anchor on a substring
+  containing no backtick.
 - Learned at M-01: `shutil.rmtree` fails with `PermissionError: [WinError 5]` on a
   `.git` directory, because git marks its object files read-only and Windows
   refuses to unlink a read-only file. Pass an `onexc` handler that does
   `os.chmod(path, stat.S_IWRITE)` and retries. This bites any probe that builds a
   throwaway clone of the tree and then cleans it up, and it surfaces halfway
   through the run rather than at the start.
+- Learned at P02-T04, the concrete case behind PR-30: **Cloudflare's WAF sits in
+  front of the Supabase REST endpoint and inspects request *headers*, not just
+  bodies and query strings.** A header value shaped like SQL injection —
+  `' or 1=1--` and `'; drop table tenant;--` were the two that tripped it — is
+  answered **403 with an HTML body** and never reaches PostgREST or Postgres. It
+  arrives with no SQLSTATE and no JSON, so a harness that treats "no rows and no
+  error code" as a clean null gets a false pass. Distinguish it by
+  `content-type: text/html` on a 403. This is the same edge that produces the
+  `error code: 1010` block recorded above, reached by a different signature.
+  **It is not deterministic**: the same twelve values ran twice ten minutes
+  apart and were blocked two, then one. Assert the total, count the blocked
+  separately, and never fail a proof on which of the two a given value drew.
+- Learned at P02-T04: PostgREST exposes request headers to SQL as
+  `current_setting('request.headers', true)`, a **JSON text** that must be parsed
+  and may be `NULL` or `''`. Header **names arrive lower-cased**, but match them
+  case-insensitively anyway; a direct (non-PostgREST) connection has no such
+  setting at all, so the `missing_ok` second argument is mandatory and absence
+  must be a normal path, not an exception. Reading it does not make a function
+  volatile: the value is fixed for the duration of a statement, which is exactly
+  what `stable` promises, and `stable` is required for the planner to use the
+  function inside an RLS policy.
+- Learned at P02-T04: Node's `fetch` rejects a header value containing a NUL or
+  other control character with a client-side `TypeError` before any request is
+  sent. A malformed-input list intended to reach a server must exclude them, or
+  the probe fails in the harness and never tests anything.
+- Found at P02-T04, landed here at P02-T05: PowerShell strips the inner double
+  quotes out of a single-quoted `rg` pattern argument, so the regex reaches
+  ripgrep with a character class that was never written and the error names a
+  class the author did not type. Same family as the `bash -c` and `node -e`
+  entries above: a pattern containing quotes goes in a file and is passed with
+  `-f`, or the quotes are escaped for PowerShell first.
+- Learned at P02-T05, the same backtick trap as the `node -e` entry above but
+  reached from the other side: a backtick inside a SQL comment written in a
+  **JavaScript template literal** terminates the literal, and TypeScript reports
+  `TS1005: ',' expected` at a line that looks syntactically fine. Prose inside a
+  template literal names types in words — "of type char" — rather than quoting
+  them in backticks.
+- Learned at P02-T06, and it is the one measurement §11.0.1 does *not* warn
+  about: **`has_function_privilege(role, oid, 'EXECUTE')` does not fold in a
+  `NOINHERIT` membership.** `authenticator` is a `MEMBER` of `service_role`,
+  `service_role` holds `EXECUTE` on both `vault` functions, and
+  `has_function_privilege('authenticator', ...)` still answers **false** — which
+  is correct and is the same answer reading `aclexplode(proacl)` gives, so the
+  two agree and §11b.1's "direct EXECUTE" column can be taken from either. The
+  trap is the opposite of the `pg_has_role` one: here the convenient function
+  under-reports rather than over-reports, so it is safe for the *direct* question
+  and useless for the reachable-by-`SET ROLE` one. That third measurement has to
+  be built by hand — `pg_has_role(role, r, 'MEMBER')` joined against the ACL and
+  against schema `USAGE` — and it is the only one that finds the `vault` path.
+- Learned at P02-T05, two catalog typings that cost a full suite run each:
+  `pg_policy.polcmd` is of type `"char"`, not `text`, so concatenating it has no
+  unique operator and the query fails 42725 — cast it explicitly. And
+  `pg_get_function_identity_arguments()` renders **parameter names as well as
+  types** (`p_name text, p_slug text`), not the bare type list the name suggests;
+  `proargnames` and `pronargs` are the columns for the name and arity questions.
+- Learned at P02-T15: `scripts/check_stated_counts.py`'s rules-file assertion
+  compares the two always-on Hard-rules tables first and returns on inequality,
+  so a plant that mutates only `AGENTS.md` never reaches the exists-or-invoked
+  checks. Proving a renamed or uninvoked `scripts/` path therefore requires
+  planting the same string in both files; otherwise identity fails first and
+  the probe reports a catch of the wrong assertion. Companion to PR-38
+  (a structural assertion beside an existing compare must be proven with the
+  compare removed) and to the P02-T10 MISSED-until-the-plant-applied rule.

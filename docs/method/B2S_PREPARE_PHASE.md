@@ -410,6 +410,11 @@ Run before public launch. **This is an audit, not a removal** — history is per
 - [ ] Confirm no absolute filesystem paths in new files
 - [ ] RLS policy review against `SECURITY_MODEL.md`
 - [ ] Confirm the admin role's actual reach matches G10 and the terms of service
+
+  > **2026-08-31, P02-T13, OD-G19.** "admin role" here names Operator. `GLOSSARY.md`
+  > §5 and OD-G19 forbid describing that entity as admin, superuser or staff. The
+  > original checklist line is left standing (PR-07 / PR-29 — this file is the
+  > signing record of the prepare phase). The live name is Operator.
 - [ ] Decide whether the app repo stays public at commercial launch
 - [ ] If going private: understand that already-pushed content stays disclosed
 

@@ -4,9 +4,13 @@
 now history and is not a sequencing document.
 **Authored:** 2026-08-01 by the reviewer surface, after Gate 3.
 
-Eight phases, dependency-ordered, delivering Release 1 as signed in `SCOPE.md` §2.
+Nine phases, dependency-ordered, delivering Release 1 as signed in `SCOPE.md` §2.
 One branch per phase per `BRANCHING.md`. Every phase ends with an exit-verification
 gate run by the heavyweight class, on the branch, before the pull request.
+
+**Release 1 is a pilot with a real brand, not a demo (OD-H12).** Three items move
+earlier in consequence: staging and error visibility land at P03's entry, and
+backup with a rehearsed restore lands at P05's exit.
 
 ---
 
@@ -83,6 +87,9 @@ quarantine and its guard · the RLS test harness.
 `Typeface` · `MediaAsset` and `AssetRendition` on Supabase Storage · archive,
 never delete (OD-D5).
 
+**Entry:** staging and error visibility, live before the wizard accepts its
+first real content (CF-109, OD-H12).
+
 ### P04 — Catalog and inventory
 `Product`, `ProductVariant`, `ProductCode`, `ProductCategory`, `UnitOfMeasure` ·
 `StockMovement` as the single write path, `StockLevel` derived, one `Location` ·
@@ -98,6 +105,9 @@ never delete (OD-D5).
 
 **Exit standard:** money and quantity, exact, zero drift. The discount allocation
 and the return valuation (R1-04, R1-15) carry full ceremony.
+
+**Exit, additionally:** a backup taken and a restore rehearsed against it,
+evidenced — the first phase holding money records (OD-G8, OD-H12).
 
 ### P06 — Packaging and print
 `CONTENT_MODEL.md`, `TEMPLATE_MODEL.md`, `PRINT_CONTRACT.md` and
@@ -117,6 +127,19 @@ currency, tax on/off, locales.
 `FEATURE_INVENTORY.md`, `RISK_REGISTER.md` and `ACCEPTANCE.md` authored
 just-in-time · the operator surface, metadata and usage only · the pre-relaunch
 audit in `B2S_PREPARE_PHASE.md` §10 · CF-86's secret-scanning confirmation.
+
+### P09 — Launch and operations
+`SECURITY_MODEL.md` §9's pre-launch audit, terminal · observability, alerting
+and retention · service levels · capacity and load testing against OD-G1's
+thousand-tenant target · incident response and rollback · whether this
+repository stays public at commercial launch · Terms of Service, Privacy Policy
+and a data processing agreement, drafted by counsel, not by a builder.
+
+**The method document is authored last, at this phase's handoff.** `DEV_OS.md`
+and `DEV_OS_REFERENCE.md` are retained as history; B2S authors its own method
+from the loop it actually ran (OD-H12).
+
+**Exit standard:** the pre-launch audit in `SECURITY_MODEL.md` §9, green.
 
 ---
 
