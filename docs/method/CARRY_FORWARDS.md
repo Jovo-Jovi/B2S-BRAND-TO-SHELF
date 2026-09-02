@@ -1976,6 +1976,23 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       the artefact when signing. This task does not pick an option.
       Owner: **the P03 task that stands up staging after the owner signs
       FORK 2**, per OD-H12.
+      AMENDED (P03-T01) — PART 0 HALTED. The owner signed FORK 2 in the
+      task prompt; the staging project is not there to stand up. Org
+      jiovanny, plan pro. One ACTIVE_HEALTHY B2S project, named
+      b2s-production. Three INACTIVE projects belong to other products.
+      Development branches on b2s-production: default main only.
+      Repository secrets last updated 2026-08-03; names
+      SUPABASE_ACCESS_TOKEN and SUPABASE_PROJECT_ID exist; no secret
+      name contains STAGING. GitHub Preview and Production environment
+      secrets: none. .env.local has no staging-named key. Independent
+      production counts (User-Agent B2S-P03-T01-independent/1.0, not
+      the isolation harness): public.tenant
+      2026-09-02T13:22:41.402262+00:00 HTTP 201 [{"count":0}];
+      auth.users 2026-09-02T13:22:42.087527+00:00 HTTP 201
+      [{"count":0}]. Creating the project is the owner's act, not the
+      builder's. Row stays OPEN. Owner: **the P03 task that stands up
+      staging after the owner creates the project and sets its access
+      token and project ref as repository secrets**, per OD-H12.
 - [x] CF-110 — P01-T03 verified `supabase/schema.sql` and the concatenated
       migrations byte-identical at 18,495 characters. After P01-T04 they are
       whitespace-normalised identical with ten blank lines differing at file
