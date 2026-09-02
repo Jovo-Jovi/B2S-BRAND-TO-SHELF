@@ -3104,3 +3104,30 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       option.
       Owner: **the owner, to sign the object-storage fork assembled at
       P03-ENTRY.**
+- [x] CF-159 — No task reports the CI conclusion of its own push. PR-13 requires the
+      remote comparison line and every P02 task supplied one; none reported
+      whether the workflow run on that commit succeeded. P02-GATE's PART 1
+      asserted set equality between CI's steps and the sixteen checks it ran
+      locally, which proves the pipeline would run the right checks and not
+      that it did. ci/types-drift was red on 154016d with ci/build skipped
+      behind it, and because no report carries a run conclusion there is no way
+      to say from the record when it went red — it may predate the P02 merge.
+      A green local run and a green pipeline are different claims, and citing
+      one for the other is the substitution PR-21 forbids. Found by the reviewer
+      at 154016d.
+      MEASURED (P03-FIX-01) — the supplied "it may predate the P02 merge" was
+      the open question, not a date. Derived from workflow run history, not
+      from a report: `types-drift` concluded success on the P02 merge
+      `da0fe8b` (run 33615522309, job completed 2026-09-02T09:43:43Z) and on
+      the P02-GATE follow-up `5564c33` (run 33569338439, all seven jobs
+      success). It first went red in this episode on **2026-09-02**, on
+      `154016d`, run 33618944715 at 10:20:19Z, job 100211559716. `1a1fc03`
+      has no workflow run of its own; the follow-up was the pushed head.
+      **It did not predate the P02 merge.** That does not un-merge anything:
+      P02-GATE compared types to the live catalog directly rather than
+      trusting the job. The P02 phase did not run on a red pipeline.
+      CF-159 — CLOSED (P03-FIX-01) by PR-39: every write task's report states
+      the CI conclusion of the run on its own pushed commit — run id, every
+      job, and its result — alongside the PR-13 remote comparison line; a red
+      or skipped job is a finding, not an omission; the conclusion is the one
+      on the final head, because the follow-up commit re-triggers CI.

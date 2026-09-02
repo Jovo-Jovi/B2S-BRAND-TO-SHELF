@@ -396,6 +396,18 @@ tokenizing (`STYLE_BLOCK_RE`): no real disclosure markup is ever emitted
 inside `<style>`, so this is lossless for every actual `<details>` in the
 page. Origin: P02-T11, `scripts/check_roadmap.py`'s `parse_details_elements()`.
 
+**PR-39 — A write task reports the CI conclusion of its own push.**
+Every write task's report states the CI conclusion of the run on its own
+pushed commit — the run id, every job, and its result — alongside the PR-13
+remote comparison line. A red or skipped job is a finding, reported, never
+omitted. The follow-up commit re-triggers CI, so the conclusion to report is
+the one on the final head, not the deliverable commit. A green local run and
+a green pipeline are different claims; citing one for the other is the
+substitution PR-21 forbids. Origin: P03-FIX-01. The reviewer at `154016d`
+found `ci` / `types-drift` red with `ci` / `build` skipped, and because no
+P02 report carried a run conclusion there was no way to say from the record
+when it went red.
+
 ---
 
 ## 2. Environment quirks — never re-discover
@@ -745,3 +757,13 @@ page. Origin: P02-T11, `scripts/check_roadmap.py`'s `parse_details_elements()`.
   the probe reports a catch of the wrong assertion. Companion to PR-38
   (a structural assertion beside an existing compare must be proven with the
   compare removed) and to the P02-T10 MISSED-until-the-plant-applied rule.
+- Learned at P03-FIX-01: pinning `supabase@2.111.0` in `ci.yml` does not pin
+  the helper-type template the Management API emits. Between 09:43 UTC and
+  10:20 UTC on 2026-09-02, `npx --yes supabase@2.111.0 gen types typescript`
+  began wrapping the five helper conditionals (`Tables`, `TablesInsert`,
+  `TablesUpdate`, `Enums`, `CompositeTypes`) in parentheses, +10 bytes,
+  with the `Database` catalog prefix byte-identical at 13,199 bytes. The
+  CLI version did not move. `types-drift`'s Fail on drift step is the
+  correct loud failure for that; it is not evidence that the live schema
+  moved. Regenerating with the same pinned CLI and committing the result
+  is the ADR-002 path. Do not investigate migrations on a helper-only diff.
