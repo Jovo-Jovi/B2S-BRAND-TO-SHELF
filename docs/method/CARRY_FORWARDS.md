@@ -1399,6 +1399,13 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       **Gap (6) alone remains open** and this row stays OPEN for it —
       `updated_at` is specified with no maintenance trigger and is inert on all
       six tables. Owner: **P03**, at its entry checklist, unchanged.
+      AMENDED (P03-ENTRY) — classified (a): it blocks P03 creating Brand or
+      Asset tables under `DATA_MODEL.md` §1.4. This entry checklist verified
+      the gap is still open and did not settle it (no schema, no `DATA_MODEL.md`
+      amendment). The "P03 entry checklist" owner has therefore run. Gap (6)
+      is still the live remainder. Owner: **the first P03 task that creates a
+      table**, which must settle the `updated_at` maintenance trigger before
+      or in that migration.
 - [ ] CF-94 — `check-no-runtime-cdn` and `check-no-hardcoded-literals` scan `app/`
       and `proxy.ts` only, which was the whole of the application source when
       P01-T01 authored them. `lib/` exists as of P01-T02-RESUME and is not
@@ -1444,6 +1451,13 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       the design-surface catalog task, which is not this one, and closing
       the whole row would close a half that has not happened. Owner: **the
       task that creates `components/`, for that root.**
+      AMENDED (P03-ENTRY) — classified (a): it blocks P03 composing pages.
+      `components/` and `components/ui` / `components/shared` are still
+      absent. `BUILD_PHASES.md` "The design surface" still requires the
+      catalog after the P01 shell and before P03 composes pages, landed by
+      a mechanical builder task with its own consolidated pull request.
+      That task has not run. Owner unchanged: **the task that creates
+      `components/`, for that root.**
 - [x] CF-95 — The deployment and drift pipeline is wired but not live, and both
       remaining steps are owner actions rather than builder work.
       (1) `vercel git connect` failed against the repository: the Vercel GitHub
@@ -1923,6 +1937,45 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       demo. The row stays OPEN — nothing has moved this suite into CI yet — and
       its owner is now the P03 entry checklist rather than an open-ended
       condition. Owner: **the P03 entry checklist**, per OD-H12.
+      AMENDED (P03-ENTRY) — classified (b): owned by P03, not blocking the
+      first schema or catalog task. It constrains the wizard accepting its
+      first real content (OD-H12, `BUILD_PHASES.md` §P03 Entry). This entry
+      checklist assembled FORK 2 and did not decide it, did not create a
+      Supabase project, and did not wire the isolation suite into CI. The
+      "P03 entry checklist" owner has therefore run.
+      **FORK 2 brief, assembled not signed.** Creating staging supersedes
+      ADR-012 (append-only: a new ADR, never an edit) and amends
+      `ARCHITECTURE.md` §5 (Local and Staging rows currently dormant become
+      live; Production stays the applied-to-under-review environment) and
+      §6 (the ADR-012 amendment that the RLS suite runs against production
+      is withdrawn; the original sentence that the suite runs against
+      staging and is required on any schema-touching pull request becomes
+      true). ADR-006 otherwise stands: one applier per environment.
+      CI the moment staging exists: the isolation suite becomes a required
+      job on schema-touching pull requests (this row's closing condition);
+      types-generation and `types-drift` must name which project they read
+      (today §5 generates from production; the pre-ADR-012 text generated
+      from staging). CF-92's reinstatement trigger is a row count; staging
+      created at P03 entry while `public.tenant` is still zero satisfies
+      "before the first real tenant" and can close the suite-against-production
+      half before any non-synthetic tenant exists. This row closes when the
+      suite is that CI job. ADR-012 compensating controls split: synthetic
+      slug-prefix and same-task teardown move onto staging; the
+      schema-diff-plus-backup rule on production once a non-synthetic tenant
+      exists is not retired by staging. Two moments that may not be the
+      same: ADR-012 and CF-92 name the first real / first non-synthetic
+      tenant; OD-H12 and §P03 Entry name the wizard's first real content.
+      If the wizard writes Brand content into a synthetic tenant, real
+      content happens first; if a non-synthetic tenant is provisioned
+      before the wizard, the tenant happens first. The new ADR must say
+      which moment forbids isolation-suite runs against production.
+      **Error visibility** is an entry condition and no document defines
+      it. Checkable forms exist only as options, not as a finding: a Vercel
+      log drain a builder can open; an error-tracking DSN in Vercel env
+      and never in the repository; a named on-call path. The owner names
+      the artefact when signing. This task does not pick an option.
+      Owner: **the P03 task that stands up staging after the owner signs
+      FORK 2**, per OD-H12.
 - [x] CF-110 — P01-T03 verified `supabase/schema.sql` and the concatenated
       migrations byte-identical at 18,495 characters. After P01-T04 they are
       whitespace-normalised identical with ten blank lines differing at file
@@ -2961,6 +3014,11 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       (a sequential fourth). This from-zero quartet is not an assertion.
       Found at P02-GATE. Owner: **the first task that amends
       `__tests__/isolation/` after P02**, landing it permanently per OD-H11.
+      AMENDED (P03-ENTRY) — classified (b): owned inside P03's reach, not
+      blocking the first build. P03's Brand and Asset tables are a new
+      entity set, which is a `SECURITY_MODEL.md` §4 re-run condition, so
+      the first P03 task that amends `__tests__/isolation/` is where this
+      assertion lands, permanently per OD-H11. Owner unchanged.
 - [ ] CF-155 — `SECURITY_MODEL.md` §11b.5 states the six event-trigger
       functions carry an unpinned `search_path`. Live catalog at P02-GATE:
       all six have `proconfig=['search_path=""']` (pinned). Owner, schema,
@@ -2978,3 +3036,71 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       nine-phase owning phase exists; the gap is still a capability with
       no row. Found at P02-GATE. Owner: **the next `ROLE_JOURNEY.md`
       amendment**.
+- [ ] CF-158 — Object storage for `MediaAsset` and `AssetRendition` is an
+      unsigned decide-and-document fork at P03 entry. ADR-008 signs Supabase
+      Storage with tenant-isolated paths, governed by storage policies;
+      table rows hold references, never content. `ARCHITECTURE.md` §2 cites
+      it; `BUILD_PHASES.md` §P03 names it; `SCOPE.md` §1 module 04 traces to
+      OD-D8 and OD-G11, which are vendor-neutral. The owner has raised
+      Cloudflare R2 as an alternative. Found at P03-ENTRY. Classified (a):
+      it blocks P03 implementing the Assets module. This task assembled the
+      brief and did not sign, did not create an account, project, bucket or
+      credential, and did not author an ADR.
+      **Not a decision. Assembled, not signed.**
+      **What an R2 decision supersedes or amends.** ADRs are append-only —
+      superseded, never edited. An R2 choice is a new ADR plus named
+      amendments, not a substitution. Supersedes ADR-008 in full. Amends
+      `ARCHITECTURE.md` §2 Files row (today "Supabase Storage, tenant-isolated
+      paths") and §3's storage product is not what "No base64 binaries in
+      table rows (OD-G11)" is — OD-G11 itself stands. Amends
+      `BUILD_PHASES.md` §P03 "MediaAsset and AssetRendition on Supabase
+      Storage". `SCOPE.md` §1 module 04 says "object storage" and does not
+      name a vendor; OD-D8 and OD-G11 do not name a vendor; neither is
+      superseded. The Asset tier of `DATA_MODEL.md` is not yet authored.
+      **Tenant-isolation consequence, the deciding question.** Today storage
+      isolation and data isolation are the same mechanism: Supabase Storage
+      is `storage.objects` under RLS in the same Postgres, so
+      `current_tenant_id()` covers both and the isolation suite can assert
+      path-level isolation the way it asserts row-level. Under R2, isolation
+      becomes application-enforced — a signed URL and a prefix convention,
+      proven by the code being right rather than by the database refusing.
+      Concrete isolation proof required before the storage is chosen, not
+      after: tenant A cannot GET tenant B's object by guessed key, listed
+      prefix, or swapped signed URL; a signed URL issued for tenant A
+      cannot list or read outside that tenant's prefix; the prefix
+      convention is asserted by the suite, not by the store refusing; the
+      isolation suite grows assertions that do not depend on Postgres RLS
+      on `storage.objects`. P03's exit standard inherits P02's: tenant
+      isolation is not waivable by OD.
+      **Second credential surface.** The repository is public with secret
+      scanning and push protection on (`SECURITY_MODEL.md` §8, G3-CLOSE).
+      An R2 access key (or API token) is a second privileged secret beside
+      the Supabase `service_role` key. `SECURITY_MODEL.md` §5 is Operator
+      access controls and does not currently name a credential-rotation
+      surface; §8 forbids committing credentials and places privileged keys
+      only in the host secret store; §9's pre-launch audit is the rotation
+      and scan surface (full-history secret scan; a committed privileged
+      key is rotated, not deleted). An R2 credential adds a second
+      privileged key to that audit list, a second Vercel env entry, and a
+      second rotation path. ADR-005 quarantines `service_role` construction
+      to one server-only module with a CI guard on imports from `app/`,
+      `features/` or `components/`. An R2 client is a second privileged
+      constructor: either it joins that quarantine or a new ADR names a
+      second one. This task creates neither.
+      **Cost inputs, both sides, as inputs not an argument.** Owner-supplied:
+      R2 10 GB free tier. Documents: no storage cost figure is signed in
+      ADR-008, `ARCHITECTURE.md` or `SCOPE.md`. ADR-012's context is a
+      plan-slot fact about Supabase projects (two active slots, both held),
+      not a storage-cost figure. A free tier is a cost fact; it does not by
+      itself outrank a signed ADR. Experience on another project is
+      requirements evidence (precedence slot 14), never current truth.
+      **Options and what each forecloses.** Option A — keep ADR-008,
+      Supabase Storage. Forecloses: a second object-store vendor; a second
+      privileged constructor; isolation-by-convention rather than
+      `storage.objects` RLS. Option B — Cloudflare R2, new ADR superseding
+      ADR-008. Forecloses: using `storage.objects` RLS and
+      `current_tenant_id()` as the storage isolation proof; treating
+      storage isolation as a database refusal. This task does not pick an
+      option.
+      Owner: **the owner, to sign the object-storage fork assembled at
+      P03-ENTRY.**
