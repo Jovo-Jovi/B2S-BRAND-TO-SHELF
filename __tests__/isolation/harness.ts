@@ -34,9 +34,9 @@
 //                synthetic identities. This is a privileged credential living
 //                outside ADR-005's quarantine; it is confined to this file.
 //
-// ADR-012: this project is production and holds no real tenant. Every row this
-// harness creates is synthetic, carries the reserved `zz-test-` prefix, and is
-// torn down by the same run that seeded it.
+// ADR-013: this suite runs against staging only. Production never receives
+// these rows. Every row this harness creates is synthetic, carries the
+// reserved `zz-test-` prefix, and is torn down by the same run that seeded it.
 
 import { randomUUID } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
@@ -92,20 +92,6 @@ function loadEnvLocal(): void {
   }
 }
 
-function required(name: string): string {
-  const value = process.env[name];
-  if (value === undefined || value === "") {
-    // PR-21 — the absence of a check is never reported as a passing check. This
-    // suite fails loudly rather than skipping, because a skipped isolation gate
-    // reads as green while proving nothing.
-    throw new Error(
-      `FAIL: the tenant-isolation suite cannot run. Absent configuration: ${name}. ` +
-        `This suite never skips — absent configuration is a failure, not a reason to pass.`,
-    );
-  }
-  return value;
-}
-
 export type Config = {
   url: string;
   publishableKey: string;
@@ -117,14 +103,47 @@ export type Config = {
 export function readConfig(): Config {
   loadEnvLocal();
 
-  const url = required("NEXT_PUBLIC_SUPABASE_URL").replace(/\/+$/, "");
+  // Staging-named variables only. There is no fallback to NEXT_PUBLIC_*,
+  // to SUPABASE_PROJECT_ID, or to a URL hostname. A fallback here would
+  // let the suite seed and tear down against production while reporting
+  // green — the defect ADR-013 exists to make impossible. The hostname
+  // of SUPABASE_STAGING_URL is checked against SUPABASE_STAGING_PROJECT_ID
+  // as a consistency assertion, not as a source for the ref.
+  const missing = [
+    "SUPABASE_STAGING_URL",
+    "SUPABASE_STAGING_PUBLISHABLE_KEY",
+    "SUPABASE_STAGING_SERVICE_ROLE_KEY",
+    "SUPABASE_STAGING_PROJECT_ID",
+    "SUPABASE_ACCESS_TOKEN",
+  ].filter((name) => {
+    const value = process.env[name];
+    return value === undefined || value === "";
+  });
+  if (missing.length > 0) {
+    throw new Error(
+      `FAIL: the tenant-isolation suite cannot run. Absent staging configuration: ${missing.join(", ")}. ` +
+        `This suite never skips, never falls back to production variables, and never derives a project ref ` +
+        `from NEXT_PUBLIC_SUPABASE_URL or SUPABASE_PROJECT_ID. Absent staging configuration is a failure, ` +
+        `not a reason to pass.`,
+    );
+  }
+
+  const url = process.env.SUPABASE_STAGING_URL!.replace(/\/+$/, "");
+  const projectRef = process.env.SUPABASE_STAGING_PROJECT_ID!;
+  const urlRef = new URL(url).hostname.split(".")[0];
+  if (urlRef !== projectRef) {
+    throw new Error(
+      "FAIL: the tenant-isolation suite cannot run. SUPABASE_STAGING_URL's hostname label " +
+        "does not equal SUPABASE_STAGING_PROJECT_ID. The ref is never taken from the URL.",
+    );
+  }
 
   return {
     url,
-    publishableKey: required("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"),
-    serviceRoleKey: required("SUPABASE_SERVICE_ROLE_KEY"),
-    accessToken: required("SUPABASE_ACCESS_TOKEN"),
-    projectRef: process.env.SUPABASE_PROJECT_ID || new URL(url).hostname.split(".")[0],
+    publishableKey: process.env.SUPABASE_STAGING_PUBLISHABLE_KEY!,
+    serviceRoleKey: process.env.SUPABASE_STAGING_SERVICE_ROLE_KEY!,
+    accessToken: process.env.SUPABASE_ACCESS_TOKEN!,
+    projectRef,
   };
 }
 
@@ -714,7 +733,7 @@ export async function seed(config: Config, sql: SqlRunner): Promise<Fixture> {
 }
 
 // ---------------------------------------------------------------------------
-// Teardown — a requirement, not manners (ADR-012)
+// Teardown — a requirement, not manners (ADR-013)
 // ---------------------------------------------------------------------------
 
 export type TeardownCounts = Record<string, number>;
@@ -879,7 +898,7 @@ export const EXPECTED_ASSERTIONS = [
   // 28 is the two bounds including a real concurrency assertion, 29 is the
   // invitation-by-email flow. All landed permanently per OD-H11.
   "27a", "27b",
-  "28a", "28b", "28c", "28d", "28e",
+  "28a", "28b", "28c", "28d", "28e", "28f",
   "29a", "29b", "29c", "29d", "29e", "29f", "29g",
   // P02-T13 — OD-G19's absence of an operator write path, and ConsentGrant
   // reach. 30a–30f assert the write-path absence (10 covers INSERT; these
@@ -889,6 +908,9 @@ export const EXPECTED_ASSERTIONS = [
   // tenant-scope. All landed permanently per OD-H11.
   "30a", "30b", "30c", "30d", "30e", "30f",
   "30g", "30h", "30i", "30j",
+  // P03-T01-RESUME — the suite is connected to staging, read from the live
+  // platform and the live PostgREST hostname, not from the config object.
+  "31",
   "D",
 ];
 

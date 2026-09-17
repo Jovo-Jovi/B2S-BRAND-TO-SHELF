@@ -1255,7 +1255,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       to close it. The builder correctly refused to invent text for an unbacked
       id. Owner: reviewer.
       CF-91 — CLOSED (P01-T02-RESUME) by PR-24.
-- [ ] CF-92 — ADR-012 runs B2S on a single Supabase environment. Its reinstatement
+- [x] CF-92 — ADR-012 runs B2S on a single Supabase environment. Its reinstatement
       trigger is a row count: the isolation suite may run against production only
       while it holds zero real tenants, and a staging project is created before
       the first real tenant is onboarded. Owner: the task that onboards the first
@@ -1270,6 +1270,13 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       teardown (2026-09-01T22:53:03.970932Z). The Phase 02 exit gate has
       run, so it is no longer a live owner. Stays OPEN. Owner: the task
       that onboards the first non-synthetic tenant.
+      CLOSED (P03-T01-RESUME) — ADR-013 withdraws ADR-012's permission in
+      full. Production never runs the isolation suite again, at any row
+      count, so the row-count trigger is deleted rather than adjudicated.
+      The backup-snapshot rule on production is not retired: it becomes
+      unconditional. There is no remaining owner. The 84-character
+      "first non-synthetic tenant" clause is discharged by that
+      unconditionality, not by an onboarding that has not happened.
 - [ ] CF-93 — Seven specification gaps in `DATA_MODEL.md`'s Platform tier, found by
       building it at P01-T02-RESUME. None was resolved by invention: each was
       implemented on the narrowest reading available and is recorded here for the
@@ -1919,7 +1926,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       was removed from repository secrets — no CI job needs it, and on a public
       repository every secret is reachable by any workflow file, so it was
       exposure with no reader. It remains in Vercel, production target only.
-- [ ] CF-109 — The isolation suite runs by `npm run test:isolation` and is
+- [x] CF-109 — The isolation suite runs by `npm run test:isolation` and is
       deliberately outside `npm test`, so no CI job executes it. That was
       originally forced by absent secrets; the secrets now exist and the decision
       stands anyway, on a different ground. Under ADR-012 there is one Supabase
@@ -2010,6 +2017,14 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       of the schema from the chain is the resume's named proof. Row
       stays OPEN. Owner: **the P03-T01 resume that stands up staging**,
       per OD-H12.
+      CLOSED (P03-T01-RESUME) — ADR-013 landed. All 18 migrations applied to
+      virgin staging, each in source order. Isolation suite points at
+      staging-named variables with no production fallback, proven by a
+      start-up failure when those variables are unset. The suite is a
+      required CI job on schema-touching pull requests
+      (`.github/workflows/isolation.yml`) and fails rather than skips
+      without its secrets. `types-drift` reads
+      `SUPABASE_STAGING_PROJECT_ID`. CF-109's closing condition is met.
 - [x] CF-110 — P01-T03 verified `supabase/schema.sql` and the concatenated
       migrations byte-identical at 18,495 characters. After P01-T04 they are
       whitespace-normalised identical with ten blank lines differing at file
@@ -3040,7 +3055,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       bumped one above truth fails; both reverted SHA-256-identical, never
       `git checkout --` (PR-26). Two new `fail()` sites. Owner: none
       outstanding, closed in the task that found it.
-- [ ] CF-154 — Four concurrent `provision_tenant` RPCs from a member owning
+- [x] CF-154 — Four concurrent `provision_tenant` RPCs from a member owning
       zero tenants: exactly three succeeded, one refused SQLSTATE 23514
       "a member may own at most three active tenants", owned=3 after,
       teardown returned tenant=0 and auth.users=0. The suite asserts 28d
@@ -3053,16 +3068,29 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       entity set, which is a `SECURITY_MODEL.md` §4 re-run condition, so
       the first P03 task that amends `__tests__/isolation/` is where this
       assertion lands, permanently per OD-H11. Owner unchanged.
-- [ ] CF-155 — `SECURITY_MODEL.md` §11b.5 states the six event-trigger
+      CLOSED (P03-T01-RESUME) — assertion 28f, permanently, in group 28.
+      Four concurrent `provision_tenant` RPCs from a member owning zero:
+      three succeed, one refused SQLSTATE 23514, owned=3 after. D stays
+      last. This task is the first post-P02 amendment of
+      `__tests__/isolation/`.
+- [x] CF-155 — `SECURITY_MODEL.md` §11b.5 states the six event-trigger
       functions carry an unpinned `search_path`. Live catalog at P02-GATE:
       all six have `proconfig=['search_path=""']` (pinned). Owner, schema,
       reachability and membership are unchanged, so this is not a §11 hard
       failure and not an unnamed mechanism. Found at P02-GATE. Owner: **the
       next `SECURITY_MODEL.md` amendment**.
-- [ ] CF-156 — `DECISIONS.md`'s preamble still reads "The 84 signed
+      CLOSED (P03-T01-RESUME) — original sentences stand (PR-07). Dated
+      corrections inserted at §11b.5: live `proconfig` is
+      `search_path=""`, pinned, on all six functions. Owner, schema,
+      reachability and membership unchanged.
+- [x] CF-156 — `DECISIONS.md`'s preamble still reads "The 84 signed
       operational decisions"; §2 states 92, and `check_stated_counts.py`
       asserts the §2 figure. Found at P02-GATE. Owner: **the next
       `DECISIONS.md` write**.
+      CLOSED (P03-T01-RESUME) — the 84 is the promoted set and stands
+      (PR-07). A sentence under it now states that the live total is the
+      figure in §2. §2 moved 92 → 94 with OD-G20 and OD-H13 in the same
+      write.
 - [ ] CF-157 — `TENANCY_MODEL.md` §3 Manager Can lists purchasing as a
       distinct business operation. `ROLE_JOURNEY.md` has Manager rows for
       catalog and inventory, sales, and CSV import, and none for
@@ -3070,7 +3098,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       nine-phase owning phase exists; the gap is still a capability with
       no row. Found at P02-GATE. Owner: **the next `ROLE_JOURNEY.md`
       amendment**.
-- [ ] CF-158 — Object storage for `MediaAsset` and `AssetRendition` is an
+- [x] CF-158 — Object storage for `MediaAsset` and `AssetRendition` is an
       unsigned decide-and-document fork at P03 entry. ADR-008 signs Supabase
       Storage with tenant-isolated paths, governed by storage policies;
       table rows hold references, never content. `ARCHITECTURE.md` §2 cites
@@ -3138,6 +3166,10 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       option.
       Owner: **the owner, to sign the object-storage fork assembled at
       P03-ENTRY.**
+      CLOSED (P03-T01-RESUME) — OD-G20 signed. Object storage stays
+      Supabase Storage. ADR-008 stands. R2 declined for Release 1 on
+      isolation, not cost. Asset-tier names stay vendor-neutral. Revisit
+      at P06 against measured sizes and egress.
 - [x] CF-159 — No task reports the CI conclusion of its own push. PR-13 requires the
       remote comparison line and every P02 task supplied one; none reported
       whether the workflow run on that commit succeeded. P02-GATE's PART 1
@@ -3196,3 +3228,46 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       classified as chain-derived or platform-derived before it is called a
       finding. Owner: the owner, for the production upgrade; and
       P03-T01-RESUME, which must carry the classification either way.
+      AMENDED (P03-T01-RESUME) — classification carried. Staging and
+      production public catalogs were compared by identical Management
+      API queries: tables, columns, enums, policies (cmd, roles, using,
+      check), table grants, column grants, function grants, triggers,
+      constraints, and `security definer` functions with owner and
+      `proconfig`. Every class MATCHED. `version()` both read PostgreSQL
+      17.6 / `server_version_num` 170006. Extension names and versions
+      MATCHED. The 17.6.1.155 vs 17.6.1.166 delta remains in the
+      Management API project metadata only, which is platform-derived
+      and is not a halt. No chain-derived difference in B2S-owned
+      `public` objects. Row stays OPEN. Owner: **the owner, for the
+      production upgrade**.
+- [ ] CF-162 — OD-H13 defines error visibility and does not implement it.
+      Nothing in the repository or in `.env.local` satisfies it today:
+      there is no error-tracking DSN, no log drain, no request identifier
+      in an unhandled-error surface, and no `error.tsx` that shows one.
+      Vercel runtime logs exist as a platform default; they do not by
+      themselves put a request identifier in what the person saw.
+      Owner: **P03, before the wizard accepts real content**.
+- [ ] CF-163 — `ARCHITECTURE.md` §6's guard table names
+      `check-print-containment` as the guard for "Page geometry is emitted
+      by the print engine only". No such script exists and no workflow
+      invokes one. `AGENTS.md` §3 and `.cursor/rules/b2s-devos.mdc` both
+      state NOT YET ENFORCED with owner P06 for that same rule, correctly,
+      since P02-T15. Three documents state the rule and one names a guard
+      that is not there.
+      `check_stated_counts.py`'s `check_rules_file_guards()` asserts the
+      two always-on files against `scripts/` and the workflows;
+      `ARCHITECTURE.md` §6 is outside its subject, which is why the drift
+      survived the task that closed CF-75. Either bring §6 into that
+      assertion's subject, or state in §6 that its table is aspirational
+      and `AGENTS.md` §3 is the enforced one — but not both silently.
+      Found by the reviewer at `4ce7eb2`.
+      Left OPEN: bringing §6 into `check_rules_file_guards()` is not a
+      small extension. §6 cites short guard names and a job name
+      (`types-drift`), not `scripts/` paths; the print row names a file
+      that does not exist, so extending the current exists-and-invoked
+      assertion over §6 as it stands would fail the tree; mapping those
+      short names onto `scripts/` would change the assertion's subject.
+      Owner: **the next amendment of `scripts/check_stated_counts.py` that
+      can take `ARCHITECTURE.md` §6 as a subject**, or a dedicated
+      assertion; not silently both.
+

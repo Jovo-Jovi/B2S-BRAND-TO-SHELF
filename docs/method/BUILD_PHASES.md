@@ -87,8 +87,11 @@ quarantine and its guard · the RLS test harness.
 `Typeface` · `MediaAsset` and `AssetRendition` on Supabase Storage · archive,
 never delete (OD-D5).
 
-**Entry:** staging and error visibility, live before the wizard accepts its
-first real content (CF-109, OD-H12).
+**Entry:** an unhandled server error in production produces a record a
+builder can retrieve within one working session, keyed to a request
+identifier that also appears in what the person saw; and staging is live,
+with the isolation suite a required job on schema-touching pull requests
+(CF-109, OD-H12, OD-H13).
 
 ### P04 — Catalog and inventory
 `Product`, `ProductVariant`, `ProductCode`, `ProductCategory`, `UnitOfMeasure` ·

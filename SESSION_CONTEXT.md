@@ -1,9 +1,9 @@
 # SESSION CONTEXT
-Updated: 2026-09-17 · By: Grok 4.6 (standard; prompt named Sonnet) · Phase: P03
-Last task: P03-T01a · Verdict: —. Last-row verdict is the declared
-placeholder; the follow-up commit fills the sha only. P03-T01 reviewer
+Updated: 2026-09-17 · By: Grok 4.6 (heavyweight; prompt named Opus) · Phase: P03
+Last task: P03-T01-RESUME · Verdict: —. Last-row verdict is the declared
+placeholder; the follow-up commit fills the sha only. P03-T01a reviewer
 verdict PASS, carried here under the verdict-column protocol. Ledger
-144 → **146** rows, 39 → **40** open. Full detail in the done-steps
+146 → **148** rows, 40 → **36** open. Full detail in the done-steps
 row below.
 
 ## Read these too
@@ -74,7 +74,8 @@ Keep it short: if a paragraph is growing here, it belongs elsewhere.
 | P03-ENTRY | Phase 03 entry checklist, and two forks the build must not improvise. On `main` at `da0fe8b` per BRANCHING §3.2; no phase branch cut. PART 0 containment: `git log main..phase/02-tenancy-and-access --oneline` printed nothing; `git rev-parse main^{tree}` and `phase/02-tenancy-and-access^{tree}` both `0584ffbce5ffbbd84ab464d877a3d8d9bd2755e2`. Merge commit `da0fe8b`, parents `97b5009` and `5564c33`, PR #3. Branch not deleted. PART 2 command: `python -c "import sys; sys.path.insert(0,'scripts'); import generate_roadmap as g; d=g.collect(); print(d['carry']['open_count']); print(','.join(d['carry']['open']))"` — 38 ids at start. Classification from last owner clause, never a nearby phase number. (a) blocks first build: CF-93 (Brand/Asset table creation until DATA_MODEL gap 6 `updated_at` trigger is settled); CF-94 (composing pages until the design-surface catalog lands `components/`); CF-158 (Assets module until the owner signs the object-storage fork). (b) owned by P03, not blocking first schema: CF-109 (staging and isolation-suite CI before the wizard accepts real content); CF-154 (from-zero concurrent `provision_tenant` assertion, lands when P03 first amends `__tests__/isolation/`). (c) carried: CF-02, CF-03, CF-05, CF-14, CF-22, CF-32, CF-39, CF-41, CF-46, CF-47, CF-50, CF-51, CF-53, CF-54, CF-56, CF-58, CF-69, CF-71, CF-73, CF-83, CF-84, CF-92, CF-97, CF-126, CF-133, CF-134, CF-140, CF-146, CF-150, CF-155, CF-156, CF-157. (d) still ownerless, not triaged: CF-44, CF-74. Count 3+2+32+2=39 after CF-158. Of the four the prompt named as P03-or-entry, derivation does not place CF-92 or CF-146 in (a) or (b): CF-92's last owner is the first non-synthetic tenant and the row never names P03; CF-146's last owner is the reviewer at the next BUILD_PHASES.md amendment, and BUILD_PHASES.md names UX_PRINCIPLES.md in no phase. The real P03 set includes CF-93, which that list omitted. CF-155/CF-156/CF-157 are not named as P03; they land at the next write of those files, which may or may not be a P03 task. PART 3: BRAND_CONFIG.md is the five-line stub; DATA_MODEL.md exists and `check_data_model_schema.py` asserts both ways, so the stub's DATA_MODEL blocker is discharged; authorship is reviewer-just-in-time under OD-H7, staged outside the tree per PR-14. UX_PRINCIPLES.md is the five-line stub, owed by no phase (CF-146); P03 composes the first real pages and needs that charter, and assigning it to a phase is a BUILD_PHASES.md amendment this task does not make. The design-surface catalog has not run; `components/`, `components/ui` and `components/shared` are absent; that is (a) via CF-94. When `components/` is created: `check-service-import` already lists it, floor MINIMUM_FILES 12 rises and the absent-root notice clears; `check-data-boundary` already lists it, floors MINIMUM_FILES_SCANNED 20 and MINIMUM_IMPORT_SITES 4 rise with the true counts; CF-94 still requires adding `components` to `check-no-hardcoded-literals` ROOTS (floor 17) and `check-no-runtime-cdn` ROOTS (floor 19); eslint HTML-injection already walks the tree; `check-zod-coverage` stays on `features/`. PART 4 two briefs assembled, not signed, not recommended: FORK 1 in CF-158, FORK 2 in CF-109. No OD, no ADR, no account, project, bucket or credential created. Phase branch `phase/03-brand-and-onboarding` not cut. State at `da0fe8b` re-derived: register 92, live max CF-157 then CF-158 allocated, live max PR-38, ledger 142 then 143, done-steps 51 then 52, static set 10+6=16, static-assertion 117, PROVEN_PAIRS 37 provenance P02-GATE KNOWN_GAPS 1, migrations 18, tables 7, enums 4, isolation EXPECTED_ASSERTIONS 80 highest group 30. Supplied figures matched except provenance regex is line-wrapped (same 37 at P02-GATE). 38 open at `da0fe8b` + 1 landed open (CF-158) − 0 closed = 39 open. Prompt named Sonnet; this session ran as Cursor Grok 4.6. `docs/method/REVIEWER_CHAT_INSTRUCTIONS.md` uncommitted and unstaged (CF-140). Tests: static conformance and the four npm scripts. Isolation suite not run. Acceptance standard: none applies to an entry checklist. Tenant isolation: N/A, stated explicitly. | PASS | `1a1fc03` |
 | P03-FIX-01 | types-drift red on main: Fail on drift, not absent secrets. Job 100211559716 in run 33618944715. Local CLI regen 17752 bytes vs committed 17742; catalog prefix 13199 bytes identical; five helper conditionals gained parentheses. Regenerated with supabase@2.111.0, not hand-edited. CF-159 opened and closed by PR-39. types-drift first red this episode on 2026-09-02 at 154016d after a green P02 merge (da0fe8b types-drift success at 09:43 UTC). Prompt named Sonnet; this session ran as Cursor Grok 4.6. `docs/method/REVIEWER_CHAT_INSTRUCTIONS.md` uncommitted and unstaged (CF-140). Tests: static conformance and the four npm scripts. Isolation suite not run. Acceptance standard: none applies. Tenant isolation: N/A, stated explicitly. | PASS | `ca982bc` |
 | P03-T01 | Land OD-G20, OD-H13 and ADR-013; stand up staging; close CF-109. PART 0 HALTED, STOP 1. No staging Supabase project on the Pro organisation; no staging access-token or project-ref repository secret. Org jiovanny plan pro. list_projects: one ACTIVE_HEALTHY B2S project named b2s-production; three INACTIVE other-product projects. list_branches on that project: default main only. Repository secrets (names only, last updated 2026-08-03): NEXT_PUBLIC_SUPABASE_ANON_KEY, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_ACCESS_TOKEN, SUPABASE_PROJECT_ID, SUPABASE_SERVICE_ROLE_KEY. No secret name contains STAGING. GitHub Preview and Production environment secrets: none. .env.local has five keys, none staging-named; NEXT_PUBLIC_SUPABASE_URL resolves to b2s-production. PART 0(c) independent Management API User-Agent B2S-P03-T01-independent/1.0, not the isolation harness: public.tenant 2026-09-02T13:22:41.402262+00:00 HTTP 201 [{"count":0}]; auth.users 2026-09-02T13:22:42.087527+00:00 HTTP 201 [{"count":0}]. PART 0(b) cannot be asserted: there is no second project ref. State at 4ce7eb2 re-derived, advisory matched except done-steps 52 stated / 53 enumerated (P03-ENTRY then P03-FIX-01). Register 92, highest OD-G19, highest OD-H12, highest ADR-012. Live max CF-159, PR-39. Ledger 144, 39 open. Static set 10+6=16. fail() 117. scan targets 9. PROVEN_PAIRS 37, provenance P02-GATE, KNOWN_GAPS 1. Migrations 18. Tables 7. Enums 4. Isolation 80, highest group 30. No OD, ADR, migration, suite run, or phase branch. Isolation suite not run (must not run against production). Prompt named Opus; this session ran as Cursor Grok 4.6. `docs/method/REVIEWER_CHAT_INSTRUCTIONS.md` uncommitted and unstaged (CF-140). Tests: none beyond PART 0 queries. Acceptance: TENANT ISOLATION not proven; the standard's venue did not move. Money, print, features: N/A. | PASS | `2a82922` |
-| P03-T01a | Land the staging environment record and the pending method edits. CF-160 closed as the missing record of b2s-staging; CF-161 opened on the Postgres patch-level inversion. Commits the prior session's four method files, including PR-40. Isolation suite not run. Prompt named Sonnet; this session ran as Cursor Grok 4.6. `docs/method/REVIEWER_CHAT_INSTRUCTIONS.md` uncommitted and unstaged (CF-140). Tests: static conformance and the four npm scripts. Acceptance: none applies to a record-keeping task. Tenant isolation: N/A, stated explicitly. | — | `7ec73ce` |
+| P03-T01a | Land the staging environment record and the pending method edits. CF-160 closed as the missing record of b2s-staging; CF-161 opened on the Postgres patch-level inversion. Commits the prior session's four method files, including PR-40. Isolation suite not run. Prompt named Sonnet; this session ran as Cursor Grok 4.6. `docs/method/REVIEWER_CHAT_INSTRUCTIONS.md` uncommitted and unstaged (CF-140). Tests: static conformance and the four npm scripts. Acceptance: none applies to a record-keeping task. Tenant isolation: N/A, stated explicitly. | PASS | `7ec73ce` |
+| P03-T01-RESUME | Land OD-G20, OD-H13 and ADR-013; apply 18 migrations to virgin staging; move the isolation venue off production. Register 92 to 94. ADR-012 marked superseded, body unedited. Staging reconstitutes the schema from the chain; every B2S-owned public class MATCHED production and schema.sql; types 17752 byte-identical from staging. Isolation readConfig is staging-named only: negative proof named the four absent staging variables and did not connect to production. Suite against staging: 82 expected, 82 PASS, 0 FAIL, 0 LOST, line D all fifteen teardown counters at zero; vitest 83, the completeness guard as reconciled at P02-T03. Assertion 31: live platform name b2s-staging. Independent counts after: production tenant and auth.users both n=0; staging both n=0. types-drift reads SUPABASE_STAGING_PROJECT_ID. isolation.yml required on schema-touching paths, fails rather than skips without secrets. Static set unchanged at 10+6=16; adding a job is not adding a check. CF-92, CF-109, CF-154, CF-155, CF-156, CF-158 closed. CF-162 and CF-163 opened. CF-161 stays open on the owner's production upgrade. 40 open at 88249c8 + 2 - 6 = 36 open, ledger 146 to 148. Prompt named Opus; this session ran as Cursor Grok 4.6. REVIEWER_CHAT unstaged. Tests: isolation suite in full against staging, plus static conformance and the four npm scripts. Acceptance: TENANT ISOLATION, not waivable. Money, print, features: N/A. | — | pending |
 
 > Commit column: one or more comma-separated backticked shas, or `—` where no
 > single commit tracks the step (P-00 through P-01c predate the one-task-one-commit
@@ -113,23 +114,19 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
 - CF-74 — owner: UX_PRINCIPLES.md
 - CF-83 — owner: PRECEDENTS.md, PR-18
 - CF-84 — owner: PRECEDENTS.md, PR-19
-- CF-92 — owner: the task that onboards the first non-synthetic tenant
 - CF-93 — owner: the first P03 task that creates a table, settling DATA_MODEL gap (6)
 - CF-94 — owner: the task that creates components/, for that root
 - CF-97 — owner: reviewer, to ratify the narrowing or reject it
-- CF-109 — owner: the P03-T01 resume that stands up staging, per OD-H12
 - CF-126 — owner: the task that first subscribes to Realtime
 - CF-133 — owner: the owner, on SECURITY_MODEL.md §11b.4's standing recommendation
 - CF-134 — owner: Release 3, the subscriptions and billing work
 - CF-140 — owner: the reviewer, to commit, amend or discard on their own document
 - CF-146 — owner: the reviewer, at the next method amendment that touches BUILD_PHASES.md
 - CF-150 — owner: the task that adds a second consent_scope value, which must make scope a predicate in the same migration
-- CF-154 — owner: the first task that amends `__tests__/isolation/` after P02
-- CF-155 — owner: the next SECURITY_MODEL.md amendment
-- CF-156 — owner: the next DECISIONS.md write
 - CF-157 — owner: the next ROLE_JOURNEY.md amendment
-- CF-158 — owner: the owner, to sign the object-storage fork assembled at P03-ENTRY
-- CF-161 — owner: the owner, for the production upgrade; and P03-T01-RESUME
+- CF-161 — owner: the owner, for the production upgrade
+- CF-162 — owner: P03, before the wizard accepts real content
+- CF-163 — owner: the next amendment of scripts/check_stated_counts.py that can take ARCHITECTURE.md §6 as a subject, or a dedicated assertion; not silently both
 
 ## Frozen decisions in force
 - Freeze point 2026-07-29 (`legacy/FREEZE.md`) — tools RETIRING, not port
@@ -152,10 +149,11 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
   `TENANCY_MODEL`, `SECURITY_MODEL`, `CALC_SPEC`); the other thirteen frozen
   documents are just-in-time, each carrying its Gate 3 item to its own module
   gate. `CALC_SPEC.md`'s Gate 3 item covers its 25 Release 1 rows only.
-  `DECISIONS.md` now carries **92** signed ODs, verified by count — 80 promoted
+  `DECISIONS.md` now carries **94** signed ODs, verified by count — 80 promoted
   plus OD-H7, OD-H8 to OD-H11 signed 2026-08-04 at M-01, OD-G13 to OD-G16
   signed 2026-08-04 at P02-T01, OD-G17, OD-G18, OD-H12 signed 2026-08-05
-  at P02-T07, and OD-G19 signed 2026-08-31 at P02-T13.
+  at P02-T07, OD-G19 signed 2026-08-31 at P02-T13, and OD-G20, OD-H13
+  signed 2026-09-17 at P03-T01-RESUME.
 - PR-16 through PR-19 landed 2026-08-01. PR-18 and PR-19 exist because the
   reviewer's own state assertion went stale between verdict and execution.
 - PR-20 landed 2026-08-01. Document hygiene batches into the next task touching
@@ -166,12 +164,13 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
 - `docs/method/BRANCHING.md` IN FORCE. One branch per phase, exit gate on the
   branch, one consolidated PR per phase, deletion only on verified containment.
 - ADR-001 to ADR-011 SIGNED 2026-08-01. Append-only; superseded, never edited.
-- ADR-012 SIGNED 2026-08-02 — P01-T02. **One** Supabase project, named for
-  production: types generated from it, migrations applied to it, the isolation
-  suite run against it. Supersedes ADR-006's two-environment clause only; the rest
-  of ADR-006 stands. The organisation's plan allows two active projects and both
-  slots were held, so the choice was one project or none. Reinstatement is
-  CF-92 and its trigger is a row count, not a judgement.
+- ADR-012 SIGNED 2026-08-02 — P01-T02. **SUPERSEDED 2026-09-17 by ADR-013.**
+  Original: one Supabase project, named for production. The original text
+  stands in `docs/product/ADR.md`. ADR-006 otherwise stands.
+- ADR-013 SIGNED 2026-09-17 — P03-T01-RESUME. Two Supabase projects,
+  staging and production. Types generated from staging. Isolation suite
+  against staging only, required on any pull request touching schema.
+  Production never runs the isolation suite again, at any row count.
 - `ARCHITECTURE.md` precedence slot 11, `BUILD_PHASES.md` slot 13.
   `B2S_PREPARE_PHASE.md` is superseded as a plan; its §9 and §10 remain in force.
 - PR-25 landed 2026-08-03 — P01-T03. Raising the version of a package already
@@ -189,7 +188,10 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
   conditions apply: a new entity, any policy or grant change, a new privileged
   path, a role change, or any change to the operator surface re-runs the whole
   gate. **Re-proven a third time at P01-GATE, independently: 31 PASS, 0 FAIL,
-  0 LOST, zero tenant rows before and after.**
+  0 LOST, zero tenant rows before and after.** From ADR-013 the suite runs
+  against staging only, never production, at any row count. **Re-proven at
+  P03-T01-RESUME against staging: 82 PASS, 0 FAIL, 0 LOST, line D at
+  zero; production counts still zero afterwards.**
 - ADR-006's "verbatim" DEFINED 2026-08-03 — P01-GATE. A migration split
   is verbatim when the concatenation of `supabase/migrations/*.sql` in filename
   order is **whitespace-normalised identical** to `supabase/schema.sql` from its
@@ -372,20 +374,16 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
   (PR-29).
 
 ## Next action
-**P03-T01-RESUME on `phase/03-brand-and-onboarding`.** The staging
-project exists and the four STAGING-named repository secrets are set.
-Apply the 18-migration chain to virgin staging and compare catalogs,
-classifying any difference as chain-derived or platform-derived (CF-161)
-before calling it a finding. Land OD-G20, OD-H13 and ADR-013. Do not run
-the isolation suite against production. No pull request until the phase
-exit.
+**The next P03 build task on `phase/03-brand-and-onboarding`.** The
+design-surface catalog (CF-94) lands by its own consolidated pull request
+before P03 composes pages. The first P03 table-creating task settles
+CF-93 gap (6). Error visibility (CF-162) is live before the wizard
+accepts its first real content (OD-H12, OD-H13). Production's Postgres
+patch upgrade is the owner's (CF-161). Do not run the isolation suite
+against production. No pull request until the phase exit.
 
-After that resume: the design-surface catalog (CF-94) lands by its own
-consolidated pull request before P03 composes pages. The first P03
-table-creating task settles CF-93 gap (6). Staging and a checkable
-error-visibility artefact are live before the wizard accepts its first
-real content (CF-109, OD-H12). `phase/02-tenancy-and-access` is contained
-(empty log, equal trees at `0584ffbc`); the owner deletes it.
+`phase/02-tenancy-and-access` is contained (empty log, equal trees at
+`0584ffbc`); the owner deletes it.
 
 What remains true and must not be assumed: **no client calls
 `provision_tenant()`, `accept_invitation()`, or sets the `x-b2s-tenant`

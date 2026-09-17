@@ -7,6 +7,8 @@ quietly renumbered.
 
 **ADR-001 to ADR-011 signed by the owner, 2026-08-01**, immediately after Gate 3.
 **ADR-012 signed by the owner, 2026-08-02**, at the P01 foundation task.
+**ADR-013 signed by the owner, 2026-09-17**, at the P03-T01 resume. Supersedes
+ADR-012 in full. ADR-006 otherwise stands.
 
 ---
 
@@ -205,6 +207,10 @@ those identities fail intermittently and unreproducibly.
 
 ## ADR-012 — One Supabase environment until the first real tenant
 
+**SUPERSEDED 2026-09-17 by ADR-013.** The decision, context, consequences,
+reinstatement trigger, compensating controls and forecloses below are the
+original text, unedited.
+
 **Supersedes the two-environment clause of ADR-006.** ADR-006 otherwise stands
 in full: one authoritative SQL source, migrations split verbatim in source order,
 one applier per environment.
@@ -235,3 +241,63 @@ reviewed and a backup snapshot taken first.
 
 **Forecloses.** Treating one project as two by convention, which is how a
 migration meant for staging reaches real data.
+
+---
+
+## ADR-013 — Two Supabase environments
+
+**Supersedes ADR-012 in full.** ADR-006 stands: one authoritative SQL source,
+migrations split verbatim in source order, one applier per environment.
+
+**Decision.** B2S runs two Supabase projects on a Pro organisation, staging
+and production. Migrations are applied to staging first and to production
+under review per `BRANCHING.md`. Types are generated from staging. The
+isolation suite runs against staging only and is a required job on any pull
+request touching schema.
+
+**Context.** ADR-012's constraint was a plan slot, not a preference — the
+free organisation allowed two active projects and both were held, so the
+choice was one project or none. The organisation is now on Pro and that
+constraint is gone. ADR-012 named adding staging later as the reversible
+direction and set a row count as its trigger; the trigger has not fired, and
+creating staging while both counts read zero is the cheapest this move will
+ever be. Free-tier staging was considered and rejected: free projects
+auto-pause after a week of inactivity, and a project touched only on
+schema-touching pull requests is idle most weeks, which would convert a
+required CI job into an intermittent failure people learn to re-run. A
+paused environment is worse than a declared absent one. PR-40 fixes that
+production keeps its name and its ref.
+
+The ambiguity ADR-012 left is deleted, not adjudicated. `BUILD_PHASES.md`
+§P03 named the wizard's first real content as the trigger; ADR-012 and
+CF-92 named the first non-synthetic tenant. Which comes first no longer
+matters: production never runs the isolation suite again, from this ADR
+forward, at any row count. ADR-012's permission is withdrawn in the same
+commit that lands this, not on a later condition.
+
+**Consequences.** A destructive migration can be rehearsed. The suite seeds
+and tears down against an environment that will never hold a buyer's data.
+CF-109 closes — an isolation regression is caught at the pull request rather
+than at the next phase gate. `types-drift` reads staging, because a phase
+branch's committed types describe the schema staging holds and production
+has not yet received; that production's catalog and migration ledger match
+the repository remains the phase exit gate's assertion, where it already
+is.
+
+**Known gap.** Staging runs a newer Postgres patch than production (CF-161),
+so until the levels match the rehearsal is not faithful in that one
+dimension. This does not block. The owner's production upgrade is the
+closing act.
+
+**Compensating controls, amended.** The reserved synthetic slug prefix and
+same-task teardown move to staging. The rule that no migration reaches
+production without a reviewed schema diff and a backup snapshot is not
+retired — it becomes unconditional rather than conditional on a
+non-synthetic tenant existing, because production is now the environment
+nothing rehearses on.
+
+**Forecloses.** Running the isolation suite against production on any
+argument, including a zero row count; treating staging as a second
+production; generating types from an environment other than the one
+migrations reach first.
+

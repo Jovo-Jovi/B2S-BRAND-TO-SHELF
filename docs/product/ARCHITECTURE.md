@@ -105,17 +105,16 @@ defect.
 | Staging | The Supabase project that types are generated from and that RLS tests run against |
 | Production | Applied to under review, per `BRANCHING.md` |
 
-> **Amended by ADR-012.** Production is the only environment that exists. Types
-> are generated from it, migrations are applied to it, and the isolation suite
-> runs against it. The Local row's staging pointer and the Staging row are
-> dormant until ADR-012's reinstatement trigger fires — a staging project is
-> created before the first real tenant is onboarded, and the trigger is a row
-> count, not a judgement.
+> **ADR-013.** The original rows of this table were written for two
+> environments and are true again. Local points at staging. Staging is live.
+> Types are generated from staging. Production is applied to under review.
+> ADR-012's amendment, which made production the only environment, is
+> withdrawn: that ADR is superseded.
 
 `service_role` exists only in Vercel environment variables, per environment. Never
 in the repository, never in a client bundle, never in a migration file (OD-G7 §9).
 
-Types are generated from production. A diff between generated types and the committed
+Types are generated from staging. A diff between generated types and the committed
 ones fails the pipeline loudly — including when the secret is absent. A job that
 skips silently is worse than one that fails.
 
@@ -140,11 +139,9 @@ has one.
 
 Jobs run sequentially and block: install → lint → typecheck → unit → guards →
 types-drift → build. The RLS suite runs against staging and is required on any
-pull request touching schema.
-
-> **Amended by ADR-012.** Staging does not exist, so the RLS suite runs against
-> production — permitted only while it holds zero real tenants, which is CF-92's
-> reinstatement trigger. Everything else in this section stands.
+pull request touching schema. That suite is a separate workflow so a
+schema-path filter cannot empty the rest of this pipeline; it is not a step
+in the sequence above.
 
 **A guard that blocks you is right.** It is superseded by an ADR, never disabled.
 

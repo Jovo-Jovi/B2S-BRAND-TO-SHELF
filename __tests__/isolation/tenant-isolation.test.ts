@@ -4386,6 +4386,60 @@ describe("proof 28 — OD-G18 bounds, including the race", () => {
     },
     240_000,
   );
+
+  it(
+    "28f four concurrent calls from a member owning zero: three succeed, one refused 23514",
+    async () => {
+      const failures: string[] = [];
+      const runId = randomUUID().slice(0, 8);
+      const who = await makeIdentity(config, "g18-from0", runId);
+
+      const before = await provisionedRows(who.authId);
+      if (before.active_owner !== 0 || before.tenants !== 0) {
+        failures.push(`precondition: owned ${before.active_owner} tenants ${before.tenants}, expected 0/0`);
+      }
+
+      const startedAt = Date.now();
+      const answers = await Promise.all(
+        [0, 1, 2, 3].map((n) =>
+          provision(who, `g18-from0-${runId}-${n}`, `${SYNTHETIC_PREFIX}g18-from0-${runId}-${n}`),
+        ),
+      );
+      const elapsedMs = Date.now() - startedAt;
+      const after = await provisionedRows(who.authId);
+
+      const successes = answers.filter((answer) => answer.status === 200 && answer.tenantId !== null);
+      const refusals = answers.filter((answer) => answer.status >= 400);
+      const boundRefusals = refusals.filter((answer) => rpcError(answer.body).code === "23514");
+
+      if (successes.length !== 3) {
+        failures.push(
+          `from-zero quartet produced ${successes.length} success(es) and ${refusals.length} refusal(s); ` +
+            `statuses=${answers.map((a) => a.status).join(",")}; owned=${after.active_owner}`,
+        );
+      }
+      if (boundRefusals.length !== 1) {
+        failures.push(
+          `expected exactly one 23514 refusal, got ${boundRefusals.length} of ${refusals.length} refusal(s); ` +
+            `codes=${refusals.map((r) => rpcError(r.body).code).join(",")}`,
+        );
+      }
+      if (after.active_owner !== 3 || after.tenants !== 3) {
+        failures.push(`after the quartet: tenants=${after.tenants} owned=${after.active_owner}, expected 3/3`);
+      }
+
+      record(
+        "28f",
+        "Four concurrent provisioning calls from a member owning zero: three succeed, one refused 23514",
+        failures,
+        `Promise.all of four provision_tenant RPCs for one member owning 0, distinct slugs, ` +
+          `elapsed ${elapsedMs}ms; successes=${successes.length} refusals=${refusals.length} ` +
+          `23514=${boundRefusals.length}; owned ${before.active_owner} → ${after.active_owner}`,
+      );
+      expect(failures).toEqual([]);
+    },
+    240_000,
+  );
 });
 
 describe("proof 29 — OD-G16 invitation by email, closing CF-121", () => {
@@ -5440,6 +5494,65 @@ describe("proof 30 — operator is system-managed, and ConsentGrant reach (OD-G1
     } finally {
       await restore();
     }
+    expect(failures).toEqual([]);
+  });
+});
+
+describe("proof 31 — the live connection is staging, not production", () => {
+  it("31 the connected project is staging, read from the live platform not from the config object", async () => {
+    const failures: string[] = [];
+
+    const metaResponse = await fetch(`https://api.supabase.com/v1/projects/${config.projectRef}`, {
+      headers: {
+        Authorization: `Bearer ${config.accessToken}`,
+        "User-Agent": "B2S-isolation-31/1.0",
+      },
+    });
+    const metaBody = (await metaResponse.text()).slice(0, 2000);
+    let liveName = "";
+    let liveRef = "";
+    try {
+      const parsed = JSON.parse(metaBody) as { name?: string; ref?: string; id?: string };
+      liveName = parsed.name ?? "";
+      liveRef = parsed.ref ?? parsed.id ?? "";
+    } catch {
+      failures.push(`platform metadata was not JSON: HTTP ${metaResponse.status}`);
+    }
+
+    if (liveName !== "b2s-staging") {
+      failures.push(`live project name is ${liveName || "(empty)"}, expected b2s-staging`);
+    }
+    if (liveRef !== config.projectRef) {
+      failures.push("the platform's ref for this connection is not the ref the suite opened");
+    }
+
+    const restResponse = await fetch(`${config.url}/rest/v1/tenant?select=id&limit=0`, {
+      headers: {
+        apikey: config.publishableKey,
+        Authorization: `Bearer ${config.publishableKey}`,
+        Accept: "application/json",
+      },
+    });
+    const liveHost = new URL(restResponse.url).hostname.split(".")[0];
+    if (liveHost !== liveRef) {
+      failures.push("PostgREST live hostname label is not the platform ref");
+    }
+
+    const productionRef = process.env.SUPABASE_PROJECT_ID;
+    if (productionRef !== undefined && productionRef !== "") {
+      if (liveRef === productionRef || liveHost === productionRef) {
+        failures.push("the live connection resolved to the production project ref");
+      }
+    }
+
+    record(
+      "31",
+      "The suite's live connection is staging, not production",
+      failures,
+      `platform HTTP ${metaResponse.status} name=${liveName}; ` +
+        `PostgREST HTTP ${restResponse.status}; hostname-label-equals-platform-ref=${liveHost === liveRef}; ` +
+        `production-ref-present=${Boolean(productionRef)}`,
+    );
     expect(failures).toEqual([]);
   });
 });

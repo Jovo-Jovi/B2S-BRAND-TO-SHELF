@@ -1,0 +1,110 @@
+# Tenant-isolation suite against staging (ADR-013).
+#
+# "Touching schema" in this repository is the authoritative SQL, the split
+# migrations, the generated types that are the schema's TypeScript projection,
+# and the suite that proves the live schema. A change to any of those is a
+# schema-touching change. DATA_MODEL.md is the spec the schema implements,
+# not the schema, and is not in this path set.
+#
+# This job never skips. Absent staging secrets are a failure, not a reason
+# to pass (PR-21, vitest.isolation.config.mts). It does not fall back to
+# production configuration.
+
+name: isolation
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "supabase/migrations/**"
+      - "supabase/schema.sql"
+      - "types/database.ts"
+      - "__tests__/isolation/**"
+      - "vitest.isolation.config.mts"
+  push:
+    branches:
+      - "**"
+    paths:
+      - "supabase/migrations/**"
+      - "supabase/schema.sql"
+      - "types/database.ts"
+      - "__tests__/isolation/**"
+      - "vitest.isolation.config.mts"
+
+env:
+  NODE_VERSION: "24"
+
+jobs:
+  isolation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Cache node_modules
+        id: cache
+        uses: actions/cache@v6
+        with:
+          path: node_modules
+          key: node_modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: npm ci
+
+      # This step is the whole point of the job. It runs before the suite,
+      # and it exits non-zero rather than warning. Do not add a conditional
+      # that skips it.
+      - name: Require staging secrets and prove they are not production
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+          SUPABASE_STAGING_PROJECT_ID: ${{ secrets.SUPABASE_STAGING_PROJECT_ID }}
+          SUPABASE_STAGING_URL: ${{ secrets.SUPABASE_STAGING_URL }}
+          SUPABASE_STAGING_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_STAGING_PUBLISHABLE_KEY }}
+          SUPABASE_STAGING_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_STAGING_SERVICE_ROLE_KEY }}
+        run: |
+          missing=""
+          for name in SUPABASE_ACCESS_TOKEN SUPABASE_STAGING_PROJECT_ID SUPABASE_STAGING_URL SUPABASE_STAGING_PUBLISHABLE_KEY SUPABASE_STAGING_SERVICE_ROLE_KEY SUPABASE_PROJECT_ID; do
+            eval "val=\$$name"
+            if [ -z "$val" ]; then
+              missing="$missing $name"
+            fi
+          done
+          if [ -n "$missing" ]; then
+            echo "FAIL: isolation cannot run. Absent repository secret(s):$missing"
+            echo "This job never skips. An absent secret is a failure, not a reason"
+            echo "to pass. Do not add a conditional to this step."
+            exit 1
+          fi
+          if [ "$SUPABASE_STAGING_PROJECT_ID" = "$SUPABASE_PROJECT_ID" ]; then
+            echo "FAIL: SUPABASE_STAGING_PROJECT_ID equals SUPABASE_PROJECT_ID"
+            exit 1
+          fi
+          host="$(node -e "process.stdout.write(new URL(process.env.SUPABASE_STAGING_URL).hostname.split('.')[0])")"
+          if [ "$host" != "$SUPABASE_STAGING_PROJECT_ID" ]; then
+            echo "FAIL: SUPABASE_STAGING_URL hostname label is not SUPABASE_STAGING_PROJECT_ID"
+            exit 1
+          fi
+          if [ "$host" = "$SUPABASE_PROJECT_ID" ]; then
+            echo "FAIL: SUPABASE_STAGING_URL hostname label equals SUPABASE_PROJECT_ID"
+            exit 1
+          fi
+          echo "OK: staging secrets present and resolve to a different ref than production"
+
+      - name: Tenant-isolation suite against staging
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+          SUPABASE_STAGING_PROJECT_ID: ${{ secrets.SUPABASE_STAGING_PROJECT_ID }}
+          SUPABASE_STAGING_URL: ${{ secrets.SUPABASE_STAGING_URL }}
+          SUPABASE_STAGING_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_STAGING_PUBLISHABLE_KEY }}
+          SUPABASE_STAGING_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_STAGING_SERVICE_ROLE_KEY }}
+        run: npm run test:isolation

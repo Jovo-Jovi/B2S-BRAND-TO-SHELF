@@ -10,13 +10,17 @@ byte-identical to the register as signed; no rationale has been added after
 the fact, because the signatures cover the decisions, not a later
 reconstruction of the reasoning.
 
+The live signed total is the figure in §2, asserted against this register's
+own rows. The 84 above is the promoted set and is not the file's current
+total (CF-156).
+
 New decisions are authored here in full — decision, date, rationale, and
 what it forecloses. Existing rows are amended only by formal amendment,
 never edited in place.
 
 ## 2. Decision register
 
-92 decisions, all signed. None open.
+94 decisions, all signed. None open.
 
 ### Group A — Product identity
 
@@ -132,6 +136,7 @@ never edited in place.
 | **G17** | **`default_locale` is constrained to `en` and `ar`. `base_currency` is constrained to `EGP`, `USD`, `SAR`, `AED`, `EUR`. Enforced by the database, never by the wizard.** | SIGNED 2026-08-05 |
 | **G18** | **A `Member` may own at most three active `Tenant`s and perform at most three provisioning acts per rolling 24 hours. Both are policy values, hardcoded to the free plan in Release 1 and supplied by `Subscription` in Release 3.** | SIGNED 2026-08-05 |
 | **G19** | **`public.operator` is a system-managed table. An Operator is provisioned only by migration or by direct administrative access to the database. No API role holds INSERT, UPDATE or DELETE on it. Operator is the least-privileged platform administrator: account metadata, usage and billing (OD-G10) and nothing else. No text in this repository may describe it as a super-admin, superuser, admin or staff role.** | SIGNED 2026-08-31 |
+| **G20** | **Object storage stays Supabase Storage. `MediaAsset` and `AssetRendition` are objects under tenant-isolated paths governed by storage policies. ADR-008 stands. Cloudflare R2 is declined for Release 1 on isolation, not cost. No Asset-tier column, type or function name may contain the vendor. Revisit at P06 against measured object sizes and egress.** | SIGNED 2026-09-17 |
 
 ### Group H — Quality & acceptance
 
@@ -149,6 +154,7 @@ never edited in place.
 | **H10** | **`MODULE_SPEC.md` §1 is the application tree. Repository-root configuration and infrastructure directories are outside its scope and are stated as such.** | SIGNED 2026-08-04 |
 | **H11** | **Every probe a gate invents becomes a permanent CI check or suite assertion. An adversarial pass is additive, never re-invented.** | SIGNED 2026-08-04 |
 | **H12** | **Nine build phases. P09 — launch and operations — is added. Staging and error visibility move into P03's entry; backup with a rehearsed restore moves into P05's exit. Release 1 is a pilot with a real brand, not a demo.** | SIGNED 2026-08-05 |
+| **H13** | **`BUILD_PHASES.md` §P03's entry condition "error visibility" means: an unhandled server error in production produces a record a builder can retrieve within one working session, keyed to a request identifier that also appears in what the person saw. The definition names no vendor. This OD defines the condition; it does not implement it.** | SIGNED 2026-09-17 |
 
 ## 3. Decisions authored after the promotion
 
@@ -462,4 +468,60 @@ never rewritten (PR-29).
 **Forecloses.** A launch with no owner for the security audit; monitoring
 discovered when a tenant reports an outage; a backup policy with no rehearsal;
 a method document written before the method was observed.
+
+### OD-G20 — Object storage stays Supabase Storage
+**Signed 2026-09-17.**
+
+`MediaAsset` and `AssetRendition` are objects in Supabase Storage under
+tenant-isolated paths governed by storage policies. ADR-008 stands and is not
+superseded. Cloudflare R2 was assembled as a fork at P03 entry (CF-158) and is
+declined for Release 1.
+
+The reason is not cost. R2's free allowance is larger and its egress is free
+at any volume, so on price it wins outright. It is declined on isolation.
+Supabase Storage is `storage.objects` — a Postgres table in the same database
+under RLS — so `current_tenant_id()` governs objects and rows through one
+mechanism, proven by one suite and re-derived by one gate. Under R2, storage
+isolation would stop being a database refusal and become a prefix convention
+plus signed URLs, enforced by application code being correct. P03 inherits
+P02's exit standard and tenant isolation is not waivable by OD, so R2 would
+oblige a second isolation mechanism, a second proof class — guessed key,
+listed prefix, swapped signed URL, expired URL, cross-tenant prefix — and a
+second privileged credential in a public repository, all in the phase that
+also lands seven entities, the wizard and `BRAND_CONFIG.md`.
+
+**Rider 1.** The Asset tier of `DATA_MODEL.md` records provider, bucket and
+key. No column, type or function name may contain the vendor. That tier is
+unauthored, so this costs nothing now and makes a future reversal an object
+migration rather than a schema change.
+
+**Rider 2.** An explicit revisit at P06 against measured object sizes and
+egress rather than estimates.
+
+**Forecloses.** A second object-store vendor in Release 1; a second
+privileged constructor beside ADR-005's quarantine; storage isolation proven
+by convention rather than by refusal.
+
+### OD-H13 — Error visibility is a checkable condition
+**Signed 2026-09-17.**
+
+`BUILD_PHASES.md` §P03's entry condition "error visibility" means: an
+unhandled server error in production produces a record a builder can retrieve
+within one working session, keyed to a request identifier that also appears
+in what the person saw. §P03's entry line is amended to state the definition
+rather than the phrase.
+
+§P03 made error visibility an entry condition and no document defined it, so
+the condition could be neither satisfied nor failed. An entry condition that
+cannot be checked is not a condition. The definition names no vendor — a log
+drain, an error-tracking DSN held in Vercel environment variables and never
+in the repository, or both, all satisfy it. What it requires is that the
+record exists, that a builder can reach it without asking anyone, and that
+the identifier ties the record to the person's report.
+
+This decision defines the condition; it does not implement it. Whether the
+condition is met is P03's to satisfy before the wizard accepts real content.
+
+**Forecloses.** Satisfying an entry condition by assertion; naming a vendor
+in a phase plan where a capability was meant.
 
