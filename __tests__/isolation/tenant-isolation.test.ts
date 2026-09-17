@@ -80,10 +80,10 @@ beforeAll(async () => {
   sql = makeSqlRunner(config);
   probe = makeProbes(config);
 
-  // ADR-012's reinstatement trigger, as a check rather than a judgement (CF-92).
-  // This suite may seed and tear down against b2s-production only while it holds
-  // zero real tenants. The moment one exists it refuses to run, and a staging
-  // project must be created first.
+  // ADR-013: this suite seeds and tears down against staging only.
+  // Production never receives these rows. A non-synthetic tenant on
+  // staging is still a halt — it means the rehearsal environment has
+  // been used as a second production.
   const [live] = await sql<{ real_tenants: number }>(
     `select count(*)::int as real_tenants
        from public.tenant
@@ -91,9 +91,9 @@ beforeAll(async () => {
   );
   if (live.real_tenants > 0) {
     throw new Error(
-      `HALT: b2s-production holds ${live.real_tenants} non-synthetic tenant row(s). ` +
-        `ADR-012's reinstatement trigger has fired: create a staging project and ` +
-        `supersede ADR-012 before running this suite again.`,
+      `HALT: staging holds ${live.real_tenants} non-synthetic tenant row(s). ` +
+        `This suite never runs against production, and it will not seed against ` +
+        `a rehearsal environment that already holds real tenants.`,
     );
   }
 
