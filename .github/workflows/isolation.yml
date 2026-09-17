@@ -3,12 +3,20 @@
 # "Touching schema" in this repository is the authoritative SQL, the split
 # migrations, the generated types that are the schema's TypeScript projection,
 # and the suite that proves the live schema. A change to any of those is a
-# schema-touching change. DATA_MODEL.md is the spec the schema implements,
-# not the schema, and is not in this path set.
+# schema-touching change. The workflow file that runs the suite is in the
+# path set so a job change is itself proven. DATA_MODEL.md is the spec the
+# schema implements, not the schema, and is not in this path set.
 #
 # This job never skips. Absent staging secrets are a failure, not a reason
 # to pass (PR-21, vitest.isolation.config.mts). It does not fall back to
 # production configuration.
+#
+# Staging is one database. Two suites seeding and tearing down at once
+# produce 4a "positive path empty" — the same shape as a real RLS failure.
+# One job at a time, and never cancel a run that may be mid-teardown.
+# Pull requests against main are the required venue. Push is main only,
+# so a phase-branch push that already has an open PR does not fire a
+# second suite against the same project.
 
 name: isolation
 
@@ -22,15 +30,21 @@ on:
       - "types/database.ts"
       - "__tests__/isolation/**"
       - "vitest.isolation.config.mts"
+      - ".github/workflows/isolation.yml"
   push:
     branches:
-      - "**"
+      - main
     paths:
       - "supabase/migrations/**"
       - "supabase/schema.sql"
       - "types/database.ts"
       - "__tests__/isolation/**"
       - "vitest.isolation.config.mts"
+      - ".github/workflows/isolation.yml"
+
+concurrency:
+  group: tenant-isolation-staging
+  cancel-in-progress: false
 
 env:
   NODE_VERSION: "24"
