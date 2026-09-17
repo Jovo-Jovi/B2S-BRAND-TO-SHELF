@@ -408,6 +408,16 @@ found `ci` / `types-drift` red with `ci` / `build` skipped, and because no
 P02 report carried a run conclusion there was no way to say from the record
 when it went red.
 
+**PR-40 — The named production project is not renamed or demoted when
+staging is created.** Even if `b2s-production` has never served a tenant,
+a new project is created as `b2s-staging` and production keeps its name
+and its ref. Vercel environment variables, the production repository
+secrets, `.env.local`, and every proof in the record point at that ref.
+None of them would break under a rename, but all of them would start
+referring to a project that had since been renamed, and PR-07's rule is
+that the record stands as written. Origin: owner instruction 2026-09-17,
+on the P03-T01 halt's "named production but not yet" question.
+
 ---
 
 ## 2. Environment quirks — never re-discover
@@ -767,3 +777,17 @@ when it went red.
   correct loud failure for that; it is not evidence that the live schema
   moved. Regenerating with the same pinned CLI and committing the result
   is the ADR-002 path. Do not investigate migrations on a helper-only diff.
+- Learned at P03-STAGING-CREATE: a Supabase personal access token is
+  account-scoped, not project-scoped. The existing `SUPABASE_ACCESS_TOKEN`
+  returned HTTP 200 for `GET /v1/projects/{ref}` on both `b2s-production`
+  and `b2s-staging`. It is not what keeps the isolation suite off
+  production; the project ref and the URL are. Do not invent a second
+  access-token secret for that purpose.
+- Learned at P03-STAGING-CREATE: the Management API org name now reads
+  `B2S` (plan `pro`). P03-T01 recorded the same org as `jiovanny`. The
+  slug and plan did not move. Do not rewrite the P03-T01 row (PR-07).
+- Learned at P03-STAGING-CREATE: a newly created project in `eu-central-2`
+  came up `ACTIVE_HEALTHY` immediately. Postgres 17 on both; staging's
+  patch is `17.6.1.166` against production's `17.6.1.155`. Catalog
+  comparison at the P03-T01 resume must not treat that patch delta as a
+  migration-chain defect.

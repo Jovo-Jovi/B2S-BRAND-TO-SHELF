@@ -1989,10 +1989,27 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       the isolation harness): public.tenant
       2026-09-02T13:22:41.402262+00:00 HTTP 201 [{"count":0}];
       auth.users 2026-09-02T13:22:42.087527+00:00 HTTP 201
-      [{"count":0}]. Creating the project is the owner's act, not the
+      [{"count":0}].       Creating the project is the owner's act, not the
       builder's. Row stays OPEN. Owner: **the P03 task that stands up
       staging after the owner creates the project and sets its access
       token and project ref as repository secrets**, per OD-H12.
+      AMENDED (P03-STAGING-CREATE, 2026-09-17) — the owner act ran.
+      Org name currently reads B2S, plan pro, slug unchanged from the
+      P03-T01 measurement. `b2s-staging` created ACTIVE_HEALTHY in
+      `eu-central-2`, matching production. `b2s-production` name, ref
+      and role unchanged (PR-40). Four repository secrets set, last
+      updated 2026-09-17, names SUPABASE_STAGING_PROJECT_ID,
+      SUPABASE_STAGING_URL, SUPABASE_STAGING_PUBLISHABLE_KEY,
+      SUPABASE_STAGING_SERVICE_ROLE_KEY; none collides with the
+      production six, whose last-updated dates remain 2026-08-03.
+      Existing SUPABASE_ACCESS_TOKEN is account-scoped: GET
+      /v1/projects/{ref} returned HTTP 200 for both names with that
+      one token. Staging is virgin (0 public tables, 0 migrations).
+      Production counts this session: public.tenant [{"n":0}],
+      auth.users [{"n":0}]. Migrations not applied — reconstitution
+      of the schema from the chain is the resume's named proof. Row
+      stays OPEN. Owner: **the P03-T01 resume that stands up staging**,
+      per OD-H12.
 - [x] CF-110 — P01-T03 verified `supabase/schema.sql` and the concatenated
       migrations byte-identical at 18,495 characters. After P01-T04 they are
       whitespace-normalised identical with ten blank lines differing at file
@@ -3148,3 +3165,34 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       job, and its result — alongside the PR-13 remote comparison line; a red
       or skipped job is a finding, not an omission; the conclusion is the one
       on the final head, because the follow-up commit re-triggers CI.
+- [x] CF-160 — b2s-staging was created on 2026-09-17 outside a task prompt. Ref
+      bnjrgoaoujnrlvuxicca, region eu-central-2, ACTIVE_HEALTHY, Postgres
+      17.6.1.166, zero public tables, zero migrations applied. Production
+      b2s-production keeps ref akpvvydmltmfmkmwivgn, region eu-central-2,
+      Postgres 17.6.1.155. Cost $10/month, confirmed with the owner before
+      creation. Four repository secrets were added —
+      SUPABASE_STAGING_PROJECT_ID, SUPABASE_STAGING_URL,
+      SUPABASE_STAGING_PUBLISHABLE_KEY, SUPABASE_STAGING_SERVICE_ROLE_KEY — and
+      no name collides with the production six, which are untouched. The existing
+      SUPABASE_ACCESS_TOKEN returned HTTP 200 for both refs and is account-scoped,
+      so it is not what keeps the isolation suite off production; the project ref
+      and the URL are.
+      DEVIATION, recorded not excused: P03-T01's Do-NOT list reserved Supabase
+      project creation to the owner, and the creating session performed it. The
+      owner approved the cost before it ran, so the act was sanctioned, but it
+      happened outside a task prompt and therefore carried no done-steps row, no
+      verdict and no ledger line until this one. Infrastructure that costs money
+      and that the isolation venue will depend on should not be reachable only
+      through a chat transcript.
+      CF-160 — CLOSED (P03-T01a) by this row, which is the record it was missing.
+- [ ] CF-161 — Staging runs Postgres 17.6.1.166 and production runs 17.6.1.155, so the
+      rehearsal environment is AHEAD of the environment it rehearses for. That
+      inverts what staging is for: a migration that succeeds on 166 can still
+      fail on 155, and the catalog comparison the resume performs will attribute
+      platform-level differences to the migration chain unless the two are the
+      same patch level. Production's patch level appears upgradable from the
+      Supabase dashboard, which is the owner's act and not a builder's. Until the
+      levels match, any catalog difference between the two projects must be
+      classified as chain-derived or platform-derived before it is called a
+      finding. Owner: the owner, for the production upgrade; and
+      P03-T01-RESUME, which must carry the classification either way.
