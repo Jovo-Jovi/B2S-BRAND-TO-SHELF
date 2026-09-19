@@ -113,6 +113,8 @@ PROVEN_PAIRS = [
     ("scripts/check-service-import.mjs", "lib/supabase/server-only/ (quarantine directory)"),
     ("scripts/check-service-import.mjs", "scan roots [app, features, components]"),
     ("scripts/check-zod-coverage.mjs", "features/ (directory)"),
+    ("scripts/check_mcp_containment.py", ".cursor/mcp.json"),
+    ("scripts/check_mcp_containment.py", "docs/method/CARRY_FORWARDS.md"),
 ]
 
 KNOWN_GAPS = [
@@ -493,6 +495,10 @@ def main():
             ["node", "scripts/check-service-import.mjs"], RootsProbe(["app", "features", "components"]))
     do_pair(results, "scripts/check-zod-coverage.mjs",
             ["node", "scripts/check-zod-coverage.mjs"], DirProbe("features"))
+    do_pair(results, "scripts/check_mcp_containment.py",
+            ["python", "scripts/check_mcp_containment.py"], FileProbe(".cursor/mcp.json"))
+    do_pair(results, "scripts/check_mcp_containment.py",
+            ["python", "scripts/check_mcp_containment.py"], FileProbe("docs/method/CARRY_FORWARDS.md"))
 
     proven = sum(1 for r in results if r["proven"])
     print(f"\n=== {proven}/{len(results)} pairs proven this run ===")

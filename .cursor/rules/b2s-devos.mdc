@@ -56,6 +56,7 @@ whose mechanism is still undecided are in the deferred table below, not here.
 |---|---|---|
 | Migration discipline: one authoritative SQL source, migrations split verbatim in source order, one applier per environment, one environment | ADR-006, ADR-012 | `scripts/check_migration_split.py` (`.github/workflows/docs-integrity.yml`) |
 | Privileged-client quarantine: the `service_role` client is constructed in one server-only module | ADR-005 | `scripts/check-service-import.mjs` (`.github/workflows/ci.yml`) |
+| MCP production containment: the production Supabase MCP entry carries read_only=true; every Supabase MCP project_ref is one of the two ledger refs | CF-160, PR-40 | `scripts/check_mcp_containment.py` (`.github/workflows/docs-integrity.yml`) |
 | Staging discipline: every commit stages by explicit path; `git add -A` and `git commit -a` are never used | PR-36 | PR-36 |
 | Generated types match the live schema; an absent secret fails the job rather than skipping | ADR-002, ARCHITECTURE.md §5 | `types-drift` job in `.github/workflows/ci.yml` |
 

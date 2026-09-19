@@ -13,10 +13,23 @@
 #
 # Staging is one database. Two suites seeding and tearing down at once
 # produce 4a "positive path empty" — the same shape as a real RLS failure.
-# One job at a time, and never cancel a run that may be mid-teardown.
-# Pull requests against main are the required venue. Push is main only,
-# so a phase-branch push that already has an open PR does not fire a
-# second suite against the same project.
+# Serialise every run against that database; restrict none of them.
+# concurrency.group tenant-isolation-staging with cancel-in-progress
+# false is what does it: GitHub queues a second run in the same group
+# rather than starting it, so two suites never seed together, and a run
+# that may be mid-teardown is never cancelled. The group is not
+# branch-scoped, so two phase-branch pushes still serialise.
+#
+# The push trigger matches ci.yml (every branch). The path filter is
+# unchanged. BRANCHING §3 allows one pull request per phase, at the
+# phase exit, after the gate, so a main-only push trigger would leave
+# an entire phase unproven — the condition CF-109 existed to end.
+# Restricting the trigger to main was belt-and-braces that removed the
+# belt. CF-109 stays closed on its own terms; the gap is CF-164.
+#
+# A phase-exit push and its pull request both fire. Two serialised
+# nine-minute runs once per phase is the correct price; do not
+# "optimise" the duplicate away.
 
 name: isolation
 
@@ -33,7 +46,7 @@ on:
       - ".github/workflows/isolation.yml"
   push:
     branches:
-      - main
+      - "**"
     paths:
       - "supabase/migrations/**"
       - "supabase/schema.sql"

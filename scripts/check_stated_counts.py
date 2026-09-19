@@ -526,7 +526,7 @@ RULES_FILES = (
 # every `scripts/` path they name must exist and be invoked by a workflow. A
 # renamed guard in a hand-edited rules file is how CF-75's drift recurs.
 MINIMUM_RULES_FILES = 2
-MINIMUM_GUARD_PATHS = 7
+MINIMUM_GUARD_PATHS = 8
 
 SCRIPT_PATH_RE = re.compile(r"`(scripts/[^`\s]+)`")
 WORKFLOW_RUN_RE = re.compile(

@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "supabase-b2s-production": {
+      "url": "https://mcp.supabase.com/mcp?project_ref=akpvvydmltmfmkmwivgn&read_only=true"
+    },
+    "b2s-staging": {
+      "type": "stdio",
+      "command": "C:/Program Files/nodejs/npx.cmd",
+      "args": [
+        "-y",
+        "@supabase/mcp-server-supabase@latest",
+        "--project-ref=bnjrgoaoujnrlvuxicca"
+      ],
+      "envFile": "${workspaceFolder}/.env.local"
+    }
+  }
+}

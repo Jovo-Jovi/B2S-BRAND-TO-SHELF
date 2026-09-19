@@ -3270,4 +3270,29 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       Owner: **the next amendment of `scripts/check_stated_counts.py` that
       can take `ARCHITECTURE.md` §6 as a subject**, or a dedicated
       assertion; not silently both.
+- [x] CF-164 — CF-109 was closed on a mechanism that is now effectively gate-only again,
+      which is the condition CF-109 existed to end. isolation.yml fired on
+      pull_request with base main and on push to main; BRANCHING §3 allows one
+      pull request per phase, at the phase exit, after the gate, so across a
+      phase the suite ran at the exit PR and again after the merge — and
+      CF-109's own words were "an isolation regression between gates is not
+      caught until the next gate". The close satisfied CF-109's stated
+      condition literally, so closing it was defensible; the interaction with
+      §3 made that condition hollow. The fix is not to restore the
+      belt-and-braces: concurrency tenant-isolation-staging with
+      cancel-in-progress false is what serialises two runs against one
+      database, so the push trigger can cover phase branches without
+      reintroducing the race. Found by the reviewer at 0637f9b.
+      CF-164 — CLOSED (P03-T02). Push coverage restored to every branch,
+      matching ci.yml's `push: branches: ["**"]`, path filter unchanged,
+      concurrency group retained with `cancel-in-progress: false`. CF-109
+      stays CLOSED. The trigger is proven by a push that touches
+      `.github/workflows/isolation.yml` (in its own path filter) and by a
+      later push that does not.
+- [ ] CF-165 — The staging MCP entry is writable, so it exposes
+      `apply_migration`. ADR-006 says one applier per environment. An MCP
+      server that can apply a migration is a second applier — a migration
+      could reach staging without a commit, and staging and
+      `supabase/migrations` would silently disagree, which is the one thing
+      staging exists to prevent. Owner: **the owner**.
 

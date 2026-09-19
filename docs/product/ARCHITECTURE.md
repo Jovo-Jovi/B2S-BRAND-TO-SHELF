@@ -138,10 +138,15 @@ has one.
 | Generated types match the live schema | `types-drift` |
 
 Jobs run sequentially and block: install → lint → typecheck → unit → guards →
-types-drift → build. The RLS suite runs against staging and is required on any
-pull request touching schema. That suite is a separate workflow so a
-schema-path filter cannot empty the rest of this pipeline; it is not a step
-in the sequence above.
+types-drift → build. The RLS suite runs against staging, on every branch,
+whenever a schema-touching path changes — `push` (ci.yml's `"**"` branch
+shape) or `pull_request` against main, same path filter. Concurrent runs
+are serialised by the `tenant-isolation-staging` concurrency group
+(`cancel-in-progress: false`); GitHub queues the second rather than
+starting it. A phase-exit push and its pull request both fire; two
+serialised runs once per phase is the correct price. That suite is a
+separate workflow so a schema-path filter cannot empty the rest of this
+pipeline; it is not a step in the sequence above.
 
 **A guard that blocks you is right.** It is superseded by an ADR, never disabled.
 

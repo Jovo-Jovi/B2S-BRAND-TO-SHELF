@@ -301,3 +301,17 @@ argument, including a zero row count; treating staging as a second
 production; generating types from an environment other than the one
 migrations reach first.
 
+**AMENDED 2026-09-19 (P03-T02).** The Decision sentence "a required job on
+any pull request touching schema" stands and is not edited (PR-07). It is
+not untrue: the job remains required on those pull requests. P03-T02
+additionally fires the same job on `push` to every branch, same path
+filter, serialised by concurrency group `tenant-isolation-staging` with
+`cancel-in-progress: false`. BRANCHING §3 makes a pull-request-only
+trigger gate-only again — the condition CF-109 existed to end — which is
+why the push trigger is broad and the concurrency group, not a narrower
+branch set, is what prevents two suites seeding one database. The
+Consequences clause that an isolation regression is "caught at the pull
+request rather than at the next phase gate" is therefore incomplete as a
+description of *when* the job fires, and is left standing as the close
+reason recorded at P03-T01-RESUME.
+
