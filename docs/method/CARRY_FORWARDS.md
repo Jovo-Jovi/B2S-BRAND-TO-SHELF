@@ -1277,7 +1277,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       unconditional. There is no remaining owner. The 84-character
       "first non-synthetic tenant" clause is discharged by that
       unconditionality, not by an onboarding that has not happened.
-- [ ] CF-93 — Seven specification gaps in `DATA_MODEL.md`'s Platform tier, found by
+- [x] CF-93 — Seven specification gaps in `DATA_MODEL.md`'s Platform tier, found by
       building it at P01-T02-RESUME. None was resolved by invention: each was
       implemented on the narrowest reading available and is recorded here for the
       tier amendment. Owner: reviewer, at the next `DATA_MODEL.md` amendment.
@@ -1413,6 +1413,25 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       is still the live remainder. Owner: **the first P03 task that creates a
       table**, which must settle the `updated_at` maintenance trigger before
       or in that migration.
+      CLOSED (P03-T03) — gap (6) is its last open remainder and is closed.
+      Migration `20260919120001_updated_at_maintenance` lands
+      `public.set_updated_at()`, not `security definer`, `search_path` pinned
+      to `''`, assigning `NEW.updated_at = now()` unconditionally, with a
+      BEFORE UPDATE FOR EACH ROW `{table}_set_updated_at` trigger on every
+      table that declares the column. Live staging catalog: five tables
+      (`consent_grant`, `invitation`, `member`, `membership`, `tenant`);
+      `operator` and `activity_event` declare none and carry none, matching
+      §3 and §1's departures table. Applied to staging then production;
+      catalogs agree on B2S-owned `public` objects. `DATA_MODEL.md` §1 rule 4
+      names the trigger. `scripts/check_data_model_schema.py` asserts both
+      directions with floors in the OK line, proven on six on-disk plants
+      and six isolated plants with the table/enum compare out of the path
+      (PR-38). Isolation 32a: an authenticated write of a granted column
+      moves `updated_at`. Isolation 32b: a caller-chosen timestamp does not
+      persist — grant-refused for authenticated, overwritten for
+      `service_role` HTTP and in-process SQL. Suite: 84 expected, 84 PASS,
+      0 FAIL, 0 LOST, line D at zero. Nothing of this row remains open. The
+      other six gaps stay closed by their earlier amendments, unedited.
 - [ ] CF-94 — `check-no-runtime-cdn` and `check-no-hardcoded-literals` scan `app/`
       and `proxy.ts` only, which was the whole of the application source when
       P01-T01 authored them. `lib/` exists as of P01-T02-RESUME and is not

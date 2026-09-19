@@ -911,6 +911,10 @@ export const EXPECTED_ASSERTIONS = [
   // P03-T01-RESUME — the suite is connected to staging, read from the live
   // platform and the live PostgREST hostname, not from the config object.
   "31",
+  // P03-T03 — CF-93 gap (6). `updated_at` is maintained by the trigger;
+  // an authenticated write moves it, and a caller-chosen timestamp does
+  // not persist. D stays last.
+  "32a", "32b",
   "D",
 ];
 

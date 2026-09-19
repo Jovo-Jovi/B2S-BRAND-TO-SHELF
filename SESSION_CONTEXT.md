@@ -1,9 +1,9 @@
 # SESSION CONTEXT
-Updated: 2026-09-19 · By: Grok 4.6 (heavyweight; prompt named Opus) · Phase: P03
-Last task: P03-T02 · Verdict: —. Last-row verdict is the declared
-placeholder; the follow-up commit fills the sha only. P03-T01-RESUME
+Updated: 2026-09-19 · By: Grok 4.6 (standard; prompt named Sonnet) · Phase: P03
+Last task: P03-T03 · Verdict: —. Last-row verdict is the declared
+placeholder; the follow-up commit fills the sha only. P03-T02
 reviewer verdict PASS, carried here under the verdict-column protocol. Ledger
-148 → **150** rows, 36 → **37** open. Full detail in the done-steps
+150 rows, 37 → **36** open. Full detail in the done-steps
 row below.
 
 ## Read these too
@@ -76,7 +76,8 @@ Keep it short: if a paragraph is growing here, it belongs elsewhere.
 | P03-T01 | Land OD-G20, OD-H13 and ADR-013; stand up staging; close CF-109. PART 0 HALTED, STOP 1. No staging Supabase project on the Pro organisation; no staging access-token or project-ref repository secret. Org jiovanny plan pro. list_projects: one ACTIVE_HEALTHY B2S project named b2s-production; three INACTIVE other-product projects. list_branches on that project: default main only. Repository secrets (names only, last updated 2026-08-03): NEXT_PUBLIC_SUPABASE_ANON_KEY, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_ACCESS_TOKEN, SUPABASE_PROJECT_ID, SUPABASE_SERVICE_ROLE_KEY. No secret name contains STAGING. GitHub Preview and Production environment secrets: none. .env.local has five keys, none staging-named; NEXT_PUBLIC_SUPABASE_URL resolves to b2s-production. PART 0(c) independent Management API User-Agent B2S-P03-T01-independent/1.0, not the isolation harness: public.tenant 2026-09-02T13:22:41.402262+00:00 HTTP 201 [{"count":0}]; auth.users 2026-09-02T13:22:42.087527+00:00 HTTP 201 [{"count":0}]. PART 0(b) cannot be asserted: there is no second project ref. State at 4ce7eb2 re-derived, advisory matched except done-steps 52 stated / 53 enumerated (P03-ENTRY then P03-FIX-01). Register 92, highest OD-G19, highest OD-H12, highest ADR-012. Live max CF-159, PR-39. Ledger 144, 39 open. Static set 10+6=16. fail() 117. scan targets 9. PROVEN_PAIRS 37, provenance P02-GATE, KNOWN_GAPS 1. Migrations 18. Tables 7. Enums 4. Isolation 80, highest group 30. No OD, ADR, migration, suite run, or phase branch. Isolation suite not run (must not run against production). Prompt named Opus; this session ran as Cursor Grok 4.6. `docs/method/REVIEWER_CHAT_INSTRUCTIONS.md` uncommitted and unstaged (CF-140). Tests: none beyond PART 0 queries. Acceptance: TENANT ISOLATION not proven; the standard's venue did not move. Money, print, features: N/A. | PASS | `2a82922` |
 | P03-T01a | Land the staging environment record and the pending method edits. CF-160 closed as the missing record of b2s-staging; CF-161 opened on the Postgres patch-level inversion. Commits the prior session's four method files, including PR-40. Isolation suite not run. Prompt named Sonnet; this session ran as Cursor Grok 4.6. `docs/method/REVIEWER_CHAT_INSTRUCTIONS.md` uncommitted and unstaged (CF-140). Tests: static conformance and the four npm scripts. Acceptance: none applies to a record-keeping task. Tenant isolation: N/A, stated explicitly. | PASS | `7ec73ce` |
 | P03-T01-RESUME | Land OD-G20, OD-H13 and ADR-013; apply 18 migrations to virgin staging; move the isolation venue off production. Register 92 to 94. ADR-012 marked superseded, body unedited. Staging reconstitutes the schema from the chain; every B2S-owned public class MATCHED production and schema.sql; types 17752 byte-identical from staging. Isolation readConfig is staging-named only: negative proof named the four absent staging variables and did not connect to production. Suite against staging: 82 expected, 82 PASS, 0 FAIL, 0 LOST, line D all fifteen teardown counters at zero; vitest 83, the completeness guard as reconciled at P02-T03. Assertion 31: live platform name b2s-staging. Independent counts after: production tenant and auth.users both n=0; staging both n=0. types-drift reads SUPABASE_STAGING_PROJECT_ID. isolation.yml required on schema-touching paths, fails rather than skips without secrets. Static set unchanged at 10+6=16; adding a job is not adding a check. CF-92, CF-109, CF-154, CF-155, CF-156, CF-158 closed. CF-162 and CF-163 opened. CF-161 stays open on the owner's production upgrade. 40 open at 88249c8 + 2 - 6 = 36 open, ledger 146 to 148. Prompt named Opus; this session ran as Cursor Grok 4.6. REVIEWER_CHAT unstaged. Tests: isolation suite in full against staging, plus static conformance and the four npm scripts. Acceptance: TENANT ISOLATION, not waivable. Money, print, features: N/A. | PASS | `83738c1` |
-| P03-T02 | Restore per-push isolation coverage, and put the MCP containment under a guard. isolation.yml push trigger matches ci.yml every-branch shape; path filter unchanged; concurrency tenant-isolation-staging cancel-in-progress false retained; comment block rewritten. .cursor/mcp.json committed with scripts/check_mcp_containment.py in the same commit, wired as docs-integrity's eleventh check; production entry must carry read_only=true; both refs two-way with the ledger; no env block; floors 2 servers and 2 Supabase entries. Five plants CAUGHT from an in-memory snapshot, never git checkout; every revert SHA-256-identical. Two-way probe 39 of 39, enumerated 39, KNOWN_GAPS 1, provenance P03-T02. Isolation workflow change is a changed condition, not a new premise, no pair. Static set 10+6=16 to 11+6=17; fail() 117 to 137. CF-109 stays CLOSED; CF-164 opened and closed; CF-165 opened on staging MCP as a second applier, posture left to the owner, staging entry not changed. 36 open at 0637f9b + 1 - 0 = 37 open, ledger 148 to 150. Prompt named Opus; this session ran as Cursor Grok 4.6. REVIEWER_CHAT unstaged. Tests: isolation suite in full against staging, planted violations, two-way probe, static conformance and the four npm scripts. Acceptance: TENANT ISOLATION, not waivable. Money, print, features: N/A. | — | `2c02e89` |
+| P03-T02 | Restore per-push isolation coverage, and put the MCP containment under a guard. isolation.yml push trigger matches ci.yml every-branch shape; path filter unchanged; concurrency tenant-isolation-staging cancel-in-progress false retained; comment block rewritten. .cursor/mcp.json committed with scripts/check_mcp_containment.py in the same commit, wired as docs-integrity's eleventh check; production entry must carry read_only=true; both refs two-way with the ledger; no env block; floors 2 servers and 2 Supabase entries. Five plants CAUGHT from an in-memory snapshot, never git checkout; every revert SHA-256-identical. Two-way probe 39 of 39, enumerated 39, KNOWN_GAPS 1, provenance P03-T02. Isolation workflow change is a changed condition, not a new premise, no pair. Static set 10+6=16 to 11+6=17; fail() 117 to 137. CF-109 stays CLOSED; CF-164 opened and closed; CF-165 opened on staging MCP as a second applier, posture left to the owner, staging entry not changed. 36 open at 0637f9b + 1 - 0 = 37 open, ledger 148 to 150. Prompt named Opus; this session ran as Cursor Grok 4.6. REVIEWER_CHAT unstaged. Tests: isolation suite in full against staging, planted violations, two-way probe, static conformance and the four npm scripts. Acceptance: TENANT ISOLATION, not waivable. Money, print, features: N/A. | PASS | `2c02e89` |
+| P03-T03 | Make `updated_at` real: the maintenance trigger, its assertion, and CF-93's last gap. On `phase/03-brand-and-onboarding` from `6610be2`; no PR, no merge. ADR-013 independent path (User-Agent `B2S-P03-T03-independent/1.0`): production and staging `public.tenant` and `auth.users` both `[{"n":0}]` before work and after the suite. PART 1 live staging catalog: 7 public tables; 5 declare `updated_at` (`consent_grant`, `invitation`, `member`, `membership`, `tenant`); `operator` and `activity_event` declare none, matching §3 and §1's departures table; no HALT 4. Migration `20260919120001_updated_at_maintenance` applied to staging then production via CLI `db push`; catalogs agree on B2S-owned `public` objects. `public.set_updated_at()` is not `security definer`, `search_path` pinned to `''`, unconditional `NEW.updated_at = now()`. Five `{table}_set_updated_at` BEFORE UPDATE FOR EACH ROW triggers. §11a.1 stays ten (`check_security_model_bypass.py`). Types regenerated from staging: 17752 bytes, catalog prefix 13199, helpers 4553, byte-identical, not hand-edited. `DATA_MODEL.md` §1 rule 4 names the trigger; immutable-table clause placed in §1 because the departures table is already there, with a pointer from rule 5. `check_data_model_schema.py` both directions, floors 1 and 1 in the OK line. 6 on-disk plants CAUGHT plus 6 isolated with the compare out of the path (PR-38), every revert SHA-256-identical. PROVEN_PAIRS stays 39, provenance P03-T02: changed condition on an existing check, not a new premise. fail() 137 to 138 by AST. Proofs 32a and 32b: authenticated `display_name` write moves `updated_at`; caller-chosen timestamp grant-refused for authenticated (no UPDATE on the column) and overwritten for `service_role` HTTP and in-process SQL. Proofs 15 and 22 extended to know `set_updated_at` as the one invoker trigger function granted to postgres only; no prior assertion weakened, reordered or deleted. Suite against staging: **84 expected — 84 PASS, 0 FAIL, 0 LOST**, 342s, line D all fifteen teardown counters at zero; vitest 85, the completeness guard. CF-93 CLOSED. 37 open at `6610be2` + 0 landed open − 1 closed = 36 open, ledger 150. Prompt named Sonnet; this session ran as Cursor Grok 4.6. `docs/method/REVIEWER_CHAT_INSTRUCTIONS.md` uncommitted and unstaged. Tests: isolation suite in full against staging, planted violations, static conformance and the four npm scripts. Acceptance: TENANT ISOLATION, because the schema moved; §4's six named full-gate re-run conditions did not fire (no new entity, policy, existing-object grant, privileged path, role, or Operator surface) and the suite ran anyway. Money, print, features: N/A. | — | pending |
 
 > Commit column: one or more comma-separated backticked shas, or `—` where no
 > single commit tracks the step (P-00 through P-01c predate the one-task-one-commit
@@ -115,7 +116,6 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
 - CF-74 — owner: UX_PRINCIPLES.md
 - CF-83 — owner: PRECEDENTS.md, PR-18
 - CF-84 — owner: PRECEDENTS.md, PR-19
-- CF-93 — owner: the first P03 task that creates a table, settling DATA_MODEL gap (6)
 - CF-94 — owner: the task that creates components/, for that root
 - CF-97 — owner: reviewer, to ratify the narrowing or reject it
 - CF-126 — owner: the task that first subscribes to Realtime
@@ -258,7 +258,7 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
   figures live where P02-T09 recorded one, split at P02-T09-FIX because they
   measure different things and neither had ever been asserted against its
   own derivation:
-  - The static-assertion count stands at **137** fail() call site(s),
+  - The static-assertion count stands at **138** fail() call site(s),
     enumerated as one `Call` node per assertion across every
     `scripts/check_*.py` (PR-23) — command: parse each file's AST and count
     `Call` nodes whose function is the bare name `fail`, never a textual
@@ -290,6 +290,10 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
     It rose again to 137 at P03-T02: twenty new `fail()` sites in
     `check_mcp_containment.py` (JSON shape, floors, project_ref set, production
     read_only, env block, credential patterns, and the two-way ledger link).
+    It rose again to 138 at P03-T03: one new `fail()` site in
+    `check_data_model_schema.py` (the `updated_at` trigger contract, one
+    `Call` in a loop). Changed condition on an existing check, not a new
+    premise: `PROVEN_PAIRS` stays 39, provenance P03-T02.
     `check_stated_counts.py`'s scan-target count stays **9**.
     `check_stated_counts.py`'s `MINIMUM_GUARD_PATHS` moved 7 → **8** with the
     new `scripts/check_mcp_containment.py` citation in both always-on files;
@@ -380,15 +384,14 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
   (PR-29).
 
 ## Next action
-**The next P03 build task on `phase/03-brand-and-onboarding`.** Per-push
-isolation coverage is restored; P03 schema work may proceed against that
-coverage. The design-surface catalog (CF-94) lands by its own consolidated
-pull request before P03 composes pages. The first P03 table-creating task
-settles CF-93 gap (6). Error visibility (CF-162) is live before the wizard
-accepts its first real content (OD-H12, OD-H13). Production's Postgres
-patch upgrade is the owner's (CF-161). Staging MCP write posture is the
-owner's (CF-165). Do not run the isolation suite against production. No
-pull request until the phase exit.
+**The next P03 build task on `phase/03-brand-and-onboarding`.** `updated_at`
+is maintained; Brand and Asset tables may now be created under the settled
+rule. The design-surface catalog (CF-94) lands by its own consolidated
+pull request before P03 composes pages. Error visibility (CF-162) is live
+before the wizard accepts its first real content (OD-H12, OD-H13).
+Production's Postgres patch upgrade is the owner's (CF-161). Staging MCP
+write posture is the owner's (CF-165). Do not run the isolation suite
+against production. No pull request until the phase exit.
 
 `phase/02-tenancy-and-access` is contained (empty log, equal trees at
 `0584ffbc`); the owner deletes it.

@@ -10,6 +10,11 @@ applied migrations. This check asserts one against the other:
            table the schema creates has a §3.n subsection
   enums    §3's enum roster and the schema's `create type ... as enum` set are
            the same set, not merely the same size
+  updated_at  every table declaring `updated_at` carries a BEFORE UPDATE FOR
+           EACH ROW `{table}_set_updated_at` trigger calling
+           `public.set_updated_at()`, and every such trigger is on a table
+           that declares the column; the function exists, is not
+           `security definer`, and pins `search_path` to ''
 
 **Why both directions and not just the count.** `check_stated_counts.py` already
 asserts §3's two totals and that every live table and enum is named *somewhere*
@@ -39,6 +44,11 @@ SCHEMA_REL = "supabase/schema.sql"
 MINIMUM_SUBSECTIONS = 2
 MINIMUM_SCHEMA_TABLES = 1
 MINIMUM_SCHEMA_ENUMS = 1
+# P03-T03 / CF-93 gap (6). A schema with zero `updated_at` columns makes the
+# bidirectional trigger assertion vacuous. The floor is a minimum examined,
+# not the live count: Brand-tier tables will raise the observed number.
+MINIMUM_UPDATED_AT_TABLES = 1
+MINIMUM_UPDATED_AT_TRIGGERS = 1
 
 WORD_NUMBERS = {
     "zero": 0, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
@@ -136,6 +146,199 @@ def schema_objects(schema):
     return tables, enums
 
 
+def strip_line_comments(schema):
+    """Blank `--` comments so a word in prose is never parsed as DDL.
+
+    Same shape as `check_security_model_bypass.py`'s `schema_definers`: a
+    structural walk over statements, not a scan for a forbidden substring
+    (PR-22).
+    """
+    return "\n".join(
+        line[:line.find("--")] if line.find("--") >= 0 else line
+        for line in (
+            "" if raw.lstrip().startswith("--") else raw
+            for raw in schema.split("\n")
+        )
+    )
+
+
+def _matching_paren(text, open_index):
+    depth = 0
+    for i in range(open_index, len(text)):
+        ch = text[i]
+        if ch == "(":
+            depth += 1
+        elif ch == ")":
+            depth -= 1
+            if depth == 0:
+                return i
+    return -1
+
+
+def parse_table_columns(schema):
+    """Column names declared by each `create table public.*`, structurally.
+
+    Nested parentheses (CHECK constraints, defaults) are walked by depth, so a
+    constraint name is never taken as a column. A leading `constraint` /
+    `check` / `unique` / `primary` / `foreign` / `exclude` piece is skipped.
+    """
+    code = strip_line_comments(schema)
+    tables = {}
+    for match in re.finditer(
+            r"create\s+table\s+(?:if\s+not\s+exists\s+)?public\.(\w+)\s*\(",
+            code, re.I):
+        name = match.group(1)
+        close = _matching_paren(code, match.end() - 1)
+        if close < 0:
+            die(f"{SCHEMA_REL}: `create table public.{name}` has no matching "
+                f"closer, so its columns cannot be read")
+        body = code[match.end():close]
+        columns = []
+        piece, depth = [], 0
+        pieces = []
+        for ch in body:
+            if ch == "(":
+                depth += 1
+                piece.append(ch)
+            elif ch == ")":
+                depth -= 1
+                piece.append(ch)
+            elif ch == "," and depth == 0:
+                pieces.append("".join(piece))
+                piece = []
+            else:
+                piece.append(ch)
+        if piece:
+            pieces.append("".join(piece))
+        skip = re.compile(
+            r"^(constraint|check|unique|primary|foreign|exclude)\b", re.I)
+        for raw in pieces:
+            token = raw.strip()
+            if not token or skip.match(token):
+                continue
+            col = re.match(r"^([A-Za-z_][A-Za-z0-9_]*)\b", token)
+            if col:
+                columns.append(col.group(1))
+        tables[name] = columns
+    return tables
+
+
+def parse_set_updated_at_function(schema):
+    """The `public.set_updated_at()` identity, or None if it is not created.
+
+    Options are the span between the argument list and the dollar-quoted body,
+    so `security definer` in a comment or a later function cannot attach to it.
+    A later `create or replace` is what the database holds.
+    """
+    code = strip_line_comments(schema)
+    found = None
+    for match in re.finditer(
+            r"create\s+(?:or\s+replace\s+)?function\s+public\.set_updated_at\s*\(",
+            code, re.I):
+        close = _matching_paren(code, match.end() - 1)
+        if close < 0:
+            die(f"{SCHEMA_REL}: `create function public.set_updated_at` has no "
+                f"matching argument-list closer")
+        body = re.compile(r"\bas\s+(\$\w*\$)", re.I).search(code, close + 1)
+        if not body:
+            die(f"{SCHEMA_REL}: `create function public.set_updated_at` has no "
+                f"dollar-quoted body, so its options cannot be read")
+        options = code[close + 1:body.start()]
+        found = {
+            "security_definer": bool(re.search(r"security\s+definer", options, re.I)),
+            "search_path_pinned": bool(re.search(
+                r"set\s+search_path\s*(?:=|to)\s*''", options, re.I)),
+        }
+    return found
+
+
+def parse_updated_at_triggers(schema):
+    """BEFORE UPDATE FOR EACH ROW triggers that call `public.set_updated_at()`.
+
+    The name is part of the rule: `{table}_set_updated_at`. A trigger that
+    fires on the right event but under an ad-hoc name is not this contract.
+    """
+    code = strip_line_comments(schema)
+    pattern = re.compile(
+        r"create\s+trigger\s+(\w+)\s+"
+        r"before\s+update\s+on\s+public\.(\w+)\s+"
+        r"for\s+each\s+row\s+"
+        r"execute\s+(?:function|procedure)\s+public\.set_updated_at\s*\(\s*\)\s*;",
+        re.I | re.S,
+    )
+    found = {}
+    for match in pattern.finditer(code):
+        trigger_name, table = match.group(1), match.group(2)
+        expected = f"{table}_set_updated_at"
+        if trigger_name.lower() != expected.lower():
+            continue
+        found[table] = trigger_name
+    return found
+
+
+def updated_at_contract_failures(schema):
+    """Failures of the `updated_at` trigger contract, against a schema string.
+
+    Callable with the table/enum compare out of the path (PR-38). Returns a
+    list of messages; empty means the contract holds. Does not print or set
+    FAIL — the caller does that — so an isolated proof can see a miss as an
+    empty list rather than as a process exit.
+    """
+    messages = []
+    tables = parse_table_columns(schema)
+    with_column = sorted(
+        name for name, cols in tables.items() if "updated_at" in cols)
+    triggers = parse_updated_at_triggers(schema)
+    function = parse_set_updated_at_function(schema)
+
+    if len(with_column) < MINIMUM_UPDATED_AT_TABLES:
+        messages.append(
+            f"{SCHEMA_REL} declares {len(with_column)} table(s) with an "
+            f"`updated_at` column, minimum {MINIMUM_UPDATED_AT_TABLES}. A "
+            f"schema with none makes the trigger assertion vacuous (PR-27)"
+        )
+    if len(triggers) < MINIMUM_UPDATED_AT_TRIGGERS:
+        messages.append(
+            f"{SCHEMA_REL} declares {len(triggers)} `set_updated_at` trigger(s), "
+            f"minimum {MINIMUM_UPDATED_AT_TRIGGERS}. A schema with none makes "
+            f"the reverse assertion vacuous (PR-27)"
+        )
+
+    missing_trigger = [name for name in with_column if name not in triggers]
+    if missing_trigger:
+        messages.append(
+            f"{SCHEMA_REL}: table(s) {missing_trigger} declare `updated_at` "
+            f"and carry no BEFORE UPDATE FOR EACH ROW "
+            f"`{{table}}_set_updated_at` trigger calling "
+            f"`public.set_updated_at()`"
+        )
+    extra_trigger = sorted(set(triggers) - set(with_column))
+    if extra_trigger:
+        messages.append(
+            f"{SCHEMA_REL}: trigger(s) {extra_trigger} call "
+            f"`public.set_updated_at()` on a table that does not declare "
+            f"`updated_at`"
+        )
+
+    if function is None:
+        messages.append(
+            f"{SCHEMA_REL}: `public.set_updated_at()` is not created"
+        )
+    else:
+        if function["security_definer"]:
+            messages.append(
+                f"{SCHEMA_REL}: `public.set_updated_at()` is `security definer`; "
+                f"it must not be — it touches no table, only the candidate row"
+            )
+        if not function["search_path_pinned"]:
+            messages.append(
+                f"{SCHEMA_REL}: `public.set_updated_at()` does not pin "
+                f"`search_path` to ''"
+            )
+
+    return messages, with_column, triggers, function
+
+
 def compare(kind, doc_names, schema_names):
     only_doc = sorted(set(doc_names) - set(schema_names))
     only_schema = sorted(set(schema_names) - set(doc_names))
@@ -199,16 +402,34 @@ def main():
     compare("tables", doc_tables, schema_tables)
     compare("enums", doc_enums, schema_enums)
 
+    # The `updated_at` contract is asserted after the name-set compare and
+    # does not return early on a name mismatch, so a plant that only breaks
+    # the trigger contract is not masked by the pre-existing compare
+    # (PR-38). `updated_at_contract_failures` is also importable with the
+    # compare out of the path entirely.
+    contract, with_column, triggers, function = updated_at_contract_failures(schema)
+    for message in contract:
+        fail(message)
+
     if FAIL:
         sys.exit(1)
 
+    fn_state = (
+        "exists, not security definer, search_path pinned"
+        if function is not None
+        else "missing"
+    )
     print(
         f"OK: {DOC_REL} §3 and {SCHEMA_REL} agree both ways. "
         f"{stated_tables} stated tables = {len(doc_tables)} §3.n subsection(s) = "
         f"{len(schema_tables)} in the schema {schema_tables}; "
         f"{stated_enums} stated enums = {len(doc_enums)} on the roster = "
         f"{len(schema_enums)} in the schema {schema_enums}; "
-        f"{subsections} subsection(s) examined, minimum {MINIMUM_SUBSECTIONS}"
+        f"{subsections} subsection(s) examined, minimum {MINIMUM_SUBSECTIONS}; "
+        f"{len(with_column)} table(s) declaring updated_at carry the trigger "
+        f"{with_column}, minimum {MINIMUM_UPDATED_AT_TABLES}; "
+        f"{len(triggers)} matching trigger(s), minimum {MINIMUM_UPDATED_AT_TRIGGERS}; "
+        f"public.set_updated_at() {fn_state}"
     )
 
 

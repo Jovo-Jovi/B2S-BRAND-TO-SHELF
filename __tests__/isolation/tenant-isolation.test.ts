@@ -1048,14 +1048,26 @@ describe("proof 15 — the roles and the function surface", () => {
       "provision_tenant",
       "caller_email_is_verified",
       "accept_invitation",
+      // P03-T03. Trigger function, not security definer: it touches only the
+      // candidate row. The ten definers above stay definers; this one must
+      // not become one.
+      "set_updated_at",
     ];
     if (!sameSet(functions.map((f) => f.proname), expectedFunctions)) {
       failures.push(`public functions are [${functions.map((f) => f.proname).join(", ")}], expected [${expectedFunctions.join(", ")}]`);
     }
+    const invokerTriggers = new Set(["set_updated_at"]);
     for (const fn of functions) {
-      if (!fn.prosecdef) failures.push(`${fn.proname}: not security definer`);
+      if (invokerTriggers.has(fn.proname)) {
+        if (fn.prosecdef) {
+          failures.push(`${fn.proname}: is security definer — it must not be`);
+        }
+      } else if (!fn.prosecdef) {
+        failures.push(`${fn.proname}: not security definer`);
+      }
       // An unpinned search_path on a security definer function is the classic
       // privilege-escalation route: the caller chooses which table it reads.
+      // The invoker trigger pins the same way, by the same rule.
       if (!/search_path=/.test(fn.config)) failures.push(`${fn.proname}: no pinned search_path (proconfig = "${fn.config}")`);
     }
 
@@ -1096,7 +1108,7 @@ describe("proof 15 — the roles and the function surface", () => {
       "15",
       "No RLS-bypassing role attribute; helpers answer only for their caller",
       failures,
-      `${roles.length} roles with rolsuper/rolbypassrls false; ${functions.length} public functions, all security definer with a pinned search_path; ` +
+      `${roles.length} roles with rolsuper/rolbypassrls false; ${functions.length} public functions, ${functions.filter((f) => f.prosecdef).length} security definer, invoker=[${functions.filter((f) => !f.prosecdef).map((f) => f.proname).join(", ")}], all with a pinned search_path; ` +
         `${rpcChecks.length} RPC answers: ${rpcObserved.join(", ")}`,
     );
     expect(failures).toEqual([]);
@@ -1898,6 +1910,10 @@ describe("proof 22 — every function's EXECUTE privilege is explicit (CF-105)",
       provision_tenant: "authenticated,postgres",
       caller_email_is_verified: "authenticated,postgres",
       accept_invitation: "authenticated,postgres",
+      // P03-T03. set_updated_at is a trigger function and is granted to
+      // nobody, for the same reason materialise_member is: EXECUTE is
+      // checked when the trigger is created, never when it fires.
+      set_updated_at: "postgres",
     };
 
     for (const row of rows) {
@@ -1931,6 +1947,9 @@ describe("proof 22 — every function's EXECUTE privilege is explicit (CF-105)",
     const triggerFn = await probe.rpc(fixture.a.owner, "enforce_tenant_active_owner");
     if (triggerFn.status < 400) failures.push(`A-owner rpc/enforce_tenant_active_owner: answered ${triggerFn.status}`);
     overTheWire.push(`A-owner.enforce_tenant_active_owner=${triggerFn.status}`);
+    const updatedAtFn = await probe.rpc(fixture.a.owner, "set_updated_at");
+    if (updatedAtFn.status < 400) failures.push(`A-owner rpc/set_updated_at: answered ${updatedAtFn.status}`);
+    overTheWire.push(`A-owner.set_updated_at=${updatedAtFn.status}`);
 
     record(
       "22",
@@ -5552,6 +5571,148 @@ describe("proof 31 — the live connection is staging, not production", () => {
       `platform HTTP ${metaResponse.status} name=${liveName}; ` +
         `PostgREST HTTP ${restResponse.status}; hostname-label-equals-platform-ref=${liveHost === liveRef}; ` +
         `production-ref-present=${Boolean(productionRef)}`,
+    );
+    expect(failures).toEqual([]);
+  });
+});
+
+describe("proof 32 — updated_at is maintained, and no caller supplies its value", () => {
+  it("32a an authenticated write of a granted column moves updated_at", async () => {
+    const { a } = fixture;
+    const failures: string[] = [];
+    const name = `${SYNTHETIC_PREFIX}uat-move-${fixture.runId}`;
+
+    const before = await columnValue("member", a.owner.authId, "updated_at");
+    if (before === null) failures.push("precondition: member.updated_at is null");
+
+    const http = await probe.update(a.owner, "member", a.owner.authId, {
+      display_name: name,
+    });
+    if (!http.ok || http.count !== 1) {
+      failures.push(
+        `A-owner UPDATE own member display_name: POSITIVE PATH REFUSED ` +
+          `(HTTP ${http.status} ${http.code}) ${http.message}`,
+      );
+    }
+
+    const afterName = await columnValue("member", a.owner.authId, "display_name");
+    const afterTs = await columnValue("member", a.owner.authId, "updated_at");
+    if (afterName !== name) {
+      failures.push(
+        `display_name after HTTP PATCH is ${afterName}, expected ${name} — ` +
+          `the request did not reach the table`,
+      );
+    }
+    if (afterTs === null) {
+      failures.push("updated_at is null after the write");
+    } else if (afterTs === before) {
+      failures.push(
+        `updated_at did not move on a write that reached the table ` +
+          `(still ${afterTs})`,
+      );
+    } else if (before !== null && afterTs < before) {
+      failures.push(`updated_at moved backwards: ${before} -> ${afterTs}`);
+    }
+
+    record(
+      "32a",
+      "An authenticated write of a granted column moves updated_at",
+      failures,
+      `HTTP ${http.status} count=${http.count}; before=${before}; after=${afterTs}; ` +
+        `display_name reached table=${afterName === name}`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("32b a caller-chosen updated_at does not persist", async () => {
+    const { a } = fixture;
+    const failures: string[] = [];
+    const chosen = "2020-01-01T00:00:00.000Z";
+    const authName = `${SYNTHETIC_PREFIX}uat-auth-${fixture.runId}`;
+    const privName = `${SYNTHETIC_PREFIX}uat-priv-${fixture.runId}`;
+    const sqlName = `${SYNTHETIC_PREFIX}uat-sql-${fixture.runId}`;
+
+    const authHttp = await probe.update(a.owner, "member", a.owner.authId, {
+      display_name: authName,
+      updated_at: chosen,
+    });
+    const afterAuthName = await columnValue("member", a.owner.authId, "display_name");
+    const afterAuthTs = await columnValue("member", a.owner.authId, "updated_at");
+    if (authHttp.ok && authHttp.count > 0) {
+      if (afterAuthName !== authName) {
+        failures.push("authenticated PATCH reported success but display_name did not change");
+      }
+      if (afterAuthTs !== null && afterAuthTs.startsWith("2020-01-01")) {
+        failures.push(
+          `authenticated PATCH persisted the chosen updated_at (${afterAuthTs})`,
+        );
+      }
+    } else if (!refusedByGrant(authHttp)) {
+      failures.push(
+        `authenticated PATCH with chosen updated_at: HTTP ${authHttp.status} ` +
+          `${authHttp.code} "${authHttp.message}", expected a grant refusal ` +
+          `or a write whose timestamp is not the chosen value`,
+      );
+    }
+
+    const serviceRole: Caller = {
+      label: "service_role",
+      apiKey: config.serviceRoleKey,
+      token: config.serviceRoleKey,
+    };
+    const privHttp = await probe.update(serviceRole, "member", a.owner.authId, {
+      display_name: privName,
+      updated_at: chosen,
+    });
+    const afterPrivName = await columnValue("member", a.owner.authId, "display_name");
+    const afterPrivTs = await columnValue("member", a.owner.authId, "updated_at");
+    if (!privHttp.ok || privHttp.count !== 1) {
+      failures.push(
+        `service_role PATCH: POSITIVE PATH REFUSED ` +
+          `(HTTP ${privHttp.status} ${privHttp.code}) ${privHttp.message} — ` +
+          `the hostile timestamp never reached the table`,
+      );
+    }
+    if (afterPrivName !== privName) {
+      failures.push(
+        `service_role PATCH display_name is ${afterPrivName}, expected ${privName} — ` +
+          `the request did not reach the table`,
+      );
+    }
+    if (afterPrivTs !== null && afterPrivTs.startsWith("2020-01-01")) {
+      failures.push(
+        `service_role PATCH persisted the chosen updated_at (${afterPrivTs})`,
+      );
+    }
+
+    await sql(
+      `update public.member
+          set display_name = '${sqlName}',
+              updated_at = timestamptz '2020-01-01 00:00:00+00'
+        where id = '${a.owner.authId}'`,
+    );
+    const afterSqlName = await columnValue("member", a.owner.authId, "display_name");
+    const afterSqlTs = await columnValue("member", a.owner.authId, "updated_at");
+    if (afterSqlName !== sqlName) {
+      failures.push(
+        `in-process UPDATE display_name is ${afterSqlName}, expected ${sqlName} — ` +
+          `the statement did not reach the table`,
+      );
+    }
+    if (afterSqlTs !== null && afterSqlTs.startsWith("2020-01-01")) {
+      failures.push(
+        `in-process UPDATE persisted the chosen updated_at (${afterSqlTs})`,
+      );
+    }
+
+    record(
+      "32b",
+      "A caller-chosen updated_at does not persist; the trigger overwrites it",
+      failures,
+      `authenticated HTTP ${authHttp.status} ${authHttp.code || "ok"} ` +
+        `grant-refused=${refusedByGrant(authHttp)}; ` +
+        `service_role HTTP ${privHttp.status} count=${privHttp.count} ` +
+        `ts=${afterPrivTs}; in-process ts=${afterSqlTs}`,
     );
     expect(failures).toEqual([]);
   });

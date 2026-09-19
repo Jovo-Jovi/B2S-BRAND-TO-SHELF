@@ -47,11 +47,29 @@ contradicts.
    (OD-D5) — that constraint arrives with the Brand tier.
 4. **Provenance.** `created_at timestamptz not null default now()`,
    `updated_at timestamptz not null default now()`,
-   `created_by uuid null references member(id)`.
+   `created_by uuid null references member(id)`. `updated_at` is maintained by
+   `public.set_updated_at()`, a BEFORE UPDATE FOR EACH ROW trigger carried by
+   every table that declares the column. The trigger sets
+   `NEW.updated_at = now()` unconditionally, so the column records when the row
+   was last written and no caller can supply its value. It is not
+   `security definer` — it touches no table, only the candidate row — and its
+   `search_path` is pinned to `''` like every other function in `public`. A
+   table that declares `updated_at` and carries no trigger is a defect, not a
+   decision; this section's departures table is the only place an absence is
+   legitimate. Unconditional rather than guarded by `IS DISTINCT FROM`: a no-op
+   UPDATE is still a write against the row, and a column that sometimes records
+   writes is one whose absence you cannot reason about. An immutable table
+   declares no `updated_at` and therefore carries no trigger —
+   `activity_event` is the existing instance and the Brand tier will add
+   another. That absence lives in the departures table above, not as a
+   forgotten trigger.
 5. **Immutable once issued.** Enforced by policy absence — no UPDATE policy is
    written for an immutable table, so no caller can update it. Applies to
    `activity_event` here; to `invoice`, `credit_note`, `artwork_version`,
-   `print_artifact` and `document_artifact` in later tiers.
+   `print_artifact` and `document_artifact` in later tiers. The same tables
+   declare no `updated_at`: immutability is the absence of a write path, and
+   a column that records writes has nothing to record. The trigger in rule 4
+   follows the column, so it is absent here too.
 6. **Money is `numeric`.** Never `float`, `real` or `double precision`, anywhere,
    for any purpose (ADR-011). No money column exists in this tier.
 7. **Enumerations store a language-neutral key.** A Postgres enum or a check
