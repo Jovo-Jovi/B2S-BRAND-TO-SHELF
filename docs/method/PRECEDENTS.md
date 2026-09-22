@@ -418,6 +418,40 @@ referring to a project that had since been renamed, and PR-07's rule is
 that the record stands as written. Origin: owner instruction 2026-09-17,
 on the P03-T01 halt's "named production but not yet" question.
 
+**PR-41 — A production migration with data and no verified dump halts
+before push.**
+Every production-migration task measures `public.tenant` and `auth.users`
+in production by a path the isolation suite does not use. While both read
+zero, the schema half of the ADR-013 amendment of 2026-09-22 is the
+complete recovery point. The moment either reads non-zero, the task HALTS
+before `supabase db push` unless it carries a verified dump as that
+amendment specifies: `pg_dump -Fc` through the session pooler, outside the
+repository, checked with `pg_restore --list`, with timestamp, byte size,
+SHA-256 and table-of-contents count recorded, and the file itself never
+committed. The rule fires on a measurement every such task already makes,
+so no reviewer has to remember to ask for it. A static check cannot assert
+this instead. A check runs after the commit is pushed; the halt has to
+happen before `db push`; and the dump file is forbidden from the
+repository, so a check can audit a later claim and cannot see the archive.
+No such check is built here. Origin: P03-T05, OD-H14, the ADR-013
+amendment of 2026-09-22.
+
+**PR-42 — Artifacts a check asserts against each other in both directions
+land in the same commit.**
+When a check asserts two artifacts against each other in both directions,
+those artifacts land in the same commit. Spec-first is expressed by the
+order of work inside a task, not by a separate commit. Origin: P03-T04,
+where the reviewer's prompt required DATA_MODEL.md to land "in its own
+commit, before any migration"; check_data_model_schema.py asserts §3
+against supabase/schema.sql both ways, so commit abd3efd — declaring
+nineteen tables against a schema holding seven — fails that check by
+construction. Three commits were pushed together and CI ran only on the
+head, so the red commit was never reported, and a bisect or revert landing
+on it gets a failing tree. The defect was the reviewer's instruction, not
+the builder's execution. History is not rewritten: a force-push on a shared
+branch would be the larger harm, and PR-07 applies to this project's own
+record.
+
 ---
 
 ## 2. Environment quirks — never re-discover
@@ -799,6 +833,29 @@ on the P03-T01 halt's "named production but not yet" question.
   snapshot was taken as a Management API catalog JSON (tables, columns,
   enums, policies, triggers, functions, migrations, row counts) instead
   of `pg_dump`. Do not treat an empty dump file as a snapshot.
+  ANNOTATED 2026-09-22 (P03-T05, PR-07). The sentences above stand. Docker
+  is rejected by OD-H14. The data recovery point is native `pg_dump`
+  through the session pooler, triggered by the first non-synthetic row,
+  per the ADR-013 amendment of 2026-09-22. A catalog JSON is not that
+  recovery point.
+- Learned at P03-T05: `pg_dump` against Supabase uses the session pooler
+  on port 5432, which works over IPv4. The direct connection is IPv6-only
+  on paid plans without the IPv4 add-on. The transaction pooler on port
+  6543 breaks `pg_dump`'s COPY protocol. Client tools at major version 15
+  or lower fail GSSAPI negotiation against the pooler. Observed this
+  task, and not used as a count: `supabase db query --linked` after the
+  local link file was pointed at production returned
+  `LegacyDbConfigIpv6Error` ("IPv6 is not supported on your current
+  network") and did not reach Postgres. The link file was restored to
+  staging. The production counts for this task are the Management API
+  results, not that error.
+- Learned at P03-T05: PostgreSQL 17.11 client tools are installed on the
+  owner's machine at a user-local path, obtained after the official
+  installer returned HTTP 403. The reviewer's wording was "signature not
+  yet verified". Measured this task: `pg_dump --version` reports
+  `pg_dump (PostgreSQL) 17.11`, and the Authenticode status of
+  `pg_dump.exe` is NotSigned, so the file carries no signature to verify.
+  This task did not run `pg_dump` against a database.
 - Learned at P03-T04: injecting `STAGING_*` keys onto `process.env` before
   vitest collects `__tests__/isolation/` lets Vite inline those values
   at transform time and then fail collection with `failed to find the

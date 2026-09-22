@@ -315,3 +315,60 @@ request rather than at the next phase gate" is therefore incomplete as a
 description of *when* the job fires, and is left standing as the close
 reason recorded at P03-T01-RESUME.
 
+**AMENDED 2026-09-22 — the recovery-point control, restated without Docker
+and triggered by data.** ADR-013's compensating control — a reviewed schema
+diff and a recovery point before any production migration — stands. Its
+mechanism is specified here, because the one first attempted
+(`supabase db dump`) requires Docker, which is rejected (OD-H14). The
+Decision, Context, Consequences, Known gap, Compensating controls and
+Forecloses paragraphs above are unedited (PR-07).
+
+A recovery point has two halves.
+
+**Schema — every production migration, without exception.** The migration
+chain is the schema backup. P03-T01-RESUME proved it reconstitutes the
+schema from nothing on a virgin project, and ADR-006 requires every
+migration to be independently revertible. Before each production migration
+the remote migration ledger and a catalog fingerprint are recorded.
+
+**Data — from the first non-synthetic row.** Every production-migration
+task already measures `public.tenant` and `auth.users` in production by a
+path the isolation suite does not use. While both read zero there is no
+data to recover, and the schema half is the complete recovery point. The
+moment either reads non-zero, the following becomes mandatory immediately
+before `supabase db push` to production, and the task HALTS without it
+(PR-41):
+
+1. `pg_dump` in custom format (`-Fc`), PostgreSQL 17 client tools installed
+   natively, through the session pooler on port 5432 — never the
+   transaction pooler on 6543, which breaks `pg_dump`'s COPY protocol.
+2. Written to a local path outside the repository. Never committed, never
+   uploaded, never a workflow artifact: artifacts on a public repository
+   are downloadable by other users, and a production dump there is a
+   public copy of buyers' data.
+3. Verified with `pg_restore --list`: readable, and its table of contents
+   names every table the catalog holds.
+4. Never restored into staging to verify it. Staging never holds a buyer's
+   data (this ADR).
+5. The repository records timestamp, byte size, SHA-256 and
+   table-of-contents count — never the file, its contents or the
+   connection string.
+6. Retained until the migration is proven and superseded by the next dump.
+
+Before the first dump, the client binaries' code signature is verified.
+They were obtained after the official installer returned HTTP 403, and a
+binary of unverified provenance does not handle a production password.
+
+Supabase's platform daily backup is a physical snapshot, platform-held and
+not portable. It is a second layer against losing the project, not this
+control: it cannot undo one migration applied hours after it ran.
+
+**Responsibility.** The owner accepts, on the record, that the first real
+dump will run on the day real data is at stake rather than being rehearsed
+beforehand.
+
+**The record, stated honestly.** P03-T03 and P03-T04 applied to an empty
+production database with the schema half recorded and no data snapshot.
+Under this amendment that is the complete recovery point for an empty
+database, not an exception.
+

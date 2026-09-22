@@ -1014,6 +1014,11 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       document in none of the nine phases, so the worked justification for the
       no-literals rule is owed by nobody. That is not this row's defect and is
       not invented an owner here — it is CF-146, which also carries CF-74.
+      AMENDED (P03-T05) — the `UX_PRINCIPLES.md` half now has an owner.
+      `BUILD_PHASES.md` §P03 names that document, which is what CF-146
+      existed to decide, and CF-146 is CLOSED. Owner: **P08** for the
+      `FEATURE_INVENTORY.md` must-not-reproduce half, and **P03** for the
+      `UX_PRINCIPLES.md` half.
 - [ ] CF-74 — The report engine has no resource bundle outside the invoice
       template. `الإجمالي` is re-declared at bb-stock-costs.html:5652, :5743,
       :5746, :5798 and `المنتج` at :5651, :5712, :5757, :5782. Eight
@@ -1021,8 +1026,11 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       one declaration site. Owner: DOMAIN_MODEL.md and UX_PRINCIPLES.md.
       AMENDED (P-06a). DOMAIN_MODEL.md invariant 2 settles the storage half — no
       Arabic string is ever an identifier, and TranslationEntry is the only
-      home for display text. The single-declaration-site requirement remains.
+      home for display text. The       single-declaration-site requirement remains.
       Owner: UX_PRINCIPLES.md.
+      AMENDED (P03-T05) — `BUILD_PHASES.md` §P03 names `UX_PRINCIPLES.md`,
+      so this row's entire owner is that phase. Owner: **P03**, the
+      `UX_PRINCIPLES.md` authoring.
 - [x] CF-75 — AGENTS.md and .cursor/rules/b2s-devos.mdc carried folder paths
       (`src/data/adapters/`, `src/print/`, `components/ui/`,
       `components/shared/`) and a named library (`zod`) in always-on rules,
@@ -2918,7 +2926,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       **11**, re-derived by the same command. Owner: none outstanding, closed in
       the task that performed the triage; the residue is carried by rows (c) and
       (d)'s own owners and by CF-146.
-- [ ] CF-146 — `UX_PRINCIPLES.md` is owed by no phase. It is one of OD-H7's
+- [x] CF-146 — `UX_PRINCIPLES.md` is owed by no phase. It is one of OD-H7's
       just-in-time documents and `BUILD_PHASES.md` names it in none of the nine
       phases, unlike `PRINT_CONTRACT.md` (P06), `IMPORT_SPEC.md` (P07) and
       `FEATURE_INVENTORY.md` / `RISK_REGISTER.md` / `ACCEPTANCE.md` (P08), each
@@ -2934,6 +2942,12 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       carry-forward, only by amending `BUILD_PHASES.md`, which is the
       reviewer's document. Owner: the reviewer, at the next method amendment
       that touches `BUILD_PHASES.md`.
+      CLOSED (P03-T05) — `BUILD_PHASES.md` §P03 names `UX_PRINCIPLES.md`,
+      authored just-in-time by the reviewer before the design-surface
+      catalog is designed. The catalog is the first design artifact in the
+      project and cannot be designed without a charter. OD-G21 is that
+      charter's first input. CF-74 is amended to name P03. Owner: none
+      outstanding.
 - [x] CF-147 — a done-steps row split into six columns, and both the shape check
       and the roadmap generator let it through. `SESSION_CONTEXT.md`'s
       P02-T09-FIX row described one of that task's new assertions by quoting a
@@ -3322,4 +3336,31 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       could reach staging without a commit, and staging and
       `supabase/migrations` would silently disagree, which is the one thing
       staging exists to prevent. Owner: **the owner**.
+- [x] CF-166 — When a check asserts two artifacts against each other in both
+      directions, those artifacts must land in the same commit. Spec-first
+      expressed as a separate commit fails the check by construction.
+      Origin: P03-T04. The reviewer's prompt required `DATA_MODEL.md` to
+      land in its own commit, before any migration.
+      `check_data_model_schema.py` asserts §3 against `supabase/schema.sql`
+      both ways, so commit `abd3efd`, declaring nineteen tables against a
+      schema holding seven, fails that check. Three commits were pushed
+      together and CI ran only on the head, so the red commit was never
+      reported. A bisect or a revert that lands on `abd3efd` gets a failing
+      tree. The defect was the reviewer's instruction, not the builder's
+      execution. History is not rewritten: a force-push on a shared branch
+      would be the larger harm, and PR-07 applies to this project's own
+      record. The ruling is PR-42.
+      CLOSED (P03-T05) by PR-42. Owner: none outstanding.
+- [ ] CF-167 — `BRANCHING.md` does not state how a design-surface pull
+      request coexists with an open phase branch. §2 is one branch per
+      phase. §3 is one consolidated pull request per phase, and a signed
+      mid-phase amendment gets its own branch and its own pull request.
+      §3.2 sends a method change to `main`, and PR-32 and PR-34 put a
+      method change that touches the ledger on the open phase branch
+      instead. The design-surface catalog is product work, `components/`,
+      landed by its own consolidated pull request (`BUILD_PHASES.md`,
+      "The design surface"). It is not a method amendment and it is not
+      a signed mid-phase amendment. Two branches, each with one task at
+      a time, is the gap, and this task does not author the branching
+      rule. Owner: **the reviewer**.
 

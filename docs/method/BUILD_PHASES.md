@@ -82,7 +82,10 @@ quarantine and its guard · the RLS test harness.
 **Not waivable.**
 
 ### P03 — Brand and onboarding
-`BRAND_CONFIG.md` authored just-in-time · the onboarding wizard · `Brand`,
+`UX_PRINCIPLES.md` authored just-in-time by the reviewer, before the
+design-surface catalog is designed. The catalog is the first design
+artifact in the project and cannot be designed without a charter; OD-G21
+is its first input. `BRAND_CONFIG.md` authored just-in-time · the onboarding wizard · `Brand`,
 `BrandProfile`, `BrandTheme`, `LogoVariant`, `ColorRole`, `ColorValue`,
 `Typeface` · `MediaAsset` and `AssetRendition` on Supabase Storage · archive,
 never delete (OD-D5).
@@ -152,8 +155,12 @@ from the loop it actually ran (OD-H12).
 Builders compose and wire; they never restyle. A visual gap routes back to design,
 never patched in a feature folder.
 
-The catalog is designed after the P01 shell and before P03 composes pages, and is
-landed by a mechanical builder task with its own consolidated pull request.
+The catalog has two steps, and they are not the same act. It is DESIGNED
+against `UX_PRINCIPLES.md` by the design surface, not by a builder. It is
+then LANDED by a mechanical builder task with its own consolidated pull
+request. A builder prompt to create `components/ui` without a designed
+catalog is the defect this section exists to prevent. The design happens
+after the P01 shell and before P03 composes pages.
 
 ---
 

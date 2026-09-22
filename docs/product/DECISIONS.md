@@ -20,7 +20,7 @@ never edited in place.
 
 ## 2. Decision register
 
-94 decisions, all signed. None open.
+96 decisions, all signed. None open.
 
 ### Group A — Product identity
 
@@ -137,6 +137,7 @@ never edited in place.
 | **G18** | **A `Member` may own at most three active `Tenant`s and perform at most three provisioning acts per rolling 24 hours. Both are policy values, hardcoded to the free plan in Release 1 and supplied by `Subscription` in Release 3.** | SIGNED 2026-08-05 |
 | **G19** | **`public.operator` is a system-managed table. An Operator is provisioned only by migration or by direct administrative access to the database. No API role holds INSERT, UPDATE or DELETE on it. Operator is the least-privileged platform administrator: account metadata, usage and billing (OD-G10) and nothing else. No text in this repository may describe it as a super-admin, superuser, admin or staff role.** | SIGNED 2026-08-31 |
 | **G20** | **Object storage stays Supabase Storage. `MediaAsset` and `AssetRendition` are objects under tenant-isolated paths governed by storage policies. ADR-008 stands. Cloudflare R2 is declined for Release 1 on isolation, not cost. No Asset-tier column, type or function name may contain the vendor. Revisit at P06 against measured object sizes and egress.** | SIGNED 2026-09-17 |
+| **G21** | **The platform's navigation, forms, tables, buttons and status indicators use one platform look for every tenant. A tenant's brand appears on its outputs, on the surfaces where that brand is being shown or edited, and as the tenant's logo in the header. The design-surface token layer is platform tokens for chrome, and the seven ColorRoles only where a brand is rendered or edited.** | SIGNED 2026-09-22 |
 
 ### Group H — Quality & acceptance
 
@@ -155,6 +156,7 @@ never edited in place.
 | **H11** | **Every probe a gate invents becomes a permanent CI check or suite assertion. An adversarial pass is additive, never re-invented.** | SIGNED 2026-08-04 |
 | **H12** | **Nine build phases. P09 — launch and operations — is added. Staging and error visibility move into P03's entry; backup with a rehearsed restore moves into P05's exit. Release 1 is a pilot with a real brand, not a demo.** | SIGNED 2026-08-05 |
 | **H13** | **`BUILD_PHASES.md` §P03's entry condition "error visibility" means: an unhandled server error in production produces a record a builder can retrieve within one working session, keyed to a request identifier that also appears in what the person saw. The definition names no vendor. This OD defines the condition; it does not implement it.** | SIGNED 2026-09-17 |
+| **H14** | **No B2S procedure, local or in CI, requires Docker. `supabase db dump`, `supabase start` and any other Docker-backed command are not used. A control whose execution requires Docker is not a control this project has.** | SIGNED 2026-09-22 |
 
 ## 3. Decisions authored after the promotion
 
@@ -524,4 +526,57 @@ condition is met is P03's to satisfy before the wizard accepts real content.
 
 **Forecloses.** Satisfying an entry condition by assertion; naming a vendor
 in a phase plan where a capability was meant.
+
+### OD-H14 — Docker is not a project dependency
+**Signed 2026-09-22.**
+
+**Decision.** No B2S procedure, local or in CI, requires Docker.
+`supabase db dump`, `supabase start` and any other Docker-backed command
+are not used. A control whose execution requires Docker is not a control
+this project has.
+
+**Reasoning.** Owner decision, 2026-09-22. The one procedure that depended
+on Docker — ADR-013's pre-migration snapshot — has a native equivalent, and
+a local-environment dependency added for one command is a dependency every
+future machine and contributor inherits. `supabase start` was already
+unnecessary: ADR-013 points local development at staging.
+
+**Forecloses.** Docker Desktop, Docker in CI, `supabase db dump`,
+`supabase start`, and any restore-verification method that starts a local
+Postgres container.
+
+### OD-G21 — The platform's own interface is neutral; tenant brand is rendered, not worn
+**Signed 2026-09-22.**
+
+Filed in Group G. The register's convention is the group title. Group D
+holds the tenant's brand inventory — fields, logos, colours, fonts — and
+Group H holds acceptance and method. Group G holds the platform itself:
+the client (G4), that the client is responsive (G5), and where it is
+hosted (G9). This decision constrains that client's chrome. It is not a
+brand-field rule and not an acceptance gate.
+
+**Decision.** The platform's navigation, forms, tables, buttons and status
+indicators use one platform look for every tenant. A tenant's brand
+appears on its outputs — packaging, labels, stickers, cartons, stands,
+garment tickets and every buyer-facing document — on the surfaces where
+that brand is being shown or edited, and as the tenant's logo in the
+header. The design-surface token layer is therefore two layers: platform
+tokens for chrome, and the seven ColorRoles only where a brand is rendered
+or edited.
+
+**Reasoning.** PRODUCT_BRIEF §1's "white-label" is satisfied by B2S's mark
+never appearing on a tenant's output; Balance Bites is a customer of the
+platform (OD-A4), not its face. BRAND_CONFIG.md §11 enforces contrast only
+between foreground and background, so a tenant accent failing against the
+page would make every button unreadable, and the platform cannot refuse a
+brand for being that brand. `critical` means warnings and regulatory
+marks, never decorative; if it recoloured the whole application, a
+warning in one tenant would be decoration in another. OD-G14 lets one
+member hold several tenants and switch by an explicit selector;
+recolouring the application on that switch would make two memberships
+look like two products.
+
+**Forecloses.** Tenant ColorRoles applied to platform chrome; a per-tenant
+restyle of navigation, forms, tables or status; B2S's mark on any
+tenant output.
 
