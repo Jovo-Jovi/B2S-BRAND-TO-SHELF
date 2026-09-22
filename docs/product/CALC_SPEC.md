@@ -650,6 +650,34 @@ Edge:       a formatted string never enters storage, never enters a comparison,
             and never enters an identifier.
 ```
 
+**AMENDED 2026-09-22 — Locale definitions, and the Arabic rendering.**
+The Expected line above stands and is not edited (PR-07). The owner signs
+this amendment by landing P03-T06, with that line in front of them.
+
+```
+Expected:  330.63 → "330.63 EGP" (en) · "330.63 ج.م" (ar), same stored
+           value.
+Locale definitions, stated here and nowhere else:
+  en — Latin digits (0–9), "." decimal separator, "," grouping, currency
+       code after the value.
+  ar — Latin digits (0–9), "." decimal separator, "," grouping, currency
+       symbol after the value.
+```
+
+Reasoning. In operations, people type numbers. A field displaying
+Arabic-Indic digits while the person types Latin ones shows two digit
+systems inside one control during editing, and a price field whose display
+uses ٫ while the keyboard produces "." is a source of entry errors. Latin
+digits in ar make what is read and what is typed the same, and give every
+formatted number and every identifier on one Arabic document one digit
+system.
+
+This is not the defect the row's legacy source records. That defect was
+money formatting modelled twice with Western digits hardcoded at :1631.
+This is one locale definition, resolved at render and stated once. D8 is
+unchanged: nothing is stored formatted, so redefining ar's numbering later
+is this one line and no data migration.
+
 ★ = the two rows where the choice changes every downstream figure.
 
 ---

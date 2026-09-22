@@ -1019,6 +1019,11 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       existed to decide, and CF-146 is CLOSED. Owner: **P08** for the
       `FEATURE_INVENTORY.md` must-not-reproduce half, and **P03** for the
       `UX_PRINCIPLES.md` half.
+      AMENDED (P03-T06) — the P03 half is discharged. `UX_PRINCIPLES.md` §4
+      is the worked justification for the no-literals rule, including the
+      corrupted return word this row names. The P08 half stays open.
+      Owner: **P08**, the `FEATURE_INVENTORY.md` must-not-reproduce
+      authoring.
 - [ ] CF-74 — The report engine has no resource bundle outside the invoice
       template. `الإجمالي` is re-declared at bb-stock-costs.html:5652, :5743,
       :5746, :5798 and `المنتج` at :5651, :5712, :5757, :5782. Eight
@@ -1031,6 +1036,11 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       AMENDED (P03-T05) — `BUILD_PHASES.md` §P03 names `UX_PRINCIPLES.md`,
       so this row's entire owner is that phase. Owner: **P03**, the
       `UX_PRINCIPLES.md` authoring.
+      AMENDED (P03-T06) — stating the principle is not the whole of the
+      owed act. `UX_PRINCIPLES.md` §4 states one string, one declaration
+      site, and names a duplicate-value report as owed. The requirement
+      needs that check to hold it, so this row stays OPEN. The check is
+      CF-170. Owner: **the task that lands the design-surface catalog**.
 - [x] CF-75 — AGENTS.md and .cursor/rules/b2s-devos.mdc carried folder paths
       (`src/data/adapters/`, `src/print/`, `components/ui/`,
       `components/shared/`) and a named library (`zod`) in always-on rules,
@@ -3363,4 +3373,106 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       a signed mid-phase amendment. Two branches, each with one task at
       a time, is the gap, and this task does not author the branching
       rule. Owner: **the reviewer**.
+- [ ] CF-168 — STATIC. No physical left or right, and no `margin-left`,
+      `padding-right` or equivalent, where a logical start or end property
+      exists. A script over the source. No new dependency. A gate which
+      cannot observe what it checks is not a gate (PR-21). Owner: **the
+      task that lands the design-surface catalog**.
+- [ ] CF-169 — STATIC. The `en` and `ar` message catalogs hold exactly the
+      same key set. A script over the source. No new dependency. Measured
+      at P03-T06, before this row opened: both catalogs hold 19 keys and
+      the sets are equal. A gate which cannot observe what it checks is
+      not a gate (PR-21). Owner: **the task that lands the design-surface
+      catalog**.
+- [ ] CF-170 — STATIC. A duplicate-value report per catalog namespace.
+      This is CF-74's check. A script over the source. No new dependency.
+      A gate which cannot observe what it checks is not a gate (PR-21).
+      Owner: **the task that lands the design-surface catalog**.
+- [ ] CF-171 — STATIC. Brand tokens are referenced only inside the brand
+      frame component. A script over the source. No new dependency. A gate
+      which cannot observe what it checks is not a gate (PR-21). Owner:
+      **the task that lands the design-surface catalog**.
+- [ ] CF-172 — STATIC. No raw colour, spacing or radius value outside the
+      token layer. A script over the source. No new dependency. A gate
+      which cannot observe what it checks is not a gate (PR-21). Owner:
+      **the task that lands the design-surface catalog**.
+- [ ] CF-173 — STATIC. Every catalog primitive implements every state
+      `DESIGN_SURFACE.md` requires of it. A script over the source. No new
+      dependency. `DESIGN_SURFACE.md` is not yet authored; a check against
+      a spec that does not exist observes nothing (PR-21). Owner: **the
+      task that lands the design-surface catalog**.
+- [ ] CF-174 — STATIC. Variant and size names match `DESIGN_SURFACE.md`
+      exactly. A script over the source. No new dependency.
+      `DESIGN_SURFACE.md` is not yet authored; a check against a spec that
+      does not exist observes nothing (PR-21). Owner: **the task that
+      lands the design-surface catalog**.
+- [ ] CF-175 — STATIC. Formatted numbers reach the screen only through the
+      locale formatter `CALC_SPEC.md` R1-25 defines, never a hand-built
+      digit string. A script over the source. No new dependency. A gate
+      which cannot observe what it checks is not a gate (PR-21). Owner:
+      **the task that lands the design-surface catalog**.
+- [ ] CF-176 — COMPONENT-RENDERED. Accessible name, role and label on every
+      interactive primitive, in every state, in both locales. Runs inside
+      the existing unit tests. Needs one new dev dependency, an
+      accessibility-rule engine, which is an ADR and an owner decision
+      under `AGENTS.md` §2. This task does not add it. A unit environment
+      that does not render the primitive cannot observe a name, role or
+      label (PR-21). Owner: **the task that lands the design-surface
+      catalog**.
+- [ ] CF-177 — BROWSER-RENDERED. WCAG 2.2 AA contrast for every platform
+      primitive in light and dark. A real browser and one new CI job,
+      needing a headless-browser runner, which is an ADR and an owner
+      decision under `AGENTS.md` §2. No Docker (OD-H14). This task does
+      not add the runner. A contrast check without computed styles passes
+      on nothing (PR-21). Owner: **the task that lands the design-surface
+      catalog**.
+- [ ] CF-178 — BROWSER-RENDERED. Every primitive and the wizard's first
+      step usable at 360 CSS pixels and at desktop width, with no
+      horizontal page scroll. A real browser and one new CI job, needing
+      a headless-browser runner. No Docker (OD-H14). A layout check
+      without layout passes on nothing (PR-21). Owner: **the task that
+      lands the design-surface catalog**.
+- [ ] CF-179 — BROWSER-RENDERED. Every primitive rendered in `ar` with
+      correct mirroring, and with the never-mirror exceptions
+      `UX_PRINCIPLES.md` §3 names left unmirrored. A real browser and one
+      new CI job, needing a headless-browser runner. No Docker (OD-H14).
+      A mirroring check without a rendered direction observes nothing
+      (PR-21). Owner: **the task that lands the design-surface catalog**.
+- [ ] CF-180 — ACCEPTANCE. The onboarding wizard's first step is composed
+      from catalog primitives alone, with no page-level styling, in both
+      locales and both themes. A catalog that cannot compose the first
+      real screen it exists for is incomplete, whatever its inventory
+      says. A gate which cannot observe what it checks is not a gate
+      (PR-21). Owner: **the task that lands the design-surface catalog**.
+- [ ] CF-181 — Before the first production dump, the client binaries'
+      provenance is verified: by a valid signature where the binary
+      carries one, otherwise by the publisher's published checksum for
+      the archive the binaries came from. A binary whose provenance
+      cannot be verified by either route does not handle a production
+      password. The ADR-013 amendment of 2026-09-22 states that rule.
+      The installed `pg_dump.exe` was measured NotSigned at P03-T05, so
+      the signature route cannot pass for it, and the checksum route is
+      not done. The wording closed in this task; the verified binaries
+      did not. Found by the reviewer at `f53884e`. Owner: **the owner**.
+- [x] CF-182 — The reviewer authored a formatting rule into a draft of
+      `UX_PRINCIPLES.md` §3 — Western digits in both locales for money,
+      quantities, dates, codes and identifiers — without reading the
+      higher-precedence documents that already owned the subject.
+      `CALC_SPEC.md` R1-25, slot 4, signed 2026-08-01, rendered Arabic
+      money with Arabic-Indic digits, and `DOMAIN_MODEL.md` D8 makes the
+      digit system a Locale concern. The owner then signed the
+      recommendation without that row in front of them. P03-T06's builder
+      found the contradiction and halted before the first edit. The
+      defect was one rule with two declaration sites, which
+      `UX_PRINCIPLES.md` §4 forbids for strings. Resolution is PR-43.
+      CLOSED (P03-T06) by PR-43. Owner: none outstanding.
+- [x] CF-183 — Never re-link the local Supabase CLI to production to take
+      a read. P03-T05 re-pointed the local link file at production for a
+      count, then restored it; the call failed before reaching Postgres
+      and the counts came from the Management API, so nothing happened.
+      A local CLI linked to production is how a later `db push` lands on
+      the wrong database. ADR-013 points local development at staging,
+      and the Management API is already the read path every task uses.
+      CLOSED (P03-T06) by the quirk in `PRECEDENTS.md` §2. Owner: none
+      outstanding.
 

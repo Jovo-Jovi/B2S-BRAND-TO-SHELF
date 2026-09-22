@@ -1,9 +1,9 @@
 # SESSION CONTEXT
-Updated: 2026-09-22 · By: Grok 4.7 (standard; prompt named Sonnet) · Phase: P03
-Last task: P03-T05 · Verdict: —. Last-row verdict is the declared
-placeholder; the follow-up commit fills the sha only. P03-T03 and P03-T04
-reviewer verdicts PASS, carried here under the verdict-column protocol. Ledger
-152 rows, **36** open. Full detail in the done-steps
+Updated: 2026-09-23 · By: Grok 4.7 (standard; prompt named Sonnet) · Phase: P03
+Last task: P03-T06 · Verdict: —. Last-row verdict is the declared
+placeholder; the follow-up commit fills the sha only. P03-T05 reviewer verdict
+PASS, carried here under the verdict-column protocol. Ledger
+168 rows, **50** open. Full detail in the done-steps
 row below.
 
 ## Read these too
@@ -79,7 +79,8 @@ Keep it short: if a paragraph is growing here, it belongs elsewhere.
 | P03-T02 | Restore per-push isolation coverage, and put the MCP containment under a guard. isolation.yml push trigger matches ci.yml every-branch shape; path filter unchanged; concurrency tenant-isolation-staging cancel-in-progress false retained; comment block rewritten. .cursor/mcp.json committed with scripts/check_mcp_containment.py in the same commit, wired as docs-integrity's eleventh check; production entry must carry read_only=true; both refs two-way with the ledger; no env block; floors 2 servers and 2 Supabase entries. Five plants CAUGHT from an in-memory snapshot, never git checkout; every revert SHA-256-identical. Two-way probe 39 of 39, enumerated 39, KNOWN_GAPS 1, provenance P03-T02. Isolation workflow change is a changed condition, not a new premise, no pair. Static set 10+6=16 to 11+6=17; fail() 117 to 137. CF-109 stays CLOSED; CF-164 opened and closed; CF-165 opened on staging MCP as a second applier, posture left to the owner, staging entry not changed. 36 open at 0637f9b + 1 - 0 = 37 open, ledger 148 to 150. Prompt named Opus; this session ran as Cursor Grok 4.6. REVIEWER_CHAT unstaged. Tests: isolation suite in full against staging, planted violations, two-way probe, static conformance and the four npm scripts. Acceptance: TENANT ISOLATION, not waivable. Money, print, features: N/A. | PASS | `2c02e89` |
 | P03-T03 | Make `updated_at` real: the maintenance trigger, its assertion, and CF-93's last gap. On `phase/03-brand-and-onboarding` from `6610be2`; no PR, no merge. ADR-013 independent path (User-Agent `B2S-P03-T03-independent/1.0`): production and staging `public.tenant` and `auth.users` both `[{"n":0}]` before work and after the suite. PART 1 live staging catalog: 7 public tables; 5 declare `updated_at` (`consent_grant`, `invitation`, `member`, `membership`, `tenant`); `operator` and `activity_event` declare none, matching §3 and §1's departures table; no HALT 4. Migration `20260919120001_updated_at_maintenance` applied to staging then production via CLI `db push`; catalogs agree on B2S-owned `public` objects. `public.set_updated_at()` is not `security definer`, `search_path` pinned to `''`, unconditional `NEW.updated_at = now()`. Five `{table}_set_updated_at` BEFORE UPDATE FOR EACH ROW triggers. §11a.1 stays ten (`check_security_model_bypass.py`). Types regenerated from staging: 17752 bytes, catalog prefix 13199, helpers 4553, byte-identical, not hand-edited. `DATA_MODEL.md` §1 rule 4 names the trigger; immutable-table clause placed in §1 because the departures table is already there, with a pointer from rule 5. `check_data_model_schema.py` both directions, floors 1 and 1 in the OK line. 6 on-disk plants CAUGHT plus 6 isolated with the compare out of the path (PR-38), every revert SHA-256-identical. PROVEN_PAIRS stays 39, provenance P03-T02: changed condition on an existing check, not a new premise. fail() 137 to 138 by AST. Proofs 32a and 32b: authenticated `display_name` write moves `updated_at`; caller-chosen timestamp grant-refused for authenticated (no UPDATE on the column) and overwritten for `service_role` HTTP and in-process SQL. Proofs 15 and 22 extended to know `set_updated_at` as the one invoker trigger function granted to postgres only; no prior assertion weakened, reordered or deleted. Suite against staging: **84 expected — 84 PASS, 0 FAIL, 0 LOST**, 342s, line D all fifteen teardown counters at zero; vitest 85, the completeness guard. CF-93 CLOSED. 37 open at `6610be2` + 0 landed open − 1 closed = 36 open, ledger 150. Prompt named Sonnet; this session ran as Cursor Grok 4.6. `docs/method/REVIEWER_CHAT_INSTRUCTIONS.md` uncommitted and unstaged. Tests: isolation suite in full against staging, planted violations, static conformance and the four npm scripts. Acceptance: TENANT ISOLATION, because the schema moved; §4's six named full-gate re-run conditions did not fire (no new entity, policy, existing-object grant, privileged path, role, or Operator surface) and the suite ran anyway. Money, print, features: N/A. | PASS | `5a051b0` |
 | P03-T04 | Land the Brand and Asset tiers, and the bilingual key. On `phase/03-brand-and-onboarding` from `5a051b0`; no PR, no merge. Spec commit `abd3efd` before any migration. ADR-013 independent path (User-Agent `B2S-P03-T04-independent/1.0`): production `tenant_n=0` `users_n=0` before apply and after the suite; staging both zero after teardown. Five migrations `20260922120001` through `05` applied to staging then production via CLI `db push`. Suggested Brand-then-Asset split changed: Asset before Brand because `typeface.font_asset_id` and `logo_variant.media_asset_id` reference `media_asset`. Cycle resolved by nullable `brand.current_profile_id`. `brand_profile` has no UPDATE policy and no `updated_at`. This tier added no `security definer`; §11a.1 stays ten. Types CLI-regenerated from staging, 17752 to 42063 bytes, UTF-8 no BOM. Isolation against staging: **94 expected — 94 PASS, 0 FAIL, 0 LOST**, 525s, line D all new-table counters at zero; vitest 95, the completeness guard. Prompt named eleven tables; seven to nineteen is plus twelve (PR-33). `db dump --linked` failed Docker Desktop and wrote an empty file; catalog JSON snapshot taken instead. After apply catalogs agree: 19 tables, 10 enums, 24 migrations, 56 policies, 19 triggers, 0 chain-derived diffs. Floors: data_model subsections 2 to 21, tables 1 to 19, enums 1 to 10, `updated_at` 1 and 1 to 16 and 16; migration split 19/1569 to 24/2108; enum-keys 12/4 to 30/10; ROLE_JOURNEY 17 to 19. PROVEN_PAIRS stays 39, provenance P03-T02. fail() stays 138. No new CF id. 36 plus 0 minus 0 = 36 open, ledger 150. Prompt named Opus; this session ran as Cursor Grok 4.6. `docs/method/REVIEWER_CHAT_INSTRUCTIONS.md` uncommitted and unstaged. Tests: the tenant-isolation suite in full against staging. Acceptance: TENANT ISOLATION, not waivable. Money and print: N/A. | PASS | `fb787e1` |
-| P03-T05 | Land OD-H14 and OD-G21, amend ADR-013 beside its text, and correct the method. On phase/03-brand-and-onboarding from 954b9de; no PR, no merge. PART 0 Management API, User-Agent B2S-P03-T05-independent/1.0, production ref from check_mcp_containment.py: public.tenant 2026-09-22T15:36:32.344218+00:00 HTTP 201 [{"n":0}]; auth.users 2026-09-22T15:36:35.614315+00:00 HTTP 201 [{"n":0}]. A supabase db query --linked attempt after pointing the local link file at production returned LegacyDbConfigIpv6Error and did not reach Postgres; the link file was restored to staging; those errors are not the counts. Register 94 to 96, verified by row count. ADR-013 body unedited; the 2026-09-22 amendment states the schema half on every migration and the data half from the first non-synthetic row. PR-41 halts a production migration before db push when a count is non-zero and no verified dump is carried. PR-42: artifacts a bidirectional check asserts land in the same commit. The docker-dump quirk is annotated, not deleted. Connection facts and the PostgreSQL 17.11 client tools are recorded; Authenticode status of pg_dump.exe is NotSigned. CF-166 opened and closed by PR-42. CF-146 closed. CF-74 amended to P03. CF-73's UX half amended to P03. CF-167 opened on the design-surface pull request beside an open phase branch; BRANCHING.md not edited. 36 open at 954b9de plus 1 landed open (CF-167) minus 1 previously open closed (CF-146) equals 36 open; CF-166 nets zero; ledger 150 to 152. No pg_dump against a database. No Docker. Isolation suite not run. Prompt named Sonnet; this session ran as Cursor Grok 4.7. REVIEWER_CHAT unstaged. Tests: static conformance and the four npm scripts. Acceptance: none of the four applies. Tenant isolation: N/A, stated explicitly. | — | `1f66ed8` |
+| P03-T05 | Land OD-H14 and OD-G21, amend ADR-013 beside its text, and correct the method. On phase/03-brand-and-onboarding from 954b9de; no PR, no merge. PART 0 Management API, User-Agent B2S-P03-T05-independent/1.0, production ref from check_mcp_containment.py: public.tenant 2026-09-22T15:36:32.344218+00:00 HTTP 201 [{"n":0}]; auth.users 2026-09-22T15:36:35.614315+00:00 HTTP 201 [{"n":0}]. A supabase db query --linked attempt after pointing the local link file at production returned LegacyDbConfigIpv6Error and did not reach Postgres; the link file was restored to staging; those errors are not the counts. Register 94 to 96, verified by row count. ADR-013 body unedited; the 2026-09-22 amendment states the schema half on every migration and the data half from the first non-synthetic row. PR-41 halts a production migration before db push when a count is non-zero and no verified dump is carried. PR-42: artifacts a bidirectional check asserts land in the same commit. The docker-dump quirk is annotated, not deleted. Connection facts and the PostgreSQL 17.11 client tools are recorded; Authenticode status of pg_dump.exe is NotSigned. CF-166 opened and closed by PR-42. CF-146 closed. CF-74 amended to P03. CF-73's UX half amended to P03. CF-167 opened on the design-surface pull request beside an open phase branch; BRANCHING.md not edited. 36 open at 954b9de plus 1 landed open (CF-167) minus 1 previously open closed (CF-146) equals 36 open; CF-166 nets zero; ledger 150 to 152. No pg_dump against a database. No Docker. Isolation suite not run. Prompt named Sonnet; this session ran as Cursor Grok 4.7. REVIEWER_CHAT unstaged. Tests: static conformance and the four npm scripts. Acceptance: none of the four applies. Tenant isolation: N/A, stated explicitly. | PASS | `1f66ed8` |
+| P03-T06 | Amend R1-25 Arabic rendering beside the original Expected line; land UX_PRINCIPLES.md with section 3 deferring the digit system to R1-25; place it and DESIGN_SURFACE.md in precedence slot 12. PART 0 one Arabic-Indic hit at CALC_SPEC.md:646. Register 96, ADR-013, live maximum was CF-167 and PR-42; this task allocated PR-43 and CF-168 through CF-183. Thirteen catalog gates CF-168 to CF-180 stay open. Binaries CF-181 stay open, owner the owner. PR-43 closed CF-182. The re-link quirk closed CF-183. CF-74 stays open, owner the catalog landing task. CF-73 P03 half discharged; P08 stays. en and ar catalogs hold the same 19 keys. 36 open plus 16 landed minus 2 closed equals 50 open; ledger 152 to 168. No schema, no dependency, no components. Isolation suite not run. Prompt named Sonnet; this session ran as Cursor Grok 4.7. REVIEWER_CHAT unstaged. Tests: static conformance and the four npm scripts. Money acceptance: one rendering example, no calculation or expected numeric value moved. Features and print N/A. Tenant isolation: N/A, stated explicitly. | — | pending |
 
 > Commit column: one or more comma-separated backticked shas, or `—` where no
 > single commit tracks the step (P-00 through P-01c predate the one-task-one-commit
@@ -114,8 +115,8 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
 - CF-58 — owner: owner decision, retire or keep, landing at the next repo-maintenance task
 - CF-69 — owner: P08, the FEATURE_INVENTORY.md must-not-reproduce authoring
 - CF-71 — owner: P08, the FEATURE_INVENTORY.md must-not-reproduce authoring
-- CF-73 — owner: P08 for the FEATURE_INVENTORY.md must-not-reproduce half; P03 for the UX_PRINCIPLES.md half
-- CF-74 — owner: P03, the UX_PRINCIPLES.md authoring
+- CF-73 — owner: P08, the FEATURE_INVENTORY.md must-not-reproduce authoring
+- CF-74 — owner: the task that lands the design-surface catalog, which lands the duplicate-value check
 - CF-83 — owner: PRECEDENTS.md, PR-18
 - CF-84 — owner: PRECEDENTS.md, PR-19
 - CF-94 — owner: the task that creates components/, for that root
@@ -131,6 +132,20 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
 - CF-163 — owner: the next amendment of scripts/check_stated_counts.py that can take ARCHITECTURE.md §6 as a subject, or a dedicated assertion; not silently both
 - CF-165 — owner: the owner
 - CF-167 — owner: the reviewer, for how a design-surface pull request coexists with an open phase branch
+- CF-168 — owner: the task that lands the design-surface catalog
+- CF-169 — owner: the task that lands the design-surface catalog
+- CF-170 — owner: the task that lands the design-surface catalog
+- CF-171 — owner: the task that lands the design-surface catalog
+- CF-172 — owner: the task that lands the design-surface catalog
+- CF-173 — owner: the task that lands the design-surface catalog
+- CF-174 — owner: the task that lands the design-surface catalog
+- CF-175 — owner: the task that lands the design-surface catalog
+- CF-176 — owner: the task that lands the design-surface catalog
+- CF-177 — owner: the task that lands the design-surface catalog
+- CF-178 — owner: the task that lands the design-surface catalog
+- CF-179 — owner: the task that lands the design-surface catalog
+- CF-180 — owner: the task that lands the design-surface catalog
+- CF-181 — owner: the owner, for the PostgreSQL client binaries' provenance
 
 ## Frozen decisions in force
 - Freeze point 2026-07-29 (`legacy/FREEZE.md`) — tools RETIRING, not port
@@ -389,16 +404,15 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
   (PR-29).
 
 ## Next action
-**The next P03 build task on `phase/03-brand-and-onboarding`.** Brand, Asset
-and `TranslationKey` tables exist under RLS. Do not build the wizard, a
-route, a form or a `features/` directory in the next schema-adjacent task
-unless that is its named work. `UX_PRINCIPLES.md` is authored just-in-time
-by the reviewer in P03, against OD-G21, before the design-surface catalog
-is designed. The catalog (CF-94) is then landed by a mechanical builder
-task with its own consolidated pull request, before P03 composes pages.
-How that pull request coexists with this open phase branch is the
-reviewer's (CF-167); this task does not author the branching rule. Error
-visibility (CF-162) is live before the wizard accepts its first real
+**The reviewer authors `DESIGN_SURFACE.md`; a later task lands the catalog.**
+`UX_PRINCIPLES.md` is landed at slot 12. Do not create `components/`, a
+token file, or the wizard unless that is the named work. The catalog
+(CF-94) is designed against the charter, then landed by a mechanical
+builder task with its own consolidated pull request, before P03 composes
+pages. How that pull request coexists with this open phase branch is the
+reviewer's (CF-167). Thirteen catalog gates are open on that landing task
+(CF-168 through CF-180). Provenance of the PostgreSQL client binaries is
+the owner's (CF-181). Error visibility (CF-162) is live before the wizard accepts its first real
 content (OD-H12, OD-H13). Production's Postgres patch upgrade is the
 owner's (CF-161). Staging MCP write posture is the owner's (CF-165). Do
 not run the isolation suite against production. No pull request until the

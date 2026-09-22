@@ -452,6 +452,20 @@ the builder's execution. History is not rewritten: a force-push on a shared
 branch would be the larger harm, and PR-07 applies to this project's own
 record.
 
+**PR-43 — A rule already owned by a higher document is referenced, never
+restated.**
+Before a rule is authored into a frozen document, every document of higher
+precedence is searched for the same subject, and a rule already owned
+elsewhere is referenced, never restated. Origin: P03-T06, where the
+reviewer wrote "Numerals are Western (0–9) in both locales for money…"
+into `UX_PRINCIPLES.md` §3 without reading `CALC_SPEC.md` R1-25, which
+already owned Arabic money rendering and had rendered it as Arabic-Indic
+digits since 2026-08-01. The owner signed the recommendation without that
+row in front of them; the builder found the contradiction and halted
+before the first edit. The defect was not the digit choice — it was one
+rule with two declaration sites, which `UX_PRINCIPLES.md` §4 forbids for
+strings and which is exactly how two documents drift.
+
 ---
 
 ## 2. Environment quirks — never re-discover
@@ -862,3 +876,10 @@ record.
   current suite` at a file-level `beforeAll`. Load them from `.env.local`
   after transform, via the harness `loadEnvLocal()`, and run
   `npm run test:isolation` with no extra env overlay.
+- Learned at P03-T05: never re-link the local Supabase CLI to production to
+  take a read. P03-T05 re-pointed the local link file at production for a
+  count, then restored it; the call failed before reaching Postgres and the
+  counts came from the Management API, so nothing happened. A local CLI
+  linked to production is how a later `db push` lands on the wrong
+  database, ADR-013 points local development at staging, and the Management
+  API is already the read path every task uses.

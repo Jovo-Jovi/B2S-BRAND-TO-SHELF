@@ -372,3 +372,17 @@ production database with the schema half recorded and no data snapshot.
 Under this amendment that is the complete recovery point for an empty
 database, not an exception.
 
+**AMENDED 2026-09-22 — provenance, not signature.** The P03-T05 amendment
+requires that "before the first dump, the client binaries' code signature
+is verified". The installed `pg_dump.exe` carries no Authenticode signature
+(NotSigned, measured at P03-T05), so that clause could never pass and would
+halt the first real dump on its own precondition. The requirement was
+provenance; a signature is one way to establish it. Restated: before the
+first dump, the client binaries' provenance is verified — by a valid
+signature where the binary carries one, otherwise by the publisher's
+published checksum for the archive the binaries came from. A binary whose
+provenance cannot be verified by either route does not handle a production
+password. The Decision, Context, Consequences, Known gap, Compensating
+controls, Forecloses paragraphs and both earlier amendments above are
+unedited (PR-07).
+
