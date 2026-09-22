@@ -36,7 +36,9 @@ Five carried on `Membership` — the `public.role` enum, verbatim: **owner**,
 |---|---|---|---|
 | Owner | Manage tenant membership: invite, assign a `Role`, suspend or archive a `Membership` | P02 | `TENANCY_MODEL.md` §3 Can column ("member management"); bounded by the `membership_active_owner_required` trigger (§3 rule 1) — a tenant may never be left at zero active owners |
 | Owner | Issue, scope, time-box and revoke a `ConsentGrant` for Operator break-glass access | P02 | `TENANCY_MODEL.md` §5 — only an `Owner` may create one, never an `Operator` and never a support ticket |
-| Owner | Every Manager-level business operation, in addition to the two rows above | P04 | `TENANCY_MODEL.md` §3 Can column ("everything within the tenant"); P04 is the earliest phase that gives an Owner tenant business data to act on |
+| Owner | Capture and version the tenant `Brand`, `BrandLine`, `BrandProfile`, themes, typefaces, logos, guidelines and `MediaAsset` records | P03 | `TENANCY_MODEL.md` §3 Can column ("everything within the tenant"); SCOPE modules 02 and 03. Completing onboarding is an Owner act |
+| Manager | Maintain `BrandLine`, `BrandTheme`, `Typeface`, `LogoVariant`, `BrandGuideline` and `MediaAsset` records inside the tenant Brand | P03 | `TENANCY_MODEL.md` §3 Cannot column names "delete the brand" as the Manager exclusion, not every brand write. Catalog work at P04 reads what this row writes |
+| Owner | Every Manager-level business operation, in addition to the Owner rows above | P04 | `TENANCY_MODEL.md` §3 Can column ("everything within the tenant"); P04 is the earliest phase that gives an Owner catalog and sales data to act on |
 | Manager | Catalog and inventory operations | P04 | `TENANCY_MODEL.md` §3 Can column |
 | Manager | Sales, invoicing, payments, returns | P05 | `TENANCY_MODEL.md` §3 Can column |
 | Manager | CSV import of products and buyers | P07 | `TENANCY_MODEL.md` §3 Can column; `IMPORT_SPEC.md` is authored just-in-time at P07. CF-32 still names the pre-renumbering phase id `P-10` for this same work and has not been corrected |

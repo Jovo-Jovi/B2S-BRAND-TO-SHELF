@@ -226,6 +226,7 @@ the owner expects to read. It is **not** an identifier and never becomes one.
 | `Currency` | `عملة` | A tenant-selectable currency | money |
 | `ExchangeRate` | — | A rate between two `Currency` records | rate, fx |
 | `Locale` | `لغة` | A language and region pairing, with direction | language, lang |
+| `TranslationKey` | — | The identity of one translatable string. It carries no text; owning rows reference it and `TranslationEntry` rows hang off it | key, i18n key |
 | `TranslationEntry` | — | One string in one `Locale`. What makes "no literals" achievable | string, i18n, label |
 | `RegulatoryProfile` | — | A tenant's selected regime and its declaration rules | compliance, regulation |
 | `ImportTemplate` | — | A CSV column contract for one entity | template, csv |

@@ -1,17 +1,18 @@
 # DATA MODEL — B2S
 
-**Status:** AUTHORED, Platform tier. Precedence slot 6.
-**Authored:** 2026-08-01 by the reviewer surface.
-**Depends on:** `DOMAIN_MODEL.md` (88 entities, 9 tiers), `TENANCY_MODEL.md`,
-`SECURITY_MODEL.md`, `GLOSSARY.md`, `ARCHITECTURE.md`.
+**Status:** AUTHORED, Platform, Brand, Asset and TranslationKey. Precedence slot 6.
+**Authored:** 2026-08-01 by the reviewer surface. Brand, Asset and
+`TranslationKey` / `TranslationEntry` amendment landed P03-T04.
+**Depends on:** `DOMAIN_MODEL.md` (89 entities, 9 tiers), `TENANCY_MODEL.md`,
+`SECURITY_MODEL.md`, `GLOSSARY.md`, `ARCHITECTURE.md`, `BRAND_CONFIG.md`.
 
 > **Scope of this revision.** `DOMAIN_MODEL.md` says what exists. This says how it
 > is stored. Under OD-H7 it is authored one tier ahead of the phase that needs it.
-> **This revision covers the Platform tier only** — the tenancy spine that
-> Phase 01 builds and that every later table hangs from. The remaining eight tiers
-> land as signed amendments, each one phase ahead of its module. That is
-> deliberate: a storage shape authored six phases early is rewritten before it is
-> used.
+> **This revision covers the Platform tier, the Brand tier, the Asset tier, and
+> the two System-tier tables `translation_key` and `translation_entry`.** The
+> remaining deferred tiers land as signed amendments, each one phase ahead of
+> its module. That is deliberate: a storage shape authored six phases early is
+> rewritten before it is used.
 >
 > This document specifies the schema. It does not contain the SQL. The builder
 > authors `supabase/schema.sql` from it (ADR-006), and the exit gate verifies the
@@ -19,10 +20,10 @@
 
 ---
 
-## 1. Universal rules, and the three tables that depart from them
+## 1. Universal rules, and the five tables that depart from them
 
 These rules govern every table unless §3 states otherwise for a table by name.
-§3 departs three times, each departure deliberate and reasoned where it is
+§3 departs five times, each departure deliberate and reasoned where it is
 declared, and the live schema matches §3 exactly. Rules 1, 2, 5, 6, 7 and 8 are
 departed from nowhere; only rules 3 and 4 carry exceptions, and these are all of
 them:
@@ -32,6 +33,8 @@ them:
 | `operator` | rule 3 and rule 4 | A platform administrator is not tenant data. The grant's own lifecycle is `granted_at`, `granted_by` and `revoked_at` — provenance and retirement stated in the terms that apply to it (§3.4) |
 | `activity_event` | rule 3 and rule 4 | Append-only under rule 5. An immutable row has no `updated_at` to maintain and nothing to archive, so it carries `occurred_at` (§3.6) |
 | `consent_grant` | rule 3 | Provenance per rule 4, but retirement is `revoked_at`: a grant is revoked or lapses and is never extended, and archiving it would hide the record an operator access is audited against (§3.5) |
+| `brand_profile` | rule 3, and rule 4 in respect of `updated_at` only | Immutable once made current. A change produces a new version, so there is no `updated_at` to maintain — the same reasoning as `activity_event`. Never archived and never deleted (OD-D5, DOMAIN_MODEL invariant 3), so no `archived_at`. `created_at` and `created_by` are carried; only `updated_at` is absent |
+| `color_value` | rule 3 | A value belongs to exactly one `brand_theme` and has no life apart from it. Archiving one would leave a theme holding six roles, which §11 of `BRAND_CONFIG.md` makes invalid. A theme is archived; its values go with it |
 
 A departure not listed here is a defect and not a decision. §3 states each in
 full; this table exists so that a rule below is never read as a claim §3
@@ -43,8 +46,9 @@ contradicts.
    name, code, email or Arabic string is ever an identifier (DOMAIN_MODEL §3.2,
    CF-65).
 3. **Soft retirement.** `archived_at timestamptz null`. Rows are archived, never
-   deleted. `brand_profile` and `artwork_version` may never be archived either
-   (OD-D5) — that constraint arrives with the Brand tier.
+   deleted. `brand_profile` is never archived (OD-D5, the departure above);
+   `artwork_version` may never be archived either and that constraint arrives
+   with its tier.
 4. **Provenance.** `created_at timestamptz not null default now()`,
    `updated_at timestamptz not null default now()`,
    `created_by uuid null references member(id)`. `updated_at` is maintained by
@@ -58,18 +62,18 @@ contradicts.
    decision; this section's departures table is the only place an absence is
    legitimate. Unconditional rather than guarded by `IS DISTINCT FROM`: a no-op
    UPDATE is still a write against the row, and a column that sometimes records
-   writes is one whose absence you cannot reason about. An immutable table
+   writes is one whose absence you cannot reason about.    An immutable table
    declares no `updated_at` and therefore carries no trigger —
-   `activity_event` is the existing instance and the Brand tier will add
-   another. That absence lives in the departures table above, not as a
+   `activity_event` and `brand_profile` are the two instances in this
+   revision. That absence lives in the departures table above, not as a
    forgotten trigger.
 5. **Immutable once issued.** Enforced by policy absence — no UPDATE policy is
    written for an immutable table, so no caller can update it. Applies to
-   `activity_event` here; to `invoice`, `credit_note`, `artwork_version`,
-   `print_artifact` and `document_artifact` in later tiers. The same tables
-   declare no `updated_at`: immutability is the absence of a write path, and
-   a column that records writes has nothing to record. The trigger in rule 4
-   follows the column, so it is absent here too.
+   `activity_event` and `brand_profile` here; to `invoice`, `credit_note`,
+   `artwork_version`, `print_artifact` and `document_artifact` in later tiers.
+   The same tables declare no `updated_at`: immutability is the absence of a
+   write path, and a column that records writes has nothing to record. The
+   trigger in rule 4 follows the column, so it is absent here too.
 6. **Money is `numeric`.** Never `float`, `real` or `double precision`, anywhere,
    for any purpose (ADR-011). No money column exists in this tier.
 7. **Enumerations store a language-neutral key.** A Postgres enum or a check
@@ -218,20 +222,28 @@ explicitly not member-writable.
 
 ---
 
-## 3. The Platform tier
+## 3. The tables
 
-Seven tables and four enums for Release 1. §3.7 is `role`, which is an enum,
-deliberately not a table, and the only one of the four with a subsection of its
-own. The other three — `tenant_status`, `membership_status` and `consent_scope`
-— are declared inline in the column tables of §3.1, §3.3 and §3.5. That is why
-this line read "one enum" until P01-T06-FIX: every value was specified and only
-the stated total was wrong, which is PR-15's exact shape. The count is now
+Nineteen tables and ten enums. Entities: Platform 10, Brand 9, Asset 2,
+System 1 of 16 arriving now. The entity and table counts diverge as they
+already do — `ColorRole` is an entity and a Postgres enum, not a table,
+exactly as `role` is (§3.7).
+
+The Platform tier is seven of the nineteen: §3.1 through §3.8, of which
+§3.7 `role` is an enum, deliberately not a table, and the only Platform enum
+with a subsection of its own. The other three Platform enums —
+`tenant_status`, `membership_status` and `consent_scope` — are declared
+inline in the column tables of §3.1, §3.3 and §3.5. That is why this line
+read "one enum" until P01-T06-FIX: every value was specified and only the
+stated total was wrong, which is PR-15's exact shape. The count is now
 asserted against `supabase/schema.sql` by `scripts/check_stated_counts.py`.
 `subscription` and `feature_flag` are Release 3 (`SCOPE.md`) and land with
-billing. §3.8 `invitation` is the seventh table, landed with OD-G16.
+billing. §3.8 `invitation` is the seventh Platform table, landed with
+OD-G16. Brand, Asset and the two System tables follow as §3.9 onward.
 
-**The four enums:** `role` · `tenant_status` · `membership_status` ·
-`consent_scope`
+**The ten enums:** `role` · `tenant_status` · `membership_status` ·
+`consent_scope` · `color_role` · `typeface_role` · `script_kind` ·
+`logo_kind` · `logo_ground` · `rendition_tier`
 
 That roster restates the paragraph above in one parseable line so a script can
 read it. `scripts/check_data_model_schema.py` asserts this section against
@@ -604,6 +616,257 @@ a person who already holds a `member` row — now requires
 invariant. The policy is not a way to accept an email invitation: that
 invitation is not a `membership` row.
 
+### 3.9 `brand`
+One per tenant, 1:1 with `Tenant` (DOMAIN_MODEL §5.1).
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid pk | |
+| `tenant_id` | uuid not null → tenant | UNIQUE. One account is one company is one master brand |
+| `name_key_id` | uuid not null → translation_key | The brand's displayed name. Never a text column |
+| `current_profile_id` | uuid null → brand_profile | Null until a profile satisfies `BRAND_CONFIG.md` §11. Nullable to break the cycle with `brand_profile.brand_id` |
+| provenance + `archived_at` | | per §1 |
+
+**RLS.** SELECT, INSERT and UPDATE where `tenant_id = current_tenant_id()`.
+No DELETE policy: rows are archived, never deleted (§1.3). **No operator
+policy** — tenant business data under §2's operator rule.
+
+### 3.10 `brand_line`
+A product line under the master brand.
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid pk | |
+| `tenant_id` | uuid not null → tenant | |
+| `brand_id` | uuid not null → brand | |
+| `name_key_id` | uuid not null → translation_key | |
+| `profile_id` | uuid null → brand_profile | Whole-profile override (`BRAND_CONFIG.md` §7). Null means inherit the brand's current profile. There is no field-level merge and nothing resolved is ever stored |
+| provenance + `archived_at` | | per §1 |
+
+**RLS.** SELECT, INSERT and UPDATE where `tenant_id = current_tenant_id()`.
+No DELETE policy. **No operator policy.**
+
+A `brand_line` in tenant A cannot reference a `brand_profile` in tenant B:
+the foreign key is composite on `(profile_id, tenant_id)`, so a
+cross-tenant reference is impossible by construction (DOMAIN_MODEL §6).
+
+### 3.11 `brand_profile`
+Immutable. Departs §1 rules 3 and 4 as tabulated above.
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid pk | |
+| `tenant_id` | uuid not null → tenant | |
+| `brand_id` | uuid not null → brand | |
+| `version` | integer not null | UNIQUE with `brand_id`. Monotonic per brand |
+| `supersedes_id` | uuid null → brand_profile | The version this replaces. Null on the first |
+| `created_at`, `created_by` | | Rule 4 less `updated_at` |
+
+No UPDATE policy is written, so no caller can update it (§1 rule 5). Every
+generated artifact references the exact `brand_profile` it was generated
+from, and that reference is frozen with it — OD-E11's byte-identical
+`PrintArtifact` requirement is unprovable against a mutable brand.
+
+**RLS.** SELECT and INSERT where `tenant_id = current_tenant_id()`. **No
+UPDATE policy and no DELETE policy exist** — that absence is the
+immutability, per §1.5, the same mechanism `activity_event` uses. **No
+operator policy.**
+
+### 3.12 `brand_theme`
+A colour expression of a profile.
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid pk | |
+| `tenant_id` | uuid not null → tenant | |
+| `profile_id` | uuid not null → brand_profile | |
+| `name_key_id` | uuid not null → translation_key | |
+| `is_default` | boolean not null default false | Exactly one true per profile, enforced by a partial unique index, not by a CHECK |
+| provenance + `archived_at` | | per §1 |
+
+**RLS.** SELECT, INSERT and UPDATE where `tenant_id = current_tenant_id()`.
+No DELETE policy. **No operator policy.**
+
+### 3.13 `color_value`
+One per `(theme, role)`. Departs §1 rule 3.
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid pk | |
+| `tenant_id` | uuid not null → tenant | |
+| `theme_id` | uuid not null → brand_theme | UNIQUE with `role` |
+| `role` | color_role not null | |
+| `srgb` | text not null | CHECK: `^#[0-9a-f]{6}$`. Lowercase, language-neutral (§1 rule 7) |
+| provenance | | rule 4 |
+
+No print representation. CMYK, spot and substrate behaviour are
+`PRINT_CONTRACT.md`'s and that document does not exist; a column added on a
+guess is how the legacy colour drift happened. Seven-values-per-theme is
+not a table constraint — a row cannot count its siblings — it is a
+precondition of making a profile current (`BRAND_CONFIG.md` §11 rule 3),
+enforced by the function that does so.
+
+**RLS.** SELECT, INSERT and UPDATE where `tenant_id = current_tenant_id()`.
+No DELETE policy. **No operator policy.**
+
+### 3.14 `color_role` — not a table
+`color_role` is a Postgres enum, not a table, exactly as `role` is (§3.7).
+The seven values are fixed by `BRAND_CONFIG.md` §4 and are not
+tenant-configurable: `primary`, `secondary`, `accent`, `background`,
+`foreground`, `muted`, `critical`. Every value is a lowercase ASCII key
+(§1 rule 7). This is D7 made concrete, and it closes the storage half of
+CF-49: a semantic set cannot be redefined by whichever writer got there
+first. `DOMAIN_MODEL.md` counts `ColorRole` as an entity because it has
+independent meaning; storage does not need a row per value. **This is a
+deliberate divergence between the domain count and the table count,
+recorded here so the two are never reconciled by mistake.**
+
+### 3.15 `typeface`
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid pk | |
+| `tenant_id` | uuid not null → tenant | |
+| `profile_id` | uuid not null → brand_profile | UNIQUE with `(role, script)` |
+| `role` | typeface_role not null | `heading`, `body` |
+| `script` | script_kind not null | `latin`, `arabic` |
+| `family` | text not null | As the brand names it. Not an identifier |
+| `weight` | integer not null | CHECK 100–900 |
+| `is_italic` | boolean not null default false | |
+| `font_asset_id` | uuid null → media_asset | Where the tenant supplied a file |
+| provenance + `archived_at` | | per §1 |
+
+A Latin face chosen for a wordmark usually has no Arabic coverage. A
+profile naming one face for both scripts has specified nothing for one of
+its two languages.
+
+**RLS.** SELECT, INSERT and UPDATE where `tenant_id = current_tenant_id()`.
+No DELETE policy. **No operator policy.**
+
+### 3.16 `logo_variant`
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid pk | |
+| `tenant_id` | uuid not null → tenant | |
+| `profile_id` | uuid not null → brand_profile | UNIQUE with `(kind, ground)` |
+| `kind` | logo_kind not null | `full`, `mark`, `wordmark` |
+| `ground` | logo_ground not null | `light`, `dark` |
+| `media_asset_id` | uuid not null → media_asset | |
+| provenance + `archived_at` | | per §1 |
+
+**RLS.** SELECT, INSERT and UPDATE where `tenant_id = current_tenant_id()`.
+No DELETE policy. **No operator policy.**
+
+### 3.17 `brand_guideline`
+Advisory to humans, inert to the renderer.
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid pk | |
+| `tenant_id` | uuid not null → tenant | |
+| `profile_id` | uuid not null → brand_profile | |
+| `title_key_id` | uuid not null → translation_key | |
+| `body_key_id` | uuid not null → translation_key | |
+| `ordinal` | integer not null | Display order. UNIQUE with `profile_id` |
+| provenance + `archived_at` | | per §1 |
+
+Nothing reads a guideline and changes output. A constraint that needs
+enforcing is a `TEMPLATE_MODEL.md` rule, not a longer guideline.
+
+**RLS.** SELECT, INSERT and UPDATE where `tenant_id = current_tenant_id()`.
+No DELETE policy. **No operator policy.**
+
+### 3.18 `media_asset`
+The logical file a tenant uploaded.
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid pk | |
+| `tenant_id` | uuid not null → tenant | |
+| `provider` | text not null | OD-G20 rider 1: provider-neutral. No column, type or function name contains a vendor name. UNIQUE on `(provider, bucket, object_key)` |
+| `bucket` | text not null | |
+| `object_key` | text not null | |
+| `content_type` | text not null | |
+| `byte_size` | bigint not null | CHECK > 0 |
+| `checksum` | text not null | |
+| `original_filename` | text null | The tenant's name for it. Never an identifier |
+| provenance + `archived_at` | | per §1 |
+
+Rows hold references, never content. Base64-in-rows is what broke the
+retiring tools (OD-G11).
+
+**RLS.** SELECT, INSERT and UPDATE where `tenant_id = current_tenant_id()`.
+No DELETE policy. **No operator policy.**
+
+### 3.19 `asset_rendition`
+Each derivative, one per tier.
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid pk | |
+| `tenant_id` | uuid not null → tenant | |
+| `media_asset_id` | uuid not null → media_asset | UNIQUE with `tier` |
+| `tier` | rendition_tier not null | `display`, `print` |
+| `provider` | text not null | As `media_asset` |
+| `bucket` | text not null | |
+| `object_key` | text not null | |
+| `width_px` | integer null | Null for non-raster |
+| `height_px` | integer null | Null for non-raster |
+| `content_type` | text not null | |
+| `byte_size` | bigint not null | |
+| provenance + `archived_at` | | per §1 |
+
+**RLS.** SELECT, INSERT and UPDATE where `tenant_id = current_tenant_id()`.
+No DELETE policy. **No operator policy.**
+
+### 3.20 `translation_key`
+The identity of one translatable string.
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid pk | |
+| `tenant_id` | uuid not null → tenant | |
+| provenance + `archived_at` | | per §1 |
+
+It carries no text. Owning rows reference it; entries hang off it. Both
+are real foreign keys, so a cross-tenant reference is impossible by
+construction rather than by check (DOMAIN_MODEL §6). Tenant-scoped with a
+non-null `tenant_id`; no fourth exception to §1 rule 1.
+
+**RLS.** SELECT, INSERT and UPDATE where `tenant_id = current_tenant_id()`.
+No DELETE policy. **No operator policy.**
+
+### 3.21 `translation_entry`
+One string in one locale.
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid pk | |
+| `tenant_id` | uuid not null → tenant | |
+| `key_id` | uuid not null → translation_key | UNIQUE with `locale` |
+| `locale` | text not null | CHECK `en`, `ar` — the same permitted set as `tenant.default_locale` (OD-G17). Widening is a CHECK amendment, not a migration of every brand table |
+| `value` | text not null | |
+| provenance + `archived_at` | | per §1 |
+
+It holds tenant-authored content and any tenant override of enumeration
+display text. Platform-wide enumeration defaults stay in
+`app/[locale]/dictionaries/en.json` and `ar.json`, where they cost no
+database read and where `check-no-hardcoded-literals` already reaches
+them. OD-D7 is preserved exactly: the stored enum value is a
+language-neutral key and its display text is never the stored value.
+
+A string with no entry for a permitted locale is not an error at write
+time and is an error at render time. The renderer names the field and the
+missing locale; it never falls back to the other language. A blank on a
+carton is a defect you see; a quietly English name on an Arabic label is
+a defect you ship.
+
+**RLS.** SELECT, INSERT and UPDATE where `tenant_id = current_tenant_id()`.
+No DELETE policy. **No operator policy.** A `translation_entry` cannot
+reference a `translation_key` across tenants: the foreign key is
+composite on `(key_id, tenant_id)`.
+
 ---
 
 ## 4. Indexes, each with its reason
@@ -615,8 +878,18 @@ invitation is not a `membership` row.
 | `activity_event (tenant_id, occurred_at desc)` | The audit view is always tenant-scoped and time-ordered |
 | `consent_grant (tenant_id, expires_at)` | Evaluating live grants |
 | `tenant (slug)` | Unique constraint, and route resolution |
+| `brand (tenant_id)` unique | One brand per tenant, enforced not assumed |
+| `brand_line (brand_id)` | Every line of a brand, the wizard's and the catalog's commonest read |
+| `brand_profile (brand_id, version)` unique | Version monotonicity, and the lookup behind "which profile was this artifact generated from" |
+| `brand_theme (profile_id)` where `is_default` unique partial | Exactly one default per profile, as a constraint rather than a convention |
+| `color_value (theme_id, role)` unique | One value per role. The other half of D7 |
+| `typeface (profile_id, role, script)` unique | One face per pair; the missing-pair check reads it |
+| `logo_variant (profile_id, kind, ground)` unique | One variant per combination |
+| `translation_entry (key_id, locale)` unique | One string per locale. Every bilingual read |
+| `asset_rendition (media_asset_id, tier)` unique | One rendition per tier |
+| `media_asset (provider, bucket, object_key)` unique | One row per object. Prevents two rows claiming one file |
 
-No other index at this tier. An index without a query is a write cost with no
+No other index at this revision. An index without a query is a write cost with no
 reader.
 
 ---
@@ -671,14 +944,12 @@ Against the **live** catalog, by query — never by reading the migration.
 
 | Tier | Entities | Arrives |
 |---|---|---|
-| Brand | 9 | Phase 03 |
-| Asset | 2 | Phase 03 |
 | Catalog | 9 | Phase 04 |
 | Inventory | 6 | Phase 04 |
 | Sales | 14 | Phase 05 |
 | Packaging and print | 18 | Phase 06 |
 | Purchasing | 5 | Release 2 |
-| System | 15 | across Phases 03 to 08 as each is needed |
+| System | 1 of 16 arrived (`TranslationKey`, `TranslationEntry`); 14 remain | across Phases 03 to 08 as each is needed |
 
 Each lands as a signed amendment to this document, one phase ahead of its module,
 and inherits §1 and §2 without restatement.

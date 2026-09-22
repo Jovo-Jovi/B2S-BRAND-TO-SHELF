@@ -26,8 +26,14 @@ Counted even though they look derivative: `StockLevel` (a derived projection wit
 its own identity per variant-location pair, materialised for query) and
 `ArtworkVersion` (immutable, independently referenced by `PrintJob`).
 
-**Total: 88 entities across 9 tiers.** Where a later document disagrees with this
+**Total: 89 entities across 9 tiers.** Where a later document disagrees with this
 count, this document wins and the other is amended.
+
+`TranslationKey` is counted even though it carries no text of its own: it has
+independent identity, owning rows reference it, and `TranslationEntry` rows hang
+off it. That is the same test §1 already applies to `ArtworkVersion` (immutable,
+independently referenced) and the opposite of an enumeration, which is not
+counted.
 
 ---
 
@@ -68,11 +74,11 @@ count, this document wins and the other is amended.
 `PrintArtifact` · `Imposition` · `CalibrationRecord` · `DocumentTemplate` ·
 `DocumentArtifact`
 
-### 2.9 System tier — 15
+### 2.9 System tier — 16
 `CostRecord` · `OperatingCost` · `CostAllocation` · `TaxRule` · `Currency` ·
-`ExchangeRate` · `Locale` · `TranslationEntry` · `RegulatoryProfile` ·
-`ImportTemplate` · `ImportRun` · `ImportRowError` · `BackupSnapshot` ·
-`Notification` · `DesignSuggestion`
+`ExchangeRate` · `Locale` · `TranslationKey` · `TranslationEntry` ·
+`RegulatoryProfile` · `ImportTemplate` · `ImportRun` · `ImportRowError` ·
+`BackupSnapshot` · `Notification` · `DesignSuggestion`
 
 ---
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """DATA_MODEL.md §3 against supabase/schema.sql, both directions. OD-H9.
 
-§3 is the Platform tier specification and `schema.sql` is the authoritative
+§3 is the table specification and `schema.sql` is the authoritative
 schema (ADR-006), which `check_migration_split.py` holds equivalent to the
 applied migrations. This check asserts one against the other:
 
@@ -54,6 +54,8 @@ WORD_NUMBERS = {
     "zero": 0, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
     "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10,
     "eleven": 11, "twelve": 12,
+    "thirteen": 13, "fourteen": 14, "fifteen": 15, "sixteen": 16,
+    "seventeen": 17, "eighteen": 18, "nineteen": 19,
 }
 
 FAIL = False
@@ -86,9 +88,9 @@ def to_number(token):
 
 
 def section_three(text):
-    match = re.search(r"\n## 3\. The Platform tier\n(.*?)\n## 4\.", text, re.S)
+    match = re.search(r"\n## 3\. The tables\n(.*?)\n## 4\.", text, re.S)
     if not match:
-        die(f"{DOC_REL}: could not isolate §3 (the Platform tier). This check "
+        die(f"{DOC_REL}: could not isolate §3 (the tables). This check "
             f"asserts that section and found no heading for it (PR-27)")
     return match.group(1)
 
