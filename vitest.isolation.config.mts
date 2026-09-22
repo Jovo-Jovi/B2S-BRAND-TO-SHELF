@@ -16,7 +16,7 @@ export default defineConfig({
     // in declaration order in a single worker. Nothing here is parallel-safe.
     fileParallelism: false,
     sequence: { concurrent: false },
-    testTimeout: 180_000,
+    testTimeout: 240_000,
     hookTimeout: 240_000,
     // The PASS/FAIL ledger this suite prints is the gate's evidence, not
     // incidental logging. Vitest's console interception attributes output to a

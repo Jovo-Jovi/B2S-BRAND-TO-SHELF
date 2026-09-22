@@ -3117,6 +3117,10 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       nine-phase owning phase exists; the gap is still a capability with
       no row. Found at P02-GATE. Owner: **the next `ROLE_JOURNEY.md`
       amendment**.
+      AMENDED (P03-T04) — that task amended `ROLE_JOURNEY.md` with Owner
+      and Manager brand-capability rows and raised `MINIMUM_ROLE_JOURNEY_ROWS`
+      17 → 19. It did not add a purchasing row. The gap stands; owner
+      remains the next amendment after this one.
 - [x] CF-158 — Object storage for `MediaAsset` and `AssetRendition` is an
       unsigned decide-and-document fork at P03 entry. ADR-008 signs Supabase
       Storage with tenant-isolated paths, governed by storage policies;
@@ -3289,6 +3293,10 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       Owner: **the next amendment of `scripts/check_stated_counts.py` that
       can take `ARCHITECTURE.md` §6 as a subject**, or a dedicated
       assertion; not silently both.
+      AMENDED (P03-T04) — that task amended `check_stated_counts.py`
+      (`WORD_NUMBERS` through nineteen, and the DATA_MODEL §3 lead regex)
+      and did not take `ARCHITECTURE.md` §6 as a subject. The row stays
+      OPEN.
 - [x] CF-164 — CF-109 was closed on a mechanism that is now effectively gate-only again,
       which is the condition CF-109 existed to end. isolation.yml fired on
       pull_request with base main and on push to main; BRANCHING §3 allows one

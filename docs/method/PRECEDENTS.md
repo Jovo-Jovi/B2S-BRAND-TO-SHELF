@@ -791,3 +791,17 @@ on the P03-T01 halt's "named production but not yet" question.
   patch is `17.6.1.166` against production's `17.6.1.155`. Catalog
   comparison at the P03-T01 resume must not treat that patch delta as a
   migration-chain defect.
+- Learned at P03-T04: `supabase db dump --linked` on this machine fails
+  with `LegacyDockerRunError` ("Docker Desktop is a prerequisite") and
+  writes an empty `-f` target. That is not the same as the P01-T02
+  `db push` cache warning, which is local-cache-only and still applies
+  the migrations. Dump needs Docker; push does not. ADR-013's backup
+  snapshot was taken as a Management API catalog JSON (tables, columns,
+  enums, policies, triggers, functions, migrations, row counts) instead
+  of `pg_dump`. Do not treat an empty dump file as a snapshot.
+- Learned at P03-T04: injecting `STAGING_*` keys onto `process.env` before
+  vitest collects `__tests__/isolation/` lets Vite inline those values
+  at transform time and then fail collection with `failed to find the
+  current suite` at a file-level `beforeAll`. Load them from `.env.local`
+  after transform, via the harness `loadEnvLocal()`, and run
+  `npm run test:isolation` with no extra env overlay.

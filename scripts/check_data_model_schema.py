@@ -41,14 +41,14 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DOC_REL = "docs/product/DATA_MODEL.md"
 SCHEMA_REL = "supabase/schema.sql"
 
-MINIMUM_SUBSECTIONS = 2
-MINIMUM_SCHEMA_TABLES = 1
-MINIMUM_SCHEMA_ENUMS = 1
-# P03-T03 / CF-93 gap (6). A schema with zero `updated_at` columns makes the
-# bidirectional trigger assertion vacuous. The floor is a minimum examined,
-# not the live count: Brand-tier tables will raise the observed number.
-MINIMUM_UPDATED_AT_TABLES = 1
-MINIMUM_UPDATED_AT_TRIGGERS = 1
+MINIMUM_SUBSECTIONS = 21
+MINIMUM_SCHEMA_TABLES = 19
+MINIMUM_SCHEMA_ENUMS = 10
+# P03-T03 / CF-93 gap (6). Raised 1/1 → 16/16 at P03-T04: five Platform
+# tables plus eleven of the twelve Brand/Asset/translation tables declare
+# `updated_at`; `brand_profile` is the departure and carries none.
+MINIMUM_UPDATED_AT_TABLES = 16
+MINIMUM_UPDATED_AT_TRIGGERS = 16
 
 WORD_NUMBERS = {
     "zero": 0, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
