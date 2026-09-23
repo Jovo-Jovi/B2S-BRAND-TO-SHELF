@@ -678,6 +678,24 @@ This is one locale definition, resolved at render and stated once. D8 is
 unchanged: nothing is stored formatted, so redefining ar's numbering later
 is this one line and no data migration.
 
+**AMENDED 2026-09-23 — date presentation, added to the locale definitions.**
+The Expected line and the 2026-09-22 amendment above stand and are not
+edited (PR-07).
+
+```
+Both locales:
+  calendar     — Gregorian.
+  display      — DD/MM/YYYY, in the locale's digits and separators as
+                 defined above; e.g. 23/09/2026.
+  machine      — ISO 8601 (2026-09-23) for every stored, transmitted,
+                 exported or otherwise machine-readable value.
+  week start   — Saturday.
+```
+
+Stated here because this block is the single declaration site for locale
+formatting (PR-43). A date is a formatted value under `DOMAIN_MODEL.md` D8:
+derived from the Locale at render and never stored formatted.
+
 ★ = the two rows where the choice changes every downstream figure.
 
 ---

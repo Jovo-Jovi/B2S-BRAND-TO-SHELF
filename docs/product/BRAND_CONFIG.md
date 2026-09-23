@@ -237,6 +237,13 @@ names the field and the locale or pair at fault; none is a generic "invalid".
 4. `foreground` meets a stated contrast ratio against `background`, in every
    theme. The ratio is a platform constant, not a tenant setting — a brand
    cannot opt out of legibility.
+
+   **AMENDED 2026-09-23 — the constant is stated.** Rule 4 above stands and
+   is not edited (PR-07). `foreground` meets a contrast ratio of at least
+   4.5:1 against `background`, in every theme. 4.5:1 is WCAG 2.2 AA for
+   normal text, and `foreground` is by definition the text role (§4). It
+   remains a platform constant and not a tenant setting.
+
 5. At least one `LogoVariant` exists, and its `MediaAsset` has a rendition in
    both the `display` and `print` tiers.
 6. A `Typeface` exists for every `(role, script)` pair the permitted locale

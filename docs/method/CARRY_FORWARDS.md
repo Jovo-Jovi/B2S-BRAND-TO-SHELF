@@ -2785,6 +2785,14 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       staged path explicitly (PR-36) and by `git show --stat` on the
       resulting commit(s) after landing. Owner: the reviewer, to commit,
       amend or discard on their own document.
+      AMENDED (P03-T07) — the pending edit above is no longer the whole of
+      this row. Document precedence is now stated two ways.
+      `CLAUDE_PROJECT_INSTRUCTIONS.md` carries `UX_PRINCIPLES.md` and
+      `DESIGN_SURFACE.md` at slot 12. `REVIEWER_CHAT_INSTRUCTIONS.md` still
+      carries the old list, slot 12 as `MODULE_SPEC.md` alone, because that
+      file is the reviewer's uncommitted document and every task has left it
+      unstaged. This row now carries a substantive divergence, not only a
+      pending edit. The reviewer still owns the file.
 - [x] CF-141 — `scripts/check_two_way_empty_target.py` states when it must be
       run nowhere. P02-T09-FIX landed it permanently under PR-28 and recorded
       why it is not wired into `docs-integrity.yml` — several premises need a
@@ -3419,6 +3427,11 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       that does not render the primitive cannot observe a name, role or
       label (PR-21). Owner: **the task that lands the design-surface
       catalog**.
+      AMENDED (P03-T07) — the "one new dev dependency" clause above stands
+      (PR-07). The tier needs two: a DOM implementation and the
+      accessibility-rule engine. ADR-014 names jsdom and axe-core, used
+      only by component-rendered tests, with the global vitest environment
+      staying `node`. The catalog landing task still owns the tier.
 - [ ] CF-177 — BROWSER-RENDERED. WCAG 2.2 AA contrast for every platform
       primitive in light and dark. A real browser and one new CI job,
       needing a headless-browser runner, which is an ADR and an owner
@@ -3475,4 +3488,22 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       and the Management API is already the read path every task uses.
       CLOSED (P03-T06) by the quirk in `PRECEDENTS.md` §2. Owner: none
       outstanding.
+- [x] CF-184 — `UX_PRINCIPLES.md` §11 says the component-rendered tier
+      needs "one dev dependency: an accessibility-rule engine". P03-T06's
+      inventory shows that is not true: `vitest.config.mts` sets
+      environment `node` and the existing component test asserts
+      `renderToStaticMarkup` output, which is a string, not a document. An
+      accessibility-rule engine needs a DOM to walk, so the tier needs a
+      DOM implementation as well as the engine. The reviewer wrote "one";
+      the inventory contradicts it.
+      CLOSED (P03-T07) by the amendment beside `UX_PRINCIPLES.md` §11 and
+      by ADR-014, which names both. Owner: none outstanding.
+- [ ] CF-185 — `.cursor/rules/b2s-print.mdc` applies to globs
+      `src/print/**` and `src/modules/**/print/**`. There is no `src/`
+      directory; `MODULE_SPEC.md` §1 places the print engine at
+      `lib/print/`, so with `alwaysApply` false these rules will not load
+      for any file P06 writes. `check_rules_file_guards()` asserts
+      `AGENTS.md` and `b2s-devos.mdc` only, so the drift is invisible to
+      every check. Owner: **the P06 entry checklist, or the next task
+      touching `.cursor/rules/`**.
 

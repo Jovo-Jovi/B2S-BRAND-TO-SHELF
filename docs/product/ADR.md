@@ -9,6 +9,7 @@ quietly renumbered.
 **ADR-012 signed by the owner, 2026-08-02**, at the P01 foundation task.
 **ADR-013 signed by the owner, 2026-09-17**, at the P03-T01 resume. Supersedes
 ADR-012 in full. ADR-006 otherwise stands.
+**ADR-014 signed by the owner, 2026-09-23**, at the P03-T07 land task.
 
 ---
 
@@ -385,4 +386,32 @@ provenance cannot be verified by either route does not handle a production
 password. The Decision, Context, Consequences, Known gap, Compensating
 controls, Forecloses paragraphs and both earlier amendments above are
 unedited (PR-07).
+
+---
+
+## ADR-014 — Component-rendered accessibility tier
+
+**Decision.** Two devDependencies: jsdom, as the DOM implementation, and
+axe-core, as the accessibility-rule engine. They are used only by
+component-rendered tests, selected per test file; the global vitest
+environment stays `node` and `vitest.isolation.config.mts` is untouched.
+No matcher-wrapper package: tests assert on the engine's result directly.
+
+**Context.** vitest runs in environment `node`, and the existing component
+test asserts `renderToStaticMarkup` output, which is a string, not a
+document. An accessibility-rule engine walks a document.
+`UX_PRINCIPLES.md` §11 said this tier needed "one dev dependency";
+P03-T06's inventory showed it needs two.
+
+**Consequences.** A simulated DOM computes no layout and no rendered
+colour, so rules that depend on either — colour contrast among them —
+cannot be evaluated in this tier. They are excluded here by an explicit
+list that the tier asserts, and the browser-rendered tier (CF-177) owns
+them. A pass in this tier is never reported as a contrast pass. Licences:
+jsdom MIT; axe-core MPL-2.0, file-level copyleft, acceptable as a
+devDependency that never reaches the client bundle.
+
+**Forecloses.** A DOM environment for every unit test; a simulated-DOM
+pass reported as a rendered pass; an accessibility claim this tier cannot
+observe; a matcher wrapper as a third dependency.
 

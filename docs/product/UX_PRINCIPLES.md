@@ -106,3 +106,5 @@ Shared compositions: form section, data table with filters, empty state, error s
 | Browser-rendered — a real browser | A headless-browser runner and one new CI job | Colour contrast in light and dark · layout at 360 px and desktop · RTL rendering of every primitive · no horizontal page scroll |
 
 Contrast and responsive checks need layout and computed styles. A test environment without a rendering engine has neither, and a gate which cannot observe what it checks is not a gate (PR-21). The two dependencies those tiers need are an ADR for the task that lands the catalog. This document does not name them.
+
+**AMENDED 2026-09-23 — the component-rendered tier needs two dev dependencies.** The table above stands and is not edited (PR-07). It needs a DOM implementation and an accessibility-rule engine, per ADR-014. The cell that says "One dev dependency: an accessibility-rule engine" is the sentence P03-T06 landed; the inventory beside it shows `vitest` running in environment `node` and the component test asserting `renderToStaticMarkup` output, which is a string, not a document. An accessibility-rule engine walks a document, so the tier needs both.

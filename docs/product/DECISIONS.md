@@ -20,7 +20,7 @@ never edited in place.
 
 ## 2. Decision register
 
-96 decisions, all signed. None open.
+98 decisions, all signed. None open.
 
 ### Group A — Product identity
 
@@ -138,6 +138,8 @@ never edited in place.
 | **G19** | **`public.operator` is a system-managed table. An Operator is provisioned only by migration or by direct administrative access to the database. No API role holds INSERT, UPDATE or DELETE on it. Operator is the least-privileged platform administrator: account metadata, usage and billing (OD-G10) and nothing else. No text in this repository may describe it as a super-admin, superuser, admin or staff role.** | SIGNED 2026-08-31 |
 | **G20** | **Object storage stays Supabase Storage. `MediaAsset` and `AssetRendition` are objects under tenant-isolated paths governed by storage policies. ADR-008 stands. Cloudflare R2 is declined for Release 1 on isolation, not cost. No Asset-tier column, type or function name may contain the vendor. Revisit at P06 against measured object sizes and egress.** | SIGNED 2026-09-17 |
 | **G21** | **The platform's navigation, forms, tables, buttons and status indicators use one platform look for every tenant. A tenant's brand appears on its outputs, on the surfaces where that brand is being shown or edited, and as the tenant's logo in the header. The design-surface token layer is platform tokens for chrome, and the seven ColorRoles only where a brand is rendered or edited.** | SIGNED 2026-09-22 |
+| **G22** | **Every chrome neutral colour has red, green and blue equal. The platform introduces no colour cast: no tinted, warm, cool or signature grey, and no gold. A page or component uses a platform colour token or it is a defect.** | SIGNED 2026-09-23 |
+| **G23** | **The platform's interface is set in IBM Plex Sans for Latin and IBM Plex Sans Arabic for Arabic, treated as one superfamily. The font files are self-hosted and committed as assets, and are never loaded from a content delivery network. A tenant's typefaces are used only inside the brand frame (OD-G21) and never replace the platform face in chrome.** | SIGNED 2026-09-23 |
 
 ### Group H — Quality & acceptance
 
@@ -579,4 +581,56 @@ look like two products.
 **Forecloses.** Tenant ColorRoles applied to platform chrome; a per-tenant
 restyle of navigation, forms, tables or status; B2S's mark on any
 tenant output.
+
+### OD-G22 — The chrome is achromatic
+**Signed 2026-09-23.**
+
+Filed in Group G. It extends OD-G21 from no accent to no cast, and it
+constrains the same chrome.
+
+**Decision.** Every chrome neutral colour has red, green and blue equal.
+The platform introduces no colour cast: no tinted, warm, cool or signature
+grey, and no gold. A page or component uses a platform colour token or it
+is a defect.
+
+**Reasoning.** This is part of the proofing model, not a style. Print
+colour is judged against neutral grey because a tinted surround shifts how
+the colour beside it is perceived — a cool grey makes a warm brand read
+warmer. B2S is where a brand owner decides what their packaging looks like,
+so the platform's chrome is that surround. It extends OD-G21 from no accent
+to no cast.
+
+**Held by.** CF-172 asserts every chrome neutral token has R = G = B, and
+that no colour value appears outside the token definitions.
+
+**Forecloses.** Any chrome neutral with unequal channels; a chrome colour
+chosen by a page or component; gold; and revisiting this as an aesthetic
+preference.
+
+### OD-G23 — The platform typeface is one superfamily
+**Signed 2026-09-23.**
+
+Filed in Group G. Tenant typefaces stay the brand inventory OD-G21 already
+keeps inside the brand frame. This decision names the platform face those
+typefaces do not replace.
+
+**Decision.** The platform's interface is set in IBM Plex Sans for Latin
+and IBM Plex Sans Arabic for Arabic, treated as one superfamily. The font
+files are self-hosted and committed as assets, and are never loaded from a
+content delivery network. A tenant's typefaces are used only inside the
+brand frame (OD-G21) and never replace the platform face in chrome.
+
+**Reasoning.** The two were designed together, so weights and vertical
+metrics match across scripts by design — an Arabic caption and an English
+one at the same step look like the same step. They carry tabular figures
+and are licensed under the SIL Open Font License 1.1. `ARCHITECTURE.md`
+already forbids a runtime CDN; this decision names the faces that rule
+bundles.
+
+**Held by.** CF-172 asserts no font family appears outside the token
+definitions other than these two and their generic fallbacks;
+`check-no-runtime-cdn` forbids a runtime font source.
+
+**Forecloses.** A second chrome typeface, a runtime font CDN, a per-page
+font choice, and a monospace face for data.
 
