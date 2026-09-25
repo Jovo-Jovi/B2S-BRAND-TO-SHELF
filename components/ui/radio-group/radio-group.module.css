@@ -1,0 +1,94 @@
+.group {
+  display: flex;
+  flex-direction: column;
+  row-gap: var(--b2s-space-3);
+  margin-inline: 0;
+  margin-block: 0;
+  padding-inline: 0;
+  border: 0;
+  color: var(--b2s-color-text);
+  font-size: var(--b2s-text-body);
+}
+
+.horizontal {
+  flex-direction: row;
+  column-gap: var(--b2s-space-3);
+}
+
+.caption {
+  padding-inline: 0;
+}
+
+.option {
+  display: inline-flex;
+  align-items: center;
+  column-gap: var(--b2s-space-3);
+}
+
+.control {
+  position: relative;
+  display: inline-flex;
+  inline-size: var(--b2s-check-size);
+  block-size: var(--b2s-check-size);
+}
+
+.radio {
+  appearance: none;
+  margin-block: 0;
+  margin-inline: 0;
+  inline-size: var(--b2s-check-size);
+  block-size: var(--b2s-check-size);
+  border: var(--b2s-border-width) solid var(--b2s-color-border-control);
+  border-radius: 50%;
+  background-color: var(--b2s-color-surface);
+}
+
+.dot {
+  position: absolute;
+  inset-block-start: 25%;
+  inset-inline-start: 25%;
+  inline-size: 50%;
+  block-size: 50%;
+  border-radius: 50%;
+  background-color: var(--b2s-color-action);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.radio:checked + .dot,
+.group[data-state="checked"] .radio:checked + .dot {
+  opacity: 1;
+}
+
+.radio:hover,
+.group[data-state="hover"] .radio {
+  border-block-color: var(--b2s-color-text);
+  border-inline-color: var(--b2s-color-text);
+}
+
+.radio:focus-visible,
+.group[data-state="focus"] .radio:focus,
+.group[data-state="focus"] .radio {
+  outline-style: solid;
+  outline-width: var(--b2s-focus-width);
+  outline-color: var(--b2s-color-focus);
+  outline-offset: var(--b2s-focus-offset);
+}
+
+.radio:active,
+.group[data-state="active"] .radio {
+  background-color: var(--b2s-color-sunken);
+}
+
+.group[data-state="disabled"],
+.radio:disabled {
+  color: var(--b2s-color-text-subtle);
+  background-color: var(--b2s-color-sunken);
+  pointer-events: none;
+}
+
+.group[data-state="error"] .radio,
+.radio[aria-invalid="true"] {
+  border-block-color: var(--b2s-color-danger);
+  border-inline-color: var(--b2s-color-danger);
+}

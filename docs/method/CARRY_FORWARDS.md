@@ -1456,7 +1456,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       `service_role` HTTP and in-process SQL. Suite: 84 expected, 84 PASS,
       0 FAIL, 0 LOST, line D at zero. Nothing of this row remains open. The
       other six gaps stay closed by their earlier amendments, unedited.
-- [ ] CF-94 — `check-no-runtime-cdn` and `check-no-hardcoded-literals` scan `app/`
+- [x] CF-94 — `check-no-runtime-cdn` and `check-no-hardcoded-literals` scan `app/`
       and `proxy.ts` only, which was the whole of the application source when
       P01-T01 authored them. `lib/` exists as of P01-T02-RESUME and is not
       scanned; `features/` and `components/` will not be either when they arrive.
@@ -1508,6 +1508,15 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       a mechanical builder task with its own consolidated pull request.
       That task has not run. Owner unchanged: **the task that creates
       `components/`, for that root.**
+      CLOSED (P03-T09) — **`components/` is covered.** The four guards reach
+      it and their floors moved to the true counts: hardcoded literals
+      17 to 45, runtime CDN 20 to 59, service-import 12 to 40, data-boundary
+      files 20 to 48. Import sites stay 4, because no component imports
+      Supabase. `check-logical-properties.mjs` already named `components`
+      as an optional root; its floors moved from 1 stylesheet and 239
+      declarations to 12 and 657, so an emptied `app/globals.css` still
+      fails. Those moves are changed conditions, not new premises, and
+      add no `PROVEN_PAIRS` entry. Owner: none outstanding.
 - [x] CF-95 — The deployment and drift pipeline is wired but not live, and both
       remaining steps are owner actions rather than builder work.
       (1) `vercel git connect` failed against the repository: the Vercel GitHub
@@ -3428,22 +3437,39 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       token definitions. It parses hex and `rgb()`, and it requires every
       chrome-neutral colour token to have R = G = B. Owner: none
       outstanding.
-- [ ] CF-173 — STATIC. Every catalog primitive implements every state
+- [x] CF-173 — STATIC. Every catalog primitive implements every state
       `DESIGN_SURFACE.md` requires of it. A script over the source. No new
       dependency. `DESIGN_SURFACE.md` is not yet authored; a check against
       a spec that does not exist observes nothing (PR-21). Owner: **the
       task that lands the design-surface catalog**.
-- [ ] CF-174 — STATIC. Variant and size names match `DESIGN_SURFACE.md`
+      CLOSED (P03-T09) by `scripts/check-component-states.mjs`. A state is
+      covered when a test callback contains the state name as a string
+      literal, JSX, and an assertion. Floor: 11 implemented primitives, 21
+      component blocks, 66 enforced states. Ten blocks are pending by name.
+      An implementation with no block fails. Plants, from an in-memory
+      snapshot of `button.test.tsx`: removing the `active` literal makes
+      the state uncovered, and the file on disk stays byte-identical.
+      Owner: none outstanding.
+- [x] CF-174 — STATIC. Variant and size names match `DESIGN_SURFACE.md`
       exactly. A script over the source. No new dependency.
       `DESIGN_SURFACE.md` is not yet authored; a check against a spec that
       does not exist observes nothing (PR-21). Owner: **the task that
       lands the design-surface catalog**.
+      CLOSED (P03-T09) by `scripts/check-component-variants.mjs`. The
+      TypeScript compiler already in the repository parses each primitive's
+      `Variant` and `Size` aliases, including a single string-literal type.
+      Floor: 11 implemented primitives, 21 component blocks, 25 variant
+      members, 22 size members. Ten blocks are pending by name. An
+      implementation with no block fails. Plants, from an in-memory
+      snapshot of `button.tsx`: dropping `danger` from the variant union
+      no longer matches the block, and the file on disk stays
+      byte-identical. Owner: none outstanding.
 - [ ] CF-175 — STATIC. Formatted numbers reach the screen only through the
       locale formatter `CALC_SPEC.md` R1-25 defines, never a hand-built
       digit string. A script over the source. No new dependency. A gate
       which cannot observe what it checks is not a gate (PR-21). Owner:
       **the task that lands the design-surface catalog**.
-- [ ] CF-176 — COMPONENT-RENDERED. Accessible name, role and label on every
+- [x] CF-176 — COMPONENT-RENDERED. Accessible name, role and label on every
       interactive primitive, in every state, in both locales. Runs inside
       the existing unit tests. Needs one new dev dependency, an
       accessibility-rule engine, which is an ADR and an owner decision
@@ -3456,6 +3482,19 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       accessibility-rule engine. ADR-014 names jsdom and axe-core, used
       only by component-rendered tests, with the global vitest environment
       staying `node`. The catalog landing task still owns the tier.
+      CLOSED (P03-T09) by `scripts/check-component-a11y.mjs` and
+      `components/ui/a11y-tier.test.tsx`. The rule engine runs against
+      every implemented primitive, in every state CF-173 enforces, in both
+      locales, on the component root in the per-file DOM. Floor: 11
+      primitives. The exclusion list is `color-contrast` only. Cause: a
+      simulated DOM computes no rendered colour; jsdom's
+      `HTMLCanvasElement.getContext` returns null, and axe-core throws
+      inside `_isIconLigature` while reading `canvas`, then returns
+      incomplete. CF-177 owns rendered contrast. The list is asserted: an
+      unlisted incomplete id fails, and a listed id that the runs stop
+      returning fails. Plants, in memory: adding `button-name` to the
+      observed set fails as unlisted, and an empty observed set fails
+      because `color-contrast` went silent. Owner: none outstanding.
 - [ ] CF-177 — BROWSER-RENDERED. WCAG 2.2 AA contrast for every platform
       primitive in light and dark. A real browser and one new CI job,
       needing a headless-browser runner, which is an ADR and an owner
@@ -3544,12 +3583,23 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       CLOSED (P03-T08) by the in-place corrections and the Corrections
       section, and by the annotations beside the two stale sentences.
       Owner: none outstanding.
-- [ ] CF-187 — The P03-T07 probe returned `landmark-one-main` and
+- [x] CF-187 — The P03-T07 probe returned `landmark-one-main` and
       `page-has-heading-one` as incomplete although the view contains a
       `main` and an `h1`. They are structural rules, not layout-dependent
       ones, so the component tier's exclusion list must not adopt them
       without a stated cause. Only rules that need rendered layout or
       colour belong on that list. Owner: **the task that builds CF-176**.
+      CLOSED (P03-T09). Cause, measured by running axe-core 4.13.0 inside
+      jsdom on a document that contained a `main` and an `h1`: both rules
+      return incomplete with `document.elementFromPoint is not a function`,
+      thrown from `isModalOpen` before the rule looks at the landmarks.
+      The cause is not that a primitive is not a page. The same two rules
+      do not return incomplete when axe runs on a component root rather
+      than the document, so listing them would fail the "listed rule that
+      stopped returning incomplete" assertion. They are not on the
+      exclusion list. No open browser-tier row checks page landmarks:
+      CF-177 is contrast, CF-178 is scroll, CF-179 is mirroring. Owner:
+      none outstanding.
 - [x] CF-188 — Local Node was 22.12 against `.nvmrc`'s 24 at P03-T07, and
       jsdom 30.1.1 warns below 22.22. CI runs 24 and passed. A local test
       run on a runtime the project does not pin produces results nobody
@@ -3600,4 +3650,20 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       apply migrations, an environment ADR-013 does not name and an applier
       ADR-006 does not allow, and nothing records that it is off by
       decision. This task did not uninstall it. Owner: **the owner**.
+- [ ] CF-192 — The local Node runtime is v24.21.0, extracted into nvm's
+      version directory and hardlinked to nvm's executable without
+      elevation at P03-T08-FIX. The standalone v22.12.0 install remains
+      later on PATH, and the next `nvm use` replaces that link. This
+      runtime runs `npx supabase` with `SUPABASE_ACCESS_TOKEN`, which
+      reaches production, so ADR-013's provenance rule applies to it:
+      verify the downloaded archive against nodejs.org's published
+      SHASUMS256.txt, and replace the hardlink with an elevated nvm
+      install and removal of the standalone copy. Owner: **the owner**.
+- [x] CF-193 — P03-T08 recorded that local tests ran on Node v24.11.1.
+      P03-T08-FIX found no such runtime on PATH or under nvm — only the
+      editor's bundled v24.18.1, off PATH. The claim is not reproducible.
+      CI ran Node 24 and was green on ac72957, so the repository evidence
+      stands; the local claim does not.
+      CLOSED (P03-T09) by this row, so the record matches the machine.
+      Owner: none outstanding.
 

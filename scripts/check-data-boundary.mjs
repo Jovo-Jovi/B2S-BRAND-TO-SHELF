@@ -24,10 +24,11 @@ const SCANNED_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx", ".mts", ".mjs"
 // commit (P02-T11, CF-148): 10 files under [app, lib, __tests__, proxy.ts]
 // (features/ and components/ do not exist yet) and 3 Supabase import sites,
 // all inside lib/supabase/. P02-T14 creates features/ and lib/supabase/session.ts:
-// 20 files and 4 import sites. Raise both the day either count grows; never
-// lower either to make a shrinking result pass. Changed condition, not a new
-// premise: PROVEN_PAIRS does not gain a pair for this guard.
-const MINIMUM_FILES_SCANNED = 20;
+// 20 files and 4 import sites. P03-T09 creates components/ and raises the
+// file floor to the true count measured with that root present. Import
+// sites stay 4: no component imports Supabase. Changed condition, not a
+// new premise: PROVEN_PAIRS does not gain a pair for this guard.
+const MINIMUM_FILES_SCANNED = 48;
 const MINIMUM_IMPORT_SITES = 4;
 
 // An import of any Supabase client package, in either module syntax.

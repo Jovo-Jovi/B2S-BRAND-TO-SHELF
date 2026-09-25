@@ -1,9 +1,9 @@
 # SESSION CONTEXT
-Updated: 2026-09-25 · By: Grok 4.7 (standard; prompt named Sonnet) · Phase: P03
-Last task: P03-T08-FIX · Verdict: —. Last-row verdict is the declared
-placeholder; the follow-up commit fills the sha only. P03-T08 reviewer verdict
-FAIL: the two closed gates did not hold what they claimed. Ledger
-176 rows, **47** open. Full detail in the done-steps
+Updated: 2026-09-26 · By: Grok 4.7 (heavyweight; prompt named Opus) · Phase: P03
+Last task: P03-T09 · Verdict: —. Last-row verdict is the declared
+placeholder; the follow-up commit fills the sha only. P03-T08-FIX reviewer verdict
+PASS. Ledger
+178 rows, **43** open. Full detail in the done-steps
 row below.
 
 ## Read these too
@@ -83,7 +83,8 @@ Keep it short: if a paragraph is growing here, it belongs elsewhere.
 | P03-T06 | Amend R1-25 Arabic rendering beside the original Expected line; land UX_PRINCIPLES.md with section 3 deferring the digit system to R1-25; place it and DESIGN_SURFACE.md in precedence slot 12. PART 0 one Arabic-Indic hit at CALC_SPEC.md:646. Register 96, ADR-013, live maximum was CF-167 and PR-42; this task allocated PR-43 and CF-168 through CF-183. Thirteen catalog gates CF-168 to CF-180 stay open. Binaries CF-181 stay open, owner the owner. PR-43 closed CF-182. The re-link quirk closed CF-183. CF-74 stays open, owner the catalog landing task. CF-73 P03 half discharged; P08 stays. en and ar catalogs hold the same 19 keys. 36 open plus 16 landed minus 2 closed equals 50 open; ledger 152 to 168. No schema, no dependency, no components. Isolation suite not run. Prompt named Sonnet; this session ran as Cursor Grok 4.7. REVIEWER_CHAT unstaged. Tests: static conformance and the four npm scripts. Money acceptance: one rendering example, no calculation or expected numeric value moved. Features and print N/A. Tenant isolation: N/A, stated explicitly. | PASS | `4babfbc` |
 | P03-T07 | Land DESIGN_SURFACE.md, OD-G22, OD-G23 and ADR-014, and pin jsdom 30.1.1 with axe-core 4.13.0 in the same commit. On phase/03-brand-and-onboarding from 4999239; no PR, no merge. Staged specification 63770 bytes, SHA-256 081eec70fe2825476a9d3e8b915b72a0a2ab66e4353ac0583f13e1550e1746fb. PART 1 found no higher document stating a different date format, contrast ratio, chrome colour rule or platform typeface. R1-25, BRAND_CONFIG section 11 and UX_PRINCIPLES section 11 amended beside their text. Register 96 to 98. Probe ran axe-core against the sign-in view in a per-file jsdom environment: en and ar, 0 violations; incomplete color-contrast, landmark-one-main and page-has-heading-one, each because axe encountered an error. Neither package in the client bundle. Placeholders replaced with OD-G22, OD-G23 and ADR-014. Mechanical check: 21 component blocks, eight required states each, 55 n/a each with a reason. Findings reported, not corrected: weight-500 is not a defined token; the document's seventy-pair count was not the enumerated 56; one published dark ratio does not match the hex and the pair still meets AA. CF-184 opened and closed. CF-185 opened. CF-140 and CF-176 amended. 50 open plus 1 landed open minus 0 previously open closed equals 51 open; CF-184 nets zero; ledger 168 to 170. Isolation suite not run. Prompt named Opus; this session ran as Cursor Grok 4.7. REVIEWER_CHAT unstaged. Tests: static conformance, the four npm scripts, and the one-off probe, not committed. Money: the CALC_SPEC diff adds the date block only. Features and print N/A. Tenant isolation: N/A, stated explicitly. | PASS | `b514598` |
 | P03-T08 | Land the design-surface corrections, the self-hosted IBM Plex faces, the token layer, and four static gates. On phase/03-brand-and-onboarding from fa8b900; no PR, no merge. Node v24.11.1 matches .nvmrc 24. DESIGN_SURFACE.md corrected in place: 21 blocks, 55 n/a each with a reason, 56 contrast pairs, chrome neutrals achromatic. Six woff2 files from @ibm/plex-sans@1.1.0 and @ibm/plex-sans-arabic@1.1.0. Gates CF-168, CF-169, CF-170, CF-172. Static set 17 to 21. PROVEN_PAIRS 39 to 45. 51 open + 3 landed - 8 closed = 46. Prompt named Sonnet; this session ran as Cursor Grok 4.7. REVIEWER_CHAT unstaged. Tests: static conformance and the four npm scripts. Acceptance: none applies. Tenant isolation: N/A, stated explicitly. | FAIL | `14579a8` |
-| P03-T08-FIX | Rewrite the two static checks whose plants passed. On phase/03-brand-and-onboarding from ac72957; no PR, no merge. PART 0: no open pull request against main. Local Node is v24.21.0, matching .nvmrc 24. The logical check parses declarations and maps 60 physical properties from CSS Logical Properties and Values Level 1, W3C Working Draft, 4 December 2025. The token check treats every colour token as achromatic unless it is one of the ten chromatic tokens DESIGN_SURFACE.md names, asserted both ways. Floors: 1 stylesheet, 239 declarations, 60 mapped properties; 204 tokens, 56 achromatic colour tokens, 10 chromatic tokens, 9 font-family declarations. app/globals.css already complied and was not exempted. CF-189 and CF-190 opened and closed. CF-191 opened. PROVEN_PAIRS stays 45. fail() stays 138. 46 open at ac72957 plus 1 landed open minus 0 previously open closed equals 47; the two hole rows net zero; ledger 173 to 176. Prompt named Sonnet; this session ran as Grok 4.7. REVIEWER_CHAT unstaged. Tests: the two checks' plants, static conformance, and the four npm scripts. Isolation suite not run. Acceptance: none applies. Tenant isolation: N/A, stated explicitly. | — | `bb32083` |
+| P03-T08-FIX | Rewrite the two static checks whose plants passed. On phase/03-brand-and-onboarding from ac72957; no PR, no merge. PART 0: no open pull request against main. Local Node is v24.21.0, matching .nvmrc 24. The logical check parses declarations and maps 60 physical properties from CSS Logical Properties and Values Level 1, W3C Working Draft, 4 December 2025. The token check treats every colour token as achromatic unless it is one of the ten chromatic tokens DESIGN_SURFACE.md names, asserted both ways. Floors: 1 stylesheet, 239 declarations, 60 mapped properties; 204 tokens, 56 achromatic colour tokens, 10 chromatic tokens, 9 font-family declarations. app/globals.css already complied and was not exempted. CF-189 and CF-190 opened and closed. CF-191 opened. PROVEN_PAIRS stays 45. fail() stays 138. 46 open at ac72957 plus 1 landed open minus 0 previously open closed equals 47; the two hole rows net zero; ledger 173 to 176. Prompt named Sonnet; this session ran as Grok 4.7. REVIEWER_CHAT unstaged. Tests: the two checks' plants, static conformance, and the four npm scripts. Isolation suite not run. Acceptance: none applies. Tenant isolation: N/A, stated explicitly. | PASS | `bb32083` |
+| P03-T09 | The form family: eleven primitives and the three gates every primitive answers to. On phase/03-brand-and-onboarding from c70f09e; no PR, no merge. PART 0: no open pull request against main. Node v24.21.0 matches .nvmrc 24. No new package. ARCHITECTURE.md names no styling mechanism, so CSS Modules stand. components/ui holds Field, TextField, BilingualField, Select, Checkbox, RadioGroup, Switch, Button, TextLink, Spinner and Skeleton. MODULE_SPEC section 1 names them; shared/ stays deferred. CF-94 closed. Four guards reach components/ with floors moved: literals 45, CDN 59, service-import 40, data-boundary 48 files and 4 import sites. Logical floors 12 stylesheets and 657 declarations. Changed conditions, no new pairs. CF-173, CF-174 and CF-176 landed. Floors: 11 implemented, 21 blocks, 25 variant members, 22 size members, 66 enforced states. Ten blocks pending by name. Exclusion list is color-contrast only; cause is jsdom canvas getContext returning null. landmark-one-main and page-has-heading-one are not listed: on a component root they do not return incomplete, and on a document they return incomplete because elementFromPoint is missing. CF-187 closed. Plants from in-memory snapshots were confirmed applied and the files stayed byte-identical. Static set 21 to 24. PROVEN_PAIRS 45 to 50. fail() stays 138. 47 open at c70f09e plus 1 landed open minus 5 closed equals 43. CF-192 open, CF-193 closed. Prompt named Opus; this session ran as Grok 4.7. REVIEWER_CHAT unstaged. Tests: unit and component tests in both locales and every enforced state, the accessibility tier, the gate plants, the two-way probe, static conformance and the four npm scripts. Isolation suite not run. Acceptance: FEATURES and ENTITIES against DESIGN_SURFACE.md component blocks. Money: N/A. Print: N/A. Tenant isolation: N/A, stated explicitly. | — | `pending` |
 
 > Commit column: one or more comma-separated backticked shas, or `—` where no
 > single commit tracks the step (P-00 through P-01c predate the one-task-one-commit
@@ -121,7 +122,6 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
 - CF-73 — owner: P08, the FEATURE_INVENTORY.md must-not-reproduce authoring
 - CF-83 — owner: PRECEDENTS.md, PR-18
 - CF-84 — owner: PRECEDENTS.md, PR-19
-- CF-94 — owner: the task that creates components/, for that root
 - CF-97 — owner: reviewer, to ratify the narrowing or reject it
 - CF-126 — owner: the task that first subscribes to Realtime
 - CF-133 — owner: the owner, on SECURITY_MODEL.md §11b.4's standing recommendation
@@ -134,18 +134,15 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
 - CF-163 — owner: the next amendment of scripts/check_stated_counts.py that can take ARCHITECTURE.md §6 as a subject, or a dedicated assertion; not silently both
 - CF-165 — owner: the owner
 - CF-171 — owner: the task that lands the design-surface catalog
-- CF-173 — owner: the task that lands the design-surface catalog
-- CF-174 — owner: the task that lands the design-surface catalog
 - CF-175 — owner: the task that lands the design-surface catalog
-- CF-176 — owner: the task that lands the design-surface catalog
 - CF-177 — owner: the task that lands the design-surface catalog
 - CF-178 — owner: the task that lands the design-surface catalog
 - CF-179 — owner: the task that lands the design-surface catalog
 - CF-180 — owner: the task that lands the design-surface catalog
 - CF-181 — owner: the owner, for the PostgreSQL client binaries' provenance
 - CF-185 — owner: the P06 entry checklist, or the next task touching .cursor/rules/
-- CF-187 — owner: the task that builds CF-176
 - CF-191 — owner: the owner
+- CF-192 — owner: the owner
 
 ## Frozen decisions in force
 - Freeze point 2026-07-29 (`legacy/FREEZE.md`) — tools RETIRING, not port
@@ -273,8 +270,9 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
   finds something is landed as a permanent check by the fix task that follows,
   and one that finds nothing is landed too, because a probe that passes today is
   the one that catches tomorrow's regression.
-- **The static conformance set is eleven `docs-integrity` checks and ten
-  `guards`, twenty-one in total, as of 2026-09-25 — P03-T08.** It was
+- **The static conformance set is eleven `docs-integrity` checks and thirteen
+  `guards`, twenty-four in total, as of 2026-09-26 — P03-T09.** It was
+  eleven and ten, twenty-one, as of 2026-09-25 — P03-T08. It was
   eleven and six, seventeen, as of 2026-09-19 — P03-T02. Two distinct
   figures live where P02-T09 recorded one, split at P02-T09-FIX because they
   measure different things and neither had ever been asserted against its
@@ -333,11 +331,17 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
     P03-T02: 37 → 39, two new pairs for `check_mcp_containment.py` against
     `.cursor/mcp.json` and `docs/method/CARRY_FORWARDS.md`. The isolation.yml
     trigger change is a changed condition, not a new premise, and added no pair.
-  - The proven two-way empty-target case count stands at **45**, last proved
-    at **P03-T08** — re-proven here by actually removing and then emptying
-    every premise the twenty-one checks read — forty-six pairs enumerated
-    (forty-five in `PROVEN_PAIRS` plus the one documented gap),
-    forty-five proven, one recorded as a documented gap rather than folded
+    It moved again at P03-T08: 39 → 45, six new pairs for the four gates landed
+    with the token layer. It moved again at P03-T09: 45 → 50, five new pairs
+    for the three component gates — variants and states each against
+    `DESIGN_SURFACE.md` and `components/ui`, and the accessibility tier
+    against `components/ui`. The four guards extended to `components/` are
+    changed conditions, not new premises, and added no pair.
+  - The proven two-way empty-target case count stands at **50**, last proved
+    at **P03-T09** — re-proven here by actually removing and then emptying
+    every premise the twenty-four checks read — fifty-one pairs enumerated
+    (fifty in `PROVEN_PAIRS` plus the one documented gap),
+    fifty proven, one recorded as a documented gap rather than folded
     into either number:
     `check_module_spec_tree.py`'s reverse-direction premise (the live
     tracked directory tree via `git ls-files`) cannot be substituted on
@@ -405,22 +409,19 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
   (PR-29).
 
 ## Next action
-**P03-T09 builds the catalog primitives.** The two gate rewrites that
-preceded it are landed. The Supabase GitHub integration (CF-191) posts a
+**P03-T10 builds the other ten primitives**, including BrandFrame and its
+boundary gate (CF-171). Do not build compositions, AppShell, or a wizard
+screen; those are P03-T11, with the browser-tier ADR and CF-177, CF-178,
+CF-179 and the acceptance test (CF-180). CF-175's formatter does not exist
+yet. The local Node runtime (CF-192) is the owner's: verify the archive
+against nodejs.org's SHASUMS256.txt and replace the hardlink with an
+elevated nvm install. The Supabase GitHub integration (CF-191) posts a
 skipped Supabase Preview check and was not uninstalled; it is the owner's.
-Foundations are in place: the
-corrected `DESIGN_SURFACE.md`, the self-hosted faces, the token layer on
-the document root, and the four static gates that landed with it. The
-catalog lands on this phase branch as a contiguous run of tasks. Do not
-create `components/` until that task. CF-171,
-CF-173, CF-174 and CF-176 wait for the primitives. CF-175 waits for the
-R1-25 formatter. CF-187 is the structural-rule exclusion cause, owned by
-the task that builds CF-176. The print-rules glob (CF-185) is fixed before
-P06 opens. Error visibility (CF-162) is live before the wizard accepts its first real
-content (OD-H12, OD-H13). Production's Postgres patch upgrade is the
-owner's (CF-161). Staging MCP write posture is the owner's (CF-165). Do
-not run the isolation suite against production. No pull request until the
-phase exit.
+The print-rules glob (CF-185) is fixed before P06 opens. Error visibility
+(CF-162) is live before the wizard accepts real content. Production's
+Postgres patch upgrade is the owner's (CF-161). Staging MCP write posture
+is the owner's (CF-165). Do not run the isolation suite against production.
+No pull request until the phase exit.
 
 `phase/02-tenancy-and-access` is contained (empty log, equal trees at
 `0584ffbc`); the owner deletes it.

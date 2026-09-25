@@ -1,0 +1,79 @@
+.root {
+  display: inline-flex;
+  align-items: center;
+  column-gap: var(--b2s-space-3);
+  padding-inline: 0;
+  border: 0;
+  background-color: transparent;
+  color: var(--b2s-color-text);
+  font-size: var(--b2s-text-body);
+  font-family: inherit;
+}
+
+.track {
+  position: relative;
+  flex: 0 0 auto;
+  block-size: var(--b2s-control-height);
+  inline-size: calc(var(--b2s-control-height) * 2);
+  border-radius: var(--b2s-radius-full);
+  border: var(--b2s-border-width) solid var(--b2s-color-border-control);
+  background-color: var(--b2s-color-sunken);
+}
+
+.thumb {
+  position: absolute;
+  inset-block-start: var(--b2s-space-1);
+  inset-inline-start: var(--b2s-space-1);
+  block-size: calc(var(--b2s-control-height) - (var(--b2s-space-1) * 2) - (var(--b2s-border-width) * 2));
+  inline-size: calc(var(--b2s-control-height) - (var(--b2s-space-1) * 2) - (var(--b2s-border-width) * 2));
+  border-radius: var(--b2s-radius-full);
+  background-color: var(--b2s-color-action-text);
+  transition-property: inset-inline-start, inline-size;
+  transition-duration: var(--b2s-duration-base);
+  transition-timing-function: var(--b2s-ease-standard);
+}
+
+.checked .track {
+  background-color: var(--b2s-color-action);
+  border-block-color: var(--b2s-color-action);
+  border-inline-color: var(--b2s-color-action);
+}
+
+.checked .thumb {
+  inset-inline-start: calc(100% - var(--b2s-control-height) + var(--b2s-space-1));
+}
+
+.root:hover .track,
+.root[data-state="hover"] .track {
+  border-block-color: var(--b2s-color-text);
+  border-inline-color: var(--b2s-color-text);
+}
+
+.root:focus-visible .track,
+.root[data-state="focus"] .track {
+  outline-style: solid;
+  outline-width: var(--b2s-focus-width);
+  outline-color: var(--b2s-color-focus);
+  outline-offset: var(--b2s-focus-offset);
+}
+
+.root:active .thumb,
+.root[data-state="active"] .thumb {
+  inline-size: calc(var(--b2s-control-height) - var(--b2s-space-1) - (var(--b2s-border-width) * 2));
+}
+
+.root:disabled,
+.root[data-state="disabled"] {
+  color: var(--b2s-color-text-subtle);
+  pointer-events: none;
+}
+
+.root:disabled .track,
+.root[data-state="disabled"] .track {
+  background-color: var(--b2s-color-sunken);
+}
+
+.thumbSpinner {
+  inline-size: 100%;
+  block-size: 100%;
+}

@@ -1,0 +1,54 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  row-gap: var(--b2s-field-gap);
+  border: 0;
+  margin-inline: 0;
+  padding-inline: 0;
+}
+
+.caption {
+  color: var(--b2s-color-text);
+  font-size: var(--b2s-text-body);
+  padding-inline: 0;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  row-gap: var(--b2s-space-2);
+}
+
+.tag {
+  color: var(--b2s-color-text-muted);
+  font-size: var(--b2s-text-sm);
+}
+
+.indicator,
+.help {
+  margin-block: 0;
+  margin-inline: 0;
+  color: var(--b2s-color-text-muted);
+  font-size: var(--b2s-text-sm);
+}
+
+.complete {
+  color: var(--b2s-color-success);
+}
+
+.missing {
+  color: var(--b2s-color-warning);
+}
+
+.error {
+  margin-block: 0;
+  margin-inline: 0;
+  color: var(--b2s-color-danger);
+  font-size: var(--b2s-text-sm);
+}
+
+.root[data-state="disabled"] .caption,
+.root[data-state="disabled"] .tag,
+.root[data-state="disabled"] .help {
+  color: var(--b2s-color-text-subtle);
+}

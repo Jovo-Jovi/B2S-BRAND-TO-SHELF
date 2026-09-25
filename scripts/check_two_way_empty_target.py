@@ -121,6 +121,11 @@ PROVEN_PAIRS = [
     ("scripts/check-catalog-duplicates.mjs", "app/[locale]/dictionaries/en.json"),
     ("scripts/check-catalog-duplicates.mjs", "app/[locale]/dictionaries/ar.json"),
     ("scripts/check-token-values.mjs", "app/globals.css"),
+    ("scripts/check-component-variants.mjs", "docs/product/DESIGN_SURFACE.md"),
+    ("scripts/check-component-variants.mjs", "components/ui"),
+    ("scripts/check-component-states.mjs", "docs/product/DESIGN_SURFACE.md"),
+    ("scripts/check-component-states.mjs", "components/ui"),
+    ("scripts/check-component-a11y.mjs", "components/ui"),
 ]
 
 KNOWN_GAPS = [
@@ -517,6 +522,16 @@ def main():
             ["node", "scripts/check-catalog-duplicates.mjs"], FileProbe("app/[locale]/dictionaries/ar.json"))
     do_pair(results, "scripts/check-token-values.mjs",
             ["node", "scripts/check-token-values.mjs"], FileProbe("app/globals.css"))
+    do_pair(results, "scripts/check-component-variants.mjs",
+            ["node", "scripts/check-component-variants.mjs"], FileProbe("docs/product/DESIGN_SURFACE.md"))
+    do_pair(results, "scripts/check-component-variants.mjs",
+            ["node", "scripts/check-component-variants.mjs"], DirProbe("components/ui"))
+    do_pair(results, "scripts/check-component-states.mjs",
+            ["node", "scripts/check-component-states.mjs"], FileProbe("docs/product/DESIGN_SURFACE.md"))
+    do_pair(results, "scripts/check-component-states.mjs",
+            ["node", "scripts/check-component-states.mjs"], DirProbe("components/ui"))
+    do_pair(results, "scripts/check-component-a11y.mjs",
+            ["node", "scripts/check-component-a11y.mjs"], DirProbe("components/ui"))
 
     proven = sum(1 for r in results if r["proven"])
     print(f"\n=== {proven}/{len(results)} pairs proven this run ===")

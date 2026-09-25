@@ -906,3 +906,17 @@ strings and which is exactly how two documents drift.
   occupies, and that replacement needs an elevated terminal. Do not run
   both managers. The ledger row for this reproducibility gap is the next
   prompt's, not this task's.
+- Learned at P03-T09: axe-core inside jsdom does not measure a page the way
+  a browser does. `color-contrast` returns incomplete because
+  `HTMLCanvasElement.getContext` is null (`Not implemented` without the
+  `canvas` package). `landmark-one-main` and `page-has-heading-one` return
+  incomplete on a document because `document.elementFromPoint` is not a
+  function, thrown from axe's `isModalOpen`, even when the document
+  contains a `main` and an `h1`. They do not return incomplete when the
+  run context is a component root. The component tier excludes only
+  `color-contrast`, and it does not install `canvas`: a stub that made
+  `getContext` succeed would change the incomplete result the exclusion
+  list asserts. P03-T08's journal line that local tests ran on Node
+  v24.11.1 is not reproducible on this machine; CF-193 records that, and
+  CF-192 records that the v24.21.0 hardlink still needs an elevated nvm
+  install and a SHASUMS256 check.

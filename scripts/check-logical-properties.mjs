@@ -110,8 +110,15 @@ const MAPPED = [
 const LONGHANDS = new Set(PHYSICAL_LONGHANDS);
 const SHORTHANDS = new Set(PHYSICAL_SHORTHANDS);
 
-const MINIMUM_STYLESHEETS = 1;
-const MINIMUM_DECLARATIONS = 239;
+// P03-T09 — components/ now holds a stylesheet per primitive. The floors
+// below are the true counts across app/, features/ and components/. Raising
+// them is a changed condition on the existing app/globals.css premise: an
+// emptied globals.css still falls short of the new declaration floor, and
+// PROVEN_PAIRS does not gain a pair. Button's loading width lock writes
+// element.style.inlineSize, which this scan does not parse, so that write
+// is not part of the declaration count.
+const MINIMUM_STYLESHEETS = 12;
+const MINIMUM_DECLARATIONS = 657;
 const MINIMUM_MAPPED = 60;
 
 let violations = 0;

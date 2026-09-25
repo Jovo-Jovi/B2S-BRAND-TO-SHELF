@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 // ARCHITECTURE.md §6 — "No brand, business or locale literal outside
 // configuration, translation resources or tokens". Scans application source
-// under app/, lib/, features/ and the root proxy (excluding the message
-// catalogs and the token stylesheet, which are the named exemptions) for a
-// hex colour, an Arabic character, a bare URL or a phone-shaped digit run. Each pattern
-// asserts the SHAPE the forbidden value takes (PR-22), not a word this file
-// is not allowed to say.
+// under app/, lib/, features/, components/ and the root proxy (excluding the
+// message catalogs and the token stylesheet, which are the named exemptions)
+// for a hex colour, an Arabic character, a bare URL or a phone-shaped digit
+// run. Each pattern asserts the SHAPE the forbidden value takes (PR-22), not
+// a word this file is not allowed to say.
 
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, extname, sep } from "node:path";
 
-const ROOTS = ["app", "proxy.ts", "lib", "features"];
+const ROOTS = ["app", "proxy.ts", "lib", "features", "components"];
 const SCANNED_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx"]);
 const EXEMPT_PATH_SEGMENT = `${sep}dictionaries${sep}`;
 
@@ -20,8 +20,11 @@ const EXEMPT_PATH_SEGMENT = `${sep}dictionaries${sep}`;
 // CF-94 — the floor is the true count across the scanned roots as of the
 // commit that adds `lib/`, not the placeholder 1 that let `lib/` ship
 // unscanned in the first place. P02-T14 adds `features/` and raises the
-// floor to the true count of 17.
-const MINIMUM_FILES = 17;
+// floor to the true count of 17. P03-T09 adds components/ once the catalog
+// exists and raises the floor to the true count measured with that root
+// present. Changed condition, not a new premise: the two-way pair stays
+// the scan roots [app, proxy.ts, lib, features].
+const MINIMUM_FILES = 45;
 
 const CHECKS = [
   { name: "hex colour", pattern: /#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3}(?:[0-9a-fA-F]{2})?)?\b/ },
