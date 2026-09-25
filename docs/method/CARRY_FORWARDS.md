@@ -3556,4 +3556,48 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       should trust.
       CLOSED (P03-T08) by the quirk in `PRECEDENTS.md` §2: local Node
       matches `.nvmrc` before any test run. Owner: none outstanding.
+- [x] CF-189 — `scripts/check-logical-properties.mjs`, as closed at CF-168,
+      matched a hand-picked set of property names by line regex. A
+      declaration that was not the first token on its line passed, and so
+      did every physical property the list omitted. Measured on the old
+      check, from an in-memory snapshot, before this rewrite: a line-leading
+      `right: 0` failed (`physical left/right property`), and the same
+      declaration written after another declaration on the same line passed,
+      still reporting 250 declarations against a floor of 250. `border-top-left-radius: 4px`
+      passed and the count moved to 251, because the name was not in the
+      set and `border-left` is not a substring of it. No plant log was
+      committed; the old check is the record. The floor counted line-colons,
+      so an emptied mapped set would still have passed (PR-27). Found by
+      plant, not by reading.
+      CLOSED (P03-T08-FIX) by parsing stylesheets and inline styles into
+      declarations and checking every physical property that CSS Logical
+      Properties and Values Level 1 (W3C Working Draft, 4 December 2025)
+      maps to a logical equivalent: 46 longhands, 8 shorthands, 6
+      value-keyword properties, 60 in total. Floor: 1 stylesheet, 239
+      declarations, 60 mapped properties. Changed condition on the existing
+      premise `app/globals.css`. `PROVEN_PAIRS` does not move. Owner: none
+      outstanding.
+- [x] CF-190 — `scripts/check-token-values.mjs`, as closed at CF-172,
+      required equal channels only for a closed list of fourteen existing
+      chrome-neutral tokens, and fully parsed only hex and `rgb()`. A
+      `--b2s-color-*` token added after that list was invisible. Measured
+      on the old check: `--b2s-color-tinted-panel: #f0f0f5` passed, and the
+      OK line reported 208 tokens against a floor of 204. The floor counted
+      token definitions, so an emptied achromatic set would still have
+      passed (PR-27). Found by plant, not by reading.
+      CLOSED (P03-T08-FIX) by inverting the rule. Every `--b2s-color-*`
+      token, and every colour in any `--b2s-` definition, is achromatic
+      unless the token is on the closed chromatic list, and that list is
+      asserted both ways against `DESIGN_SURFACE.md` §2.2 and §2.11. The
+      list is the ten status colours and their backgrounds, and the danger
+      action and its hover. Floor: 204 token definitions, 56 achromatic
+      colour tokens, 10 chromatic tokens, 9 font-family declarations.
+      Changed condition on the existing premise `app/globals.css`.
+      `PROVEN_PAIRS` does not move. Owner: none outstanding.
+- [ ] CF-191 — The Supabase GitHub integration is installed and posts a
+      skipped "Supabase Preview" check. On `ac72957` that check completed
+      `skipped`. The integration can create preview-branch databases and
+      apply migrations, an environment ADR-013 does not name and an applier
+      ADR-006 does not allow, and nothing records that it is off by
+      decision. This task did not uninstall it. Owner: **the owner**.
 

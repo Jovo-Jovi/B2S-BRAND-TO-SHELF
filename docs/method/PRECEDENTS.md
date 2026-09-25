@@ -889,3 +889,20 @@ strings and which is exactly how two documents drift.
   not pin produces results nobody should trust, and this one was only
   noticed because a dependency complained. Local Node matches `.nvmrc`
   before any test run.
+- Learned at P03-T08-FIX: two Node managers are installed, and the
+  standalone one shadows nvm-windows. `node -v` reported v22.12.0 from the
+  Program Files install while nvm-windows held only v22.5.0. nvm-windows
+  selects a version by pointing a symlink, and a standalone install earlier
+  on PATH keeps `node -v` on the old binary after `nvm use`. The journal
+  line for P03-T08 records Node v24.11.1. This session found no Node 24 on
+  PATH and none under nvm-windows. The only Node 24 already on the machine
+  was the editor helper at v24.18.1, and it is not on PATH. This session
+  put Node v24.21.0 on PATH by installing it under the nvm version
+  directory and hardlinking the nvm-root `node` executable, which is
+  earlier on PATH than Program Files. The standalone v22.12.0 install is
+  still present. `where node` lists the nvm-root shims first and the
+  Program Files binary after them. A real `nvm use` still needs the
+  Program Files directory to be the symlink, which the standalone install
+  occupies, and that replacement needs an elevated terminal. Do not run
+  both managers. The ledger row for this reproducibility gap is the next
+  prompt's, not this task's.
