@@ -6,6 +6,8 @@
 
 `DESIGN_SURFACE.md` is not yet authored. It sits in slot 12 directly after this document and yields to it.
 
+ANNOTATED 2026-09-25 (P03-T08, PR-07). The sentence above stands. `DESIGN_SURFACE.md` was signed 2026-09-23 and landed at P03-T07.
+
 Precedence: read with `BRAND_CONFIG.md`, `SECURITY_MODEL.md` §2, OD-G21 and OD-H13. This document governs the design surface — `components/ui` and `components/shared` — and every page composed from it. It specifies principles and the checks that hold them. It names no library, no framework and no component implementation; those are the catalog's.
 
 ## 1. What the interface is for

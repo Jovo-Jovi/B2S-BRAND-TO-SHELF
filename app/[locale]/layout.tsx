@@ -46,6 +46,20 @@ export default async function LocaleLayout({
 
   return (
     <html lang={locale} dir={direction[locale]}>
+      <link
+        rel="preload"
+        href="/fonts/IBMPlexSans-Regular.woff2"
+        as="font"
+        type="font/woff2"
+        crossOrigin="anonymous"
+      />
+      <link
+        rel="preload"
+        href="/fonts/IBMPlexSansArabic-Regular.woff2"
+        as="font"
+        type="font/woff2"
+        crossOrigin="anonymous"
+      />
       <body>{children}</body>
     </html>
   );

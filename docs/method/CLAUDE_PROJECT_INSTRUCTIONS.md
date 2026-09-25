@@ -140,6 +140,9 @@ specification. Slot 12 is below slot 11, so `SECURITY_MODEL.md`,
 `CALC_SPEC.md`'s locale definitions, `BRAND_CONFIG.md` and every ADR win
 over any presentation rule in either document.
 
+ANNOTATED 2026-09-25 (P03-T08, PR-07). The sentence above stands.
+`DESIGN_SURFACE.md` was signed 2026-09-23 and landed at P03-T07.
+
 **Void documents.** These are archived and must never be cited as current truth,
 even if quoted to you: `PHASE_PLAN.md` (P02 and P06 void, parity gates void) ·
 `PROMPT_PACK.md` (P-DELTA-* void) · `DELTA_RUN_01.md` (Passes 2-4 void) ·

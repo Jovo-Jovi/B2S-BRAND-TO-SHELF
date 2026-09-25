@@ -66,23 +66,23 @@ That is where this system spends its boldness: in one place, inside the brand fr
 | `--b2s-color-action-hover` | `#3d3d3d` | `#d6d6d6` | Primary action, hovered |
 | `--b2s-color-focus` | `#1a1a1a` | `#f2f2f2` | Focus ring |
 | `--b2s-color-danger-action` | `#b3261e` | `#c62f26` | Destructive fill; text `#ffffff` |
-| `--b2s-color-success` / `-bg` | `#1f7a3d` / `#eef7f1` | `#6fcf8f` / `#16261b` | Status |
-| `--b2s-color-warning` / `-bg` | `#8a5a00` / `#fbf5e6` | `#e6b450` / `#2a2212` | Status |
-| `--b2s-color-danger` / `-bg` | `#b3261e` / `#fbeeed` | `#f08a82` / `#2e1a19` | Status |
-| `--b2s-color-info` / `-bg` | `#1f5fae` / `#edf3fb` | `#7fb0ec` / `#17222f` | Status |
+| `--b2s-color-success`, `--b2s-color-success-bg` | `#1f7a3d` / `#eef7f1` | `#6fcf8f` / `#16261b` | Status |
+| `--b2s-color-warning`, `--b2s-color-warning-bg` | `#8a5a00` / `#fbf5e6` | `#e6b450` / `#2a2212` | Status |
+| `--b2s-color-danger`, `--b2s-color-danger-bg` | `#b3261e` / `#fbeeed` | `#f08a82` / `#2e1a19` | Status |
+| `--b2s-color-info`, `--b2s-color-info-bg` | `#1f5fae` / `#edf3fb` | `#7fb0ec` / `#17222f` | Status |
 
 **Status colours are functional, not decorative.** They carry the four states and nothing else. They never appear as brand, accent, emphasis or illustration.
 
 **`border` and `border-control` are different jobs.** WCAG 2.2 1.4.11 requires 3:1 only where a boundary is needed to identify a control. Dividers are decorative and sit quieter; control boundaries meet 3:1 on every surface.
 
-**Contrast, computed rather than asserted** (PR-23). Seventy text and control pairs, both themes; every one meets WCAG 2.2 AA. Selected rows:
+**Contrast, computed rather than asserted** (PR-23). Fifty-six text and control pairs, both themes — each of `text`, `text-muted` and `text-subtle` on `canvas`, `surface`, `sunken` and `raised`; `border-control` and `focus` on those four surfaces; `action-text` on `action` and on `action-hover`; white on `danger-action` and on `danger-action-hover`; and each status colour on its background. Every one meets WCAG 2.2 AA. Selected rows:
 
 | Pair | Light | Dark | Needs |
 |---|---|---|---|
 | text on surface | 17.40 | 14.72 | 4.5 |
 | text-muted on surface | 7.57 | 7.86 | 4.5 |
 | text-subtle on canvas (lowest) | 4.85 | 6.29 | 4.5 |
-| border-control on sunken (lowest) | 3.67 | 3.93 | 3.0 |
+| border-control, lowest | 3.67 on sunken | 3.33 on raised | 3.0 |
 | action-text on action | 17.40 | 15.55 | 4.5 |
 | white on danger-action | 6.54 | 5.47 | 4.5 |
 | success on success-bg | 4.91 | 8.29 | 4.5 |
@@ -100,7 +100,7 @@ Placeholders use `text-subtle` and meet 4.5:1, but a placeholder is never a subs
 
 Chosen deliberately rather than by default. The two were designed as one superfamily, so weights and vertical metrics match across scripts by design rather than by adjustment — which in a bilingual interface means an Arabic caption and an English one at the same step look like the same step. Its engineered grotesque character suits a production platform whose subject is manufacturing and print. It carries tabular figures, and its licence is the SIL Open Font License 1.1.
 
-**Font files are self-hosted and committed as assets.** A runtime font CDN is forbidden (`check-no-runtime-cdn`). If the landing task proposes a package to supply the files, that is an ADR under `AGENTS.md` §2.
+**Font files are self-hosted and committed as assets.** A runtime font CDN is forbidden (`check-no-runtime-cdn`). If the landing task proposes a package to supply the files, that is an ADR under `AGENTS.md` §2. Each face is loaded with `font-display: swap`, and the regular weight of each family is preloaded.
 
 **Stack:** `"IBM Plex Sans", "IBM Plex Sans Arabic", system-ui, sans-serif`. Under `:lang(ar)` the Arabic face is listed first, so shared glyphs — digits and punctuation — take the Arabic face's metrics and sit correctly on an Arabic line.
 
@@ -117,6 +117,8 @@ Chosen deliberately rather than by default. The two were designed as one superfa
 | `xl` | 1.25rem · 20px | 1.4 · 28px | 1.6 · 32px | Page headings compact; section headings comfortable |
 | `2xl` | 1.5rem · 24px | 1.33 · 32px | 1.5 · 36px | Page headings, comfortable |
 | `3xl` | 2rem · 32px | 1.25 · 40px | 1.44 · 46px | Wizard step titles. Sparingly |
+
+Each step is a token: `--b2s-text-xs`, `--b2s-text-sm`, `--b2s-text-md`, `--b2s-text-lg`, `--b2s-text-xl`, `--b2s-text-2xl`, `--b2s-text-3xl`, each with `--b2s-leading-{step}` resolved by `:lang(ar)` as the table states. Weights are tokens: `--b2s-weight-regular` (400), `--b2s-weight-medium` (500), `--b2s-weight-semibold` (600).
 
 **Numbers** use tabular figures in tables, numeric fields and totals, so digits align in columns. **A monospace face is never used for data**; tabular figures of the interface face do the job without making numbers look like code.
 
@@ -670,7 +672,7 @@ states:
 keyboard: [Arrow keys move between tabs in visual direction, Home and End jump to first and last, Enter or Space activates]
 aria: tablist, tab and tabpanel roles with aria-selected and aria-controls
 mirrors: tab order follows reading direction; ArrowLeft moves to the next tab in right-to-left
-tokens: [space-4, space-5, indicator-width, color-text, color-text-muted, color-border, color-action, text-body, weight-500]
+tokens: [space-4, space-5, indicator-width, color-text, color-text-muted, color-border, color-action, text-body, weight-medium]
 ```
 
 **Manual activation** — arrows move focus, Enter or Space selects — wherever a panel loads data, so moving through tabs does not fire a request per tab.
@@ -772,7 +774,7 @@ states:
 keyboard: [none]
 aria: plain text; status is never carried by colour alone — the text always states it
 mirrors: icon at inline-start
-tokens: [radius-sm, color-success-bg, color-warning-bg, color-danger-bg, color-info-bg, color-sunken, text-xs, space-1, space-2, weight-500]
+tokens: [radius-sm, color-success-bg, color-warning-bg, color-danger-bg, color-info-bg, color-sunken, text-xs, space-1, space-2, weight-medium]
 ```
 
 ### BrandFrame
@@ -991,3 +993,35 @@ AppShell
 - An optimistic write the server may refuse.
 - A remembered tenant selection.
 - A value the implementer chooses because this document did not state it.
+
+## Corrections
+
+A correction changes the text in place, because the component blocks are a machine contract that gates parse and a contract that is wrong where it binds is wrong. This section records each prior text verbatim. Git keeps the rest.
+
+**2026-09-25 — P03-T08.** The scale steps and the weights were not tokens. Component blocks referenced `text-xs`, `text-sm`, `text-xl` and `weight-500`, and no definition in this document contained those names. Prior token lines in the blocks:
+
+`tokens: [space-4, space-5, indicator-width, color-text, color-text-muted, color-border, color-action, text-body, weight-500]`
+
+`tokens: [radius-sm, color-success-bg, color-warning-bg, color-danger-bg, color-info-bg, color-sunken, text-xs, space-1, space-2, weight-500]`
+
+`weight-500` is now `weight-medium`. The scale and the three weights are defined as tokens after the scale table.
+
+**2026-09-25 — P03-T08.** The self-hosting paragraph did not state `font-display` or preload. Prior text:
+
+`**Font files are self-hosted and committed as assets.** A runtime font CDN is forbidden (`check-no-runtime-cdn`). If the landing task proposes a package to supply the files, that is an ADR under `AGENTS.md` §2.`
+
+The paragraph now also states that each face loads with `font-display: swap` and that the regular weight of each family is preloaded.
+
+**2026-09-25 — P03-T08.** The contrast sentence claimed a count the document does not enumerate, and the border-control row published a dark ratio from the rejected zinc palette. Prior text:
+
+`**Contrast, computed rather than asserted** (PR-23). Seventy text and control pairs, both themes; every one meets WCAG 2.2 AA. Selected rows:`
+
+`| border-control on sunken (lowest) | 3.67 | 3.93 | 3.0 |`
+
+The sentence now states fifty-six, which is the set the colour table enumerates. The border-control row is lowest light 3.67 on sunken and lowest dark 3.33 on raised. The other selected ratios were recomputed from the hex values and were unchanged.
+
+**2026-09-25 — P03-T08.** Status background tokens were written as a suffix, so a reader that does not invent the expansion cannot see the name the blocks use. Prior text:
+
+`| `--b2s-color-success` / `-bg` | `#1f7a3d` / `#eef7f1` | `#6fcf8f` / `#16261b` | Status |`
+
+and the same `/ `-bg`` form for warning, danger and info. Each background token is now written in full.

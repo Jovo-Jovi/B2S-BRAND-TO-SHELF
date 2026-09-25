@@ -883,3 +883,9 @@ strings and which is exactly how two documents drift.
   linked to production is how a later `db push` lands on the wrong
   database, ADR-013 points local development at staging, and the Management
   API is already the read path every task uses.
+- Learned at P03-T07, closed by CF-188: local Node was 22.12 against
+  `.nvmrc`'s 24, and jsdom 30.1.1 warns below 22.22. CI runs 24 and passed,
+  so nothing failed — but a local test run on a runtime the project does
+  not pin produces results nobody should trust, and this one was only
+  noticed because a dependency complained. Local Node matches `.nvmrc`
+  before any test run.

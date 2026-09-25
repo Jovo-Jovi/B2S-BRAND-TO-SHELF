@@ -1024,7 +1024,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       corrupted return word this row names. The P08 half stays open.
       Owner: **P08**, the `FEATURE_INVENTORY.md` must-not-reproduce
       authoring.
-- [ ] CF-74 — The report engine has no resource bundle outside the invoice
+- [x] CF-74 — The report engine has no resource bundle outside the invoice
       template. `الإجمالي` is re-declared at bb-stock-costs.html:5652, :5743,
       :5746, :5798 and `المنتج` at :5651, :5712, :5757, :5782. Eight
       declarations of two strings. Requirement: one resource key per string,
@@ -1041,6 +1041,12 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       site, and names a duplicate-value report as owed. The requirement
       needs that check to hold it, so this row stays OPEN. The check is
       CF-170. Owner: **the task that lands the design-surface catalog**.
+      CLOSED (P03-T08) by `scripts/check-catalog-duplicates.mjs`, which
+      holds the one-string requirement CF-170 was opened to check. The
+      sign-in page name and the submit control stay two keys, justified
+      in that check: they are different jobs, and one key would make a
+      button-label change rewrite the document title. Owner: none
+      outstanding.
 - [x] CF-75 — AGENTS.md and .cursor/rules/b2s-devos.mdc carried folder paths
       (`src/data/adapters/`, `src/print/`, `components/ui/`,
       `components/shared/`) and a named library (`zod`) in always-on rules,
@@ -3369,7 +3375,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       would be the larger harm, and PR-07 applies to this project's own
       record. The ruling is PR-42.
       CLOSED (P03-T05) by PR-42. Owner: none outstanding.
-- [ ] CF-167 — `BRANCHING.md` does not state how a design-surface pull
+- [x] CF-167 — `BRANCHING.md` does not state how a design-surface pull
       request coexists with an open phase branch. §2 is one branch per
       phase. §3 is one consolidated pull request per phase, and a signed
       mid-phase amendment gets its own branch and its own pull request.
@@ -3381,29 +3387,47 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       a signed mid-phase amendment. Two branches, each with one task at
       a time, is the gap, and this task does not author the branching
       rule. Owner: **the reviewer**.
-- [ ] CF-168 — STATIC. No physical left or right, and no `margin-left`,
+      CLOSED (P03-T08). `BUILD_PHASES.md` "The design surface" and
+      `BRANCHING.md` §3 now state that the catalog lands on the open phase
+      branch as a contiguous run of tasks, reviewed as one unit inside the
+      phase pull request. Owner: none outstanding.
+- [x] CF-168 — STATIC. No physical left or right, and no `margin-left`,
       `padding-right` or equivalent, where a logical start or end property
       exists. A script over the source. No new dependency. A gate which
       cannot observe what it checks is not a gate (PR-21). Owner: **the
       task that lands the design-surface catalog**.
-- [ ] CF-169 — STATIC. The `en` and `ar` message catalogs hold exactly the
+      CLOSED (P03-T08) by `scripts/check-logical-properties.mjs`, wired in
+      the guards job. Floor: 1 stylesheet and 250 declarations. Owner:
+      none outstanding.
+- [x] CF-169 — STATIC. The `en` and `ar` message catalogs hold exactly the
       same key set. A script over the source. No new dependency. Measured
       at P03-T06, before this row opened: both catalogs hold 19 keys and
       the sets are equal. A gate which cannot observe what it checks is
       not a gate (PR-21). Owner: **the task that lands the design-surface
       catalog**.
-- [ ] CF-170 — STATIC. A duplicate-value report per catalog namespace.
+      AMENDED (P03-T08) — the 19-key measurement above stands. The catalogs
+      on this branch hold 17 leaves, and that is the check's floor.
+      CLOSED (P03-T08) by `scripts/check-catalog-parity.mjs`. Owner: none
+      outstanding.
+- [x] CF-170 — STATIC. A duplicate-value report per catalog namespace.
       This is CF-74's check. A script over the source. No new dependency.
       A gate which cannot observe what it checks is not a gate (PR-21).
       Owner: **the task that lands the design-surface catalog**.
+      CLOSED (P03-T08) by `scripts/check-catalog-duplicates.mjs`. The
+      `access.title` / `access.signInSubmit` pair is justified there, not
+      merged. Owner: none outstanding.
 - [ ] CF-171 — STATIC. Brand tokens are referenced only inside the brand
       frame component. A script over the source. No new dependency. A gate
       which cannot observe what it checks is not a gate (PR-21). Owner:
       **the task that lands the design-surface catalog**.
-- [ ] CF-172 — STATIC. No raw colour, spacing or radius value outside the
+- [x] CF-172 — STATIC. No raw colour, spacing or radius value outside the
       token layer. A script over the source. No new dependency. A gate
       which cannot observe what it checks is not a gate (PR-21). Owner:
       **the task that lands the design-surface catalog**.
+      CLOSED (P03-T08) by `scripts/check-token-values.mjs`. Floor: 204
+      token definitions. It parses hex and `rgb()`, and it requires every
+      chrome-neutral colour token to have R = G = B. Owner: none
+      outstanding.
 - [ ] CF-173 — STATIC. Every catalog primitive implements every state
       `DESIGN_SURFACE.md` requires of it. A script over the source. No new
       dependency. `DESIGN_SURFACE.md` is not yet authored; a check against
@@ -3506,4 +3530,30 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       `AGENTS.md` and `b2s-devos.mdc` only, so the drift is invisible to
       every check. Owner: **the P06 entry checklist, or the next task
       touching `.cursor/rules/`**.
+- [x] CF-186 — `DESIGN_SURFACE.md` carried four defects, all the reviewer's,
+      all found by P03-T07's independent verification: (1) `text-xs`,
+      `text-sm`, `text-xl` and `weight-500` are referenced by component
+      blocks and were defined nowhere; the reviewer's self-check passed
+      only because its script added those names to the defined set by
+      hand; (2) §2.2 claimed seventy pairs where the document enumerates
+      56; (3) the lowest-pair row published 3.93 for dark border-control
+      on sunken, where the achromatic value is 4.06 and the true dark
+      minimum is 3.33 on raised; (4) `UX_PRINCIPLES.md` and
+      `CLAUDE_PROJECT_INSTRUCTIONS.md` still said `DESIGN_SURFACE.md` was
+      not yet authored.
+      CLOSED (P03-T08) by the in-place corrections and the Corrections
+      section, and by the annotations beside the two stale sentences.
+      Owner: none outstanding.
+- [ ] CF-187 — The P03-T07 probe returned `landmark-one-main` and
+      `page-has-heading-one` as incomplete although the view contains a
+      `main` and an `h1`. They are structural rules, not layout-dependent
+      ones, so the component tier's exclusion list must not adopt them
+      without a stated cause. Only rules that need rendered layout or
+      colour belong on that list. Owner: **the task that builds CF-176**.
+- [x] CF-188 — Local Node was 22.12 against `.nvmrc`'s 24 at P03-T07, and
+      jsdom 30.1.1 warns below 22.22. CI runs 24 and passed. A local test
+      run on a runtime the project does not pin produces results nobody
+      should trust.
+      CLOSED (P03-T08) by the quirk in `PRECEDENTS.md` §2: local Node
+      matches `.nvmrc` before any test run. Owner: none outstanding.
 

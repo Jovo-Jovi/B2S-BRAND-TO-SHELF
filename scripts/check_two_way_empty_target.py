@@ -115,6 +115,12 @@ PROVEN_PAIRS = [
     ("scripts/check-zod-coverage.mjs", "features/ (directory)"),
     ("scripts/check_mcp_containment.py", ".cursor/mcp.json"),
     ("scripts/check_mcp_containment.py", "docs/method/CARRY_FORWARDS.md"),
+    ("scripts/check-logical-properties.mjs", "app/globals.css"),
+    ("scripts/check-catalog-parity.mjs", "app/[locale]/dictionaries/en.json"),
+    ("scripts/check-catalog-parity.mjs", "app/[locale]/dictionaries/ar.json"),
+    ("scripts/check-catalog-duplicates.mjs", "app/[locale]/dictionaries/en.json"),
+    ("scripts/check-catalog-duplicates.mjs", "app/[locale]/dictionaries/ar.json"),
+    ("scripts/check-token-values.mjs", "app/globals.css"),
 ]
 
 KNOWN_GAPS = [
@@ -499,6 +505,18 @@ def main():
             ["python", "scripts/check_mcp_containment.py"], FileProbe(".cursor/mcp.json"))
     do_pair(results, "scripts/check_mcp_containment.py",
             ["python", "scripts/check_mcp_containment.py"], FileProbe("docs/method/CARRY_FORWARDS.md"))
+    do_pair(results, "scripts/check-logical-properties.mjs",
+            ["node", "scripts/check-logical-properties.mjs"], FileProbe("app/globals.css"))
+    do_pair(results, "scripts/check-catalog-parity.mjs",
+            ["node", "scripts/check-catalog-parity.mjs"], FileProbe("app/[locale]/dictionaries/en.json"))
+    do_pair(results, "scripts/check-catalog-parity.mjs",
+            ["node", "scripts/check-catalog-parity.mjs"], FileProbe("app/[locale]/dictionaries/ar.json"))
+    do_pair(results, "scripts/check-catalog-duplicates.mjs",
+            ["node", "scripts/check-catalog-duplicates.mjs"], FileProbe("app/[locale]/dictionaries/en.json"))
+    do_pair(results, "scripts/check-catalog-duplicates.mjs",
+            ["node", "scripts/check-catalog-duplicates.mjs"], FileProbe("app/[locale]/dictionaries/ar.json"))
+    do_pair(results, "scripts/check-token-values.mjs",
+            ["node", "scripts/check-token-values.mjs"], FileProbe("app/globals.css"))
 
     proven = sum(1 for r in results if r["proven"])
     print(f"\n=== {proven}/{len(results)} pairs proven this run ===")

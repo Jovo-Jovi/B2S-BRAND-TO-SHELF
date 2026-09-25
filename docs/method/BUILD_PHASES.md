@@ -162,6 +162,14 @@ request. A builder prompt to create `components/ui` without a designed
 catalog is the defect this section exists to prevent. The design happens
 after the P01 shell and before P03 composes pages.
 
+The catalog lands on the open phase branch as a contiguous run of tasks,
+reviewed as one unit inside the phase pull request — not on a branch of its
+own. It depends on decisions and documents that exist only on the phase
+branch while the phase is open, so a separate branch from main would either
+lack its own specification or carry copies of it. The phrase "its own
+consolidated pull request" meant reviewable as one unit; a contiguous task
+run inside the phase pull request keeps that.
+
 ---
 
 ## Standing rules for every phase
