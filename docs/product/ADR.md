@@ -7,6 +7,9 @@ quietly renumbered.
 
 **ADR-001 to ADR-011 signed by the owner, 2026-08-01**, immediately after Gate 3.
 **ADR-012 signed by the owner, 2026-08-02**, at the P01 foundation task.
+**ADR-013 signed by the owner, 2026-09-17**, at the P03-T01 resume. Supersedes
+ADR-012 in full. ADR-006 otherwise stands.
+**ADR-014 signed by the owner, 2026-09-23**, at the P03-T07 land task.
 
 ---
 
@@ -205,6 +208,10 @@ those identities fail intermittently and unreproducibly.
 
 ## ADR-012 — One Supabase environment until the first real tenant
 
+**SUPERSEDED 2026-09-17 by ADR-013.** The decision, context, consequences,
+reinstatement trigger, compensating controls and forecloses below are the
+original text, unedited.
+
 **Supersedes the two-environment clause of ADR-006.** ADR-006 otherwise stands
 in full: one authoritative SQL source, migrations split verbatim in source order,
 one applier per environment.
@@ -235,3 +242,176 @@ reviewed and a backup snapshot taken first.
 
 **Forecloses.** Treating one project as two by convention, which is how a
 migration meant for staging reaches real data.
+
+---
+
+## ADR-013 — Two Supabase environments
+
+**Supersedes ADR-012 in full.** ADR-006 stands: one authoritative SQL source,
+migrations split verbatim in source order, one applier per environment.
+
+**Decision.** B2S runs two Supabase projects on a Pro organisation, staging
+and production. Migrations are applied to staging first and to production
+under review per `BRANCHING.md`. Types are generated from staging. The
+isolation suite runs against staging only and is a required job on any pull
+request touching schema.
+
+**Context.** ADR-012's constraint was a plan slot, not a preference — the
+free organisation allowed two active projects and both were held, so the
+choice was one project or none. The organisation is now on Pro and that
+constraint is gone. ADR-012 named adding staging later as the reversible
+direction and set a row count as its trigger; the trigger has not fired, and
+creating staging while both counts read zero is the cheapest this move will
+ever be. Free-tier staging was considered and rejected: free projects
+auto-pause after a week of inactivity, and a project touched only on
+schema-touching pull requests is idle most weeks, which would convert a
+required CI job into an intermittent failure people learn to re-run. A
+paused environment is worse than a declared absent one. PR-40 fixes that
+production keeps its name and its ref.
+
+The ambiguity ADR-012 left is deleted, not adjudicated. `BUILD_PHASES.md`
+§P03 named the wizard's first real content as the trigger; ADR-012 and
+CF-92 named the first non-synthetic tenant. Which comes first no longer
+matters: production never runs the isolation suite again, from this ADR
+forward, at any row count. ADR-012's permission is withdrawn in the same
+commit that lands this, not on a later condition.
+
+**Consequences.** A destructive migration can be rehearsed. The suite seeds
+and tears down against an environment that will never hold a buyer's data.
+CF-109 closes — an isolation regression is caught at the pull request rather
+than at the next phase gate. `types-drift` reads staging, because a phase
+branch's committed types describe the schema staging holds and production
+has not yet received; that production's catalog and migration ledger match
+the repository remains the phase exit gate's assertion, where it already
+is.
+
+**Known gap.** Staging runs a newer Postgres patch than production (CF-161),
+so until the levels match the rehearsal is not faithful in that one
+dimension. This does not block. The owner's production upgrade is the
+closing act.
+
+**Compensating controls, amended.** The reserved synthetic slug prefix and
+same-task teardown move to staging. The rule that no migration reaches
+production without a reviewed schema diff and a backup snapshot is not
+retired — it becomes unconditional rather than conditional on a
+non-synthetic tenant existing, because production is now the environment
+nothing rehearses on.
+
+**Forecloses.** Running the isolation suite against production on any
+argument, including a zero row count; treating staging as a second
+production; generating types from an environment other than the one
+migrations reach first.
+
+**AMENDED 2026-09-19 (P03-T02).** The Decision sentence "a required job on
+any pull request touching schema" stands and is not edited (PR-07). It is
+not untrue: the job remains required on those pull requests. P03-T02
+additionally fires the same job on `push` to every branch, same path
+filter, serialised by concurrency group `tenant-isolation-staging` with
+`cancel-in-progress: false`. BRANCHING §3 makes a pull-request-only
+trigger gate-only again — the condition CF-109 existed to end — which is
+why the push trigger is broad and the concurrency group, not a narrower
+branch set, is what prevents two suites seeding one database. The
+Consequences clause that an isolation regression is "caught at the pull
+request rather than at the next phase gate" is therefore incomplete as a
+description of *when* the job fires, and is left standing as the close
+reason recorded at P03-T01-RESUME.
+
+**AMENDED 2026-09-22 — the recovery-point control, restated without Docker
+and triggered by data.** ADR-013's compensating control — a reviewed schema
+diff and a recovery point before any production migration — stands. Its
+mechanism is specified here, because the one first attempted
+(`supabase db dump`) requires Docker, which is rejected (OD-H14). The
+Decision, Context, Consequences, Known gap, Compensating controls and
+Forecloses paragraphs above are unedited (PR-07).
+
+A recovery point has two halves.
+
+**Schema — every production migration, without exception.** The migration
+chain is the schema backup. P03-T01-RESUME proved it reconstitutes the
+schema from nothing on a virgin project, and ADR-006 requires every
+migration to be independently revertible. Before each production migration
+the remote migration ledger and a catalog fingerprint are recorded.
+
+**Data — from the first non-synthetic row.** Every production-migration
+task already measures `public.tenant` and `auth.users` in production by a
+path the isolation suite does not use. While both read zero there is no
+data to recover, and the schema half is the complete recovery point. The
+moment either reads non-zero, the following becomes mandatory immediately
+before `supabase db push` to production, and the task HALTS without it
+(PR-41):
+
+1. `pg_dump` in custom format (`-Fc`), PostgreSQL 17 client tools installed
+   natively, through the session pooler on port 5432 — never the
+   transaction pooler on 6543, which breaks `pg_dump`'s COPY protocol.
+2. Written to a local path outside the repository. Never committed, never
+   uploaded, never a workflow artifact: artifacts on a public repository
+   are downloadable by other users, and a production dump there is a
+   public copy of buyers' data.
+3. Verified with `pg_restore --list`: readable, and its table of contents
+   names every table the catalog holds.
+4. Never restored into staging to verify it. Staging never holds a buyer's
+   data (this ADR).
+5. The repository records timestamp, byte size, SHA-256 and
+   table-of-contents count — never the file, its contents or the
+   connection string.
+6. Retained until the migration is proven and superseded by the next dump.
+
+Before the first dump, the client binaries' code signature is verified.
+They were obtained after the official installer returned HTTP 403, and a
+binary of unverified provenance does not handle a production password.
+
+Supabase's platform daily backup is a physical snapshot, platform-held and
+not portable. It is a second layer against losing the project, not this
+control: it cannot undo one migration applied hours after it ran.
+
+**Responsibility.** The owner accepts, on the record, that the first real
+dump will run on the day real data is at stake rather than being rehearsed
+beforehand.
+
+**The record, stated honestly.** P03-T03 and P03-T04 applied to an empty
+production database with the schema half recorded and no data snapshot.
+Under this amendment that is the complete recovery point for an empty
+database, not an exception.
+
+**AMENDED 2026-09-22 — provenance, not signature.** The P03-T05 amendment
+requires that "before the first dump, the client binaries' code signature
+is verified". The installed `pg_dump.exe` carries no Authenticode signature
+(NotSigned, measured at P03-T05), so that clause could never pass and would
+halt the first real dump on its own precondition. The requirement was
+provenance; a signature is one way to establish it. Restated: before the
+first dump, the client binaries' provenance is verified — by a valid
+signature where the binary carries one, otherwise by the publisher's
+published checksum for the archive the binaries came from. A binary whose
+provenance cannot be verified by either route does not handle a production
+password. The Decision, Context, Consequences, Known gap, Compensating
+controls, Forecloses paragraphs and both earlier amendments above are
+unedited (PR-07).
+
+---
+
+## ADR-014 — Component-rendered accessibility tier
+
+**Decision.** Two devDependencies: jsdom, as the DOM implementation, and
+axe-core, as the accessibility-rule engine. They are used only by
+component-rendered tests, selected per test file; the global vitest
+environment stays `node` and `vitest.isolation.config.mts` is untouched.
+No matcher-wrapper package: tests assert on the engine's result directly.
+
+**Context.** vitest runs in environment `node`, and the existing component
+test asserts `renderToStaticMarkup` output, which is a string, not a
+document. An accessibility-rule engine walks a document.
+`UX_PRINCIPLES.md` §11 said this tier needed "one dev dependency";
+P03-T06's inventory showed it needs two.
+
+**Consequences.** A simulated DOM computes no layout and no rendered
+colour, so rules that depend on either — colour contrast among them —
+cannot be evaluated in this tier. They are excluded here by an explicit
+list that the tier asserts, and the browser-rendered tier (CF-177) owns
+them. A pass in this tier is never reported as a contrast pass. Licences:
+jsdom MIT; axe-core MPL-2.0, file-level copyleft, acceptable as a
+devDependency that never reaches the client bundle.
+
+**Forecloses.** A DOM environment for every unit test; a simulated-DOM
+pass reported as a rendered pass; an accessibility claim this tier cannot
+observe; a matcher wrapper as a third dependency.
+

@@ -113,6 +113,26 @@ PROVEN_PAIRS = [
     ("scripts/check-service-import.mjs", "lib/supabase/server-only/ (quarantine directory)"),
     ("scripts/check-service-import.mjs", "scan roots [app, features, components]"),
     ("scripts/check-zod-coverage.mjs", "features/ (directory)"),
+    ("scripts/check_mcp_containment.py", ".cursor/mcp.json"),
+    ("scripts/check_mcp_containment.py", "docs/method/CARRY_FORWARDS.md"),
+    ("scripts/check-logical-properties.mjs", "app/globals.css"),
+    ("scripts/check-catalog-parity.mjs", "app/[locale]/dictionaries/en.json"),
+    ("scripts/check-catalog-parity.mjs", "app/[locale]/dictionaries/ar.json"),
+    ("scripts/check-catalog-duplicates.mjs", "app/[locale]/dictionaries/en.json"),
+    ("scripts/check-catalog-duplicates.mjs", "app/[locale]/dictionaries/ar.json"),
+    ("scripts/check-token-values.mjs", "app/globals.css"),
+    ("scripts/check-token-values.mjs", "components/"),
+    ("scripts/check-token-values.mjs", "features/"),
+    ("scripts/check-contrast.mjs", "app/globals.css"),
+    ("scripts/check-contrast.mjs", "components/"),
+    ("scripts/check-component-variants.mjs", "docs/product/DESIGN_SURFACE.md"),
+    ("scripts/check-component-variants.mjs", "components/ui"),
+    ("scripts/check-component-states.mjs", "docs/product/DESIGN_SURFACE.md"),
+    ("scripts/check-component-states.mjs", "components/ui"),
+    ("scripts/check-component-a11y.mjs", "components/ui"),
+    ("scripts/check-locale-format.mjs", "scan roots [app, components, features, lib]"),
+    ("scripts/check-icon-registry.mjs", "components/ui/glyphs.tsx"),
+    ("scripts/check-icon-registry.mjs", "docs/product/DESIGN_SURFACE.md"),
 ]
 
 KNOWN_GAPS = [
@@ -493,6 +513,47 @@ def main():
             ["node", "scripts/check-service-import.mjs"], RootsProbe(["app", "features", "components"]))
     do_pair(results, "scripts/check-zod-coverage.mjs",
             ["node", "scripts/check-zod-coverage.mjs"], DirProbe("features"))
+    do_pair(results, "scripts/check_mcp_containment.py",
+            ["python", "scripts/check_mcp_containment.py"], FileProbe(".cursor/mcp.json"))
+    do_pair(results, "scripts/check_mcp_containment.py",
+            ["python", "scripts/check_mcp_containment.py"], FileProbe("docs/method/CARRY_FORWARDS.md"))
+    do_pair(results, "scripts/check-logical-properties.mjs",
+            ["node", "scripts/check-logical-properties.mjs"], FileProbe("app/globals.css"))
+    do_pair(results, "scripts/check-catalog-parity.mjs",
+            ["node", "scripts/check-catalog-parity.mjs"], FileProbe("app/[locale]/dictionaries/en.json"))
+    do_pair(results, "scripts/check-catalog-parity.mjs",
+            ["node", "scripts/check-catalog-parity.mjs"], FileProbe("app/[locale]/dictionaries/ar.json"))
+    do_pair(results, "scripts/check-catalog-duplicates.mjs",
+            ["node", "scripts/check-catalog-duplicates.mjs"], FileProbe("app/[locale]/dictionaries/en.json"))
+    do_pair(results, "scripts/check-catalog-duplicates.mjs",
+            ["node", "scripts/check-catalog-duplicates.mjs"], FileProbe("app/[locale]/dictionaries/ar.json"))
+    do_pair(results, "scripts/check-token-values.mjs",
+            ["node", "scripts/check-token-values.mjs"], FileProbe("app/globals.css"))
+    do_pair(results, "scripts/check-token-values.mjs",
+            ["node", "scripts/check-token-values.mjs"], DirProbe("components"))
+    do_pair(results, "scripts/check-token-values.mjs",
+            ["node", "scripts/check-token-values.mjs"], DirProbe("features"))
+    do_pair(results, "scripts/check-contrast.mjs",
+            ["node", "scripts/check-contrast.mjs"], FileProbe("app/globals.css"))
+    do_pair(results, "scripts/check-contrast.mjs",
+            ["node", "scripts/check-contrast.mjs"], DirProbe("components"))
+    do_pair(results, "scripts/check-component-variants.mjs",
+            ["node", "scripts/check-component-variants.mjs"], FileProbe("docs/product/DESIGN_SURFACE.md"))
+    do_pair(results, "scripts/check-component-variants.mjs",
+            ["node", "scripts/check-component-variants.mjs"], DirProbe("components/ui"))
+    do_pair(results, "scripts/check-component-states.mjs",
+            ["node", "scripts/check-component-states.mjs"], FileProbe("docs/product/DESIGN_SURFACE.md"))
+    do_pair(results, "scripts/check-component-states.mjs",
+            ["node", "scripts/check-component-states.mjs"], DirProbe("components/ui"))
+    do_pair(results, "scripts/check-component-a11y.mjs",
+            ["node", "scripts/check-component-a11y.mjs"], DirProbe("components/ui"))
+    do_pair(results, "scripts/check-locale-format.mjs",
+            ["node", "scripts/check-locale-format.mjs"],
+            RootsProbe(["app", "components", "features", "lib"]))
+    do_pair(results, "scripts/check-icon-registry.mjs",
+            ["node", "scripts/check-icon-registry.mjs"], FileProbe("components/ui/glyphs.tsx"))
+    do_pair(results, "scripts/check-icon-registry.mjs",
+            ["node", "scripts/check-icon-registry.mjs"], FileProbe("docs/product/DESIGN_SURFACE.md"))
 
     proven = sum(1 for r in results if r["proven"])
     print(f"\n=== {proven}/{len(results)} pairs proven this run ===")

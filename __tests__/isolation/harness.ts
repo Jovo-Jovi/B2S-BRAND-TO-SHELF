@@ -34,9 +34,9 @@
 //                synthetic identities. This is a privileged credential living
 //                outside ADR-005's quarantine; it is confined to this file.
 //
-// ADR-012: this project is production and holds no real tenant. Every row this
-// harness creates is synthetic, carries the reserved `zz-test-` prefix, and is
-// torn down by the same run that seeded it.
+// ADR-013: this suite runs against staging only. Production never receives
+// these rows. Every row this harness creates is synthetic, carries the
+// reserved `zz-test-` prefix, and is torn down by the same run that seeded it.
 
 import { randomUUID } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
@@ -52,9 +52,41 @@ export const TABLES = [
   "consent_grant",
   "activity_event",
   "invitation",
+  "translation_key",
+  "translation_entry",
+  "media_asset",
+  "asset_rendition",
+  "brand",
+  "brand_profile",
+  "brand_line",
+  "brand_theme",
+  "color_value",
+  "typeface",
+  "logo_variant",
+  "brand_guideline",
 ] as const;
 
 export type TableName = (typeof TABLES)[number];
+
+/**
+ * P03-T04. The twelve tables this phase added. Group 33 iterates this list
+ * so proofs 4a/4c are not restated table-by-table; 4b and 4d still send a
+ * request per TABLES entry because their evidence quotes TABLES.length.
+ */
+export const BRAND_ASSET_TABLES: TableName[] = [
+  "translation_key",
+  "translation_entry",
+  "media_asset",
+  "asset_rendition",
+  "brand",
+  "brand_profile",
+  "brand_line",
+  "brand_theme",
+  "color_value",
+  "typeface",
+  "logo_variant",
+  "brand_guideline",
+];
 
 /** §1.1 — every table except these three carries a non-null tenant_id. */
 export const TENANT_SCOPED_TABLES: TableName[] = [
@@ -62,6 +94,18 @@ export const TENANT_SCOPED_TABLES: TableName[] = [
   "consent_grant",
   "activity_event",
   "invitation",
+  "translation_key",
+  "translation_entry",
+  "media_asset",
+  "asset_rendition",
+  "brand",
+  "brand_profile",
+  "brand_line",
+  "brand_theme",
+  "color_value",
+  "typeface",
+  "logo_variant",
+  "brand_guideline",
 ];
 
 // ---------------------------------------------------------------------------
@@ -92,20 +136,6 @@ function loadEnvLocal(): void {
   }
 }
 
-function required(name: string): string {
-  const value = process.env[name];
-  if (value === undefined || value === "") {
-    // PR-21 — the absence of a check is never reported as a passing check. This
-    // suite fails loudly rather than skipping, because a skipped isolation gate
-    // reads as green while proving nothing.
-    throw new Error(
-      `FAIL: the tenant-isolation suite cannot run. Absent configuration: ${name}. ` +
-        `This suite never skips — absent configuration is a failure, not a reason to pass.`,
-    );
-  }
-  return value;
-}
-
 export type Config = {
   url: string;
   publishableKey: string;
@@ -117,14 +147,47 @@ export type Config = {
 export function readConfig(): Config {
   loadEnvLocal();
 
-  const url = required("NEXT_PUBLIC_SUPABASE_URL").replace(/\/+$/, "");
+  // Staging-named variables only. There is no fallback to NEXT_PUBLIC_*,
+  // to SUPABASE_PROJECT_ID, or to a URL hostname. A fallback here would
+  // let the suite seed and tear down against production while reporting
+  // green — the defect ADR-013 exists to make impossible. The hostname
+  // of SUPABASE_STAGING_URL is checked against SUPABASE_STAGING_PROJECT_ID
+  // as a consistency assertion, not as a source for the ref.
+  const missing = [
+    "SUPABASE_STAGING_URL",
+    "SUPABASE_STAGING_PUBLISHABLE_KEY",
+    "SUPABASE_STAGING_SERVICE_ROLE_KEY",
+    "SUPABASE_STAGING_PROJECT_ID",
+    "SUPABASE_ACCESS_TOKEN",
+  ].filter((name) => {
+    const value = process.env[name];
+    return value === undefined || value === "";
+  });
+  if (missing.length > 0) {
+    throw new Error(
+      `FAIL: the tenant-isolation suite cannot run. Absent staging configuration: ${missing.join(", ")}. ` +
+        `This suite never skips, never falls back to production variables, and never derives a project ref ` +
+        `from NEXT_PUBLIC_SUPABASE_URL or SUPABASE_PROJECT_ID. Absent staging configuration is a failure, ` +
+        `not a reason to pass.`,
+    );
+  }
+
+  const url = process.env.SUPABASE_STAGING_URL!.replace(/\/+$/, "");
+  const projectRef = process.env.SUPABASE_STAGING_PROJECT_ID!;
+  const urlRef = new URL(url).hostname.split(".")[0];
+  if (urlRef !== projectRef) {
+    throw new Error(
+      "FAIL: the tenant-isolation suite cannot run. SUPABASE_STAGING_URL's hostname label " +
+        "does not equal SUPABASE_STAGING_PROJECT_ID. The ref is never taken from the URL.",
+    );
+  }
 
   return {
     url,
-    publishableKey: required("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"),
-    serviceRoleKey: required("SUPABASE_SERVICE_ROLE_KEY"),
-    accessToken: required("SUPABASE_ACCESS_TOKEN"),
-    projectRef: process.env.SUPABASE_PROJECT_ID || new URL(url).hostname.split(".")[0],
+    publishableKey: process.env.SUPABASE_STAGING_PUBLISHABLE_KEY!,
+    serviceRoleKey: process.env.SUPABASE_STAGING_SERVICE_ROLE_KEY!,
+    accessToken: process.env.SUPABASE_ACCESS_TOKEN!,
+    projectRef,
   };
 }
 
@@ -558,6 +621,18 @@ export type TenantFixture = {
   consentGrantId: string;
   activityEventId: string;
   invitationId: string;
+  translationKeyId: string;
+  translationEntryId: string;
+  mediaAssetId: string;
+  assetRenditionId: string;
+  brandId: string;
+  brandProfileId: string;
+  brandLineId: string;
+  brandThemeId: string;
+  colorValueId: string;
+  typefaceId: string;
+  logoVariantId: string;
+  brandGuidelineId: string;
 };
 
 export type Fixture = {
@@ -624,6 +699,97 @@ export async function seed(config: Config, sql: SqlRunner): Promise<Fixture> {
   const eventB = randomUUID();
   const invitationA = randomUUID();
   const invitationB = randomUUID();
+  const graphA = {
+    translationKeyId: randomUUID(),
+    translationEntryId: randomUUID(),
+    mediaAssetId: randomUUID(),
+    assetRenditionId: randomUUID(),
+    brandId: randomUUID(),
+    brandProfileId: randomUUID(),
+    brandLineId: randomUUID(),
+    brandThemeId: randomUUID(),
+    colorValueId: randomUUID(),
+    typefaceId: randomUUID(),
+    logoVariantId: randomUUID(),
+    brandGuidelineId: randomUUID(),
+  };
+  const graphB = {
+    translationKeyId: randomUUID(),
+    translationEntryId: randomUUID(),
+    mediaAssetId: randomUUID(),
+    assetRenditionId: randomUUID(),
+    brandId: randomUUID(),
+    brandProfileId: randomUUID(),
+    brandLineId: randomUUID(),
+    brandThemeId: randomUUID(),
+    colorValueId: randomUUID(),
+    typefaceId: randomUUID(),
+    logoVariantId: randomUUID(),
+    brandGuidelineId: randomUUID(),
+  };
+
+  const brandGraphSql = (
+    tenantId: string,
+    ids: typeof graphA,
+    objectKey: string,
+  ): string => `
+    insert into public.translation_key (id, tenant_id) values
+      (${lit(ids.translationKeyId)}, ${lit(tenantId)});
+
+    insert into public.translation_entry (id, tenant_id, key_id, locale, value) values
+      (${lit(ids.translationEntryId)}, ${lit(tenantId)}, ${lit(ids.translationKeyId)},
+       'en', ${lit(SYNTHETIC_PREFIX + objectKey)});
+
+    insert into public.media_asset
+      (id, tenant_id, provider, bucket, object_key, content_type, byte_size, checksum)
+    values
+      (${lit(ids.mediaAssetId)}, ${lit(tenantId)}, 'object', 'media',
+       ${lit(`zz-test/${runId}/${objectKey}/source`)}, 'image/png', 1, '00');
+
+    insert into public.asset_rendition
+      (id, tenant_id, media_asset_id, tier, provider, bucket, object_key, content_type, byte_size)
+    values
+      (${lit(ids.assetRenditionId)}, ${lit(tenantId)}, ${lit(ids.mediaAssetId)}, 'display',
+       'object', 'media', ${lit(`zz-test/${runId}/${objectKey}/display`)}, 'image/png', 1);
+
+    insert into public.brand (id, tenant_id, name_key_id) values
+      (${lit(ids.brandId)}, ${lit(tenantId)}, ${lit(ids.translationKeyId)});
+
+    insert into public.brand_profile (id, tenant_id, brand_id, version) values
+      (${lit(ids.brandProfileId)}, ${lit(tenantId)}, ${lit(ids.brandId)}, 1);
+
+    update public.brand
+       set current_profile_id = ${lit(ids.brandProfileId)}
+     where id = ${lit(ids.brandId)};
+
+    insert into public.brand_line (id, tenant_id, brand_id, name_key_id) values
+      (${lit(ids.brandLineId)}, ${lit(tenantId)}, ${lit(ids.brandId)}, ${lit(ids.translationKeyId)});
+
+    insert into public.brand_theme (id, tenant_id, profile_id, name_key_id, is_default) values
+      (${lit(ids.brandThemeId)}, ${lit(tenantId)}, ${lit(ids.brandProfileId)},
+       ${lit(ids.translationKeyId)}, true);
+
+    insert into public.color_value (id, tenant_id, theme_id, role, srgb) values
+      (${lit(ids.colorValueId)}, ${lit(tenantId)}, ${lit(ids.brandThemeId)}, 'primary', '#000000');
+
+    insert into public.typeface
+      (id, tenant_id, profile_id, role, script, family, weight)
+    values
+      (${lit(ids.typefaceId)}, ${lit(tenantId)}, ${lit(ids.brandProfileId)},
+       'heading', 'latin', 'Test', 400);
+
+    insert into public.logo_variant
+      (id, tenant_id, profile_id, kind, ground, media_asset_id)
+    values
+      (${lit(ids.logoVariantId)}, ${lit(tenantId)}, ${lit(ids.brandProfileId)},
+       'full', 'light', ${lit(ids.mediaAssetId)});
+
+    insert into public.brand_guideline
+      (id, tenant_id, profile_id, title_key_id, body_key_id, ordinal)
+    values
+      (${lit(ids.brandGuidelineId)}, ${lit(tenantId)}, ${lit(ids.brandProfileId)},
+       ${lit(ids.translationKeyId)}, ${lit(ids.translationKeyId)}, 1);
+  `;
 
   // Seeded through the privileged SQL path rather than through PostgREST,
   // because there is deliberately no INSERT policy on `tenant` at all:
@@ -681,6 +847,9 @@ export async function seed(config: Config, sql: SqlRunner): Promise<Fixture> {
       (${lit(invitationB)}, ${lit(tenantB.id)}, ${lit(`${SYNTHETIC_PREFIX}invite-b-${runId}@example.com`)}, 'viewer', now() + interval '7 days', ${lit(bOwner.authId)});
   `);
 
+  await sql(brandGraphSql(tenantA.id, graphA, "alpha"));
+  await sql(brandGraphSql(tenantB.id, graphB, "beta"));
+
   return {
     runId,
     a: {
@@ -694,6 +863,7 @@ export async function seed(config: Config, sql: SqlRunner): Promise<Fixture> {
       consentGrantId: consentA,
       activityEventId: eventA,
       invitationId: invitationA,
+      ...graphA,
     },
     b: {
       label: "B",
@@ -706,6 +876,7 @@ export async function seed(config: Config, sql: SqlRunner): Promise<Fixture> {
       consentGrantId: consentB,
       activityEventId: eventB,
       invitationId: invitationB,
+      ...graphB,
     },
     unaffiliated,
     operator,
@@ -714,7 +885,7 @@ export async function seed(config: Config, sql: SqlRunner): Promise<Fixture> {
 }
 
 // ---------------------------------------------------------------------------
-// Teardown — a requirement, not manners (ADR-012)
+// Teardown — a requirement, not manners (ADR-013)
 // ---------------------------------------------------------------------------
 
 export type TeardownCounts = Record<string, number>;
@@ -756,6 +927,35 @@ export async function teardown(config: Config, sql: SqlRunner): Promise<void> {
 
     alter table public.membership disable trigger membership_active_owner_required;
 
+    update public.brand
+       set current_profile_id = null
+     where tenant_id in (select id from public.tenant where slug like ${prefix});
+
+    delete from public.color_value
+     where tenant_id in (select id from public.tenant where slug like ${prefix});
+    delete from public.typeface
+     where tenant_id in (select id from public.tenant where slug like ${prefix});
+    delete from public.logo_variant
+     where tenant_id in (select id from public.tenant where slug like ${prefix});
+    delete from public.brand_guideline
+     where tenant_id in (select id from public.tenant where slug like ${prefix});
+    delete from public.brand_theme
+     where tenant_id in (select id from public.tenant where slug like ${prefix});
+    delete from public.brand_line
+     where tenant_id in (select id from public.tenant where slug like ${prefix});
+    delete from public.brand_profile
+     where tenant_id in (select id from public.tenant where slug like ${prefix});
+    delete from public.brand
+     where tenant_id in (select id from public.tenant where slug like ${prefix});
+    delete from public.asset_rendition
+     where tenant_id in (select id from public.tenant where slug like ${prefix});
+    delete from public.media_asset
+     where tenant_id in (select id from public.tenant where slug like ${prefix});
+    delete from public.translation_entry
+     where tenant_id in (select id from public.tenant where slug like ${prefix});
+    delete from public.translation_key
+     where tenant_id in (select id from public.tenant where slug like ${prefix});
+
     delete from public.invitation
      where tenant_id in (select id from public.tenant where slug like ${prefix})
         or email::text like ${prefix};
@@ -795,6 +995,18 @@ export async function teardownCounts(sql: SqlRunner): Promise<TeardownCounts> {
       (select count(*) from public.consent_grant)::int                              as consent_grant_total,
       (select count(*) from public.activity_event)::int                             as activity_event_total,
       (select count(*) from public.invitation)::int                                 as invitation_total,
+      (select count(*) from public.translation_key)::int                            as translation_key_total,
+      (select count(*) from public.translation_entry)::int                          as translation_entry_total,
+      (select count(*) from public.media_asset)::int                                as media_asset_total,
+      (select count(*) from public.asset_rendition)::int                            as asset_rendition_total,
+      (select count(*) from public.brand)::int                                      as brand_total,
+      (select count(*) from public.brand_profile)::int                              as brand_profile_total,
+      (select count(*) from public.brand_line)::int                                 as brand_line_total,
+      (select count(*) from public.brand_theme)::int                                as brand_theme_total,
+      (select count(*) from public.color_value)::int                                as color_value_total,
+      (select count(*) from public.typeface)::int                                   as typeface_total,
+      (select count(*) from public.logo_variant)::int                               as logo_variant_total,
+      (select count(*) from public.brand_guideline)::int                            as brand_guideline_total,
       (select count(*) from auth.users)::int                                        as auth_users_total,
       (select count(*) from public.tenant
         where slug like ${prefix} or name like ${prefix})::int                      as tenant_synthetic,
@@ -806,6 +1018,12 @@ export async function teardownCounts(sql: SqlRunner): Promise<TeardownCounts> {
         where i.email::text like ${prefix}
            or i.tenant_id in (select id from public.tenant where slug like ${prefix}))::int
                                                                                     as invitation_synthetic,
+      (select count(*) from public.brand
+        where tenant_id in (select id from public.tenant where slug like ${prefix}))::int
+                                                                                    as brand_synthetic,
+      (select count(*) from public.translation_key
+        where tenant_id in (select id from public.tenant where slug like ${prefix}))::int
+                                                                                    as translation_key_synthetic,
       (select count(*) from auth.users where email like ${prefix})::int             as auth_users_synthetic,
       -- Proof 25b creates a schema, a function and a trigger to force a failure
       -- mid-provisioning. All three are counted here, because a fault injection
@@ -879,7 +1097,7 @@ export const EXPECTED_ASSERTIONS = [
   // 28 is the two bounds including a real concurrency assertion, 29 is the
   // invitation-by-email flow. All landed permanently per OD-H11.
   "27a", "27b",
-  "28a", "28b", "28c", "28d", "28e",
+  "28a", "28b", "28c", "28d", "28e", "28f",
   "29a", "29b", "29c", "29d", "29e", "29f", "29g",
   // P02-T13 — OD-G19's absence of an operator write path, and ConsentGrant
   // reach. 30a–30f assert the write-path absence (10 covers INSERT; these
@@ -889,6 +1107,16 @@ export const EXPECTED_ASSERTIONS = [
   // tenant-scope. All landed permanently per OD-H11.
   "30a", "30b", "30c", "30d", "30e", "30f",
   "30g", "30h", "30i", "30j",
+  // P03-T01-RESUME — the suite is connected to staging, read from the live
+  // platform and the live PostgREST hostname, not from the config object.
+  "31",
+  // P03-T03 — CF-93 gap (6). `updated_at` is maintained by the trigger;
+  // an authenticated write moves it, and a caller-chosen timestamp does
+  // not persist. D stays last.
+  "32a", "32b",
+  // P03-T04 — Brand, Asset and TranslationKey. Twelve tables, not the
+  // prompt's eleven: 7 → 19 is +12 (PR-33). D stays last.
+  "33a", "33b", "33c", "33d", "33e", "33f", "33g", "33h", "33i", "33j",
   "D",
 ];
 

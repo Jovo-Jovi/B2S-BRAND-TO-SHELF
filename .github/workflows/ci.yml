@@ -119,7 +119,7 @@ jobs:
           key: node_modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
           fail-on-cache-miss: true
 
-      # All six guards have a live target. check-service-import stopped being
+      # All fourteen guards have a live target. check-service-import stopped being
       # a vacuous pass at P01-T02: ADR-005's quarantine now exists at
       # lib/supabase/server-only/, and the guard fails if it ever disappears
       # rather than reporting OK for lack of anything to check (PR-21).
@@ -145,9 +145,39 @@ jobs:
       - name: check-zod-coverage
         run: node scripts/check-zod-coverage.mjs
 
-  # ARCHITECTURE.md §5 — types are generated from the one Supabase environment
-  # (ADR-012), and a diff between the generated types and the committed ones
-  # fails the pipeline loudly, INCLUDING when the secret is absent. A job that
+      - name: check-logical-properties
+        run: node scripts/check-logical-properties.mjs
+
+      - name: check-catalog-parity
+        run: node scripts/check-catalog-parity.mjs
+
+      - name: check-catalog-duplicates
+        run: node scripts/check-catalog-duplicates.mjs
+
+      - name: check-token-values
+        run: node scripts/check-token-values.mjs
+
+      - name: check-contrast
+        run: node scripts/check-contrast.mjs
+
+      - name: check-component-variants
+        run: node scripts/check-component-variants.mjs
+
+      - name: check-component-states
+        run: node scripts/check-component-states.mjs
+
+      - name: check-component-a11y
+        run: node scripts/check-component-a11y.mjs
+
+      - name: check-locale-format
+        run: node scripts/check-locale-format.mjs
+
+      - name: check-icon-registry
+        run: node scripts/check-icon-registry.mjs
+
+  # ARCHITECTURE.md §5 — types are generated from staging (ADR-013), and a
+  # diff between the generated types and the committed ones fails the
+  # pipeline loudly, INCLUDING when the secret is absent. A job that
   # skips silently is worse than one that fails, because a green pipeline then
   # means "nobody looked" while reading as "the schema and the types agree".
   types-drift:
@@ -174,14 +204,14 @@ jobs:
       - name: Require the drift secrets
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+          SUPABASE_STAGING_PROJECT_ID: ${{ secrets.SUPABASE_STAGING_PROJECT_ID }}
         run: |
           missing=""
           if [ -z "$SUPABASE_ACCESS_TOKEN" ]; then
             missing="$missing SUPABASE_ACCESS_TOKEN"
           fi
-          if [ -z "$SUPABASE_PROJECT_ID" ]; then
-            missing="$missing SUPABASE_PROJECT_ID"
+          if [ -z "$SUPABASE_STAGING_PROJECT_ID" ]; then
+            missing="$missing SUPABASE_STAGING_PROJECT_ID"
           fi
           if [ -n "$missing" ]; then
             echo "FAIL: types-drift cannot run. Absent repository secret(s):$missing"
@@ -195,10 +225,10 @@ jobs:
       - name: Regenerate types from the live schema
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+          SUPABASE_STAGING_PROJECT_ID: ${{ secrets.SUPABASE_STAGING_PROJECT_ID }}
         run: |
           npx --yes supabase@2.111.0 gen types typescript \
-            --project-id "$SUPABASE_PROJECT_ID" > types/database.ts
+            --project-id "$SUPABASE_STAGING_PROJECT_ID" > types/database.ts
 
       - name: Fail on drift
         run: |

@@ -33,6 +33,14 @@ no required status check blocking the merge — CI reports, the owner decides.
 A signed mid-phase amendment gets its own branch and its own consolidated PR,
 on the same terms.
 
+The design-surface catalog lands on the open phase branch as a contiguous
+run of tasks, reviewed as one unit inside the phase pull request — not on a
+branch of its own. It depends on decisions and documents that exist only on
+the phase branch while the phase is open, so a separate branch from main
+would either lack its own specification or carry copies of it. The phrase
+"its own consolidated pull request" meant reviewable as one unit; a
+contiguous task run inside the phase pull request keeps that.
+
 ## 3.1 Foundation exception
 
 The task establishing the toolchain and the pipeline may merge on its own,

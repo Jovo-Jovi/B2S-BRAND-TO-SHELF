@@ -1,0 +1,7 @@
+.glyph {
+  display: block;
+}
+
+:global([dir="rtl"]) .mirrors {
+  transform: scaleX(-1);
+}

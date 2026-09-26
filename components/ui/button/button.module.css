@@ -1,0 +1,101 @@
+.root {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  column-gap: var(--b2s-space-2);
+  block-size: var(--b2s-control-height);
+  padding-inline: var(--b2s-control-padding-inline);
+  border-radius: var(--b2s-radius-md);
+  border: var(--b2s-border-width) solid transparent;
+  font-family: inherit;
+  font-size: var(--b2s-text-body);
+  font-weight: var(--b2s-weight-medium);
+  text-decoration: none;
+  transition-property: background-color, color, border-block-color, border-inline-color;
+  transition-duration: var(--b2s-duration-quick);
+  transition-timing-function: var(--b2s-ease-standard);
+}
+
+.root:focus-visible,
+.root[data-state="focus"] {
+  outline-style: solid;
+  outline-width: var(--b2s-focus-width);
+  outline-color: var(--b2s-color-focus);
+  outline-offset: var(--b2s-focus-offset);
+}
+
+.primary {
+  background-color: var(--b2s-color-action);
+  color: var(--b2s-color-action-text);
+}
+
+.primary:hover,
+.primary[data-state="hover"] {
+  background-color: var(--b2s-color-action-hover);
+}
+
+.primary:active,
+.primary[data-state="active"] {
+  background-color: var(--b2s-color-action-active);
+}
+
+.secondary {
+  background-color: var(--b2s-color-surface);
+  color: var(--b2s-color-text);
+  border-block-color: var(--b2s-color-border-control);
+  border-inline-color: var(--b2s-color-border-control);
+}
+
+.secondary:hover,
+.secondary[data-state="hover"],
+.quiet:hover,
+.quiet[data-state="hover"] {
+  background-color: var(--b2s-color-sunken);
+}
+
+.secondary:active,
+.secondary[data-state="active"],
+.quiet:active,
+.quiet[data-state="active"] {
+  background-color: var(--b2s-color-surface-active);
+}
+
+.quiet {
+  color: var(--b2s-color-text);
+}
+
+.danger {
+  background-color: var(--b2s-color-danger-action);
+  color: var(--b2s-color-danger-action-text);
+}
+
+.danger:hover,
+.danger[data-state="hover"] {
+  background-color: var(--b2s-color-danger-action-hover);
+}
+
+.danger:active,
+.danger[data-state="active"] {
+  background-color: var(--b2s-color-danger-action-active);
+}
+
+.root:disabled,
+.root[data-state="disabled"] {
+  color: var(--b2s-color-text-subtle);
+  background-color: var(--b2s-color-sunken);
+  border-block-color: var(--b2s-color-border-control);
+  border-inline-color: var(--b2s-color-border-control);
+  pointer-events: none;
+}
+
+.icon {
+  display: inline-flex;
+  inline-size: var(--b2s-icon-size);
+  block-size: var(--b2s-icon-size);
+}
+
+.icon svg {
+  inline-size: 100%;
+  block-size: 100%;
+}

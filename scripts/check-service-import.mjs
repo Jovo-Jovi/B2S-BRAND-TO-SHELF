@@ -20,10 +20,10 @@ const SCANNED_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx"]);
 // needs somewhere to look: with every scan root gone it reported
 // "OK: 0 file(s) scanned under []" at exit 0, which is the same defect as a
 // missing quarantine wearing a cleaner message. `features/` exists as of
-// P02-T14; `components/` is still legitimately absent (CF-94's remaining
-// half). The floor is on the total examined, not on each root existing.
-// P02-T14 raises it to the true count of 12.
-const MINIMUM_FILES = 12;
+// P02-T14; P03-T09 creates components/ and raises the floor to the true
+// count across the three roots. The floor is on the total examined, not on
+// each root existing. Changed condition, not a new premise.
+const MINIMUM_FILES = 51;
 
 // PR-28 — and the quarantine has to hold something. An existing but EMPTY
 // server-only/ passed this guard at exit 0: the directory test succeeded, the

@@ -125,7 +125,7 @@ is not.
 9.  BRAND_CONFIG.md
 10. IMPORT_SPEC.md + DOCUMENT_SPEC.md
 11. ARCHITECTURE.md + ADRs
-12. MODULE_SPEC.md
+12. MODULE_SPEC.md + UX_PRINCIPLES.md + DESIGN_SURFACE.md
 13. B2S_PREPARE_PHASE.md, then its successor phase plan
 14. docs/requirements/** — requirements evidence only. Never current truth.
                            Never a parity target.
@@ -133,6 +133,15 @@ is not.
 
 Where two documents conflict, the earlier in this list wins, and you raise a
 formal amendment rather than reconciling silently.
+
+`DESIGN_SURFACE.md` is not yet authored. Within slot 12 it sits directly
+after `UX_PRINCIPLES.md` and yields to it, because it is that document's
+specification. Slot 12 is below slot 11, so `SECURITY_MODEL.md`,
+`CALC_SPEC.md`'s locale definitions, `BRAND_CONFIG.md` and every ADR win
+over any presentation rule in either document.
+
+ANNOTATED 2026-09-25 (P03-T08, PR-07). The sentence above stands.
+`DESIGN_SURFACE.md` was signed 2026-09-23 and landed at P03-T07.
 
 **Void documents.** These are archived and must never be cited as current truth,
 even if quoted to you: `PHASE_PLAN.md` (P02 and P06 void, parity gates void) ·

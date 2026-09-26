@@ -97,6 +97,470 @@ export type Database = {
           },
         ]
       }
+      asset_rendition: {
+        Row: {
+          archived_at: string | null
+          bucket: string
+          byte_size: number
+          content_type: string
+          created_at: string
+          created_by: string | null
+          height_px: number | null
+          id: string
+          media_asset_id: string
+          object_key: string
+          provider: string
+          tenant_id: string
+          tier: Database["public"]["Enums"]["rendition_tier"]
+          updated_at: string
+          width_px: number | null
+        }
+        Insert: {
+          archived_at?: string | null
+          bucket: string
+          byte_size: number
+          content_type: string
+          created_at?: string
+          created_by?: string | null
+          height_px?: number | null
+          id?: string
+          media_asset_id: string
+          object_key: string
+          provider: string
+          tenant_id: string
+          tier: Database["public"]["Enums"]["rendition_tier"]
+          updated_at?: string
+          width_px?: number | null
+        }
+        Update: {
+          archived_at?: string | null
+          bucket?: string
+          byte_size?: number
+          content_type?: string
+          created_at?: string
+          created_by?: string | null
+          height_px?: number | null
+          id?: string
+          media_asset_id?: string
+          object_key?: string
+          provider?: string
+          tenant_id?: string
+          tier?: Database["public"]["Enums"]["rendition_tier"]
+          updated_at?: string
+          width_px?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asset_rendition_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "member"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "asset_rendition_media_asset_id_tenant_id_fkey"
+            columns: ["media_asset_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "media_asset"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "asset_rendition_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      brand: {
+        Row: {
+          archived_at: string | null
+          created_at: string
+          created_by: string | null
+          current_profile_id: string | null
+          id: string
+          name_key_id: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          current_profile_id?: string | null
+          id?: string
+          name_key_id: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          current_profile_id?: string | null
+          id?: string
+          name_key_id?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "member"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_current_profile_fk"
+            columns: ["current_profile_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "brand_profile"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "brand_name_key_id_tenant_id_fkey"
+            columns: ["name_key_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "translation_key"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "brand_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
+            referencedRelation: "tenant"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      brand_guideline: {
+        Row: {
+          archived_at: string | null
+          body_key_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          ordinal: number
+          profile_id: string
+          tenant_id: string
+          title_key_id: string
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          body_key_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          ordinal: number
+          profile_id: string
+          tenant_id: string
+          title_key_id: string
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          body_key_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          ordinal?: number
+          profile_id?: string
+          tenant_id?: string
+          title_key_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_guideline_body_key_id_tenant_id_fkey"
+            columns: ["body_key_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "translation_key"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "brand_guideline_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "member"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_guideline_profile_id_tenant_id_fkey"
+            columns: ["profile_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "brand_profile"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "brand_guideline_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_guideline_title_key_id_tenant_id_fkey"
+            columns: ["title_key_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "translation_key"
+            referencedColumns: ["id", "tenant_id"]
+          },
+        ]
+      }
+      brand_line: {
+        Row: {
+          archived_at: string | null
+          brand_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          name_key_id: string
+          profile_id: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          brand_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name_key_id: string
+          profile_id?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          brand_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name_key_id?: string
+          profile_id?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_line_brand_id_tenant_id_fkey"
+            columns: ["brand_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "brand"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "brand_line_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "member"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_line_name_key_id_tenant_id_fkey"
+            columns: ["name_key_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "translation_key"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "brand_line_profile_id_tenant_id_fkey"
+            columns: ["profile_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "brand_profile"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "brand_line_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      brand_profile: {
+        Row: {
+          brand_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          supersedes_id: string | null
+          tenant_id: string
+          version: number
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          supersedes_id?: string | null
+          tenant_id: string
+          version: number
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          supersedes_id?: string | null
+          tenant_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_profile_brand_id_tenant_id_fkey"
+            columns: ["brand_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "brand"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "brand_profile_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "member"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_profile_supersedes_id_tenant_id_fkey"
+            columns: ["supersedes_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "brand_profile"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "brand_profile_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      brand_theme: {
+        Row: {
+          archived_at: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          is_default: boolean
+          name_key_id: string
+          profile_id: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_default?: boolean
+          name_key_id: string
+          profile_id: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_default?: boolean
+          name_key_id?: string
+          profile_id?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_theme_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "member"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_theme_name_key_id_tenant_id_fkey"
+            columns: ["name_key_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "translation_key"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "brand_theme_profile_id_tenant_id_fkey"
+            columns: ["profile_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "brand_profile"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "brand_theme_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      color_value: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          role: Database["public"]["Enums"]["color_role"]
+          srgb: string
+          tenant_id: string
+          theme_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["color_role"]
+          srgb: string
+          tenant_id: string
+          theme_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["color_role"]
+          srgb?: string
+          tenant_id?: string
+          theme_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "color_value_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "member"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "color_value_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "color_value_theme_id_tenant_id_fkey"
+            columns: ["theme_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "brand_theme"
+            referencedColumns: ["id", "tenant_id"]
+          },
+        ]
+      }
       consent_grant: {
         Row: {
           created_at: string
@@ -212,6 +676,137 @@ export type Database = {
           },
           {
             foreignKeyName: "invitation_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      logo_variant: {
+        Row: {
+          archived_at: string | null
+          created_at: string
+          created_by: string | null
+          ground: Database["public"]["Enums"]["logo_ground"]
+          id: string
+          kind: Database["public"]["Enums"]["logo_kind"]
+          media_asset_id: string
+          profile_id: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          ground: Database["public"]["Enums"]["logo_ground"]
+          id?: string
+          kind: Database["public"]["Enums"]["logo_kind"]
+          media_asset_id: string
+          profile_id: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          ground?: Database["public"]["Enums"]["logo_ground"]
+          id?: string
+          kind?: Database["public"]["Enums"]["logo_kind"]
+          media_asset_id?: string
+          profile_id?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "logo_variant_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "member"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "logo_variant_media_asset_id_tenant_id_fkey"
+            columns: ["media_asset_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "media_asset"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "logo_variant_profile_id_tenant_id_fkey"
+            columns: ["profile_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "brand_profile"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "logo_variant_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      media_asset: {
+        Row: {
+          archived_at: string | null
+          bucket: string
+          byte_size: number
+          checksum: string
+          content_type: string
+          created_at: string
+          created_by: string | null
+          id: string
+          object_key: string
+          original_filename: string | null
+          provider: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          bucket: string
+          byte_size: number
+          checksum: string
+          content_type: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          object_key: string
+          original_filename?: string | null
+          provider: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          bucket?: string
+          byte_size?: number
+          checksum?: string
+          content_type?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          object_key?: string
+          original_filename?: string | null
+          provider?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_asset_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "member"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_asset_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenant"
@@ -407,6 +1002,183 @@ export type Database = {
           },
         ]
       }
+      translation_entry: {
+        Row: {
+          archived_at: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          key_id: string
+          locale: string
+          tenant_id: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          key_id: string
+          locale: string
+          tenant_id: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          key_id?: string
+          locale?: string
+          tenant_id?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "translation_entry_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "member"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "translation_entry_key_id_tenant_id_fkey"
+            columns: ["key_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "translation_key"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "translation_entry_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      translation_key: {
+        Row: {
+          archived_at: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "translation_key_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "member"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "translation_key_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      typeface: {
+        Row: {
+          archived_at: string | null
+          created_at: string
+          created_by: string | null
+          family: string
+          font_asset_id: string | null
+          id: string
+          is_italic: boolean
+          profile_id: string
+          role: Database["public"]["Enums"]["typeface_role"]
+          script: Database["public"]["Enums"]["script_kind"]
+          tenant_id: string
+          updated_at: string
+          weight: number
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          family: string
+          font_asset_id?: string | null
+          id?: string
+          is_italic?: boolean
+          profile_id: string
+          role: Database["public"]["Enums"]["typeface_role"]
+          script: Database["public"]["Enums"]["script_kind"]
+          tenant_id: string
+          updated_at?: string
+          weight: number
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          family?: string
+          font_asset_id?: string | null
+          id?: string
+          is_italic?: boolean
+          profile_id?: string
+          role?: Database["public"]["Enums"]["typeface_role"]
+          script?: Database["public"]["Enums"]["script_kind"]
+          tenant_id?: string
+          updated_at?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "typeface_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "member"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "typeface_font_asset_id_tenant_id_fkey"
+            columns: ["font_asset_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "media_asset"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "typeface_profile_id_tenant_id_fkey"
+            columns: ["profile_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "brand_profile"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "typeface_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -445,10 +1217,23 @@ export type Database = {
       }
     }
     Enums: {
+      color_role:
+        | "primary"
+        | "secondary"
+        | "accent"
+        | "background"
+        | "foreground"
+        | "muted"
+        | "critical"
       consent_scope: "read_only"
+      logo_ground: "light" | "dark"
+      logo_kind: "full" | "mark" | "wordmark"
       membership_status: "invited" | "active" | "suspended"
+      rendition_tier: "display" | "print"
       role: "owner" | "manager" | "designer" | "approver" | "viewer"
+      script_kind: "latin" | "arabic"
       tenant_status: "active" | "suspended" | "closed"
+      typeface_role: "heading" | "body"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -579,10 +1364,24 @@ export const Constants = {
   },
   public: {
     Enums: {
+      color_role: [
+        "primary",
+        "secondary",
+        "accent",
+        "background",
+        "foreground",
+        "muted",
+        "critical",
+      ],
       consent_scope: ["read_only"],
+      logo_ground: ["light", "dark"],
+      logo_kind: ["full", "mark", "wordmark"],
       membership_status: ["invited", "active", "suspended"],
+      rendition_tier: ["display", "print"],
       role: ["owner", "manager", "designer", "approver", "viewer"],
+      script_kind: ["latin", "arabic"],
       tenant_status: ["active", "suspended", "closed"],
+      typeface_role: ["heading", "body"],
     },
   },
 } as const

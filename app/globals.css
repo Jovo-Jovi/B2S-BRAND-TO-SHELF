@@ -1,24 +1,334 @@
 /*
- * Design tokens. CSS custom properties only.
- * No rule in this file assigns a token to a property — the design surface
- * (fixed at Gate 3, per docs/method/BUILD_PHASES.md) owns consumption.
+ * Platform tokens from DESIGN_SURFACE.md §2, and the document root only.
+ * Components arrive at P03-T09. No class, no component selector.
  */
+
+@font-face {
+  font-family: "IBM Plex Sans";
+  src: url("/fonts/IBMPlexSans-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Sans";
+  src: url("/fonts/IBMPlexSans-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Sans";
+  src: url("/fonts/IBMPlexSans-SemiBold.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Sans Arabic";
+  src: url("/fonts/IBMPlexSansArabic-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Sans Arabic";
+  src: url("/fonts/IBMPlexSansArabic-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Sans Arabic";
+  src: url("/fonts/IBMPlexSansArabic-SemiBold.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
-  --b2s-space-1: 0.25rem;
-  --b2s-space-2: 0.5rem;
-  --b2s-space-3: 1rem;
-  --b2s-space-4: 1.5rem;
-  --b2s-space-5: 2rem;
+  --b2s-color-canvas: #f4f4f4;
+  --b2s-color-surface: #ffffff;
+  --b2s-color-sunken: #ededed;
+  --b2s-color-raised: #ffffff;
+  --b2s-color-border: #e0e0e0;
+  --b2s-color-border-control: #7a7a7a;
+  --b2s-color-text: #1a1a1a;
+  --b2s-color-text-muted: #545454;
+  --b2s-color-text-subtle: #6b6b6b;
+  --b2s-color-action: #1a1a1a;
+  --b2s-color-action-text: #ffffff;
+  --b2s-color-action-hover: #3d3d3d;
+  --b2s-color-focus: #1a1a1a;
+  --b2s-color-danger-action: #b3261e;
+  --b2s-color-danger-action-hover: #931f18;
+  --b2s-color-danger-action-text: #ffffff;
+  --b2s-color-danger-action-active: #7a1a14;
+  --b2s-color-action-active: #000000;
+  --b2s-color-surface-active: #e3e3e3;
+  --b2s-color-success: #1f7a3d;
+  --b2s-color-success-bg: #eef7f1;
+  --b2s-color-warning: #8a5a00;
+  --b2s-color-warning-bg: #fbf5e6;
+  --b2s-color-danger: #b3261e;
+  --b2s-color-danger-bg: #fbeeed;
+  --b2s-color-info: #1f5fae;
+  --b2s-color-info-bg: #edf3fb;
+  --b2s-color-scrim: rgb(0 0 0 / 0.4);
+  --b2s-elevation-1: 0 1px 2px rgb(0 0 0 / 0.06), 0 4px 12px rgb(0 0 0 / 0.08);
+  --b2s-elevation-2: 0 2px 4px rgb(0 0 0 / 0.06), 0 12px 32px rgb(0 0 0 / 0.14);
+  --b2s-elevation-3: 0 2px 4px rgb(0 0 0 / 0.06), 0 8px 24px rgb(0 0 0 / 0.12);
 
-  --b2s-radius-sm: 0.25rem;
-  --b2s-radius-md: 0.5rem;
-  --b2s-radius-lg: 1rem;
+  --b2s-font-family: "IBM Plex Sans", "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --b2s-text-xs: 0.75rem;
+  --b2s-text-sm: 0.875rem;
+  --b2s-text-md: 1rem;
+  --b2s-text-lg: 1.125rem;
+  --b2s-text-xl: 1.25rem;
+  --b2s-text-2xl: 1.5rem;
+  --b2s-text-3xl: 2rem;
+  --b2s-leading-xs: 1.33;
+  --b2s-leading-sm: 1.43;
+  --b2s-leading-md: 1.5;
+  --b2s-leading-lg: 1.44;
+  --b2s-leading-xl: 1.4;
+  --b2s-leading-2xl: 1.33;
+  --b2s-leading-3xl: 1.25;
+  --b2s-weight-regular: 400;
+  --b2s-weight-medium: 500;
+  --b2s-weight-semibold: 600;
 
-  --b2s-font-size-sm: 0.875rem;
-  --b2s-font-size-base: 1rem;
-  --b2s-font-size-lg: 1.25rem;
-  --b2s-font-size-xl: 1.5rem;
+  --b2s-space-0: 0;
+  --b2s-space-1: 0.125rem;
+  --b2s-space-2: 0.25rem;
+  --b2s-space-3: 0.5rem;
+  --b2s-space-4: 0.75rem;
+  --b2s-space-5: 1rem;
+  --b2s-space-6: 1.25rem;
+  --b2s-space-7: 1.5rem;
+  --b2s-space-8: 2rem;
+  --b2s-space-9: 2.5rem;
+  --b2s-space-10: 3rem;
+  --b2s-space-11: 4rem;
 
-  --b2s-line-height-tight: 1.25;
-  --b2s-line-height-base: 1.5;
+  --b2s-radius-sm: 4px;
+  --b2s-radius-md: 6px;
+  --b2s-radius-lg: 10px;
+  --b2s-radius-full: 9999px;
+
+  --b2s-duration-quick: 100ms;
+  --b2s-duration-base: 160ms;
+  --b2s-duration-enter: 200ms;
+  --b2s-duration-exit: 150ms;
+  --b2s-duration-pulse: 1200ms;
+  --b2s-delay-loader: 150ms;
+  --b2s-delay-tooltip: 500ms;
+  --b2s-notice-dismiss: 5000ms;
+  --b2s-ease-standard: cubic-bezier(0.2, 0, 0.2, 1);
+  --b2s-ease-enter: cubic-bezier(0.2, 0, 0, 1);
+  --b2s-ease-exit: cubic-bezier(0.4, 0, 1, 1);
+
+  --b2s-border-width: 1px;
+  --b2s-focus-width: 2px;
+  --b2s-focus-offset: 2px;
+  --b2s-check-size: 1rem;
+  --b2s-status-bar-width: 3px;
+  --b2s-indicator-width: 2px;
+  --b2s-measure-prose: 75ch;
+  --b2s-measure-form: 40rem;
+  --b2s-dialog-width-small: 24rem;
+  --b2s-dialog-width-medium: 32rem;
+  --b2s-dialog-width-large: 48rem;
+  --b2s-layer-dropdown: 10;
+  --b2s-layer-sticky: 20;
+  --b2s-layer-scrim: 30;
+  --b2s-layer-dialog: 40;
+  --b2s-layer-notice: 50;
+  --b2s-layer-tooltip: 60;
+  --b2s-switch-block-size: 1.25rem;
+  --b2s-switch-inline-size: 2.25rem;
+  --b2s-switch-thumb-size: 1rem;
+  --b2s-switch-inset: var(--b2s-space-1);
+  --b2s-radio-dot-size: 0.5rem;
+  --b2s-multiline-rows-min: 3;
+  --b2s-multiline-rows-max: 8;
+  --b2s-skeleton-opacity-min: 0.6;
+}
+
+:root:lang(ar) {
+  --b2s-font-family: "IBM Plex Sans Arabic", "IBM Plex Sans", system-ui, sans-serif;
+  --b2s-leading-xs: 1.67;
+  --b2s-leading-sm: 1.71;
+  --b2s-leading-md: 1.75;
+  --b2s-leading-lg: 1.67;
+  --b2s-leading-xl: 1.6;
+  --b2s-leading-2xl: 1.5;
+  --b2s-leading-3xl: 1.44;
+}
+
+:root,
+[data-density="comfortable"] {
+  --b2s-control-height: 40px;
+  --b2s-control-padding-inline: var(--b2s-space-5);
+  --b2s-row-height: 48px;
+  --b2s-cell-padding-block: var(--b2s-space-4);
+  --b2s-cell-padding-inline: var(--b2s-space-5);
+  --b2s-field-gap: var(--b2s-space-7);
+  --b2s-text-body: var(--b2s-text-md);
+  --b2s-icon-size: 20px;
+  --b2s-logo-height: 32px;
+}
+
+[data-density="compact"] {
+  --b2s-control-height: 32px;
+  --b2s-control-padding-inline: var(--b2s-space-4);
+  --b2s-row-height: 36px;
+  --b2s-cell-padding-block: 0.375rem;
+  --b2s-cell-padding-inline: var(--b2s-space-4);
+  --b2s-field-gap: var(--b2s-space-5);
+  --b2s-text-body: var(--b2s-text-sm);
+  --b2s-icon-size: 16px;
+  --b2s-logo-height: 28px;
+}
+
+@media (max-width: 639.98px) {
+  :root,
+  [data-density="compact"] {
+    --b2s-control-height: 40px;
+    --b2s-control-padding-inline: var(--b2s-space-5);
+    --b2s-row-height: 48px;
+    --b2s-cell-padding-block: var(--b2s-space-4);
+    --b2s-cell-padding-inline: var(--b2s-space-5);
+    --b2s-field-gap: var(--b2s-space-7);
+    --b2s-text-body: var(--b2s-text-md);
+    --b2s-icon-size: 20px;
+    --b2s-logo-height: 32px;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --b2s-color-canvas: #171717;
+    --b2s-color-surface: #1f1f1f;
+    --b2s-color-sunken: #141414;
+    --b2s-color-raised: #262626;
+    --b2s-color-border: #2e2e2e;
+    --b2s-color-border-control: #767676;
+    --b2s-color-text: #f2f2f2;
+    --b2s-color-text-muted: #b3b3b3;
+    --b2s-color-text-subtle: #999999;
+    --b2s-color-action: #f2f2f2;
+    --b2s-color-action-text: #1a1a1a;
+    --b2s-color-action-hover: #d6d6d6;
+    --b2s-color-focus: #f2f2f2;
+    --b2s-color-danger-action: #c62f26;
+    --b2s-color-danger-action-hover: #a82820;
+    --b2s-color-danger-action-text: #ffffff;
+    --b2s-color-danger-action-active: #8f211b;
+    --b2s-color-action-active: #bdbdbd;
+    --b2s-color-surface-active: #333333;
+    --b2s-color-success: #6fcf8f;
+    --b2s-color-success-bg: #16261b;
+    --b2s-color-warning: #e6b450;
+    --b2s-color-warning-bg: #2a2212;
+    --b2s-color-danger: #f08a82;
+    --b2s-color-danger-bg: #2e1a19;
+    --b2s-color-info: #7fb0ec;
+    --b2s-color-info-bg: #17222f;
+    --b2s-color-scrim: rgb(0 0 0 / 0.4);
+    --b2s-elevation-1: none;
+    --b2s-elevation-2: none;
+    --b2s-elevation-3: none;
+  }
+}
+
+:root[data-theme="dark"] {
+  --b2s-color-canvas: #171717;
+  --b2s-color-surface: #1f1f1f;
+  --b2s-color-sunken: #141414;
+  --b2s-color-raised: #262626;
+  --b2s-color-border: #2e2e2e;
+  --b2s-color-border-control: #767676;
+  --b2s-color-text: #f2f2f2;
+  --b2s-color-text-muted: #b3b3b3;
+  --b2s-color-text-subtle: #999999;
+  --b2s-color-action: #f2f2f2;
+  --b2s-color-action-text: #1a1a1a;
+  --b2s-color-action-hover: #d6d6d6;
+  --b2s-color-focus: #f2f2f2;
+  --b2s-color-danger-action: #c62f26;
+  --b2s-color-danger-action-hover: #a82820;
+  --b2s-color-danger-action-text: #ffffff;
+  --b2s-color-danger-action-active: #8f211b;
+  --b2s-color-action-active: #bdbdbd;
+  --b2s-color-surface-active: #333333;
+  --b2s-color-success: #6fcf8f;
+  --b2s-color-success-bg: #16261b;
+  --b2s-color-warning: #e6b450;
+  --b2s-color-warning-bg: #2a2212;
+  --b2s-color-danger: #f08a82;
+  --b2s-color-danger-bg: #2e1a19;
+  --b2s-color-info: #7fb0ec;
+  --b2s-color-info-bg: #17222f;
+  --b2s-color-scrim: rgb(0 0 0 / 0.4);
+  --b2s-elevation-1: none;
+  --b2s-elevation-2: none;
+  --b2s-elevation-3: none;
+}
+
+:root[data-theme="light"] {
+  --b2s-color-canvas: #f4f4f4;
+  --b2s-color-surface: #ffffff;
+  --b2s-color-sunken: #ededed;
+  --b2s-color-raised: #ffffff;
+  --b2s-color-border: #e0e0e0;
+  --b2s-color-border-control: #7a7a7a;
+  --b2s-color-text: #1a1a1a;
+  --b2s-color-text-muted: #545454;
+  --b2s-color-text-subtle: #6b6b6b;
+  --b2s-color-action: #1a1a1a;
+  --b2s-color-action-text: #ffffff;
+  --b2s-color-action-hover: #3d3d3d;
+  --b2s-color-focus: #1a1a1a;
+  --b2s-color-danger-action: #b3261e;
+  --b2s-color-danger-action-hover: #931f18;
+  --b2s-color-danger-action-text: #ffffff;
+  --b2s-color-danger-action-active: #7a1a14;
+  --b2s-color-action-active: #000000;
+  --b2s-color-surface-active: #e3e3e3;
+  --b2s-color-success: #1f7a3d;
+  --b2s-color-success-bg: #eef7f1;
+  --b2s-color-warning: #8a5a00;
+  --b2s-color-warning-bg: #fbf5e6;
+  --b2s-color-danger: #b3261e;
+  --b2s-color-danger-bg: #fbeeed;
+  --b2s-color-info: #1f5fae;
+  --b2s-color-info-bg: #edf3fb;
+  --b2s-color-scrim: rgb(0 0 0 / 0.4);
+  --b2s-elevation-1: 0 1px 2px rgb(0 0 0 / 0.06), 0 4px 12px rgb(0 0 0 / 0.08);
+  --b2s-elevation-2: 0 2px 4px rgb(0 0 0 / 0.06), 0 12px 32px rgb(0 0 0 / 0.14);
+  --b2s-elevation-3: 0 2px 4px rgb(0 0 0 / 0.06), 0 8px 24px rgb(0 0 0 / 0.12);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --b2s-duration-quick: 0ms;
+    --b2s-duration-base: 0ms;
+    --b2s-duration-enter: 0ms;
+    --b2s-duration-exit: 0ms;
+    --b2s-duration-pulse: 0ms;
+  }
+}
+
+html {
+  background: var(--b2s-color-canvas);
+  color: var(--b2s-color-text);
+  font-family: var(--b2s-font-family);
+  font-size: var(--b2s-text-md);
+  line-height: var(--b2s-leading-md);
 }

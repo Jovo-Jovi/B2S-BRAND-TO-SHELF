@@ -30,8 +30,8 @@ const KEY = /^[a-z][a-z0-9_]*$/;
 // Raise both the day either count grows; never lower either to make a
 // shrinking result pass. Changed condition, not a new premise: PROVEN_PAIRS
 // does not move.
-const MINIMUM_VALUES_CHECKED = 12;
-const MINIMUM_ENUMERATIONS = 4;
+const MINIMUM_VALUES_CHECKED = 30;
+const MINIMUM_ENUMERATIONS = 10;
 
 let violations = 0;
 

@@ -142,6 +142,14 @@ never proven. It closes here, with this definition.
 a new entity type · a change to any access rule · a change to any grant · a new
 privileged path · a role definition change · any change to the `Operator` surface.
 
+The isolation suite that proves P1–P5 between gates runs against staging
+(ADR-013) and is required on any pull request touching schema. A phase exit
+gate still re-derives the live catalog of production — the environment that
+holds, or will hold, a buyer's data. Staging is named here so the suite is
+not pointed back at production by a reading of "the live environment" alone.
+Production is named here so an exit gate is not taken as proven by the CI
+job.
+
 **No evidence means FAIL.** A gate closed on partial evidence has not been closed.
 
 ---
@@ -663,6 +671,12 @@ Six, all owned by `supabase_admin`, all enabled on origin. Their functions live
 in `extensions`, are all owned by `supabase_admin`, are **none of them
 `security definer`**, and all carry an unpinned `search_path`.
 
+**Corrected 2026-09-17, P03-T01-RESUME, CF-155.** Live catalog at P02-GATE,
+and re-read against both projects at this task: all six have
+`proconfig=['search_path=""']` (pinned). The sentence above is the
+original. Owner, schema, reachability and membership are unchanged, so this
+is not a §11 hard failure.
+
 | Trigger | Fires on | Function |
 |---|---|---|
 | `issue_graphql_placeholder` | `sql_drop` | `extensions.set_graphql_placeholder` |
@@ -686,6 +700,10 @@ code with an unpinned `search_path`. Nothing there is reachable from a tenant
 session and nothing there is ours to change — which is exactly the tier b shape:
 enumerated, measured, and watched for change.
 
+**Corrected 2026-09-17, P03-T01-RESUME, CF-155**, of "unpinned" in the
+sentence above: the six functions' `search_path` is pinned live. The
+characterisation as a `supabase_admin` code-execution surface stands.
+
 ---
 
 ### 11.5 The standing rule
@@ -693,6 +711,12 @@ enumerated, measured, and watched for change.
 **This inventory is re-derived at every phase exit gate. A mechanism that
 appears in the derivation and is not in this document is a hard failure of that
 gate.**
+
+The gate queries the live catalog of production. Staging is the rehearsal
+and the isolation-suite venue (ADR-013); it is not a second production, and
+a re-derivation against staging alone does not close a phase exit gate.
+Staging is named here so the standing rule is not read as permission to
+treat the CI job as the gate.
 
 That is what turns a one-time audit into a standing check. The gate does not
 read this list and confirm it; it queries the live catalog and compares.

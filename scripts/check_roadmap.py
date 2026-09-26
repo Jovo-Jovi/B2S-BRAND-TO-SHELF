@@ -23,7 +23,7 @@ and fails when it examined less, rather than reporting a clean zero:
                                     regenerate — both sides empty of Release
                                     2/3 content alike — and the byte-comparison
                                     below would pass over the loss (P02-T09).
-  MINIMUM_ROLE_JOURNEY_ROWS    17 — docs/product/ROLE_JOURNEY.md's table
+  MINIMUM_ROLE_JOURNEY_ROWS    19 — docs/product/ROLE_JOURNEY.md's table
                                     (P02-T09, OD-H9)
 
 Each of the two removed-target and emptied-target failure modes is proven by
@@ -136,7 +136,7 @@ MINIMUM_PHASES = 9
 MINIMUM_DONE_STEPS_ROWS = 1
 MINIMUM_OPEN_CARRY_FORWARDS = 1
 MINIMUM_RELEASE_BLOCKS = 3
-MINIMUM_ROLE_JOURNEY_ROWS = 17
+MINIMUM_ROLE_JOURNEY_ROWS = 19
 MINIMUM_TENANCY_SECTION3_ROLES = 5
 
 NAMED_NON_ENUM_ACTORS = {"Operator", "Buyer"}

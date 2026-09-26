@@ -37,6 +37,7 @@ import {
   SYNTHETIC_PREFIX,
   TABLES,
   TENANT_SCOPED_TABLES,
+  BRAND_ASSET_TABLES,
   teardown,
   teardownCounts,
   TENANT_SELECTOR_HEADER,
@@ -80,10 +81,10 @@ beforeAll(async () => {
   sql = makeSqlRunner(config);
   probe = makeProbes(config);
 
-  // ADR-012's reinstatement trigger, as a check rather than a judgement (CF-92).
-  // This suite may seed and tear down against b2s-production only while it holds
-  // zero real tenants. The moment one exists it refuses to run, and a staging
-  // project must be created first.
+  // ADR-013: this suite seeds and tears down against staging only.
+  // Production never receives these rows. A non-synthetic tenant on
+  // staging is still a halt — it means the rehearsal environment has
+  // been used as a second production.
   const [live] = await sql<{ real_tenants: number }>(
     `select count(*)::int as real_tenants
        from public.tenant
@@ -91,9 +92,9 @@ beforeAll(async () => {
   );
   if (live.real_tenants > 0) {
     throw new Error(
-      `HALT: b2s-production holds ${live.real_tenants} non-synthetic tenant row(s). ` +
-        `ADR-012's reinstatement trigger has fired: create a staging project and ` +
-        `supersede ADR-012 before running this suite again.`,
+      `HALT: staging holds ${live.real_tenants} non-synthetic tenant row(s). ` +
+        `This suite never runs against production, and it will not seed against ` +
+        `a rehearsal environment that already holds real tenants.`,
     );
   }
 
@@ -343,7 +344,10 @@ describe("proof 4 — cross-tenant reach on every table, both directions", () =>
   it("4b INSERT: permitted writes land, everything else is refused", async () => {
     const { a, b, unaffiliated } = fixture;
 
-    const payloadsFor = (identity: Identity, tenantId: string): [TableName, Record<string, unknown>][] => [
+    const payloadsFor = (identity: Identity, tenantId: string): [TableName, Record<string, unknown>][] => {
+      const home = tenantId === b.id ? b : a;
+      const suffix = randomUUID().slice(0, 8);
+      return [
       [
         "tenant",
         {
@@ -379,15 +383,138 @@ describe("proof 4 — cross-tenant reach on every table, both directions", () =>
         },
       ],
       ["operator", { id: randomUUID(), granted_at: new Date().toISOString() }],
+      ["translation_key", { id: randomUUID(), tenant_id: tenantId }],
+      [
+        "translation_entry",
+        {
+          id: randomUUID(),
+          tenant_id: tenantId,
+          key_id: home.translationKeyId,
+          locale: "ar",
+          value: `${SYNTHETIC_PREFIX}probe-ar`,
+        },
+      ],
+      [
+        "media_asset",
+        {
+          id: randomUUID(),
+          tenant_id: tenantId,
+          provider: "object",
+          bucket: "media",
+          object_key: `zz-test/probe/${suffix}/source`,
+          content_type: "image/png",
+          byte_size: 1,
+          checksum: "00",
+        },
+      ],
+      [
+        "asset_rendition",
+        {
+          id: randomUUID(),
+          tenant_id: tenantId,
+          media_asset_id: home.mediaAssetId,
+          tier: "print",
+          provider: "object",
+          bucket: "media",
+          object_key: `zz-test/probe/${suffix}/print`,
+          content_type: "image/png",
+          byte_size: 1,
+        },
+      ],
+      [
+        "brand",
+        {
+          id: randomUUID(),
+          tenant_id: tenantId,
+          name_key_id: home.translationKeyId,
+        },
+      ],
+      [
+        "brand_profile",
+        {
+          id: randomUUID(),
+          tenant_id: tenantId,
+          brand_id: home.brandId,
+          version: 2,
+          supersedes_id: home.brandProfileId,
+        },
+      ],
+      [
+        "brand_line",
+        {
+          id: randomUUID(),
+          tenant_id: tenantId,
+          brand_id: home.brandId,
+          name_key_id: home.translationKeyId,
+        },
+      ],
+      [
+        "brand_theme",
+        {
+          id: randomUUID(),
+          tenant_id: tenantId,
+          profile_id: home.brandProfileId,
+          name_key_id: home.translationKeyId,
+          is_default: false,
+        },
+      ],
+      [
+        "color_value",
+        {
+          id: randomUUID(),
+          tenant_id: tenantId,
+          theme_id: home.brandThemeId,
+          role: "secondary",
+          srgb: "#111111",
+        },
+      ],
+      [
+        "typeface",
+        {
+          id: randomUUID(),
+          tenant_id: tenantId,
+          profile_id: home.brandProfileId,
+          role: "body",
+          script: "latin",
+          family: "Test",
+          weight: 400,
+        },
+      ],
+      [
+        "logo_variant",
+        {
+          id: randomUUID(),
+          tenant_id: tenantId,
+          profile_id: home.brandProfileId,
+          kind: "mark",
+          ground: "light",
+          media_asset_id: home.mediaAssetId,
+        },
+      ],
+      [
+        "brand_guideline",
+        {
+          id: randomUUID(),
+          tenant_id: tenantId,
+          profile_id: home.brandProfileId,
+          title_key_id: home.translationKeyId,
+          body_key_id: home.translationKeyId,
+          ordinal: 2,
+        },
+      ],
     ];
+    };
 
     // An owner may write memberships and consent grants inside their own tenant;
-    // any active member may append an activity_event to it. Nothing else is
-    // reachable, and provisioning a tenant or a member never is.
+    // any active member may append an activity_event to it. Brand/Asset rows
+    // are tenant-scoped with no role check at RLS, so a viewer may insert them
+    // too. `brand` is omitted: unique(tenant_id) is already occupied by the
+    // fixture, so a second insert is a uniqueness refusal not a permission one.
+    const brandWritable: TableName[] = BRAND_ASSET_TABLES.filter((table) => table !== "brand");
     const allowed: Record<string, TableName[]> = {
-      [a.owner.label]: ["membership", "consent_grant", "activity_event", "invitation"],
-      [a.viewer.label]: ["activity_event"],
-      [b.owner.label]: ["membership", "consent_grant", "activity_event", "invitation"],
+      [a.owner.label]: ["membership", "consent_grant", "activity_event", "invitation", ...brandWritable],
+      [a.viewer.label]: ["activity_event", ...brandWritable],
+      [b.owner.label]: ["membership", "consent_grant", "activity_event", "invitation", ...brandWritable],
       [unaffiliated.label]: [],
     };
 
@@ -564,6 +691,30 @@ describe("proof 4 — cross-tenant reach on every table, both directions", () =>
       ["activity_event", b.activityEventId],
       ["invitation", a.invitationId],
       ["invitation", b.invitationId],
+      ["translation_key", a.translationKeyId],
+      ["translation_key", b.translationKeyId],
+      ["translation_entry", a.translationEntryId],
+      ["translation_entry", b.translationEntryId],
+      ["media_asset", a.mediaAssetId],
+      ["media_asset", b.mediaAssetId],
+      ["asset_rendition", a.assetRenditionId],
+      ["asset_rendition", b.assetRenditionId],
+      ["brand", a.brandId],
+      ["brand", b.brandId],
+      ["brand_profile", a.brandProfileId],
+      ["brand_profile", b.brandProfileId],
+      ["brand_line", a.brandLineId],
+      ["brand_line", b.brandLineId],
+      ["brand_theme", a.brandThemeId],
+      ["brand_theme", b.brandThemeId],
+      ["color_value", a.colorValueId],
+      ["color_value", b.colorValueId],
+      ["typeface", a.typefaceId],
+      ["typeface", b.typefaceId],
+      ["logo_variant", a.logoVariantId],
+      ["logo_variant", b.logoVariantId],
+      ["brand_guideline", a.brandGuidelineId],
+      ["brand_guideline", b.brandGuidelineId],
     ];
 
     const failures: string[] = [];
@@ -660,6 +811,95 @@ describe("proof 6 — no row may carry another tenant's tenant_id", () => {
         email: `${SYNTHETIC_PREFIX}cross-invite-${randomUUID().slice(0, 8)}@example.com`,
         role: "viewer",
         expires_at: futureIso(1),
+      },
+      translation_key: {
+        id: randomUUID(),
+        tenant_id: fixture.b.id,
+      },
+      translation_entry: {
+        id: randomUUID(),
+        tenant_id: fixture.b.id,
+        key_id: fixture.b.translationKeyId,
+        locale: "ar",
+        value: `${SYNTHETIC_PREFIX}cross-ar`,
+      },
+      media_asset: {
+        id: randomUUID(),
+        tenant_id: fixture.b.id,
+        provider: "object",
+        bucket: "media",
+        object_key: `zz-test/cross/${randomUUID().slice(0, 8)}/source`,
+        content_type: "image/png",
+        byte_size: 1,
+        checksum: "00",
+      },
+      asset_rendition: {
+        id: randomUUID(),
+        tenant_id: fixture.b.id,
+        media_asset_id: fixture.b.mediaAssetId,
+        tier: "print",
+        provider: "object",
+        bucket: "media",
+        object_key: `zz-test/cross/${randomUUID().slice(0, 8)}/print`,
+        content_type: "image/png",
+        byte_size: 1,
+      },
+      brand: {
+        id: randomUUID(),
+        tenant_id: fixture.b.id,
+        name_key_id: fixture.b.translationKeyId,
+      },
+      brand_profile: {
+        id: randomUUID(),
+        tenant_id: fixture.b.id,
+        brand_id: fixture.b.brandId,
+        version: 2,
+        supersedes_id: fixture.b.brandProfileId,
+      },
+      brand_line: {
+        id: randomUUID(),
+        tenant_id: fixture.b.id,
+        brand_id: fixture.b.brandId,
+        name_key_id: fixture.b.translationKeyId,
+      },
+      brand_theme: {
+        id: randomUUID(),
+        tenant_id: fixture.b.id,
+        profile_id: fixture.b.brandProfileId,
+        name_key_id: fixture.b.translationKeyId,
+        is_default: false,
+      },
+      color_value: {
+        id: randomUUID(),
+        tenant_id: fixture.b.id,
+        theme_id: fixture.b.brandThemeId,
+        role: "secondary",
+        srgb: "#111111",
+      },
+      typeface: {
+        id: randomUUID(),
+        tenant_id: fixture.b.id,
+        profile_id: fixture.b.brandProfileId,
+        role: "body",
+        script: "latin",
+        family: "Test",
+        weight: 400,
+      },
+      logo_variant: {
+        id: randomUUID(),
+        tenant_id: fixture.b.id,
+        profile_id: fixture.b.brandProfileId,
+        kind: "mark",
+        ground: "light",
+        media_asset_id: fixture.b.mediaAssetId,
+      },
+      brand_guideline: {
+        id: randomUUID(),
+        tenant_id: fixture.b.id,
+        profile_id: fixture.b.brandProfileId,
+        title_key_id: fixture.b.translationKeyId,
+        body_key_id: fixture.b.translationKeyId,
+        ordinal: 2,
       },
     };
 
@@ -1048,14 +1288,26 @@ describe("proof 15 — the roles and the function surface", () => {
       "provision_tenant",
       "caller_email_is_verified",
       "accept_invitation",
+      // P03-T03. Trigger function, not security definer: it touches only the
+      // candidate row. The ten definers above stay definers; this one must
+      // not become one.
+      "set_updated_at",
     ];
     if (!sameSet(functions.map((f) => f.proname), expectedFunctions)) {
       failures.push(`public functions are [${functions.map((f) => f.proname).join(", ")}], expected [${expectedFunctions.join(", ")}]`);
     }
+    const invokerTriggers = new Set(["set_updated_at"]);
     for (const fn of functions) {
-      if (!fn.prosecdef) failures.push(`${fn.proname}: not security definer`);
+      if (invokerTriggers.has(fn.proname)) {
+        if (fn.prosecdef) {
+          failures.push(`${fn.proname}: is security definer — it must not be`);
+        }
+      } else if (!fn.prosecdef) {
+        failures.push(`${fn.proname}: not security definer`);
+      }
       // An unpinned search_path on a security definer function is the classic
       // privilege-escalation route: the caller chooses which table it reads.
+      // The invoker trigger pins the same way, by the same rule.
       if (!/search_path=/.test(fn.config)) failures.push(`${fn.proname}: no pinned search_path (proconfig = "${fn.config}")`);
     }
 
@@ -1096,7 +1348,7 @@ describe("proof 15 — the roles and the function surface", () => {
       "15",
       "No RLS-bypassing role attribute; helpers answer only for their caller",
       failures,
-      `${roles.length} roles with rolsuper/rolbypassrls false; ${functions.length} public functions, all security definer with a pinned search_path; ` +
+      `${roles.length} roles with rolsuper/rolbypassrls false; ${functions.length} public functions, ${functions.filter((f) => f.prosecdef).length} security definer, invoker=[${functions.filter((f) => !f.prosecdef).map((f) => f.proname).join(", ")}], all with a pinned search_path; ` +
         `${rpcChecks.length} RPC answers: ${rpcObserved.join(", ")}`,
     );
     expect(failures).toEqual([]);
@@ -1898,6 +2150,10 @@ describe("proof 22 — every function's EXECUTE privilege is explicit (CF-105)",
       provision_tenant: "authenticated,postgres",
       caller_email_is_verified: "authenticated,postgres",
       accept_invitation: "authenticated,postgres",
+      // P03-T03. set_updated_at is a trigger function and is granted to
+      // nobody, for the same reason materialise_member is: EXECUTE is
+      // checked when the trigger is created, never when it fires.
+      set_updated_at: "postgres",
     };
 
     for (const row of rows) {
@@ -1931,6 +2187,9 @@ describe("proof 22 — every function's EXECUTE privilege is explicit (CF-105)",
     const triggerFn = await probe.rpc(fixture.a.owner, "enforce_tenant_active_owner");
     if (triggerFn.status < 400) failures.push(`A-owner rpc/enforce_tenant_active_owner: answered ${triggerFn.status}`);
     overTheWire.push(`A-owner.enforce_tenant_active_owner=${triggerFn.status}`);
+    const updatedAtFn = await probe.rpc(fixture.a.owner, "set_updated_at");
+    if (updatedAtFn.status < 400) failures.push(`A-owner rpc/set_updated_at: answered ${updatedAtFn.status}`);
+    overTheWire.push(`A-owner.set_updated_at=${updatedAtFn.status}`);
 
     record(
       "22",
@@ -4386,6 +4645,60 @@ describe("proof 28 — OD-G18 bounds, including the race", () => {
     },
     240_000,
   );
+
+  it(
+    "28f four concurrent calls from a member owning zero: three succeed, one refused 23514",
+    async () => {
+      const failures: string[] = [];
+      const runId = randomUUID().slice(0, 8);
+      const who = await makeIdentity(config, "g18-from0", runId);
+
+      const before = await provisionedRows(who.authId);
+      if (before.active_owner !== 0 || before.tenants !== 0) {
+        failures.push(`precondition: owned ${before.active_owner} tenants ${before.tenants}, expected 0/0`);
+      }
+
+      const startedAt = Date.now();
+      const answers = await Promise.all(
+        [0, 1, 2, 3].map((n) =>
+          provision(who, `g18-from0-${runId}-${n}`, `${SYNTHETIC_PREFIX}g18-from0-${runId}-${n}`),
+        ),
+      );
+      const elapsedMs = Date.now() - startedAt;
+      const after = await provisionedRows(who.authId);
+
+      const successes = answers.filter((answer) => answer.status === 200 && answer.tenantId !== null);
+      const refusals = answers.filter((answer) => answer.status >= 400);
+      const boundRefusals = refusals.filter((answer) => rpcError(answer.body).code === "23514");
+
+      if (successes.length !== 3) {
+        failures.push(
+          `from-zero quartet produced ${successes.length} success(es) and ${refusals.length} refusal(s); ` +
+            `statuses=${answers.map((a) => a.status).join(",")}; owned=${after.active_owner}`,
+        );
+      }
+      if (boundRefusals.length !== 1) {
+        failures.push(
+          `expected exactly one 23514 refusal, got ${boundRefusals.length} of ${refusals.length} refusal(s); ` +
+            `codes=${refusals.map((r) => rpcError(r.body).code).join(",")}`,
+        );
+      }
+      if (after.active_owner !== 3 || after.tenants !== 3) {
+        failures.push(`after the quartet: tenants=${after.tenants} owned=${after.active_owner}, expected 3/3`);
+      }
+
+      record(
+        "28f",
+        "Four concurrent provisioning calls from a member owning zero: three succeed, one refused 23514",
+        failures,
+        `Promise.all of four provision_tenant RPCs for one member owning 0, distinct slugs, ` +
+          `elapsed ${elapsedMs}ms; successes=${successes.length} refusals=${refusals.length} ` +
+          `23514=${boundRefusals.length}; owned ${before.active_owner} → ${after.active_owner}`,
+      );
+      expect(failures).toEqual([]);
+    },
+    240_000,
+  );
 });
 
 describe("proof 29 — OD-G16 invitation by email, closing CF-121", () => {
@@ -5440,6 +5753,759 @@ describe("proof 30 — operator is system-managed, and ConsentGrant reach (OD-G1
     } finally {
       await restore();
     }
+    expect(failures).toEqual([]);
+  });
+});
+
+describe("proof 31 — the live connection is staging, not production", () => {
+  it("31 the connected project is staging, read from the live platform not from the config object", async () => {
+    const failures: string[] = [];
+
+    const metaResponse = await fetch(`https://api.supabase.com/v1/projects/${config.projectRef}`, {
+      headers: {
+        Authorization: `Bearer ${config.accessToken}`,
+        "User-Agent": "B2S-isolation-31/1.0",
+      },
+    });
+    const metaBody = (await metaResponse.text()).slice(0, 2000);
+    let liveName = "";
+    let liveRef = "";
+    try {
+      const parsed = JSON.parse(metaBody) as { name?: string; ref?: string; id?: string };
+      liveName = parsed.name ?? "";
+      liveRef = parsed.ref ?? parsed.id ?? "";
+    } catch {
+      failures.push(`platform metadata was not JSON: HTTP ${metaResponse.status}`);
+    }
+
+    if (liveName !== "b2s-staging") {
+      failures.push(`live project name is ${liveName || "(empty)"}, expected b2s-staging`);
+    }
+    if (liveRef !== config.projectRef) {
+      failures.push("the platform's ref for this connection is not the ref the suite opened");
+    }
+
+    const restResponse = await fetch(`${config.url}/rest/v1/tenant?select=id&limit=0`, {
+      headers: {
+        apikey: config.publishableKey,
+        Authorization: `Bearer ${config.publishableKey}`,
+        Accept: "application/json",
+      },
+    });
+    const liveHost = new URL(restResponse.url).hostname.split(".")[0];
+    if (liveHost !== liveRef) {
+      failures.push("PostgREST live hostname label is not the platform ref");
+    }
+
+    const productionRef = process.env.SUPABASE_PROJECT_ID;
+    if (productionRef !== undefined && productionRef !== "") {
+      if (liveRef === productionRef || liveHost === productionRef) {
+        failures.push("the live connection resolved to the production project ref");
+      }
+    }
+
+    record(
+      "31",
+      "The suite's live connection is staging, not production",
+      failures,
+      `platform HTTP ${metaResponse.status} name=${liveName}; ` +
+        `PostgREST HTTP ${restResponse.status}; hostname-label-equals-platform-ref=${liveHost === liveRef}; ` +
+        `production-ref-present=${Boolean(productionRef)}`,
+    );
+    expect(failures).toEqual([]);
+  });
+});
+
+describe("proof 32 — updated_at is maintained, and no caller supplies its value", () => {
+  it("32a an authenticated write of a granted column moves updated_at", async () => {
+    const { a } = fixture;
+    const failures: string[] = [];
+    const name = `${SYNTHETIC_PREFIX}uat-move-${fixture.runId}`;
+
+    const before = await columnValue("member", a.owner.authId, "updated_at");
+    if (before === null) failures.push("precondition: member.updated_at is null");
+
+    const http = await probe.update(a.owner, "member", a.owner.authId, {
+      display_name: name,
+    });
+    if (!http.ok || http.count !== 1) {
+      failures.push(
+        `A-owner UPDATE own member display_name: POSITIVE PATH REFUSED ` +
+          `(HTTP ${http.status} ${http.code}) ${http.message}`,
+      );
+    }
+
+    const afterName = await columnValue("member", a.owner.authId, "display_name");
+    const afterTs = await columnValue("member", a.owner.authId, "updated_at");
+    if (afterName !== name) {
+      failures.push(
+        `display_name after HTTP PATCH is ${afterName}, expected ${name} — ` +
+          `the request did not reach the table`,
+      );
+    }
+    if (afterTs === null) {
+      failures.push("updated_at is null after the write");
+    } else if (afterTs === before) {
+      failures.push(
+        `updated_at did not move on a write that reached the table ` +
+          `(still ${afterTs})`,
+      );
+    } else if (before !== null && afterTs < before) {
+      failures.push(`updated_at moved backwards: ${before} -> ${afterTs}`);
+    }
+
+    record(
+      "32a",
+      "An authenticated write of a granted column moves updated_at",
+      failures,
+      `HTTP ${http.status} count=${http.count}; before=${before}; after=${afterTs}; ` +
+        `display_name reached table=${afterName === name}`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("32b a caller-chosen updated_at does not persist", async () => {
+    const { a } = fixture;
+    const failures: string[] = [];
+    const chosen = "2020-01-01T00:00:00.000Z";
+    const authName = `${SYNTHETIC_PREFIX}uat-auth-${fixture.runId}`;
+    const privName = `${SYNTHETIC_PREFIX}uat-priv-${fixture.runId}`;
+    const sqlName = `${SYNTHETIC_PREFIX}uat-sql-${fixture.runId}`;
+
+    const authHttp = await probe.update(a.owner, "member", a.owner.authId, {
+      display_name: authName,
+      updated_at: chosen,
+    });
+    const afterAuthName = await columnValue("member", a.owner.authId, "display_name");
+    const afterAuthTs = await columnValue("member", a.owner.authId, "updated_at");
+    if (authHttp.ok && authHttp.count > 0) {
+      if (afterAuthName !== authName) {
+        failures.push("authenticated PATCH reported success but display_name did not change");
+      }
+      if (afterAuthTs !== null && afterAuthTs.startsWith("2020-01-01")) {
+        failures.push(
+          `authenticated PATCH persisted the chosen updated_at (${afterAuthTs})`,
+        );
+      }
+    } else if (!refusedByGrant(authHttp)) {
+      failures.push(
+        `authenticated PATCH with chosen updated_at: HTTP ${authHttp.status} ` +
+          `${authHttp.code} "${authHttp.message}", expected a grant refusal ` +
+          `or a write whose timestamp is not the chosen value`,
+      );
+    }
+
+    const serviceRole: Caller = {
+      label: "service_role",
+      apiKey: config.serviceRoleKey,
+      token: config.serviceRoleKey,
+    };
+    const privHttp = await probe.update(serviceRole, "member", a.owner.authId, {
+      display_name: privName,
+      updated_at: chosen,
+    });
+    const afterPrivName = await columnValue("member", a.owner.authId, "display_name");
+    const afterPrivTs = await columnValue("member", a.owner.authId, "updated_at");
+    if (!privHttp.ok || privHttp.count !== 1) {
+      failures.push(
+        `service_role PATCH: POSITIVE PATH REFUSED ` +
+          `(HTTP ${privHttp.status} ${privHttp.code}) ${privHttp.message} — ` +
+          `the hostile timestamp never reached the table`,
+      );
+    }
+    if (afterPrivName !== privName) {
+      failures.push(
+        `service_role PATCH display_name is ${afterPrivName}, expected ${privName} — ` +
+          `the request did not reach the table`,
+      );
+    }
+    if (afterPrivTs !== null && afterPrivTs.startsWith("2020-01-01")) {
+      failures.push(
+        `service_role PATCH persisted the chosen updated_at (${afterPrivTs})`,
+      );
+    }
+
+    await sql(
+      `update public.member
+          set display_name = '${sqlName}',
+              updated_at = timestamptz '2020-01-01 00:00:00+00'
+        where id = '${a.owner.authId}'`,
+    );
+    const afterSqlName = await columnValue("member", a.owner.authId, "display_name");
+    const afterSqlTs = await columnValue("member", a.owner.authId, "updated_at");
+    if (afterSqlName !== sqlName) {
+      failures.push(
+        `in-process UPDATE display_name is ${afterSqlName}, expected ${sqlName} — ` +
+          `the statement did not reach the table`,
+      );
+    }
+    if (afterSqlTs !== null && afterSqlTs.startsWith("2020-01-01")) {
+      failures.push(
+        `in-process UPDATE persisted the chosen updated_at (${afterSqlTs})`,
+      );
+    }
+
+    record(
+      "32b",
+      "A caller-chosen updated_at does not persist; the trigger overwrites it",
+      failures,
+      `authenticated HTTP ${authHttp.status} ${authHttp.code || "ok"} ` +
+        `grant-refused=${refusedByGrant(authHttp)}; ` +
+        `service_role HTTP ${privHttp.status} count=${privHttp.count} ` +
+        `ts=${afterPrivTs}; in-process ts=${afterSqlTs}`,
+    );
+    expect(failures).toEqual([]);
+  });
+});
+
+describe("proof 33 — Brand, Asset and TranslationKey isolation", () => {
+  const graphId = (t: typeof fixture.a, table: TableName): string => {
+    const map: Record<string, string> = {
+      translation_key: t.translationKeyId,
+      translation_entry: t.translationEntryId,
+      media_asset: t.mediaAssetId,
+      asset_rendition: t.assetRenditionId,
+      brand: t.brandId,
+      brand_profile: t.brandProfileId,
+      brand_line: t.brandLineId,
+      brand_theme: t.brandThemeId,
+      color_value: t.colorValueId,
+      typeface: t.typefaceId,
+      logo_variant: t.logoVariantId,
+      brand_guideline: t.brandGuidelineId,
+    };
+    const id = map[table];
+    if (id === undefined) throw new Error(`no seeded id for ${table}`);
+    return id;
+  };
+
+  const sqlState = (body: string): string => {
+    const code = body.match(/\b(23\d{3})\b/);
+    return code ? code[1] : "";
+  };
+
+  const ownTenantPayload = (
+    table: TableName,
+    t: typeof fixture.a,
+    extra: Record<string, unknown> = {},
+  ): Record<string, unknown> => {
+    const suffix = randomUUID().slice(0, 8);
+    const base: Record<TableName, Record<string, unknown>> = {
+      tenant: {},
+      member: {},
+      membership: {},
+      operator: {},
+      consent_grant: {},
+      activity_event: {},
+      invitation: {},
+      translation_key: { tenant_id: t.id },
+      translation_entry: {
+        tenant_id: t.id,
+        key_id: t.translationKeyId,
+        locale: "ar",
+        value: `${SYNTHETIC_PREFIX}33-${suffix}`,
+      },
+      media_asset: {
+        tenant_id: t.id,
+        provider: "object",
+        bucket: "media",
+        object_key: `zz-test/33/${suffix}/source`,
+        content_type: "image/png",
+        byte_size: 1,
+        checksum: "00",
+      },
+      asset_rendition: {
+        tenant_id: t.id,
+        media_asset_id: t.mediaAssetId,
+        tier: "print",
+        provider: "object",
+        bucket: "media",
+        object_key: `zz-test/33/${suffix}/print`,
+        content_type: "image/png",
+        byte_size: 1,
+      },
+      brand: { tenant_id: t.id, name_key_id: t.translationKeyId },
+      brand_profile: {
+        tenant_id: t.id,
+        brand_id: t.brandId,
+        version: 3,
+        supersedes_id: t.brandProfileId,
+      },
+      brand_line: {
+        tenant_id: t.id,
+        brand_id: t.brandId,
+        name_key_id: t.translationKeyId,
+      },
+      brand_theme: {
+        tenant_id: t.id,
+        profile_id: t.brandProfileId,
+        name_key_id: t.translationKeyId,
+        is_default: false,
+      },
+      color_value: {
+        tenant_id: t.id,
+        theme_id: t.brandThemeId,
+        role: "accent",
+        srgb: "#222222",
+      },
+      typeface: {
+        tenant_id: t.id,
+        profile_id: t.brandProfileId,
+        role: "heading",
+        script: "arabic",
+        family: "Test",
+        weight: 400,
+      },
+      logo_variant: {
+        tenant_id: t.id,
+        profile_id: t.brandProfileId,
+        kind: "wordmark",
+        ground: "dark",
+        media_asset_id: t.mediaAssetId,
+      },
+      brand_guideline: {
+        tenant_id: t.id,
+        profile_id: t.brandProfileId,
+        title_key_id: t.translationKeyId,
+        body_key_id: t.translationKeyId,
+        ordinal: 3,
+      },
+    };
+    return { id: randomUUID(), ...base[table], ...extra };
+  };
+
+  it("33a SELECT: own rows return, foreign/unaffiliated/anon reach nothing", async () => {
+    const { a, b, unaffiliated } = fixture;
+    const failures: string[] = [];
+    const evidence: string[] = [];
+    const anon = anonCaller(config);
+
+    for (const table of BRAND_ASSET_TABLES) {
+      for (const [who, expected] of [
+        [a.owner, [graphId(a, table)]],
+        [a.viewer, [graphId(a, table)]],
+        [b.owner, [graphId(b, table)]],
+        [unaffiliated, [] as string[]],
+      ] as [Identity, string[]][]) {
+        const attempt = await probe.select(who, table);
+        const label = `${who.label} SELECT ${table}`;
+        if (!attempt.ok) {
+          failures.push(`${label}: errored ${attempt.status} (${attempt.code}) ${attempt.message}`);
+          continue;
+        }
+        if (!sameSet(attempt.ids, expected)) {
+          failures.push(
+            `${label}: read [${sortedIds(attempt.ids).join(", ") || "none"}], expected [${sortedIds(expected).join(", ") || "none"}]`,
+          );
+        }
+        if (expected.length > 0 && attempt.count === 0) {
+          failures.push(`${label}: POSITIVE PATH EMPTY`);
+        }
+        const leaked = attempt.ids.filter((id) => id === graphId(a, table) || id === graphId(b, table))
+          .filter((id) => !expected.includes(id));
+        if (leaked.length > 0) failures.push(`${label}: LEAKED [${leaked.join(", ")}]`);
+      }
+
+      const anonRead = await probe.select(anon, table);
+      if (anonRead.count > 0) {
+        failures.push(`anon SELECT ${table}: returned ${anonRead.count} rows`);
+      }
+      evidence.push(`${table}=ok`);
+    }
+
+    record(
+      "33a",
+      "Brand/Asset/translation SELECT: own rows return, foreign/unaffiliated/anon reach nothing",
+      failures,
+      `${BRAND_ASSET_TABLES.length} tables × 4 identities + anon; ${evidence.join(", ")}`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("33b INSERT: tenant A cannot insert tenant B's rows; unaffiliated and anon insert nothing", async () => {
+    const { a, b, unaffiliated } = fixture;
+    const failures: string[] = [];
+    const evidence: string[] = [];
+    const anon = anonCaller(config);
+
+    for (const table of BRAND_ASSET_TABLES) {
+      const payload = ownTenantPayload(table, b);
+      const id = String(payload.id);
+      const asA = await probe.insert(a.owner, table, payload);
+      if (asA.ok) {
+        failures.push(`A-owner INSERT ${table} as tenant B: ACCEPTED`);
+        await sql(`delete from public.${table} where id = '${id}'`);
+      } else if (table === "brand") {
+        if (!refusedByPolicy(asA) && asA.code !== "23505") {
+          failures.push(
+            `A-owner INSERT brand as tenant B: refused as "${asA.message}" (${asA.code}), expected WITH CHECK or unique(tenant_id)`,
+          );
+        }
+      } else if (!refusedByPolicy(asA)) {
+        failures.push(
+          `A-owner INSERT ${table} as tenant B: refused as "${asA.message}" (${asA.code}), expected WITH CHECK`,
+        );
+      }
+      if (await rowExists(table, id)) failures.push(`A-owner INSERT ${table}: a row persisted`);
+
+      const unaPayload = ownTenantPayload(table, a);
+      const una = await probe.insert(unaffiliated, table, unaPayload);
+      if (una.ok) {
+        failures.push(`unaffiliated INSERT ${table}: ACCEPTED`);
+        await sql(`delete from public.${table} where id = '${String(unaPayload.id)}'`);
+      }
+
+      const anonPayload = ownTenantPayload(table, a);
+      const anonIns = await probe.insert(anon, table, anonPayload);
+      if (anonIns.ok) {
+        failures.push(`anon INSERT ${table}: ACCEPTED`);
+        await sql(`delete from public.${table} where id = '${String(anonPayload.id)}'`);
+      }
+      evidence.push(`${table}=A:${asA.code || "ok"} una:${una.code || "ok"} anon:${anonIns.status}`);
+    }
+
+    record(
+      "33b",
+      "Brand/Asset/translation INSERT: A cannot write B; unaffiliated and anon insert nothing",
+      failures,
+      evidence.join("; "),
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("33c UPDATE: tenant A cannot change tenant B's rows", async () => {
+    const { a, b } = fixture;
+    const failures: string[] = [];
+    const evidence: string[] = [];
+    const patches: Partial<Record<TableName, Record<string, unknown>>> = {
+      translation_key: { archived_at: new Date().toISOString() },
+      translation_entry: { value: `${SYNTHETIC_PREFIX}hijacked` },
+      media_asset: { original_filename: `${SYNTHETIC_PREFIX}hijacked` },
+      asset_rendition: { width_px: 9 },
+      brand: { archived_at: new Date().toISOString() },
+      brand_profile: { version: 99 },
+      brand_line: { archived_at: new Date().toISOString() },
+      brand_theme: { is_default: false },
+      color_value: { srgb: "#ffffff" },
+      typeface: { weight: 700 },
+      logo_variant: { archived_at: new Date().toISOString() },
+      brand_guideline: { ordinal: 99 },
+    };
+
+    for (const table of BRAND_ASSET_TABLES) {
+      const patch = patches[table]!;
+      const column = Object.keys(patch)[0];
+      const before = await columnValue(table, graphId(b, table), column);
+      const attempt = await probe.update(a.owner, table, graphId(b, table), patch);
+      if (attempt.ok && attempt.count > 0) {
+        failures.push(`A-owner UPDATE tenant B ${table}: ACCEPTED count=${attempt.count}`);
+      }
+      const after = await columnValue(table, graphId(b, table), column);
+      if (after !== before) {
+        failures.push(`A-owner UPDATE tenant B ${table}.${column}: ${before} -> ${after}`);
+      }
+      evidence.push(`${table}=${attempt.code || `count ${attempt.count}`}`);
+    }
+
+    record(
+      "33c",
+      "Brand/Asset/translation UPDATE: A cannot change B's rows",
+      failures,
+      evidence.join("; "),
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("33d DELETE: refused on the grant for every new table, own and foreign", async () => {
+    const { a, b, unaffiliated } = fixture;
+    const failures: string[] = [];
+    let probes = 0;
+
+    for (const identity of [a.owner, a.viewer, unaffiliated]) {
+      for (const table of BRAND_ASSET_TABLES) {
+        for (const id of [graphId(a, table), graphId(b, table)]) {
+          probes += 1;
+          const attempt = await probe.remove(identity, table, id);
+          if (attempt.ok && attempt.count > 0) {
+            failures.push(`${identity.label} DELETE ${table}: DELETED a row`);
+          } else if (attempt.ok) {
+            failures.push(`${identity.label} DELETE ${table}: matched zero rows silently`);
+          } else if (!refusedByGrant(attempt)) {
+            failures.push(
+              `${identity.label} DELETE ${table}: refused as "${attempt.message}", expected a grant refusal`,
+            );
+          }
+          if (!(await rowExists(table, id))) {
+            failures.push(`${identity.label} DELETE ${table}: the row is gone`);
+          }
+        }
+      }
+    }
+
+    record(
+      "33d",
+      "Brand/Asset/translation DELETE: refused by the grant, rows remain",
+      failures,
+      `${probes} delete probes across ${BRAND_ASSET_TABLES.length} tables, own and foreign`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("33e brand_profile cannot be updated by any identity, including its own tenant's Owner", async () => {
+    const { a, b, unaffiliated } = fixture;
+    const failures: string[] = [];
+    const evidence: string[] = [];
+    const anon = anonCaller(config);
+
+    const policies = await sql<{ n: number }>(
+      `select count(*)::int as n
+         from pg_policy p
+         join pg_class c on c.oid = p.polrelid
+         join pg_namespace n on n.oid = c.relnamespace
+        where n.nspname = 'public' and c.relname = 'brand_profile' and p.polcmd = 'u'`,
+    );
+    if (policies[0].n !== 0) {
+      failures.push(`catalog holds ${policies[0].n} UPDATE polic(ies) on brand_profile, expected 0 — immutability is the absence`);
+    }
+    evidence.push(`update_policies=${policies[0].n}`);
+
+    const before = await columnValue("brand_profile", a.brandProfileId, "version");
+    for (const who of [a.owner, a.viewer, b.owner, unaffiliated]) {
+      const attempt = await probe.update(who, "brand_profile", a.brandProfileId, { version: 99 });
+      if (attempt.ok && attempt.count > 0) {
+        failures.push(`${who.label} UPDATE own-or-A brand_profile: ACCEPTED`);
+      } else if (attempt.ok) {
+        failures.push(`${who.label} UPDATE brand_profile: matched zero rows silently; expected a grant refusal (no UPDATE privilege)`);
+      } else if (!refusedByGrant(attempt)) {
+        failures.push(
+          `${who.label} UPDATE brand_profile: refused as "${attempt.message}" (${attempt.code}), expected a grant refusal — the absent policy, not a refused value`,
+        );
+      }
+      evidence.push(`${who.label}=${attempt.code || attempt.status}`);
+    }
+    const anonAttempt = await probe.update(anon, "brand_profile", a.brandProfileId, { version: 99 });
+    if (anonAttempt.ok && anonAttempt.count > 0) {
+      failures.push("anon UPDATE brand_profile: ACCEPTED");
+    }
+    evidence.push(`anon=${anonAttempt.code || anonAttempt.status}`);
+    const after = await columnValue("brand_profile", a.brandProfileId, "version");
+    if (after !== before) failures.push(`brand_profile.version changed ${before} -> ${after}`);
+
+    record(
+      "33e",
+      "brand_profile cannot be updated by any identity, including its Owner — absent policy",
+      failures,
+      `version stayed ${after}; ${evidence.join("; ")}`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("33f a brand_line in tenant A cannot reference a brand_profile in tenant B — foreign key", async () => {
+    const { a, b } = fixture;
+    const failures: string[] = [];
+    const id = randomUUID();
+
+    const outcome = await sql.try(`
+      insert into public.brand_line (id, tenant_id, brand_id, name_key_id, profile_id)
+      values ('${id}', '${a.id}', '${a.brandId}', '${a.translationKeyId}', '${b.brandProfileId}')
+    `);
+    if (outcome.ok) {
+      failures.push("privileged INSERT of a brand_line pointing at tenant B's profile: ACCEPTED");
+      await sql(`delete from public.brand_line where id = '${id}'`);
+    } else if (sqlState(outcome.body) !== "23503") {
+      failures.push(
+        `refused ${outcome.status} SQLSTATE ${sqlState(outcome.body) || "none"} — expected 23503 foreign key, so the request reached the constraint: ${outcome.body.slice(0, 240)}`,
+      );
+    } else if (!/brand_profile/i.test(outcome.body)) {
+      failures.push(`23503 did not name brand_profile: ${outcome.body.slice(0, 240)}`);
+    }
+    if (await rowExists("brand_line", id)) failures.push("the cross-tenant brand_line row persisted");
+
+    record(
+      "33f",
+      "brand_line cannot reference a brand_profile across tenants — refused by the foreign key",
+      failures,
+      `HTTP ${outcome.status}; SQLSTATE ${sqlState(outcome.body) || "none"}`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("33g a translation_entry cannot reference a translation_key across tenants — foreign key", async () => {
+    const { a, b } = fixture;
+    const failures: string[] = [];
+    const id = randomUUID();
+
+    const outcome = await sql.try(`
+      insert into public.translation_entry (id, tenant_id, key_id, locale, value)
+      values ('${id}', '${a.id}', '${b.translationKeyId}', 'ar', '${SYNTHETIC_PREFIX}cross-key')
+    `);
+    if (outcome.ok) {
+      failures.push("privileged INSERT of a translation_entry pointing at tenant B's key: ACCEPTED");
+      await sql(`delete from public.translation_entry where id = '${id}'`);
+    } else if (sqlState(outcome.body) !== "23503") {
+      failures.push(
+        `refused ${outcome.status} SQLSTATE ${sqlState(outcome.body) || "none"} — expected 23503 foreign key: ${outcome.body.slice(0, 240)}`,
+      );
+    } else if (!/translation_key/i.test(outcome.body)) {
+      failures.push(`23503 did not name translation_key: ${outcome.body.slice(0, 240)}`);
+    }
+    if (await rowExists("translation_entry", id)) failures.push("the cross-tenant translation_entry row persisted");
+
+    record(
+      "33g",
+      "translation_entry cannot reference a translation_key across tenants — refused by the foreign key",
+      failures,
+      `HTTP ${outcome.status}; SQLSTATE ${sqlState(outcome.body) || "none"}`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("33h color_value uniqueness on (theme_id, role) holds; a seventh role cannot be duplicated", async () => {
+    const { a } = fixture;
+    const failures: string[] = [];
+    const evidence: string[] = [];
+
+    const dupId = randomUUID();
+    const dup = await sql.try(`
+      insert into public.color_value (id, tenant_id, theme_id, role, srgb)
+      values ('${dupId}', '${a.id}', '${a.brandThemeId}', 'primary', '#abcdef')
+    `);
+    if (dup.ok) {
+      failures.push("duplicate (theme_id, primary) ACCEPTED");
+      await sql(`delete from public.color_value where id = '${dupId}'`);
+    } else if (sqlState(dup.body) !== "23505") {
+      failures.push(
+        `duplicate primary refused ${dup.status} SQLSTATE ${sqlState(dup.body) || "none"}, expected 23505: ${dup.body.slice(0, 240)}`,
+      );
+    }
+    evidence.push(`dup_primary=${sqlState(dup.body) || (dup.ok ? "ok" : "fail")}`);
+
+    const roles = ["secondary", "accent", "background", "foreground", "muted", "critical"] as const;
+    const inserted: string[] = [];
+    for (const role of roles) {
+      const id = randomUUID();
+      const outcome = await sql.try(`
+        insert into public.color_value (id, tenant_id, theme_id, role, srgb)
+        values ('${id}', '${a.id}', '${a.brandThemeId}', '${role}', '#123456')
+      `);
+      if (!outcome.ok) {
+        failures.push(`insert of distinct role ${role}: REFUSED ${sqlState(outcome.body)} ${outcome.body.slice(0, 160)}`);
+      } else {
+        inserted.push(id);
+      }
+    }
+    evidence.push(`distinct_roles_landed=${inserted.length}/6`);
+
+    const seventhId = randomUUID();
+    const seventh = await sql.try(`
+      insert into public.color_value (id, tenant_id, theme_id, role, srgb)
+      values ('${seventhId}', '${a.id}', '${a.brandThemeId}', 'critical', '#654321')
+    `);
+    if (seventh.ok) {
+      failures.push("duplicate of the seventh role (critical) ACCEPTED");
+      await sql(`delete from public.color_value where id = '${seventhId}'`);
+    } else if (sqlState(seventh.body) !== "23505") {
+      failures.push(
+        `duplicate critical refused ${seventh.status} SQLSTATE ${sqlState(seventh.body) || "none"}, expected 23505: ${seventh.body.slice(0, 240)}`,
+      );
+    }
+    evidence.push(`dup_critical=${sqlState(seventh.body) || (seventh.ok ? "ok" : "fail")}`);
+
+    if (inserted.length > 0) {
+      await sql(`delete from public.color_value where id in (${inserted.map((id) => `'${id}'`).join(",")})`);
+    }
+
+    record(
+      "33h",
+      "color_value uniqueness on (theme_id, role) holds; a seventh role cannot be duplicated",
+      failures,
+      evidence.join("; "),
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("33i exactly one default theme per profile, proven against the partial unique index", async () => {
+    const { a } = fixture;
+    const failures: string[] = [];
+    const secondDefault = randomUUID();
+    const nonDefault = randomUUID();
+
+    const dup = await sql.try(`
+      insert into public.brand_theme (id, tenant_id, profile_id, name_key_id, is_default)
+      values ('${secondDefault}', '${a.id}', '${a.brandProfileId}', '${a.translationKeyId}', true)
+    `);
+    if (dup.ok) {
+      failures.push("second is_default=true ACCEPTED");
+      await sql(`delete from public.brand_theme where id = '${secondDefault}'`);
+    } else if (sqlState(dup.body) !== "23505") {
+      failures.push(
+        `second default refused ${dup.status} SQLSTATE ${sqlState(dup.body) || "none"}, expected 23505: ${dup.body.slice(0, 240)}`,
+      );
+    } else if (!/brand_theme_one_default_per_profile/i.test(dup.body)) {
+      failures.push(`23505 did not name brand_theme_one_default_per_profile: ${dup.body.slice(0, 240)}`);
+    }
+
+    const extra = await sql.try(`
+      insert into public.brand_theme (id, tenant_id, profile_id, name_key_id, is_default)
+      values ('${nonDefault}', '${a.id}', '${a.brandProfileId}', '${a.translationKeyId}', false)
+    `);
+    if (!extra.ok) {
+      failures.push(`is_default=false sibling REFUSED: ${extra.body.slice(0, 240)}`);
+    } else {
+      await sql(`delete from public.brand_theme where id = '${nonDefault}'`);
+    }
+
+    record(
+      "33i",
+      "Exactly one default theme per profile — partial unique index",
+      failures,
+      `second_default SQLSTATE ${sqlState(dup.body) || (dup.ok ? "ok" : "fail")}; non_default ${extra.ok ? "landed" : "refused"}`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("33j translation_entry.locale refuses a value outside the permitted set", async () => {
+    const { a } = fixture;
+    const failures: string[] = [];
+    const evidence: string[] = [];
+
+    for (const locale of ["fr", "EN", "en-GB", "en "]) {
+      const id = randomUUID();
+      const outcome = await sql.try(`
+        insert into public.translation_entry (id, tenant_id, key_id, locale, value)
+        values ('${id}', '${a.id}', '${a.translationKeyId}', '${locale}', '${SYNTHETIC_PREFIX}locale')
+      `);
+      if (outcome.ok) {
+        failures.push(`locale ${JSON.stringify(locale)} ACCEPTED`);
+        await sql(`delete from public.translation_entry where id = '${id}'`);
+      } else if (sqlState(outcome.body) !== "23514") {
+        failures.push(
+          `locale ${JSON.stringify(locale)} refused ${outcome.status} SQLSTATE ${sqlState(outcome.body) || "none"}, expected 23514: ${outcome.body.slice(0, 240)}`,
+        );
+      } else if (!/translation_entry_locale_permitted/i.test(outcome.body)) {
+        failures.push(`23514 did not name translation_entry_locale_permitted for ${locale}: ${outcome.body.slice(0, 240)}`);
+      }
+      evidence.push(`${JSON.stringify(locale)}=${sqlState(outcome.body) || (outcome.ok ? "ok" : "fail")}`);
+    }
+
+    const okId = randomUUID();
+    const permitted = await sql.try(`
+      insert into public.translation_entry (id, tenant_id, key_id, locale, value)
+      values ('${okId}', '${a.id}', '${a.translationKeyId}', 'ar', '${SYNTHETIC_PREFIX}ar')
+    `);
+    if (!permitted.ok) {
+      failures.push(`locale 'ar' REFUSED: ${permitted.body.slice(0, 240)}`);
+    } else {
+      await sql(`delete from public.translation_entry where id = '${okId}'`);
+    }
+    evidence.push(`ar=${permitted.ok ? "landed" : "refused"}`);
+
+    record(
+      "33j",
+      "translation_entry.locale refuses a value outside the permitted set",
+      failures,
+      evidence.join("; "),
+    );
     expect(failures).toEqual([]);
   });
 });

@@ -10,13 +10,17 @@ byte-identical to the register as signed; no rationale has been added after
 the fact, because the signatures cover the decisions, not a later
 reconstruction of the reasoning.
 
+The live signed total is the figure in §2, asserted against this register's
+own rows. The 84 above is the promoted set and is not the file's current
+total (CF-156).
+
 New decisions are authored here in full — decision, date, rationale, and
 what it forecloses. Existing rows are amended only by formal amendment,
 never edited in place.
 
 ## 2. Decision register
 
-92 decisions, all signed. None open.
+98 decisions, all signed. None open.
 
 ### Group A — Product identity
 
@@ -132,6 +136,10 @@ never edited in place.
 | **G17** | **`default_locale` is constrained to `en` and `ar`. `base_currency` is constrained to `EGP`, `USD`, `SAR`, `AED`, `EUR`. Enforced by the database, never by the wizard.** | SIGNED 2026-08-05 |
 | **G18** | **A `Member` may own at most three active `Tenant`s and perform at most three provisioning acts per rolling 24 hours. Both are policy values, hardcoded to the free plan in Release 1 and supplied by `Subscription` in Release 3.** | SIGNED 2026-08-05 |
 | **G19** | **`public.operator` is a system-managed table. An Operator is provisioned only by migration or by direct administrative access to the database. No API role holds INSERT, UPDATE or DELETE on it. Operator is the least-privileged platform administrator: account metadata, usage and billing (OD-G10) and nothing else. No text in this repository may describe it as a super-admin, superuser, admin or staff role.** | SIGNED 2026-08-31 |
+| **G20** | **Object storage stays Supabase Storage. `MediaAsset` and `AssetRendition` are objects under tenant-isolated paths governed by storage policies. ADR-008 stands. Cloudflare R2 is declined for Release 1 on isolation, not cost. No Asset-tier column, type or function name may contain the vendor. Revisit at P06 against measured object sizes and egress.** | SIGNED 2026-09-17 |
+| **G21** | **The platform's navigation, forms, tables, buttons and status indicators use one platform look for every tenant. A tenant's brand appears on its outputs, on the surfaces where that brand is being shown or edited, and as the tenant's logo in the header. The design-surface token layer is platform tokens for chrome, and the seven ColorRoles only where a brand is rendered or edited.** | SIGNED 2026-09-22 |
+| **G22** | **Every chrome neutral colour has red, green and blue equal. The platform introduces no colour cast: no tinted, warm, cool or signature grey, and no gold. A page or component uses a platform colour token or it is a defect.** | SIGNED 2026-09-23 |
+| **G23** | **The platform's interface is set in IBM Plex Sans for Latin and IBM Plex Sans Arabic for Arabic, treated as one superfamily. The font files are self-hosted and committed as assets, and are never loaded from a content delivery network. A tenant's typefaces are used only inside the brand frame (OD-G21) and never replace the platform face in chrome.** | SIGNED 2026-09-23 |
 
 ### Group H — Quality & acceptance
 
@@ -149,6 +157,8 @@ never edited in place.
 | **H10** | **`MODULE_SPEC.md` §1 is the application tree. Repository-root configuration and infrastructure directories are outside its scope and are stated as such.** | SIGNED 2026-08-04 |
 | **H11** | **Every probe a gate invents becomes a permanent CI check or suite assertion. An adversarial pass is additive, never re-invented.** | SIGNED 2026-08-04 |
 | **H12** | **Nine build phases. P09 — launch and operations — is added. Staging and error visibility move into P03's entry; backup with a rehearsed restore moves into P05's exit. Release 1 is a pilot with a real brand, not a demo.** | SIGNED 2026-08-05 |
+| **H13** | **`BUILD_PHASES.md` §P03's entry condition "error visibility" means: an unhandled server error in production produces a record a builder can retrieve within one working session, keyed to a request identifier that also appears in what the person saw. The definition names no vendor. This OD defines the condition; it does not implement it.** | SIGNED 2026-09-17 |
+| **H14** | **No B2S procedure, local or in CI, requires Docker. `supabase db dump`, `supabase start` and any other Docker-backed command are not used. A control whose execution requires Docker is not a control this project has.** | SIGNED 2026-09-22 |
 
 ## 3. Decisions authored after the promotion
 
@@ -462,4 +472,165 @@ never rewritten (PR-29).
 **Forecloses.** A launch with no owner for the security audit; monitoring
 discovered when a tenant reports an outage; a backup policy with no rehearsal;
 a method document written before the method was observed.
+
+### OD-G20 — Object storage stays Supabase Storage
+**Signed 2026-09-17.**
+
+`MediaAsset` and `AssetRendition` are objects in Supabase Storage under
+tenant-isolated paths governed by storage policies. ADR-008 stands and is not
+superseded. Cloudflare R2 was assembled as a fork at P03 entry (CF-158) and is
+declined for Release 1.
+
+The reason is not cost. R2's free allowance is larger and its egress is free
+at any volume, so on price it wins outright. It is declined on isolation.
+Supabase Storage is `storage.objects` — a Postgres table in the same database
+under RLS — so `current_tenant_id()` governs objects and rows through one
+mechanism, proven by one suite and re-derived by one gate. Under R2, storage
+isolation would stop being a database refusal and become a prefix convention
+plus signed URLs, enforced by application code being correct. P03 inherits
+P02's exit standard and tenant isolation is not waivable by OD, so R2 would
+oblige a second isolation mechanism, a second proof class — guessed key,
+listed prefix, swapped signed URL, expired URL, cross-tenant prefix — and a
+second privileged credential in a public repository, all in the phase that
+also lands seven entities, the wizard and `BRAND_CONFIG.md`.
+
+**Rider 1.** The Asset tier of `DATA_MODEL.md` records provider, bucket and
+key. No column, type or function name may contain the vendor. That tier is
+unauthored, so this costs nothing now and makes a future reversal an object
+migration rather than a schema change.
+
+**Rider 2.** An explicit revisit at P06 against measured object sizes and
+egress rather than estimates.
+
+**Forecloses.** A second object-store vendor in Release 1; a second
+privileged constructor beside ADR-005's quarantine; storage isolation proven
+by convention rather than by refusal.
+
+### OD-H13 — Error visibility is a checkable condition
+**Signed 2026-09-17.**
+
+`BUILD_PHASES.md` §P03's entry condition "error visibility" means: an
+unhandled server error in production produces a record a builder can retrieve
+within one working session, keyed to a request identifier that also appears
+in what the person saw. §P03's entry line is amended to state the definition
+rather than the phrase.
+
+§P03 made error visibility an entry condition and no document defined it, so
+the condition could be neither satisfied nor failed. An entry condition that
+cannot be checked is not a condition. The definition names no vendor — a log
+drain, an error-tracking DSN held in Vercel environment variables and never
+in the repository, or both, all satisfy it. What it requires is that the
+record exists, that a builder can reach it without asking anyone, and that
+the identifier ties the record to the person's report.
+
+This decision defines the condition; it does not implement it. Whether the
+condition is met is P03's to satisfy before the wizard accepts real content.
+
+**Forecloses.** Satisfying an entry condition by assertion; naming a vendor
+in a phase plan where a capability was meant.
+
+### OD-H14 — Docker is not a project dependency
+**Signed 2026-09-22.**
+
+**Decision.** No B2S procedure, local or in CI, requires Docker.
+`supabase db dump`, `supabase start` and any other Docker-backed command
+are not used. A control whose execution requires Docker is not a control
+this project has.
+
+**Reasoning.** Owner decision, 2026-09-22. The one procedure that depended
+on Docker — ADR-013's pre-migration snapshot — has a native equivalent, and
+a local-environment dependency added for one command is a dependency every
+future machine and contributor inherits. `supabase start` was already
+unnecessary: ADR-013 points local development at staging.
+
+**Forecloses.** Docker Desktop, Docker in CI, `supabase db dump`,
+`supabase start`, and any restore-verification method that starts a local
+Postgres container.
+
+### OD-G21 — The platform's own interface is neutral; tenant brand is rendered, not worn
+**Signed 2026-09-22.**
+
+Filed in Group G. The register's convention is the group title. Group D
+holds the tenant's brand inventory — fields, logos, colours, fonts — and
+Group H holds acceptance and method. Group G holds the platform itself:
+the client (G4), that the client is responsive (G5), and where it is
+hosted (G9). This decision constrains that client's chrome. It is not a
+brand-field rule and not an acceptance gate.
+
+**Decision.** The platform's navigation, forms, tables, buttons and status
+indicators use one platform look for every tenant. A tenant's brand
+appears on its outputs — packaging, labels, stickers, cartons, stands,
+garment tickets and every buyer-facing document — on the surfaces where
+that brand is being shown or edited, and as the tenant's logo in the
+header. The design-surface token layer is therefore two layers: platform
+tokens for chrome, and the seven ColorRoles only where a brand is rendered
+or edited.
+
+**Reasoning.** PRODUCT_BRIEF §1's "white-label" is satisfied by B2S's mark
+never appearing on a tenant's output; Balance Bites is a customer of the
+platform (OD-A4), not its face. BRAND_CONFIG.md §11 enforces contrast only
+between foreground and background, so a tenant accent failing against the
+page would make every button unreadable, and the platform cannot refuse a
+brand for being that brand. `critical` means warnings and regulatory
+marks, never decorative; if it recoloured the whole application, a
+warning in one tenant would be decoration in another. OD-G14 lets one
+member hold several tenants and switch by an explicit selector;
+recolouring the application on that switch would make two memberships
+look like two products.
+
+**Forecloses.** Tenant ColorRoles applied to platform chrome; a per-tenant
+restyle of navigation, forms, tables or status; B2S's mark on any
+tenant output.
+
+### OD-G22 — The chrome is achromatic
+**Signed 2026-09-23.**
+
+Filed in Group G. It extends OD-G21 from no accent to no cast, and it
+constrains the same chrome.
+
+**Decision.** Every chrome neutral colour has red, green and blue equal.
+The platform introduces no colour cast: no tinted, warm, cool or signature
+grey, and no gold. A page or component uses a platform colour token or it
+is a defect.
+
+**Reasoning.** This is part of the proofing model, not a style. Print
+colour is judged against neutral grey because a tinted surround shifts how
+the colour beside it is perceived — a cool grey makes a warm brand read
+warmer. B2S is where a brand owner decides what their packaging looks like,
+so the platform's chrome is that surround. It extends OD-G21 from no accent
+to no cast.
+
+**Held by.** CF-172 asserts every chrome neutral token has R = G = B, and
+that no colour value appears outside the token definitions.
+
+**Forecloses.** Any chrome neutral with unequal channels; a chrome colour
+chosen by a page or component; gold; and revisiting this as an aesthetic
+preference.
+
+### OD-G23 — The platform typeface is one superfamily
+**Signed 2026-09-23.**
+
+Filed in Group G. Tenant typefaces stay the brand inventory OD-G21 already
+keeps inside the brand frame. This decision names the platform face those
+typefaces do not replace.
+
+**Decision.** The platform's interface is set in IBM Plex Sans for Latin
+and IBM Plex Sans Arabic for Arabic, treated as one superfamily. The font
+files are self-hosted and committed as assets, and are never loaded from a
+content delivery network. A tenant's typefaces are used only inside the
+brand frame (OD-G21) and never replace the platform face in chrome.
+
+**Reasoning.** The two were designed together, so weights and vertical
+metrics match across scripts by design — an Arabic caption and an English
+one at the same step look like the same step. They carry tabular figures
+and are licensed under the SIL Open Font License 1.1. `ARCHITECTURE.md`
+already forbids a runtime CDN; this decision names the faces that rule
+bundles.
+
+**Held by.** CF-172 asserts no font family appears outside the token
+definitions other than these two and their generic fallbacks;
+`check-no-runtime-cdn` forbids a runtime font source.
+
+**Forecloses.** A second chrome typeface, a runtime font CDN, a per-page
+font choice, and a monospace face for data.
 

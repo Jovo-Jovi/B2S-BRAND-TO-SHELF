@@ -26,6 +26,9 @@ jobs:
       - name: Credential pattern scan
         run: python3 scripts/check_credentials.py
 
+      - name: MCP production containment (CF-160, PR-40)
+        run: python3 scripts/check_mcp_containment.py
+
       - name: Done-steps shape assertion
         run: python3 scripts/check_done_steps_shape.py
 
