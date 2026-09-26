@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef } from "react";
 
-import { Glyph, glyphPath } from "../glyphs";
+import { Glyph } from "../glyphs";
 import styles from "./checkbox.module.css";
 
 export type CheckboxVariant = "standard" | "indeterminate";
@@ -64,7 +64,7 @@ export function Checkbox({
           aria-describedby={ariaDescribedBy}
           onChange={(event) => onCheckedChange?.(event.target.checked)}
         />
-        <Glyph className={styles.mark} path={glyphPath.check} />
+        <Glyph className={styles.mark} name="check" />
       </span>
       <span>{caption}</span>
     </label>

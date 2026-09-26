@@ -14,9 +14,15 @@ import { RadioGroup, type RadioGroupVisual } from "./radio-group/radio-group";
 import { Select, type SelectVisual } from "./select/select";
 import { Skeleton, type SkeletonVisual } from "./skeleton/skeleton";
 import { Spinner, type SpinnerVisual } from "./spinner/spinner";
+import { StatusBadge, type StatusBadgeVisual } from "./status-badge/status-badge";
 import { Switch, type SwitchVisual } from "./switch/switch";
+import { Tabs, type TabsVisual } from "./tabs/tabs";
 import { TextField, type TextFieldVisual } from "./text-field/text-field";
 import { TextLink, type TextLinkVisual } from "./text-link/text-link";
+import { Tooltip, type TooltipVisual } from "./tooltip/tooltip";
+import { Dialog, type DialogVisual } from "./dialog/dialog";
+import { Glyph } from "./glyphs";
+import { Notice, type NoticeVisual } from "./notice/notice";
 
 const require = createRequire(import.meta.url);
 const axeSource = readFileSync(require.resolve("axe-core/axe.js"), "utf8");
@@ -34,6 +40,19 @@ function boot() {
   if (!target.axe) {
     target.eval(axeSource);
   }
+  // jsdom's elementsFromPoint is missing or throws. axe uses it to decide
+  // which open dialog is the modal, and a throw becomes an incomplete
+  // result on every rule rather than a check of the dialog.
+  const elementsFromPoint = document.elementsFromPoint?.bind(document);
+  document.elementsFromPoint = (x: number, y: number) => {
+    try {
+      const found = elementsFromPoint?.(x, y);
+      if (found) return found;
+    } catch {
+      // The jsdom stub throws. Fall through to the open dialogs.
+    }
+    return [...document.querySelectorAll("dialog[open]")];
+  };
   return target.axe;
 }
 
@@ -216,6 +235,87 @@ describe("component accessibility tier", () => {
             Working
             <Spinner state={state as SpinnerVisual} />
           </div>
+        ),
+      },
+      {
+        name: "Tabs",
+        states: ["default", "hover", "focus", "disabled", "loading", "error", "empty", "selected"],
+        render: (state) => (
+          <Tabs
+            state={state as TabsVisual}
+            selectedId="identity"
+            tabs={[
+              { id: "identity", caption: "Identity", panel: "Legal name" },
+              { id: "trading", caption: "Trading", panel: "Trading name", disabled: state === "disabled" },
+            ]}
+          />
+        ),
+      },
+      {
+        name: "Dialog",
+        states: ["default", "focus", "loading", "error"],
+        render: (state) => (
+          <Dialog
+            open
+            variant="standard"
+            size="medium"
+            state={state as DialogVisual}
+            title="Archive the line"
+            description="It can be restored"
+            closeCaption="Close"
+            onClose={() => undefined}
+            failure={
+              state === "error"
+                ? {
+                    title: "Not saved",
+                    message: "Try again",
+                    requestIdentifier: "req-14",
+                    copyCaption: "Copy",
+                    dismissCaption: "Dismiss",
+                  }
+                : undefined
+            }
+            footer={
+              <Button type="button" loading={state === "loading"}>
+                Keep
+              </Button>
+            }
+          >
+            Body
+          </Dialog>
+        ),
+      },
+      {
+        name: "Notice",
+        states: ["default", "hover", "focus", "error"],
+        render: (state) => (
+          <Notice
+            variant="inline"
+            tone={state === "error" ? "danger" : "info"}
+            state={state as NoticeVisual}
+            title="Saved"
+            message="The line is stored"
+            icon={<Glyph name="check" />}
+            requestIdentifier={state === "error" ? "req-14" : undefined}
+            copyCaption="Copy"
+            dismissCaption="Dismiss"
+          />
+        ),
+      },
+      {
+        name: "Tooltip",
+        states: ["default", "hover", "focus"],
+        render: (state) => (
+          <Tooltip text="Full trading name" state={state as TooltipVisual}>
+            <button type="button">Name</button>
+          </Tooltip>
+        ),
+      },
+      {
+        name: "StatusBadge",
+        states: ["default", "error"],
+        render: (state) => (
+          <StatusBadge variant="success" state={state as StatusBadgeVisual} text="Ready" icon={<Glyph name="check" />} />
         ),
       },
     ];

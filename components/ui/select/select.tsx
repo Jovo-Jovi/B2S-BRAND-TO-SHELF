@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useState, type KeyboardEvent } from "react";
-import { Glyph, glyphPath } from "../glyphs";
+import { Glyph } from "../glyphs";
 import { Spinner } from "../spinner/spinner";
 import styles from "./select.module.css";
 
@@ -114,7 +114,7 @@ export function Select({
     </span>
   ) : (
     <span className={styles.chevron}>
-      <Glyph path={glyphPath.chevronDown} />
+      <Glyph name="chevronDown" />
     </span>
   );
 
@@ -200,7 +200,7 @@ export function Select({
                   onClick={() => choose(option)}
                   tabIndex={index === activeIndex ? 0 : -1}
                 >
-                  <Glyph className={styles.mark} path={glyphPath.check} />
+                  <Glyph className={styles.mark} name="check" />
                   {option.caption}
                 </button>
               );

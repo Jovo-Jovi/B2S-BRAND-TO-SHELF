@@ -130,6 +130,9 @@ PROVEN_PAIRS = [
     ("scripts/check-component-states.mjs", "docs/product/DESIGN_SURFACE.md"),
     ("scripts/check-component-states.mjs", "components/ui"),
     ("scripts/check-component-a11y.mjs", "components/ui"),
+    ("scripts/check-locale-format.mjs", "scan roots [app, components, features, lib]"),
+    ("scripts/check-icon-registry.mjs", "components/ui/glyphs.tsx"),
+    ("scripts/check-icon-registry.mjs", "docs/product/DESIGN_SURFACE.md"),
 ]
 
 KNOWN_GAPS = [
@@ -544,6 +547,13 @@ def main():
             ["node", "scripts/check-component-states.mjs"], DirProbe("components/ui"))
     do_pair(results, "scripts/check-component-a11y.mjs",
             ["node", "scripts/check-component-a11y.mjs"], DirProbe("components/ui"))
+    do_pair(results, "scripts/check-locale-format.mjs",
+            ["node", "scripts/check-locale-format.mjs"],
+            RootsProbe(["app", "components", "features", "lib"]))
+    do_pair(results, "scripts/check-icon-registry.mjs",
+            ["node", "scripts/check-icon-registry.mjs"], FileProbe("components/ui/glyphs.tsx"))
+    do_pair(results, "scripts/check-icon-registry.mjs",
+            ["node", "scripts/check-icon-registry.mjs"], FileProbe("docs/product/DESIGN_SURFACE.md"))
 
     proven = sum(1 for r in results if r["proven"])
     print(f"\n=== {proven}/{len(results)} pairs proven this run ===")

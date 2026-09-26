@@ -3,7 +3,7 @@
 import { cloneElement, useId, type ReactElement } from "react";
 
 import { classes } from "../classes";
-import { Glyph, glyphPath } from "../glyphs";
+import { Glyph } from "../glyphs";
 import styles from "./field.module.css";
 
 export type FieldVariant = "standard";
@@ -79,7 +79,7 @@ export function Field({
       ) : null}
       {error ? (
         <p id={errorId} className={styles.error} role="alert">
-          <Glyph className={styles.icon} path={glyphPath.danger} circle dot />
+          <Glyph className={styles.icon} name="danger" />
           {error}
         </p>
       ) : null}

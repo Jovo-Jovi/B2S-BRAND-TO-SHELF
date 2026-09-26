@@ -52,9 +52,9 @@ const MINIMUM_TOKENS = 234;
 const MINIMUM_ACHROMATIC = 68;
 const MINIMUM_CHROMATIC = 11;
 const MINIMUM_FONT_FAMILIES = 11;
-const MINIMUM_STYLESHEETS = 12;
-const MINIMUM_DECLARATIONS = 690;
-const MINIMUM_SOURCES = 52;
+const MINIMUM_STYLESHEETS = 18;
+const MINIMUM_DECLARATIONS = 874;
+const MINIMUM_SOURCES = 69;
 
 const FAMILIES = new Set(["IBM Plex Sans", "IBM Plex Sans Arabic"]);
 const GENERICS = new Set(["system-ui", "sans-serif"]);

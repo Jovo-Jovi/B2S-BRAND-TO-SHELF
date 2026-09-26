@@ -27,6 +27,8 @@ Every primitive carries one fenced `component` block. **The block binds; the pro
 3. **Date presentation** — `CALC_SPEC.md` R1-25's locale block, amended 2026-09-23: Gregorian calendar; `DD/MM/YYYY` for display in both locales (`23/09/2026`); ISO 8601 for every machine-readable value; weeks start on Saturday. `DateField` references it and states none of it (PR-43).
 4. **The brand contrast constant** — `BRAND_CONFIG.md` §11, amended 2026-09-23: `foreground` meets **4.5:1** against `background` in every theme, because `foreground` is the text role. `ColorField` references it.
 
+**Formatting homes, added 2026-09-26 — P03-T10.** Date formatting is complete at P03 through `lib/locale/`. Money and quantity formatting, TextField `number` redisplay and DataTable numeric cells complete at P05 through `lib/money/`, under ADR-011.
+
 ## 1. The one idea: the chrome is a proofing surround
 
 Print colour is judged against neutral grey. Proofing booths surround the sheet with an achromatic field because a tinted surround shifts how the colour beside it is perceived — a cool grey makes a warm brand read warmer, a warm grey makes it read cooler. B2S is where a brand owner decides what their packaging will look like, so the platform's chrome is that surround.
@@ -1102,3 +1104,11 @@ The section now states that until the icon registry lands, no primitive carries 
 `| CF-172 | Static | §2.1; §1; §0 items 1 and 2 | Raw colour, spacing, radius, duration, shadow or font-family values outside token definitions; every chrome neutral achromatic; font families only the two `OD-G23` names |`
 
 The row now includes z-index, every stylesheet and inline style, and the `app/globals.css` definition site. §10 gains the static contrast row for pairs declared together. That row is not CF-177.
+
+**2026-09-26 — P03-T10.** §0 did not say where date formatting and money formatting complete. Prior text, the close of item 4 running straight into §1:
+
+`4. **The brand contrast constant** — `BRAND_CONFIG.md` §11, amended 2026-09-23: `foreground` meets **4.5:1** against `background` in every theme, because `foreground` is the text role. `ColorField` references it.`
+
+`## 1. The one idea: the chrome is a proofing surround`
+
+A paragraph now sits between them: date formatting is complete at P03 through `lib/locale/`. Money and quantity formatting, TextField `number` redisplay and DataTable numeric cells complete at P05 through `lib/money/`, under ADR-011. Item 3's date rules are unchanged.

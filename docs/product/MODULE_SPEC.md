@@ -106,6 +106,11 @@ components/                       the design-surface catalog
     switch/                       Switch
     spinner/                      Spinner
     skeleton/                     Skeleton
+    tabs/                         Tabs
+    dialog/                       Dialog
+    notice/                       Notice
+    tooltip/                      Tooltip
+    status-badge/                 StatusBadge
   shared/                         deferred, compositions at P03-T11
 
 lib/
@@ -115,6 +120,7 @@ lib/
     session.ts                    session refresh, after locale normalisation
     server-only/                  QUARANTINE — ADR-005
       service.ts                  the only construction of the privileged client
+  locale/                         date formatting, CALC_SPEC.md R1-25 — P03
   money/                          exact decimal, ADR-011 — deferred, P05
   print/                          the print engine, ADR-009 — deferred, P06
 

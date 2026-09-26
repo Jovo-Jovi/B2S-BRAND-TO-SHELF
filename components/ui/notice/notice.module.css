@@ -1,0 +1,115 @@
+.root {
+  display: flex;
+  align-items: stretch;
+  column-gap: var(--b2s-space-5);
+  padding-block: var(--b2s-space-5);
+  padding-inline: var(--b2s-space-5);
+  border-radius: var(--b2s-radius-lg);
+  background-color: var(--b2s-color-raised);
+  color: var(--b2s-color-text);
+  font-size: var(--b2s-text-sm);
+  transition-property: opacity;
+  transition-duration: var(--b2s-duration-enter);
+  transition-timing-function: var(--b2s-ease-enter);
+}
+
+.toast {
+  position: fixed;
+  z-index: var(--b2s-layer-notice);
+  inset-inline-end: var(--b2s-space-5);
+  inset-block-end: var(--b2s-space-5);
+  box-shadow: var(--b2s-elevation-3);
+}
+
+.region {
+  position: fixed;
+  z-index: var(--b2s-layer-notice);
+  inset-inline-end: var(--b2s-space-5);
+  inset-block-end: var(--b2s-space-5);
+  display: flex;
+  flex-direction: column;
+  row-gap: var(--b2s-space-5);
+}
+
+.region .toast {
+  position: relative;
+  inset-inline-end: auto;
+  inset-block-end: auto;
+}
+
+.bar {
+  flex: none;
+  inline-size: var(--b2s-status-bar-width);
+  border-radius: var(--b2s-radius-sm);
+}
+
+.success {
+  background-color: var(--b2s-color-success);
+}
+
+.warning {
+  background-color: var(--b2s-color-warning);
+}
+
+.danger {
+  background-color: var(--b2s-color-danger);
+}
+
+.info {
+  background-color: var(--b2s-color-info);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  row-gap: var(--b2s-space-3);
+  min-inline-size: 0;
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  column-gap: var(--b2s-space-3);
+}
+
+.icon {
+  display: inline-flex;
+  inline-size: var(--b2s-icon-size);
+  block-size: var(--b2s-icon-size);
+}
+
+.icon svg {
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+.title,
+.message,
+.identifier {
+  margin-block: 0;
+  margin-inline: 0;
+}
+
+.identifier {
+  unicode-bidi: isolate;
+}
+
+.actions {
+  display: flex;
+  column-gap: var(--b2s-space-3);
+}
+
+.root:focus-visible,
+.root[data-state="focus"] :focus-visible,
+.actions :focus-visible {
+  outline-style: solid;
+  outline-width: var(--b2s-focus-width);
+  outline-color: var(--b2s-color-focus);
+  outline-offset: var(--b2s-focus-offset);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root {
+    transition-property: none;
+  }
+}

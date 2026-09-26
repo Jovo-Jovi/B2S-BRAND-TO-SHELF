@@ -28,7 +28,7 @@ const SCANNED_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx", ".mts", ".mjs"
 // file floor to the true count measured with that root present. Import
 // sites stay 4: no component imports Supabase. Changed condition, not a
 // new premise: PROVEN_PAIRS does not gain a pair for this guard.
-const MINIMUM_FILES_SCANNED = 48;
+const MINIMUM_FILES_SCANNED = 61;
 const MINIMUM_IMPORT_SITES = 4;
 
 // An import of any Supabase client package, in either module syntax.

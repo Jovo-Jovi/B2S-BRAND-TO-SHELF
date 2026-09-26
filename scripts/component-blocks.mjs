@@ -15,11 +15,11 @@ export const REPO = dirname(dirname(fileURLToPath(import.meta.url)));
 export const SPEC_PATH = join(REPO, "docs", "product", "DESIGN_SURFACE.md");
 export const UI_DIR = join(REPO, "components", "ui");
 
-export const MINIMUM_IMPLEMENTED = 11;
+export const MINIMUM_IMPLEMENTED = 16;
 export const MINIMUM_BLOCKS = 21;
-export const MINIMUM_VARIANT_MEMBERS = 25;
-export const MINIMUM_SIZE_MEMBERS = 22;
-export const MINIMUM_ENFORCED_STATES = 66;
+export const MINIMUM_VARIANT_MEMBERS = 36;
+export const MINIMUM_SIZE_MEMBERS = 30;
+export const MINIMUM_ENFORCED_STATES = 87;
 
 function bracketList(value) {
   const match = value.match(/\[([^\]]*)\]/);

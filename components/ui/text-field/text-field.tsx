@@ -3,7 +3,7 @@
 import { useId, useState, type ReactNode } from "react";
 
 import { classes } from "../classes";
-import { Glyph, glyphPath } from "../glyphs";
+import { Glyph } from "../glyphs";
 import { Spinner } from "../spinner/spinner";
 import {
   IDENTIFIER_DIGIT_ERROR,
@@ -133,7 +133,7 @@ export function TextField({
         {suffix ? <span className={styles.affix}>{suffix}</span> : null}
         {clearAccessibleName ? (
           <button type="button" className={styles.clear} aria-label={clearAccessibleName} onClick={() => commit("")}>
-            <Glyph path={glyphPath.cross} />
+            <Glyph name="cross" />
           </button>
         ) : null}
       </div>

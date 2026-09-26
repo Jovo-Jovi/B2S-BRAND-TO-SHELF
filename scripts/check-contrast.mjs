@@ -19,8 +19,8 @@ const GLOBALS = "app/globals.css";
 const SCAN_ROOTS = ["app", "components", "features"];
 const TEXT_MINIMUM = 4.5;
 const BOUNDARY_MINIMUM = 3;
-const MINIMUM_STYLESHEETS = 12;
-const MINIMUM_TEXT_PAIRS = 34;
+const MINIMUM_STYLESHEETS = 18;
+const MINIMUM_TEXT_PAIRS = 44;
 const MINIMUM_BOUNDARY_PAIRS = 8;
 const MINIMUM_THEMES = 2;
 

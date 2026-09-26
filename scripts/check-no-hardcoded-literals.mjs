@@ -24,7 +24,7 @@ const EXEMPT_PATH_SEGMENT = `${sep}dictionaries${sep}`;
 // exists and raises the floor to the true count measured with that root
 // present. Changed condition, not a new premise: the two-way pair stays
 // the scan roots [app, proxy.ts, lib, features].
-const MINIMUM_FILES = 45;
+const MINIMUM_FILES = 58;
 
 const CHECKS = [
   { name: "hex colour", pattern: /#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3}(?:[0-9a-fA-F]{2})?)?\b/ },

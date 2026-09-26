@@ -1,9 +1,9 @@
 # SESSION CONTEXT
-Updated: 2026-09-26 · By: Grok 4.7 (standard; prompt named Sonnet) · Phase: P03
-Last task: P03-T09-FIX · Verdict: —. Last-row verdict is the declared
-placeholder; the follow-up commit fills the sha only. P03-T09 reviewer verdict
-FAIL. Ledger
-184 rows, **45** open. Full detail in the done-steps
+Updated: 2026-09-26 · By: Grok 4.7 (heavyweight; prompt named Opus) · Phase: P03
+Last task: P03-T10 · Verdict: —. Last-row verdict is the declared
+placeholder; the follow-up commit fills the sha only. P03-T09-FIX reviewer verdict
+PASS. Ledger
+185 rows, **44** open. Full detail in the done-steps
 row below.
 
 ## Read these too
@@ -85,15 +85,16 @@ Keep it short: if a paragraph is growing here, it belongs elsewhere.
 | P03-T08 | Land the design-surface corrections, the self-hosted IBM Plex faces, the token layer, and four static gates. On phase/03-brand-and-onboarding from fa8b900; no PR, no merge. Node v24.11.1 matches .nvmrc 24. DESIGN_SURFACE.md corrected in place: 21 blocks, 55 n/a each with a reason, 56 contrast pairs, chrome neutrals achromatic. Six woff2 files from @ibm/plex-sans@1.1.0 and @ibm/plex-sans-arabic@1.1.0. Gates CF-168, CF-169, CF-170, CF-172. Static set 17 to 21. PROVEN_PAIRS 39 to 45. 51 open + 3 landed - 8 closed = 46. Prompt named Sonnet; this session ran as Cursor Grok 4.7. REVIEWER_CHAT unstaged. Tests: static conformance and the four npm scripts. Acceptance: none applies. Tenant isolation: N/A, stated explicitly. | FAIL | `14579a8` |
 | P03-T08-FIX | Rewrite the two static checks whose plants passed. On phase/03-brand-and-onboarding from ac72957; no PR, no merge. PART 0: no open pull request against main. Local Node is v24.21.0, matching .nvmrc 24. The logical check parses declarations and maps 60 physical properties from CSS Logical Properties and Values Level 1, W3C Working Draft, 4 December 2025. The token check treats every colour token as achromatic unless it is one of the ten chromatic tokens DESIGN_SURFACE.md names, asserted both ways. Floors: 1 stylesheet, 239 declarations, 60 mapped properties; 204 tokens, 56 achromatic colour tokens, 10 chromatic tokens, 9 font-family declarations. app/globals.css already complied and was not exempted. CF-189 and CF-190 opened and closed. CF-191 opened. PROVEN_PAIRS stays 45. fail() stays 138. 46 open at ac72957 plus 1 landed open minus 0 previously open closed equals 47; the two hole rows net zero; ledger 173 to 176. Prompt named Sonnet; this session ran as Grok 4.7. REVIEWER_CHAT unstaged. Tests: the two checks' plants, static conformance, and the four npm scripts. Isolation suite not run. Acceptance: none applies. Tenant isolation: N/A, stated explicitly. | PASS | `bb32083` |
 | P03-T09 | The form family: eleven primitives and the three gates every primitive answers to. On phase/03-brand-and-onboarding from c70f09e; no PR, no merge. PART 0: no open pull request against main. Node v24.21.0 matches .nvmrc 24. No new package. ARCHITECTURE.md names no styling mechanism, so CSS Modules stand. components/ui holds Field, TextField, BilingualField, Select, Checkbox, RadioGroup, Switch, Button, TextLink, Spinner and Skeleton. MODULE_SPEC section 1 names them; shared/ stays deferred. CF-94 closed. Four guards reach components/ with floors moved: literals 45, CDN 59, service-import 40, data-boundary 48 files and 4 import sites. Logical floors 12 stylesheets and 657 declarations. Changed conditions, no new pairs. CF-173, CF-174 and CF-176 landed. Floors: 11 implemented, 21 blocks, 25 variant members, 22 size members, 66 enforced states. Ten blocks pending by name. Exclusion list is color-contrast only; cause is jsdom canvas getContext returning null. landmark-one-main and page-has-heading-one are not listed: on a component root they do not return incomplete, and on a document they return incomplete because elementFromPoint is missing. CF-187 closed. Plants from in-memory snapshots were confirmed applied and the files stayed byte-identical. Static set 21 to 24. PROVEN_PAIRS 45 to 50. fail() stays 138. 47 open at c70f09e plus 1 landed open minus 5 closed equals 43. CF-192 open, CF-193 closed. Prompt named Opus; this session ran as Grok 4.7. REVIEWER_CHAT unstaged. Tests: unit and component tests in both locales and every enforced state, the accessibility tier, the gate plants, the two-way probe, static conformance and the four npm scripts. Isolation suite not run. Acceptance: FEATURES and ENTITIES against DESIGN_SURFACE.md component blocks. Money: N/A. Print: N/A. Tenant isolation: N/A, stated explicitly. | FAIL | `a3f0223` |
-| P03-T09-FIX | Danger contrast, the token scan's reach, and the halt on an unstated value. On phase/03-brand-and-onboarding from 5e67441; no PR, no merge. PART 0: no open pull request against main. Node v24.21.0 matches .nvmrc 24. DESIGN_SURFACE.md corrected in place. Chromatic set 11, both ways; z-index layers 6, both ways. Danger text is danger-action-text: 6.54 and 5.47 on the fill, 8.57 and 7.02 hovered, 10.58 and 8.75 pressed. check-token-values scans app/, components/ and features/, including inline styles; a --b2s- custom property is defined only in app/globals.css. Floors: 12 stylesheets, 690 declarations, 234 tokens, 68 achromatic, 11 chromatic, 11 font-family, 52 source files. Static contrast gate sees pairs declared together, 34 text pairs and 8 boundary pairs in 2 themes; it is not CF-177. The danger-text plant fails in dark at 3.18:1. Static set 25. PROVEN_PAIRS 54. fail() stays 138. 43 + 6 landed - 4 closed = 45. CF-196 and CF-197 stay open. Prompt named Sonnet; this session ran as Grok 4.7. REVIEWER_CHAT unstaged. Tests: component tests, both gates' plants, the two-way probe, and the four npm scripts. Acceptance: FEATURES & ENTITIES against the corrected component blocks, and WCAG 2.2 AA contrast by computation for every declared text and background pair. Money: N/A. Print: N/A. Tenant isolation: N/A, stated explicitly. | — | `9e2c8e4` |
+| P03-T09-FIX | Danger contrast, the token scan's reach, and the halt on an unstated value. On phase/03-brand-and-onboarding from 5e67441; no PR, no merge. PART 0: no open pull request against main. Node v24.21.0 matches .nvmrc 24. DESIGN_SURFACE.md corrected in place. Chromatic set 11, both ways; z-index layers 6, both ways. Danger text is danger-action-text: 6.54 and 5.47 on the fill, 8.57 and 7.02 hovered, 10.58 and 8.75 pressed. check-token-values scans app/, components/ and features/, including inline styles; a --b2s- custom property is defined only in app/globals.css. Floors: 12 stylesheets, 690 declarations, 234 tokens, 68 achromatic, 11 chromatic, 11 font-family, 52 source files. Static contrast gate sees pairs declared together, 34 text pairs and 8 boundary pairs in 2 themes; it is not CF-177. The danger-text plant fails in dark at 3.18:1. Static set 25. PROVEN_PAIRS 54. fail() stays 138. 43 + 6 landed - 4 closed = 45. CF-196 and CF-197 stay open. Prompt named Sonnet; this session ran as Grok 4.7. REVIEWER_CHAT unstaged. Tests: component tests, both gates' plants, the two-way probe, and the four npm scripts. Acceptance: FEATURES & ENTITIES against the corrected component blocks, and WCAG 2.2 AA contrast by computation for every declared text and background pair. Money: N/A. Print: N/A. Tenant isolation: N/A, stated explicitly. | PASS | `9e2c8e4` |
+| P03-T10 | The date formatter, the icon registry, and five primitives. On phase/03-brand-and-onboarding from 697bbe6; no PR, no merge. PART 0: no open pull request against main. Node v24.21.0 matches .nvmrc 24. No new package. lib/locale holds the R1-25 date formatter. 2026-09-23 renders as 23/09/2026 in en and ar and parses back to 2026-09-23. Round trip of every day of 2024 and 2026. Week of 2026-09-23 starts 2026-09-19. Identical results under America/Los_Angeles and Asia/Tokyo, offsets 420 and -540. Money and quantity formatting not built. CF-175 closed by check-locale-format.mjs, floor 57 files, seven APIs, plant of each in button.tsx restored byte-identical. Dates covered now; money and quantities when lib/money lands. Icon registry is inline, no package and no ADR. Six glyphs declare mirrors. previous and next mirror. Static check floor 6 entries and 23 never-mirror names. A mirrors-true plant on check fails, and a missing flag on previous fails. The right-to-left test asserts the mirrors class and the scaleX rule. Rendered mirroring is CF-179, in a real browser. Tabs, Dialog, Notice, Tooltip and StatusBadge. Implemented floor 16 of 21. Variant members 36, size members 30, enforced states 87. Five blocks remain pending: FileDrop, ColorField, DateField, DataTable, BrandFrame. Dialog uses the native dialog element and showModal. Floors moved with the new files: literals 58, CDN 78, service-import 51, data-boundary 61 files and 4 import sites, logical 18 stylesheets and 874 declarations, token values 18/874/234/68/11/11/69, contrast 18 stylesheets, 44 text pairs, 8 boundary pairs, 2 themes. CF-200 opened and closed: the last done-steps commit cell admits only the placeholder or a backticked sha, and a plant of "garbage not a sha" fails. DESIGN_SURFACE.md names the formatting homes. Static set 25 to 27. PROVEN_PAIRS 54 to 57. fail() stays 138. 45 open at 697bbe6 plus 0 landed open minus 1 closed equals 44. Closed CF-175. CF-200 nets zero. Prompt named Opus; this session ran as Grok 4.7. REVIEWER_CHAT unstaged. Tests: the formatter under two time zones, component tests in both locales and every enforced state, the new checks' plants, the two-way probe, static conformance and the four npm scripts. Isolation suite not run. Acceptance: exact match against R1-25's date example, and FEATURES and ENTITIES against the five component blocks. Money: N/A, no money path is built. Print: N/A. Tenant isolation: N/A, stated explicitly. | — | — |
 
 > Commit column: one or more comma-separated backticked shas, or `—` where no
 > single commit tracks the step (P-00 through P-01c predate the one-task-one-commit
 > convention). Several shas mean the step's deliverable, its PR-17 follow-up and,
 > where the owner has merged it, the merge commit. The most recent row's commit
-> column may read `pending` until its follow-up commit fills it (PR-17);
-> `check_done_steps_shape.py` exempts the last row's commit column for exactly
-> that reason. The last row's verdict column holds the declared placeholder `—`
+> column holds `—` until its follow-up commit fills it with a backticked sha
+> (PR-17). `check_done_steps_shape.py` admits only that placeholder or a
+> well-formed backticked short sha, on the last row too. The last row's verdict column holds the declared placeholder `—`
 > until the next land task writes the reviewer's actual verdict (CF-151);
 > `pending` is frozen to the 25 historical Step ids in `ALLOWED_PENDING_STEPS`
 > (CF-153). A new row must not carry it.
@@ -135,7 +136,6 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
 - CF-163 — owner: the next amendment of scripts/check_stated_counts.py that can take ARCHITECTURE.md §6 as a subject, or a dedicated assertion; not silently both
 - CF-165 — owner: the owner
 - CF-171 — owner: the task that lands the design-surface catalog
-- CF-175 — owner: the task that lands the design-surface catalog
 - CF-177 — owner: the task that lands the design-surface catalog
 - CF-178 — owner: the task that lands the design-surface catalog
 - CF-179 — owner: the task that lands the design-surface catalog
@@ -273,8 +273,9 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
   finds something is landed as a permanent check by the fix task that follows,
   and one that finds nothing is landed too, because a probe that passes today is
   the one that catches tomorrow's regression.
-- **The static conformance set is eleven `docs-integrity` checks and fourteen
-  `guards`, twenty-five in total, as of 2026-09-26 — P03-T09-FIX.** It was
+- **The static conformance set is eleven `docs-integrity` checks and sixteen
+  `guards`, twenty-seven in total, as of 2026-09-26 — P03-T10.** It was
+  eleven and fourteen, twenty-five, as of 2026-09-26 — P03-T09-FIX. It was
   eleven and thirteen, twenty-four, as of 2026-09-26 — P03-T09. It was
   eleven and ten, twenty-one, as of 2026-09-25 — P03-T08. It was
   eleven and six, seventeen, as of 2026-09-19 — P03-T02. Two distinct
@@ -344,11 +345,17 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
     It moved again at P03-T09-FIX: 50 → 54, four new pairs —
     `check-token-values.mjs` against `components/` and `features/`, and
     `check-contrast.mjs` against `app/globals.css` and `components/`.
-  - The proven two-way empty-target case count stands at **54**, last proved
-    at **P03-T09-FIX** — re-proven here by actually removing and then emptying
-    every premise the twenty-five checks read — fifty-five pairs enumerated
-    (fifty-four in `PROVEN_PAIRS` plus the one documented gap),
-    fifty proven, one recorded as a documented gap rather than folded
+    It moved again at P03-T10: 54 → 57, three new pairs —
+    `check-locale-format.mjs` against the scan roots
+    `[app, components, features, lib]`, and `check-icon-registry.mjs`
+    against `components/ui/glyphs.tsx` and `docs/product/DESIGN_SURFACE.md`.
+    The floors that rose on the existing guards are changed conditions,
+    not new premises, and added no pair.
+  - The proven two-way empty-target case count stands at **57**, last proved
+    at **P03-T10** — re-proven here by actually removing and then emptying
+    every premise the twenty-seven checks read — fifty-eight pairs enumerated
+    (fifty-seven in `PROVEN_PAIRS` plus the one documented gap),
+    fifty-seven proven, one recorded as a documented gap rather than folded
     into either number:
     `check_module_spec_tree.py`'s reverse-direction premise (the live
     tracked directory tree via `git ls-files`) cannot be substituted on
@@ -416,13 +423,14 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
   (PR-29).
 
 ## Next action
-**P03-T10 builds the other ten primitives**, including BrandFrame and its
-boundary gate (CF-171). Do not build compositions, AppShell, or a wizard
-screen; those are P03-T11, with the browser-tier ADR and CF-177, CF-178,
-CF-179 and the acceptance test (CF-180). Page landmarks and a single h1
-(CF-196) belong to the task that builds CF-180. A pull request that opens
-itself (CF-197) is the owner's. CF-175's formatter does not exist
-yet. The local Node runtime (CF-192) is the owner's: verify the archive
+**P03-T11 builds DateField, ColorField, FileDrop, DataTable and BrandFrame**,
+and the brand-token boundary (CF-171). Do not build compositions, AppShell,
+or a wizard screen; those follow, with the browser-tier work and CF-177,
+CF-178, CF-179 and the acceptance test (CF-180). Page landmarks and a single
+h1 (CF-196) belong to the task that builds CF-180. A pull request that opens
+itself (CF-197) is the owner's. Money and quantity formatting, TextField
+`number` redisplay and DataTable numeric cells complete at P05 through
+`lib/money/` (ADR-011). The local Node runtime (CF-192) is the owner's: verify the archive
 against nodejs.org's SHASUMS256.txt and replace the hardlink with an
 elevated nvm install. The Supabase GitHub integration (CF-191) posts a
 skipped Supabase Preview check and was not uninstalled; it is the owner's.

@@ -169,6 +169,12 @@ jobs:
       - name: check-component-a11y
         run: node scripts/check-component-a11y.mjs
 
+      - name: check-locale-format
+        run: node scripts/check-locale-format.mjs
+
+      - name: check-icon-registry
+        run: node scripts/check-icon-registry.mjs
+
   # ARCHITECTURE.md §5 — types are generated from staging (ADR-013), and a
   # diff between the generated types and the committed ones fails the
   # pipeline loudly, INCLUDING when the secret is absent. A job that

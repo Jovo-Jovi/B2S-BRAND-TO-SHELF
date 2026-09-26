@@ -3464,11 +3464,21 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       snapshot of `button.tsx`: dropping `danger` from the variant union
       no longer matches the block, and the file on disk stays
       byte-identical. Owner: none outstanding.
-- [ ] CF-175 — STATIC. Formatted numbers reach the screen only through the
+- [x] CF-175 — STATIC. Formatted numbers reach the screen only through the
       locale formatter `CALC_SPEC.md` R1-25 defines, never a hand-built
       digit string. A script over the source. No new dependency. A gate
       which cannot observe what it checks is not a gate (PR-21). Owner:
       **the task that lands the design-surface catalog**.
+      CLOSED (P03-T10) by `scripts/check-locale-format.mjs`. The TypeScript
+      compiler detects `Intl.DateTimeFormat`, `Intl.NumberFormat`,
+      `Intl.RelativeTimeFormat`, `toLocaleString`, `toLocaleDateString`,
+      `toLocaleTimeString` and `toFixed`. A call is allowed only inside
+      `lib/locale/` and, when it lands, `lib/money/`. The gate covers dates
+      now and extends to money and quantities when `lib/money/` lands.
+      Floor: 57 files under `app`, `components`, `features` and `lib`. A
+      plant of each API in `components/ui/button/button.tsx` failed the
+      check, naming every API, and the file was restored byte-identical.
+      Owner: none outstanding.
 - [x] CF-176 — COMPONENT-RENDERED. Accessible name, role and label on every
       interactive primitive, in every state, in both locales. Runs inside
       the existing unit tests. Needs one new dev dependency, an
@@ -3692,6 +3702,15 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       with no workflow in the repo creating it. The owner closed it. The
       source is outside the repository and is not yet identified. Owner:
       **the owner**.
+      AMENDED (P03-T10). #4, #5 and #6 are closed. Each was opened by the
+      repository account, title "Phase/03 brand and onboarding", empty
+      body, head `phase/03-brand-and-onboarding`, base `main`. #4 at
+      2026-09-17T08:50:57Z, #5 at 2026-09-24T07:19:07Z, #6 at
+      2026-09-25T23:05:25Z, about a minute after `5e67441`. No workflow in
+      the repository creates a pull request, and the local hooks are
+      samples. This task did not turn the behaviour off. It fires under a
+      condition outside the repository. The push of `697bbe6` did not open
+      one. Owner: **the owner**.
 - [x] CF-198 — Declared text and background colours were not checked for
       contrast. CF-177 remains the rendered check.
       CLOSED (P03-T09-FIX) by `scripts/check-contrast.mjs`. It resolves
@@ -3707,4 +3726,17 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       values and described them as reported and not invented. The danger
       Button text was one of them.
       CLOSED (P03-T09-FIX) by PR-44. Owner: none outstanding.
+- [x] CF-200 — `scripts/check_done_steps_shape.py` exempted the last
+      done-steps row's commit cell from its shape rule and accepted
+      anything there. With that cell set to "garbage not a sha", the check
+      reported "commit column well-formed". The exemption existed so the
+      placeholder could stand before the PR-17 follow-up fills it, but it
+      should admit only the declared placeholder or a well-formed
+      backticked short sha. P03-T09-FIX's follow-up wrote a bare sha that
+      passed as the last row and would have failed the moment another row
+      landed; commit `697bbe6` exists only to repair that. Owner: **the
+      next task that touches `check_done_steps_shape.py`**.
+      CLOSED (P03-T10). The last row's commit cell admits only the declared
+      placeholder or a well-formed backticked short sha. A plant of that
+      cell set to "garbage not a sha" fails. Owner: none outstanding.
 
