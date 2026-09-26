@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { readFileSync } from "node:fs";
 import { useState } from "react";
 import { act } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -75,5 +76,13 @@ describe("Switch", () => {
       <Switch caption="Notifications" onText="On" offText="Off" size="comfortable" />,
     );
     expect(comfortable).toContain('data-density="comfortable"');
+  });
+
+  it("sizes the track and thumb from the stated tokens", () => {
+    const css = readFileSync("components/ui/switch/switch.module.css", "utf8");
+    expect(css).toContain("block-size: var(--b2s-switch-block-size)");
+    expect(css).toContain("inline-size: var(--b2s-switch-inline-size)");
+    expect(css).toContain("block-size: var(--b2s-switch-thumb-size)");
+    expect(css).toContain("var(--b2s-switch-inset)");
   });
 });

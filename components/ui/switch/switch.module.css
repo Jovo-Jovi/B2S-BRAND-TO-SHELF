@@ -13,8 +13,8 @@
 .track {
   position: relative;
   flex: 0 0 auto;
-  block-size: var(--b2s-control-height);
-  inline-size: calc(var(--b2s-control-height) * 2);
+  block-size: var(--b2s-switch-block-size);
+  inline-size: var(--b2s-switch-inline-size);
   border-radius: var(--b2s-radius-full);
   border: var(--b2s-border-width) solid var(--b2s-color-border-control);
   background-color: var(--b2s-color-sunken);
@@ -22,10 +22,10 @@
 
 .thumb {
   position: absolute;
-  inset-block-start: var(--b2s-space-1);
-  inset-inline-start: var(--b2s-space-1);
-  block-size: calc(var(--b2s-control-height) - (var(--b2s-space-1) * 2) - (var(--b2s-border-width) * 2));
-  inline-size: calc(var(--b2s-control-height) - (var(--b2s-space-1) * 2) - (var(--b2s-border-width) * 2));
+  inset-block-start: var(--b2s-switch-inset);
+  inset-inline-start: var(--b2s-switch-inset);
+  block-size: var(--b2s-switch-thumb-size);
+  inline-size: var(--b2s-switch-thumb-size);
   border-radius: var(--b2s-radius-full);
   background-color: var(--b2s-color-action-text);
   transition-property: inset-inline-start, inline-size;
@@ -40,7 +40,7 @@
 }
 
 .checked .thumb {
-  inset-inline-start: calc(100% - var(--b2s-control-height) + var(--b2s-space-1));
+  inset-inline-start: calc(100% - var(--b2s-switch-thumb-size) - var(--b2s-switch-inset));
 }
 
 .root:hover .track,
@@ -59,7 +59,7 @@
 
 .root:active .thumb,
 .root[data-state="active"] .thumb {
-  inline-size: calc(var(--b2s-control-height) - var(--b2s-space-1) - (var(--b2s-border-width) * 2));
+  inline-size: calc(var(--b2s-switch-thumb-size) + var(--b2s-space-1));
 }
 
 .root:disabled,

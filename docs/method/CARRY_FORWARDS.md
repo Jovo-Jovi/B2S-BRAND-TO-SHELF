@@ -3666,4 +3666,45 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       stands; the local claim does not.
       CLOSED (P03-T09) by this row, so the record matches the machine.
       Owner: none outstanding.
+- [x] CF-194 — The danger Button's text was `action-text`. In dark that is
+      `#1a1a1a` on `#c62f26`, 3.18:1, below the 4.5:1 text floor, and no
+      gate computed it. The specification wrote the text as `#ffffff` in
+      the Use column and never named a token.
+      CLOSED (P03-T09-FIX) by `--b2s-color-danger-action-text` (`#ffffff`
+      in both themes) and the pressed fills, with the ratios recorded in
+      `DESIGN_SURFACE.md` §2.2. Owner: none outstanding.
+- [x] CF-195 — `scripts/check-token-values.mjs` read only `app/globals.css`,
+      so a raw colour, length, radius or z-index in a component stylesheet
+      passed, and a module could define its own `--b2s-` token.
+      CLOSED (P03-T09-FIX) by scanning every stylesheet under `app/`,
+      `components/` and `features/`, and every inline style. A `--b2s-`
+      custom property is defined only in `app/globals.css`. Floor: 12
+      stylesheets, 690 declarations, 234 tokens, 68 achromatic colour
+      tokens, 11 chromatic tokens, 11 font-family declarations, 52 source
+      files. `PROVEN_PAIRS` gains `components/` and `features/`. Owner:
+      none outstanding.
+- [ ] CF-196 — No check asserts page landmarks or a single `h1`. The
+      component tier's exclusion list does not cover them, and CF-187
+      records why those axe rules return incomplete in jsdom. Owner:
+      **the task that builds CF-180**.
+- [ ] CF-197 — A pull request against `main` opened itself within about a
+      minute of the push that landed P03-T09, as the repository account,
+      with no workflow in the repo creating it. The owner closed it. The
+      source is outside the repository and is not yet identified. Owner:
+      **the owner**.
+- [x] CF-198 — Declared text and background colours were not checked for
+      contrast. CF-177 remains the rendered check.
+      CLOSED (P03-T09-FIX) by `scripts/check-contrast.mjs`. It resolves
+      pairs declared together, directly or through a state selector of the
+      same component, in both themes. Text needs 4.5:1. A boundary token
+      against the surface declared with it needs 3:1. A colour inherited
+      from an ancestor is outside it, so it is a recurrence guard and not
+      a substitute for CF-177. Floor: 12 stylesheets, 34 text pairs, 8
+      boundary pairs, 2 themes. The danger-text plant, reverted to
+      `action-text`, fails in dark at 3.18:1. Owner: none outstanding.
+- [x] CF-199 — P03-T09 HALT 4 said an unstated value is reported and the
+      part that depends on it stops. The builder filled about ten unstated
+      values and described them as reported and not invented. The danger
+      Button text was one of them.
+      CLOSED (P03-T09-FIX) by PR-44. Owner: none outstanding.
 

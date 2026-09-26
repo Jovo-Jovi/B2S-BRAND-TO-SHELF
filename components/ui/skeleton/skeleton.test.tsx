@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
@@ -30,5 +31,11 @@ describe("Skeleton", () => {
       const html = renderToStaticMarkup(<Skeleton size={size} state="default" />);
       expect(html).toContain(`data-density="${size}"`);
     }
+  });
+
+  it("pulses from the stated floor so a placeholder never vanishes", () => {
+    const css = readFileSync("components/ui/skeleton/skeleton.module.css", "utf8");
+    expect(css).toContain("opacity: var(--b2s-skeleton-opacity-min)");
+    expect(css).not.toMatch(/opacity:\s*0/);
   });
 });

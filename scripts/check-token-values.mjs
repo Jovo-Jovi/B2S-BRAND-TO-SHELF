@@ -1,11 +1,17 @@
 #!/usr/bin/env node
-// CF-172. Raw colour, spacing, radius, duration, shadow and font-family
-// values live only in token definitions. Every --b2s-color-* token, and
-// every colour inside any --b2s- definition, is achromatic unless the token
-// is on the closed chromatic list (OD-G22). That list is exactly the status
-// colours and their backgrounds, and the danger action and its hover, and it
-// is asserted both ways against DESIGN_SURFACE.md §2.2 and §2.11. Font
-// families are the two OD-G23 faces plus generic fallbacks.
+// CF-172. Raw colour, length, radius, duration, shadow, font-family and
+// z-index values live only in token definitions. The scan is every stylesheet
+// under app/, components/ and features/, module or global, and every inline
+// style attribute. A --b2s- custom property may be defined only in
+// app/globals.css. Every --b2s-color-* token, and every colour inside any
+// --b2s- definition, is achromatic unless the token is on the closed
+// chromatic list (OD-G22). That list, and the z-index layer list, are
+// asserted both ways against DESIGN_SURFACE.md. Font families are the two
+// OD-G23 faces plus generic fallbacks.
+//
+// Button's loading width lock writes element.style.inlineSize. That
+// imperative assignment is not an inline style attribute, and this scan
+// does not parse it.
 //
 // Achromaticity is decided in the colour's own space, not by converting to
 // 8-bit sRGB. An sRGB conversion can turn a zero-chroma lab colour into
@@ -21,14 +27,17 @@
 //     non-negative scalar of that space's reference white (D65 or D50).
 //     Equal xyz components are not neutral.
 
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { join } from "node:path";
 
-const FILE = "app/globals.css";
+const GLOBALS = "app/globals.css";
 const DOCUMENT = "docs/product/DESIGN_SURFACE.md";
+const SCAN_ROOTS = ["app", "components", "features"];
 
 const CHROMATIC_TOKENS = [
   "--b2s-color-danger-action",
   "--b2s-color-danger-action-hover",
+  "--b2s-color-danger-action-active",
   "--b2s-color-success",
   "--b2s-color-success-bg",
   "--b2s-color-warning",
@@ -39,10 +48,13 @@ const CHROMATIC_TOKENS = [
   "--b2s-color-info-bg",
 ];
 
-const MINIMUM_TOKENS = 204;
-const MINIMUM_ACHROMATIC = 56;
-const MINIMUM_CHROMATIC = 10;
-const MINIMUM_FONT_FAMILIES = 9;
+const MINIMUM_TOKENS = 234;
+const MINIMUM_ACHROMATIC = 68;
+const MINIMUM_CHROMATIC = 11;
+const MINIMUM_FONT_FAMILIES = 11;
+const MINIMUM_STYLESHEETS = 12;
+const MINIMUM_DECLARATIONS = 690;
+const MINIMUM_SOURCES = 52;
 
 const FAMILIES = new Set(["IBM Plex Sans", "IBM Plex Sans Arabic"]);
 const GENERICS = new Set(["system-ui", "sans-serif"]);
@@ -637,7 +649,7 @@ function fontViolations(prop, value, fontFace) {
   const messages = [];
   if (prop === "--b2s-font-family" || (prop === "font-family" && !fontFace)) {
     for (const name of familiesIn(value)) {
-      if (name.startsWith("var(")) {
+      if (name.startsWith("var(") || WIDE.has(name.toLowerCase())) {
         continue;
       }
       if (!FAMILIES.has(name) && !GENERICS.has(name)) {
@@ -657,8 +669,17 @@ function fontViolations(prop, value, fontFace) {
   return messages;
 }
 
+const LAYER_TOKENS = [
+  "--b2s-layer-dropdown",
+  "--b2s-layer-sticky",
+  "--b2s-layer-scrim",
+  "--b2s-layer-dialog",
+  "--b2s-layer-notice",
+  "--b2s-layer-tooltip",
+];
+
 function rawViolation(prop, value) {
-  const raw = value.replace(/var\(--b2s-[a-z0-9-]+\)/g, "");
+  const raw = value.replace(/var\(\s*--b2s-[a-z0-9-]+\s*(?:,[^)]*)?\)/g, "");
   if (
     /#(?:[0-9a-fA-F]{3,8})\b/.test(raw) ||
     /(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\(/i.test(raw) ||
@@ -666,7 +687,90 @@ function rawViolation(prop, value) {
   ) {
     return `raw value outside a token definition: ${prop}: ${value}`;
   }
+  if (prop === "z-index") {
+    const named = value.trim().match(/^var\((--b2s-layer-[a-z0-9-]+)\)$/);
+    if (!named || !LAYER_TOKENS.includes(named[1])) {
+      return `raw z-index outside a token definition: ${prop}: ${value}`;
+    }
+  }
+  if (prop === "border-radius" && raw.replace(/[\s,]/g, "").length > 0) {
+    return `raw radius outside a token definition: ${prop}: ${value}`;
+  }
   return null;
+}
+
+function kebab(name) {
+  return name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+}
+
+function walkFiles(dir, extensions) {
+  const found = [];
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      if (entry.name === "node_modules" || entry.name === ".next") {
+        continue;
+      }
+      found.push(...walkFiles(full, extensions));
+      continue;
+    }
+    if (extensions.some((extension) => entry.name.endsWith(extension))) {
+      found.push(full.split("\\").join("/"));
+    }
+  }
+  return found;
+}
+
+function inlineDeclarations(source) {
+  const decls = [];
+  const quoted = /style\s*=\s*"([^"]*)"/g;
+  let match = quoted.exec(source);
+  while (match) {
+    decls.push(...declarations(match[1]));
+    match = quoted.exec(source);
+  }
+  const objectStyle = /style=\{\{([\s\S]*?)\}\}/g;
+  match = objectStyle.exec(source);
+  while (match) {
+    for (const part of match[1].split(",")) {
+      const colon = part.indexOf(":");
+      if (colon === -1) {
+        continue;
+      }
+      const prop = kebab(part.slice(0, colon).replace(/['"]/g, "").trim());
+      const value = part
+        .slice(colon + 1)
+        .trim()
+        .replace(/^["']|["']$/g, "");
+      if (prop) {
+        decls.push({ prop, value });
+      }
+    }
+    match = objectStyle.exec(source);
+  }
+  return decls;
+}
+
+export function sectionLayerTokens(markdown) {
+  const start = markdown.indexOf("### 2.11");
+  const end = markdown.indexOf("\n## 3", start + 1);
+  if (start < 0 || end < 0) {
+    return { error: "DESIGN_SURFACE.md is missing §2.11" };
+  }
+  const names = new Set();
+  for (const line of markdown.slice(start, end).split("\n")) {
+    if (!line.startsWith("|")) {
+      continue;
+    }
+    const cells = line.split("|").map((cell) => cell.trim()).filter((cell) => cell.length > 0);
+    if (cells.length < 2) {
+      continue;
+    }
+    for (const token of cells[0].match(/--b2s-layer-[a-z0-9-]+/g) ?? []) {
+      names.add(token);
+    }
+  }
+  return { names };
 }
 
 function collect(css) {
@@ -690,6 +794,39 @@ function collect(css) {
   return { decls, faces };
 }
 
+function examine(rel, text, stylesheet) {
+  const { decls, faces } = collect(stripComments(text));
+  let tokens = 0;
+  decls.forEach((decl, index) => {
+    if (decl.prop.startsWith("--")) {
+      if (decl.prop.startsWith("--b2s-") && rel !== GLOBALS) {
+        fail(`${rel}: a --b2s- custom property is defined only in ${GLOBALS} (${decl.prop})`);
+      }
+      if (rel === GLOBALS) {
+        tokens += 1;
+      }
+      for (const message of fontViolations(decl.prop, decl.value, false)) {
+        fail(`${rel}: ${message}`);
+      }
+      return;
+    }
+    if (stylesheet && faces[index]) {
+      for (const message of fontViolations(decl.prop, decl.value, true)) {
+        fail(`${rel}: ${message}`);
+      }
+      return;
+    }
+    const raw = rawViolation(decl.prop, decl.value);
+    if (raw) {
+      fail(`${rel}: ${raw}`);
+    }
+    for (const message of fontViolations(decl.prop, decl.value, false)) {
+      fail(`${rel}: ${message}`);
+    }
+  });
+  return { decls, tokens };
+}
+
 function main() {
   if (CHROMATIC_TOKENS.length < MINIMUM_CHROMATIC) {
     fail(`${CHROMATIC_TOKENS.length} chromatic token(s) on the list, minimum ${MINIMUM_CHROMATIC}`);
@@ -710,52 +847,70 @@ function main() {
   for (const message of listViolations(CHROMATIC_TOKENS, derived.names)) {
     fail(message);
   }
-
-  let text;
-  try {
-    text = stripComments(readFileSync(FILE, "utf8"));
-  } catch (err) {
-    fail(`${FILE}: ${err.message}`);
+  const layers = sectionLayerTokens(documentText);
+  if (layers.error) {
+    fail(layers.error);
     process.exit(1);
   }
-
-  const { decls, faces } = collect(text);
-  let tokens = 0;
-  for (const decl of decls) {
-    if (decl.prop.startsWith("--")) {
-      tokens += 1;
+  for (const token of LAYER_TOKENS) {
+    if (!layers.names.has(token)) {
+      fail(`${token} is listed as a z-index layer and DESIGN_SURFACE.md §2.11 does not name it`);
     }
   }
+  for (const token of layers.names) {
+    if (!LAYER_TOKENS.includes(token)) {
+      fail(`${token} is a z-index layer in DESIGN_SURFACE.md §2.11 and the layer list omits it`);
+    }
+  }
+
+  const stylesheets = [];
+  const sources = [];
+  for (const root of SCAN_ROOTS) {
+    if (!existsSync(root)) {
+      fail(`${root}/ is absent`);
+      continue;
+    }
+    stylesheets.push(...walkFiles(root, [".css"]));
+    sources.push(...walkFiles(root, [".css", ".ts", ".tsx", ".js", ".jsx", ".mjs"]));
+  }
+
+  const decls = [];
+  let tokens = 0;
+  for (const rel of stylesheets) {
+    const examined = examine(rel, readFileSync(rel, "utf8"), true);
+    decls.push(...examined.decls);
+    tokens += examined.tokens;
+  }
+  for (const rel of sources) {
+    if (rel.endsWith(".css")) {
+      continue;
+    }
+    const inline = inlineDeclarations(readFileSync(rel, "utf8"));
+    for (const decl of inline) {
+      const raw = rawViolation(decl.prop, decl.value);
+      if (raw) {
+        fail(`${rel}: ${raw}`);
+      }
+    }
+    decls.push(...inline);
+  }
+
   const colour = colourViolations(decls, CHROMATIC_TOKENS);
   for (const message of colour.messages) {
     fail(message);
   }
 
-  decls.forEach((decl, index) => {
-    const fontFace = faces[index];
-    if (decl.prop.startsWith("--")) {
-      for (const message of fontViolations(decl.prop, decl.value, false)) {
-        fail(message);
-      }
-      return;
-    }
-    if (fontFace) {
-      for (const message of fontViolations(decl.prop, decl.value, true)) {
-        fail(message);
-      }
-      return;
-    }
-    const raw = rawViolation(decl.prop, decl.value);
-    if (raw) {
-      fail(raw);
-    }
-    for (const message of fontViolations(decl.prop, decl.value, false)) {
-      fail(message);
-    }
-  });
-
   if (tokens < MINIMUM_TOKENS) {
     fail(`${tokens} token definition(s), minimum ${MINIMUM_TOKENS}`);
+  }
+  if (stylesheets.length < MINIMUM_STYLESHEETS) {
+    fail(`${stylesheets.length} stylesheet(s) scanned, minimum ${MINIMUM_STYLESHEETS}`);
+  }
+  if (decls.length < MINIMUM_DECLARATIONS) {
+    fail(`${decls.length} declaration(s) examined, minimum ${MINIMUM_DECLARATIONS}`);
+  }
+  if (sources.length < MINIMUM_SOURCES) {
+    fail(`${sources.length} source file(s) scanned, minimum ${MINIMUM_SOURCES}`);
   }
 
   if (violations > 0) {
@@ -763,7 +918,7 @@ function main() {
   }
 
   console.log(
-    `OK: token values stay inside definitions; ${tokens} token(s), minimum ${MINIMUM_TOKENS}; ${colour.achromaticTokens} achromatic colour token(s), minimum ${MINIMUM_ACHROMATIC}; ${CHROMATIC_TOKENS.length} chromatic token(s), minimum ${MINIMUM_CHROMATIC}; ${colour.fontFamilies} font-family declaration(s), minimum ${MINIMUM_FONT_FAMILIES}`,
+    `OK: token values stay inside definitions; ${stylesheets.length} stylesheet(s) scanned, minimum ${MINIMUM_STYLESHEETS}; ${decls.length} declaration(s) examined, minimum ${MINIMUM_DECLARATIONS}; ${tokens} token(s), minimum ${MINIMUM_TOKENS}; ${colour.achromaticTokens} achromatic colour token(s), minimum ${MINIMUM_ACHROMATIC}; ${CHROMATIC_TOKENS.length} chromatic token(s), minimum ${MINIMUM_CHROMATIC}; ${colour.fontFamilies} font-family declaration(s), minimum ${MINIMUM_FONT_FAMILIES}; ${sources.length} source file(s) scanned, minimum ${MINIMUM_SOURCES}`,
   );
 }
 

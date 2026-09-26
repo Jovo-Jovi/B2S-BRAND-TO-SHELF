@@ -466,6 +466,16 @@ before the first edit. The defect was not the digit choice — it was one
 rule with two declaration sites, which `UX_PRINCIPLES.md` §4 forbids for
 strings and which is exactly how two documents drift.
 
+**PR-44 — A value a specification does not state is reported, and the part
+that depends on it stops.**
+Filling the value and reporting the fill is a different act. A report that
+lists filled values as "reported and not invented" describes them
+inaccurately. Origin: P03-T09, HALT 4. About ten unstated values were
+filled. Most were harmless. The danger Button's text was not: it produced
+3.18:1 in dark, and no gate then in the set could see it. The specification
+gap was the reviewer's. The halt existed so a gap would reach the reviewer
+rather than being closed plausibly.
+
 ---
 
 ## 2. Environment quirks — never re-discover

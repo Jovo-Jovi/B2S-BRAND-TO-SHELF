@@ -25,11 +25,6 @@
   outline-offset: var(--b2s-focus-offset);
 }
 
-.root:active,
-.root[data-state="active"] {
-  transform: none;
-}
-
 .primary {
   background-color: var(--b2s-color-action);
   color: var(--b2s-color-action-text);
@@ -38,6 +33,11 @@
 .primary:hover,
 .primary[data-state="hover"] {
   background-color: var(--b2s-color-action-hover);
+}
+
+.primary:active,
+.primary[data-state="active"] {
+  background-color: var(--b2s-color-action-active);
 }
 
 .secondary {
@@ -54,18 +54,30 @@
   background-color: var(--b2s-color-sunken);
 }
 
+.secondary:active,
+.secondary[data-state="active"],
+.quiet:active,
+.quiet[data-state="active"] {
+  background-color: var(--b2s-color-surface-active);
+}
+
 .quiet {
   color: var(--b2s-color-text);
 }
 
 .danger {
   background-color: var(--b2s-color-danger-action);
-  color: var(--b2s-color-action-text);
+  color: var(--b2s-color-danger-action-text);
 }
 
 .danger:hover,
 .danger[data-state="hover"] {
   background-color: var(--b2s-color-danger-action-hover);
+}
+
+.danger:active,
+.danger[data-state="active"] {
+  background-color: var(--b2s-color-danger-action-active);
 }
 
 .root:disabled,

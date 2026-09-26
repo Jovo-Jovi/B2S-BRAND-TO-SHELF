@@ -39,17 +39,17 @@
   inline-size: var(--b2s-check-size);
   block-size: var(--b2s-check-size);
   border: var(--b2s-border-width) solid var(--b2s-color-border-control);
-  border-radius: 50%;
+  border-radius: var(--b2s-radius-full);
   background-color: var(--b2s-color-surface);
 }
 
 .dot {
   position: absolute;
-  inset-block-start: 25%;
-  inset-inline-start: 25%;
-  inline-size: 50%;
-  block-size: 50%;
-  border-radius: 50%;
+  inset-block-start: calc((var(--b2s-check-size) - var(--b2s-radio-dot-size)) / 2);
+  inset-inline-start: calc((var(--b2s-check-size) - var(--b2s-radio-dot-size)) / 2);
+  inline-size: var(--b2s-radio-dot-size);
+  block-size: var(--b2s-radio-dot-size);
+  border-radius: var(--b2s-radius-full);
   background-color: var(--b2s-color-action);
   opacity: 0;
   pointer-events: none;

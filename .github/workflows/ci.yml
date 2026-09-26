@@ -119,7 +119,7 @@ jobs:
           key: node_modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
           fail-on-cache-miss: true
 
-      # All thirteen guards have a live target. check-service-import stopped being
+      # All fourteen guards have a live target. check-service-import stopped being
       # a vacuous pass at P01-T02: ADR-005's quarantine now exists at
       # lib/supabase/server-only/, and the guard fails if it ever disappears
       # rather than reporting OK for lack of anything to check (PR-21).
@@ -156,6 +156,9 @@ jobs:
 
       - name: check-token-values
         run: node scripts/check-token-values.mjs
+
+      - name: check-contrast
+        run: node scripts/check-contrast.mjs
 
       - name: check-component-variants
         run: node scripts/check-component-variants.mjs

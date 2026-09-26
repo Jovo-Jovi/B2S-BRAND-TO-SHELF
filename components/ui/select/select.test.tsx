@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { readFileSync } from "node:fs";
 import { act } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
@@ -93,5 +94,10 @@ describe("Select", () => {
       const html = renderToStaticMarkup(<Select size={size} options={options} value="" noResults="No matches" />);
       expect(html).toContain(`data-density="${size}"`);
     }
+  });
+
+  it("raises the listbox on the stated layer", () => {
+    const css = readFileSync("components/ui/select/select.module.css", "utf8");
+    expect(css).toContain("z-index: var(--b2s-layer-dropdown)");
   });
 });

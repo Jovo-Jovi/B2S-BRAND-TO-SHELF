@@ -1,11 +1,12 @@
-// TextField number normalises Arabic-Indic digits and both decimal
-// separators to the canonical numeric form CALC_SPEC.md R1-25 stores:
-// Latin digits and "." as the decimal separator. It does not group, and
-// it does not render. Identifier values never pass through here.
+// TextField number, DESIGN_SURFACE.md TextField `number`:
+// U+0660–U+0669 and U+06F0–U+06F9 become the Latin digits 0–9.
+// U+066B becomes ".". U+066C and "," are grouping and are removed.
+// Identifier values never pass through here.
 
 const ARABIC_INDIC_ZERO = 0x0660;
 const EXTENDED_ARABIC_INDIC_ZERO = 0x06f0;
 const ARABIC_DECIMAL_SEPARATOR = 0x066b;
+const ARABIC_THOUSANDS_SEPARATOR = 0x066c;
 
 export const IDENTIFIER_DIGIT_ERROR = "arabic_indic_digit";
 
@@ -39,6 +40,8 @@ function latinDigits(value: string): string {
       out += String(code - EXTENDED_ARABIC_INDIC_ZERO);
     } else if (code === ARABIC_DECIMAL_SEPARATOR) {
       out += ".";
+    } else if (code === ARABIC_THOUSANDS_SEPARATOR || char === ",") {
+      continue;
     } else {
       out += char;
     }
@@ -46,20 +49,6 @@ function latinDigits(value: string): string {
   return out;
 }
 
-// The rightmost of "," and "." is the decimal separator. Earlier copies of
-// either are grouping marks and are removed. A value with only one kind of
-// separator treats that separator as decimal.
 export function normaliseNumberInput(value: string): string {
-  const latin = latinDigits(value);
-  const lastComma = latin.lastIndexOf(",");
-  const lastDot = latin.lastIndexOf(".");
-  if (lastComma === -1) {
-    return latin;
-  }
-  if (lastDot === -1 || lastComma > lastDot) {
-    const head = latin.slice(0, lastComma).replace(/[,.]/g, "");
-    const tail = latin.slice(lastComma + 1).replace(/,/g, "");
-    return `${head}.${tail}`;
-  }
-  return latin.replace(/,/g, "");
+  return latinDigits(value);
 }

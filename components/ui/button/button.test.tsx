@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { act } from "react";
+import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
@@ -91,5 +92,14 @@ describe("Button", () => {
     });
     expect(clicks).toBe(0);
     await view.unmount();
+  });
+
+  it("paints danger text and each pressed fill from the stated tokens", () => {
+    const css = readFileSync("components/ui/button/button.module.css", "utf8");
+    expect(css).toContain("color: var(--b2s-color-danger-action-text)");
+    expect(css).toContain("background-color: var(--b2s-color-danger-action-active)");
+    expect(css).toContain("background-color: var(--b2s-color-action-active)");
+    expect(css).toContain("background-color: var(--b2s-color-surface-active)");
+    expect(css).not.toContain("transform:");
   });
 });

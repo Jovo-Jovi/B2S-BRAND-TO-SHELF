@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { readFileSync } from "node:fs";
 import { useState } from "react";
 import { act } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -66,5 +67,12 @@ describe("RadioGroup", () => {
       const html = renderToStaticMarkup(<RadioGroup caption="Language" options={options} size={size} value="" />);
       expect(html).toContain(`data-density="${size}"`);
     }
+  });
+
+  it("draws the inner dot from the stated size", () => {
+    const css = readFileSync("components/ui/radio-group/radio-group.module.css", "utf8");
+    expect(css).toContain("inline-size: var(--b2s-radio-dot-size)");
+    expect(css).toContain("border-radius: var(--b2s-radius-full)");
+    expect(css).not.toContain("50%");
   });
 });

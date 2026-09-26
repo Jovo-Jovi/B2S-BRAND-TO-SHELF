@@ -67,6 +67,10 @@
   --b2s-color-focus: #1a1a1a;
   --b2s-color-danger-action: #b3261e;
   --b2s-color-danger-action-hover: #931f18;
+  --b2s-color-danger-action-text: #ffffff;
+  --b2s-color-danger-action-active: #7a1a14;
+  --b2s-color-action-active: #000000;
+  --b2s-color-surface-active: #e3e3e3;
   --b2s-color-success: #1f7a3d;
   --b2s-color-success-bg: #eef7f1;
   --b2s-color-warning: #8a5a00;
@@ -140,6 +144,20 @@
   --b2s-dialog-width-small: 24rem;
   --b2s-dialog-width-medium: 32rem;
   --b2s-dialog-width-large: 48rem;
+  --b2s-layer-dropdown: 10;
+  --b2s-layer-sticky: 20;
+  --b2s-layer-scrim: 30;
+  --b2s-layer-dialog: 40;
+  --b2s-layer-notice: 50;
+  --b2s-layer-tooltip: 60;
+  --b2s-switch-block-size: 1.25rem;
+  --b2s-switch-inline-size: 2.25rem;
+  --b2s-switch-thumb-size: 1rem;
+  --b2s-switch-inset: var(--b2s-space-1);
+  --b2s-radio-dot-size: 0.5rem;
+  --b2s-multiline-rows-min: 3;
+  --b2s-multiline-rows-max: 8;
+  --b2s-skeleton-opacity-min: 0.6;
 }
 
 :root:lang(ar) {
@@ -210,6 +228,10 @@
     --b2s-color-focus: #f2f2f2;
     --b2s-color-danger-action: #c62f26;
     --b2s-color-danger-action-hover: #a82820;
+    --b2s-color-danger-action-text: #ffffff;
+    --b2s-color-danger-action-active: #8f211b;
+    --b2s-color-action-active: #bdbdbd;
+    --b2s-color-surface-active: #333333;
     --b2s-color-success: #6fcf8f;
     --b2s-color-success-bg: #16261b;
     --b2s-color-warning: #e6b450;
@@ -241,6 +263,10 @@
   --b2s-color-focus: #f2f2f2;
   --b2s-color-danger-action: #c62f26;
   --b2s-color-danger-action-hover: #a82820;
+  --b2s-color-danger-action-text: #ffffff;
+  --b2s-color-danger-action-active: #8f211b;
+  --b2s-color-action-active: #bdbdbd;
+  --b2s-color-surface-active: #333333;
   --b2s-color-success: #6fcf8f;
   --b2s-color-success-bg: #16261b;
   --b2s-color-warning: #e6b450;
@@ -271,6 +297,10 @@
   --b2s-color-focus: #1a1a1a;
   --b2s-color-danger-action: #b3261e;
   --b2s-color-danger-action-hover: #931f18;
+  --b2s-color-danger-action-text: #ffffff;
+  --b2s-color-danger-action-active: #7a1a14;
+  --b2s-color-action-active: #000000;
+  --b2s-color-surface-active: #e3e3e3;
   --b2s-color-success: #1f7a3d;
   --b2s-color-success-bg: #eef7f1;
   --b2s-color-warning: #8a5a00;

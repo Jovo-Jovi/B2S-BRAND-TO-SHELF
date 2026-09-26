@@ -28,7 +28,8 @@
 .multiline {
   display: block;
   inline-size: 100%;
-  min-block-size: var(--b2s-control-height);
+  min-block-size: calc(var(--b2s-multiline-rows-min) * var(--b2s-text-body) * var(--b2s-leading-md));
+  max-block-size: calc(var(--b2s-multiline-rows-max) * var(--b2s-text-body) * var(--b2s-leading-md));
   field-sizing: content;
   overflow: auto;
   resize: none;

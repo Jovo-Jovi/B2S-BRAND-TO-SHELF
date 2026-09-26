@@ -45,7 +45,7 @@ That is where this system spends its boldness: in one place, inside the brand fr
 - **Brand tokens:** `--brand-{name}`. Defined only by `BrandFrame` (§3). Consumed only inside it (CF-171).
 - The tokens currently in `app/globals.css` are **unconsumed** — P03-T06's inventory found no rule assigning them — so this set replaces them and nothing breaks.
 - `leading` replaces `line-height` in token names so that no identifier carries a bare `line` (`GLOSSARY.md` §5).
-- No raw colour, spacing, radius, duration, shadow or font-family value appears anywhere outside the token definitions (CF-172).
+- No raw colour, spacing, radius, duration, shadow, font-family or z-index value appears anywhere outside the token definitions (CF-172). A `--b2s-` custom property is defined only in `app/globals.css`.
 - **A page or component never introduces a chrome colour.** It uses a platform token or it is a defect. Every platform colour token is defined in §2.2 and §2.11, and every chrome neutral among them is achromatic (`OD-G22`).
 
 ### 2.2 Colour — platform
@@ -55,6 +55,7 @@ That is where this system spends its boldness: in one place, inside the brand fr
 | `--b2s-color-canvas` | `#f4f4f4` | `#171717` | Page background |
 | `--b2s-color-surface` | `#ffffff` | `#1f1f1f` | Panels, fields, table body |
 | `--b2s-color-sunken` | `#ededed` | `#141414` | Wells, table header, read-only fields |
+| `--b2s-color-surface-active` | `#e3e3e3` | `#333333` | Secondary and quiet pressed fill |
 | `--b2s-color-raised` | `#ffffff` | `#262626` | Menus, popovers, dialogs, notices |
 | `--b2s-color-border` | `#e0e0e0` | `#2e2e2e` | Decorative dividers **only** — never a control boundary |
 | `--b2s-color-border-control` | `#7a7a7a` | `#767676` | Every control boundary: fields, checkboxes, switch tracks |
@@ -64,18 +65,21 @@ That is where this system spends its boldness: in one place, inside the brand fr
 | `--b2s-color-action` | `#1a1a1a` | `#f2f2f2` | Primary action fill |
 | `--b2s-color-action-text` | `#ffffff` | `#1a1a1a` | Text on primary action |
 | `--b2s-color-action-hover` | `#3d3d3d` | `#d6d6d6` | Primary action, hovered |
+| `--b2s-color-action-active` | `#000000` | `#bdbdbd` | Primary action, pressed |
 | `--b2s-color-focus` | `#1a1a1a` | `#f2f2f2` | Focus ring |
-| `--b2s-color-danger-action` | `#b3261e` | `#c62f26` | Destructive fill; text `#ffffff` |
+| `--b2s-color-danger-action` | `#b3261e` | `#c62f26` | Destructive fill; text `--b2s-color-danger-action-text` |
+| `--b2s-color-danger-action-text` | `#ffffff` | `#ffffff` | Text on the danger action |
+| `--b2s-color-danger-action-active` | `#7a1a14` | `#8f211b` | Destructive fill, pressed |
 | `--b2s-color-success`, `--b2s-color-success-bg` | `#1f7a3d` / `#eef7f1` | `#6fcf8f` / `#16261b` | Status |
 | `--b2s-color-warning`, `--b2s-color-warning-bg` | `#8a5a00` / `#fbf5e6` | `#e6b450` / `#2a2212` | Status |
 | `--b2s-color-danger`, `--b2s-color-danger-bg` | `#b3261e` / `#fbeeed` | `#f08a82` / `#2e1a19` | Status |
 | `--b2s-color-info`, `--b2s-color-info-bg` | `#1f5fae` / `#edf3fb` | `#7fb0ec` / `#17222f` | Status |
 
-**Status colours are functional, not decorative.** They carry the four states and nothing else. They never appear as brand, accent, emphasis or illustration.
+**Status colours are functional, not decorative.** They carry the four states and nothing else. They never appear as brand, accent, emphasis or illustration. The closed chromatic set is those four colours and their backgrounds, plus `danger-action`, `danger-action-hover` and `danger-action-active`. `danger-action-text` is `#ffffff` in both themes and is achromatic. `action-active` and `surface-active` are achromatic.
 
 **`border` and `border-control` are different jobs.** WCAG 2.2 1.4.11 requires 3:1 only where a boundary is needed to identify a control. Dividers are decorative and sit quieter; control boundaries meet 3:1 on every surface.
 
-**Contrast, computed rather than asserted** (PR-23). Fifty-six text and control pairs, both themes — each of `text`, `text-muted` and `text-subtle` on `canvas`, `surface`, `sunken` and `raised`; `border-control` and `focus` on those four surfaces; `action-text` on `action` and on `action-hover`; white on `danger-action` and on `danger-action-hover`; and each status colour on its background. Every one meets WCAG 2.2 AA. Selected rows:
+**Contrast, computed rather than asserted** (PR-23). Fifty-six text and control pairs, both themes — each of `text`, `text-muted` and `text-subtle` on `canvas`, `surface`, `sunken` and `raised`; `border-control` and `focus` on those four surfaces; `action-text` on `action` and on `action-hover`; `danger-action-text` on `danger-action` and on `danger-action-hover`; and each status colour on its background. Every one meets WCAG 2.2 AA. Selected rows:
 
 | Pair | Light | Dark | Needs |
 |---|---|---|---|
@@ -84,11 +88,17 @@ That is where this system spends its boldness: in one place, inside the brand fr
 | text-subtle on canvas (lowest) | 4.85 | 6.29 | 4.5 |
 | border-control, lowest | 3.67 on sunken | 3.33 on raised | 3.0 |
 | action-text on action | 17.40 | 15.55 | 4.5 |
-| white on danger-action | 6.54 | 5.47 | 4.5 |
+| action-text on action-active | 21.00 | 9.26 | 4.5 |
+| danger-action-text on danger-action | 6.54 | 5.47 | 4.5 |
+| danger-action-text on danger-action-hover | 8.57 | 7.02 | 4.5 |
+| danger-action-text on danger-action-active | 10.58 | 8.75 | 4.5 |
+| text on surface-active | 13.56 | 11.29 | 4.5 |
 | success on success-bg | 4.91 | 8.29 | 4.5 |
 | warning on warning-bg | 5.45 | 8.24 | 4.5 |
 | danger on danger-bg | 5.78 | 6.78 | 4.5 |
 | info on info-bg | 5.69 | 7.14 | 4.5 |
+
+A control's boundary is measured against the surface around it, which pressing does not change, so `border-control` against `surface-active` (2.78 in dark) is not a WCAG 2.2 1.4.11 requirement.
 
 Placeholders use `text-subtle` and meet 4.5:1, but a placeholder is never a substitute for a caption (§6, `Field`).
 
@@ -210,6 +220,8 @@ One icon set of line glyphs at a 1.5px stroke, sized by `--b2s-icon-size`. **Eve
 
 If the icon set arrives as a package, it is an ADR for the landing task under `AGENTS.md` §2.
 
+Until the icon registry lands, no primitive carries a direction-bearing icon, and a caller-supplied icon is rendered as given. The registry, and every directional icon, land together at P03-T10.
+
 ### 2.11 Component dimensions
 
 Every fixed measure a component uses is a token here, so that no component carries a raw value (CF-172).
@@ -234,6 +246,22 @@ Every fixed measure a component uses is a token here, so that no component carri
 | `--b2s-delay-loader` | 150ms | `Skeleton`, `Spinner`, every loading state |
 | `--b2s-delay-tooltip` | 500ms | `Tooltip` |
 | `--b2s-notice-dismiss` | 5000ms | `Notice` toast, success and info |
+| `--b2s-layer-dropdown` | 10 | `Select` listbox |
+| `--b2s-layer-sticky` | 20 | Sticky chrome |
+| `--b2s-layer-scrim` | 30 | Scrim |
+| `--b2s-layer-dialog` | 40 | `Dialog` |
+| `--b2s-layer-notice` | 50 | `Notice` |
+| `--b2s-layer-tooltip` | 60 | `Tooltip` |
+| `--b2s-switch-block-size` | 1.25rem | `Switch`, both densities — the whole row is the target |
+| `--b2s-switch-inline-size` | 2.25rem | `Switch`, both densities — the whole row is the target |
+| `--b2s-switch-thumb-size` | 1rem | `Switch`, both densities — the whole row is the target |
+| `--b2s-switch-inset` | `var(--b2s-space-1)` | `Switch`, both densities — the whole row is the target |
+| `--b2s-radio-dot-size` | 0.5rem | `RadioGroup` |
+| `--b2s-multiline-rows-min` | 3 | `TextField` multiline |
+| `--b2s-multiline-rows-max` | 8 | `TextField` multiline |
+| `--b2s-skeleton-opacity-min` | 0.6 | `Skeleton` |
+
+The six `--b2s-layer-*` tokens are every z-index in the catalog, and no other value is a z-index. The switch tokens are the same in both densities, because the whole row is the target. A multiline `TextField` grows to eight rows, then scrolls. The skeleton pulse runs between 0.6 and 1, so a placeholder never vanishes.
 
 ---
 
@@ -312,10 +340,10 @@ parts: [container, icon_start?, text, icon_end?, spinner?]
 variants: [primary, secondary, quiet, danger]
 sizes: [compact, comfortable]
 states:
-  default: primary is action fill with action-text; secondary is surface fill with border-control; quiet is text only; danger is danger-action fill with white text
+  default: primary is action fill with action-text; secondary is surface fill with border-control; quiet is text only; danger is danger-action fill with danger-action-text
   hover: primary to action-hover; secondary and quiet to sunken fill; danger to danger-action-hover
   focus: universal focus ring
-  active: fill deepens one step; no movement, no scale
+  active: primary to action-active; secondary and quiet to surface-active; danger to danger-action-active; no movement, no scale
   disabled: universal disabled
   loading: spinner replaces icon_start; width locked to its idle width; text kept; aria-busy
   error: n/a — a button reports no value of its own; the error belongs to the field or notice its action produces
@@ -323,7 +351,7 @@ states:
 keyboard: [Enter activates, Space activates]
 aria: native button element; an icon-only button carries an accessible name from the catalog; loading sets aria-busy and aria-disabled and never moves focus away
 mirrors: icon_start and icon_end are logical; a directional icon flips by its registry flag
-tokens: [control-height, control-padding-inline, radius-md, color-action, color-action-text, color-action-hover, color-surface, color-border-control, color-sunken, color-danger-action, color-danger-action-hover, color-focus, focus-width, focus-offset, text-body, icon-size, duration-quick, delay-loader]
+tokens: [control-height, control-padding-inline, radius-md, color-action, color-action-text, color-action-hover, color-action-active, color-surface, color-surface-active, color-border-control, color-sunken, color-danger-action, color-danger-action-text, color-danger-action-hover, color-danger-action-active, color-focus, focus-width, focus-offset, text-body, icon-size, duration-quick, delay-loader]
 ```
 
 **Use:** one `primary` per region, for the action the region exists for. `secondary` for alternatives. `quiet` for low-emphasis and repeated actions — every row action in a table. `danger` for irreversible actions only. Archiving is reversible and is `secondary`.
@@ -405,14 +433,14 @@ states:
 keyboard: [native text entry, Escape clears when clear_action is present]
 aria: native input or textarea inside Field; number uses inputmode decimal; identifier sets spellcheck off and autocapitalize off
 mirrors: prefix and suffix are logical; identifier and email inputs are left-to-right and isolated in either locale
-tokens: [control-height, control-padding-inline, radius-md, color-surface, color-border-control, color-text, color-text-subtle, color-danger, color-focus, text-body]
+tokens: [control-height, control-padding-inline, radius-md, color-surface, color-border-control, color-text, color-text-subtle, color-danger, color-focus, text-body, leading-md, multiline-rows-min, multiline-rows-max]
 ```
 
-**`number`** — for money, quantities and percentages. On input it accepts Latin **and** Arabic-Indic digits and both decimal separators, and normalises them before validation, because a person on an Arabic keyboard or pasting from another document may produce either. On blur it redisplays through the R1-25 formatter. The currency symbol sits in the `suffix`, after the value, as R1-25 defines.
+**`number`** — for money, quantities and percentages. On input, U+0660–U+0669 and U+06F0–U+06F9 become the Latin digits 0–9; U+066B, the Arabic decimal separator, becomes "."; U+066C, the Arabic thousands separator, and "," are grouping and are removed. On blur it redisplays through the R1-25 formatter. The currency symbol sits in the `suffix`, after the value, as R1-25 defines.
 
-**`identifier`** — SKUs, GTINs, batch and invoice numbers. **Never normalised and never re-digited.** A scanned code has to match what is printed character for character, so an Arabic-Indic digit typed into an identifier is refused with a named error — "Use the digits 0 to 9" — rather than silently converted.
+**`identifier`** — SKUs, GTINs, batch and invoice numbers. **Never normalised and never re-digited.** A scanned code has to match what is printed character for character, so every digit in U+0660–U+0669 and U+06F0–U+06F9 typed into an identifier is refused with the named error — "Use the digits 0 to 9" — rather than silently converted. The Extended Arabic-Indic range adopts P03-T09's choice.
 
-**`multiline`** — grows with content to a limit, then scrolls. Guideline bodies use it through `BilingualField`.
+**`multiline`** — grows with content to eight rows (`--b2s-multiline-rows-max`), from a floor of three (`--b2s-multiline-rows-min`), then scrolls. Guideline bodies use it through `BilingualField`.
 
 ### BilingualField
 
@@ -454,7 +482,7 @@ states:
   default: TextField boundary and fill; chevron at inline-end
   hover: boundary to text-muted
   focus: universal focus ring
-  active: listbox open, elevation-1
+  active: listbox open, elevation-1, layer-dropdown
   disabled: universal disabled
   loading: spinner replaces the chevron while options load; the trigger stays focusable
   error: boundary to danger; Field shows the message
@@ -463,7 +491,7 @@ states:
 keyboard: [native select handles its own keys; searchable opens on Enter, Space or ArrowDown, moves with arrows, selects on Enter, closes on Escape, type-ahead filters]
 aria: native uses the select element; searchable follows the combobox pattern with a listbox popup
 mirrors: chevron at inline-end; listbox aligns to inline-start of the trigger
-tokens: [control-height, radius-md, color-surface, color-raised, color-border-control, color-text, color-text-subtle, elevation-1, color-focus]
+tokens: [control-height, radius-md, color-surface, color-raised, color-border-control, color-text, color-text-subtle, elevation-1, layer-dropdown, color-focus]
 ```
 
 **`native` for short lists with no search** — it is the most robust option on every device and screen reader, and on a phone it opens the platform picker. **`searchable` for long lists**: the tenant switcher now, product and buyer pickers later. The identifier for the choices is `options`, never `items`.
@@ -509,11 +537,11 @@ states:
   loading: n/a — submitted with its form
   error: boundaries to danger; Field shows the message
   empty: n/a — a group always offers at least two options, and no option selected is a validation state
-  checked: action-filled inner dot
+  checked: action-filled inner dot at radio-dot-size
 keyboard: [Arrow keys move and select within the group, in visual direction; Tab enters and leaves the group]
 aria: fieldset with legend as the group caption; native radio inputs
 mirrors: options run from inline-start; arrow keys follow visual direction
-tokens: [check-size, color-border-control, color-action, color-focus, space-3, text-body]
+tokens: [check-size, radio-dot-size, radius-full, color-border-control, color-action, color-focus, space-3, text-body]
 ```
 
 **`horizontal` for two or three short options only**; anything else is vertical.
@@ -526,7 +554,7 @@ parts: [track, thumb, caption, state_text]
 variants: [standard]
 sizes: [compact, comfortable]
 states:
-  default: track sunken with border-control boundary; thumb at inline-start
+  default: track sunken with border-control boundary, switch-block-size by switch-inline-size; thumb is switch-thumb-size, inset by switch-inset, at inline-start
   hover: track boundary to text
   focus: universal focus ring around the track
   active: thumb widens by space-1 while pressed
@@ -538,7 +566,7 @@ states:
 keyboard: [Space toggles, Enter toggles]
 aria: role switch with aria-checked; the caption names the setting and the state text reads on or off from the catalog
 mirrors: the thumb moves from inline-start to inline-end, so it travels right-to-left in Arabic
-tokens: [radius-full, color-sunken, color-border-control, color-action, color-action-text, duration-base, ease-standard, color-focus]
+tokens: [radius-full, color-sunken, color-border-control, color-action, color-action-text, switch-block-size, switch-inline-size, switch-thumb-size, switch-inset, space-1, duration-base, ease-standard, color-focus]
 ```
 
 **A switch takes effect immediately** — the theme, a notification preference. A value submitted with a form is a `Checkbox`. State is never carried by colour alone: the text says on or off.
@@ -815,13 +843,13 @@ states:
   focus: n/a — not focusable
   active: n/a — not interactive
   disabled: n/a — a placeholder has no disabled form
-  loading: this primitive is the loading state; a slow opacity pulse, removed under reduced motion
+  loading: this primitive is the loading state; a slow opacity pulse between skeleton-opacity-min and 1, so a placeholder never vanishes, removed under reduced motion
   error: n/a — replaced by ErrorState
   empty: n/a — replaced by EmptyState
 keyboard: [none]
 aria: aria-hidden; the containing region carries aria-busy
 mirrors: shapes follow reading direction
-tokens: [color-sunken, radius-sm, row-height, duration-pulse, delay-loader]
+tokens: [color-sunken, radius-sm, row-height, duration-pulse, delay-loader, skeleton-opacity-min]
 ```
 
 **Content areas only**, and only after `--b2s-delay-loader` so fast responses never flash a placeholder. **It reserves the final layout's space**, so nothing shifts when content arrives.
@@ -938,7 +966,8 @@ Every gate the catalog landing task builds, and the part of this document it hol
 | CF-169 | Static | `UX_PRINCIPLES.md` §4; §4 rule 11 here | `en` and `ar` key sets, including every plural category |
 | CF-170 | Static | `UX_PRINCIPLES.md` §4 (CF-74) | Duplicate values per catalog namespace |
 | CF-171 | Static | §3 rules 2 and 7 | `--brand-*` references outside `BrandFrame`; `--b2s-*` references inside it |
-| CF-172 | Static | §2.1; §1; §0 items 1 and 2 | Raw colour, spacing, radius, duration, shadow or font-family values outside token definitions; every chrome neutral achromatic; font families only the two `OD-G23` names |
+| CF-172 | Static | §2.1; §1; §0 items 1 and 2 | Raw colour, spacing, radius, duration, shadow, font-family or z-index outside token definitions, in every stylesheet and inline style; a `--b2s-` custom property defined only in `app/globals.css`; every chrome neutral achromatic; font families only the two `OD-G23` names |
+| CF-198 | Static | §2.2 | Text and background declared together, or through a state selector of the same component, at 4.5:1 in both themes; a boundary token against the surface declared with it at 3:1. Pairs inherited from an ancestor are outside it. Not a substitute for CF-177 |
 | CF-173 | Static | §5; every `component` block | Each primitive implements every state not marked `n/a` |
 | CF-174 | Static | Every `component` block | Variant and size names match exactly |
 | CF-175 | Static | §4 rule 6; `TextField` `number` | Formatted numbers only through the R1-25 formatter |
@@ -1025,3 +1054,51 @@ The sentence now states fifty-six, which is the set the colour table enumerates.
 `| `--b2s-color-success` / `-bg` | `#1f7a3d` / `#eef7f1` | `#6fcf8f` / `#16261b` | Status |`
 
 and the same `/ `-bg`` form for warning, danger and info. Each background token is now written in full.
+
+**2026-09-26 — P03-T09-FIX.** §2.1's raw-value sentence did not name z-index, and it did not say where a `--b2s-` custom property may be defined. Prior text:
+
+`- No raw colour, spacing, radius, duration, shadow or font-family value appears anywhere outside the token definitions (CF-172).`
+
+The sentence now includes z-index, and a `--b2s-` custom property is defined only in `app/globals.css`.
+
+**2026-09-26 — P03-T09-FIX.** §2.2 named white text on the danger fill and did not name a token for it, and it did not state the pressed fills. Prior text:
+
+`| `--b2s-color-danger-action` | `#b3261e` | `#c62f26` | Destructive fill; text `#ffffff` |`
+
+and, in the contrast sentence, `white on `danger-action` and on `danger-action-hover``. The danger row now names `--b2s-color-danger-action-text`. The table gains `--b2s-color-danger-action-text` (`#ffffff` / `#ffffff`), `--b2s-color-danger-action-active` (`#7a1a14` / `#8f211b`), `--b2s-color-action-active` (`#000000` / `#bdbdbd`) and `--b2s-color-surface-active` (`#e3e3e3` / `#333333`). `danger-action-active` joins the closed chromatic set. `danger-action-text`, `action-active` and `surface-active` are achromatic. The selected contrast row `white on danger-action` is now `danger-action-text` on the danger fill, the hover and the pressed fill, plus `action-text` on `action-active` and `text` on `surface-active`. Beside that table: a control's boundary is measured against the surface around it, which pressing does not change, so `border-control` against `surface-active` (2.78 in dark) is not a WCAG 2.2 1.4.11 requirement.
+
+**2026-09-26 — P03-T09-FIX.** Button's `default` and `active` lines, and its tokens list. Prior text:
+
+`default: primary is action fill with action-text; secondary is surface fill with border-control; quiet is text only; danger is danger-action fill with white text`
+
+`active: fill deepens one step; no movement, no scale`
+
+`tokens: [control-height, control-padding-inline, radius-md, color-action, color-action-text, color-action-hover, color-surface, color-border-control, color-sunken, color-danger-action, color-danger-action-hover, color-focus, focus-width, focus-offset, text-body, icon-size, duration-quick, delay-loader]`
+
+`active` is now primary to `action-active`, secondary and quiet to `surface-active`, danger to `danger-action-active`, with no movement and no scale. `default` names `danger-action-text` for the danger variant. The tokens list gains the four new colour tokens.
+
+**2026-09-26 — P03-T09-FIX.** §2.11 did not state a z-index scale, the switch's size, the radio dot, the multiline ceiling or the skeleton pulse floor. The component blocks named none of those tokens. Prior `Select` active line: `active: listbox open, elevation-1`. Prior `RadioGroup` checked line: `checked: action-filled inner dot`. Prior `Switch` default line: `default: track sunken with border-control boundary; thumb at inline-start`. Prior `Switch` tokens line: `tokens: [radius-full, color-sunken, color-border-control, color-action, color-action-text, duration-base, ease-standard, color-focus]`. Prior `TextField` tokens line: `tokens: [control-height, control-padding-inline, radius-md, color-surface, color-border-control, color-text, color-text-subtle, color-danger, color-focus, text-body]`. Prior `Skeleton` loading line: `loading: this primitive is the loading state; a slow opacity pulse, removed under reduced motion`. Prior `Skeleton` tokens line: `tokens: [color-sunken, radius-sm, row-height, duration-pulse, delay-loader]`. Prior `RadioGroup` tokens line: `tokens: [check-size, color-border-control, color-action, color-focus, space-3, text-body]`. Prior `Select` tokens line: `tokens: [control-height, radius-md, color-surface, color-raised, color-border-control, color-text, color-text-subtle, elevation-1, color-focus]`.
+
+§2.11 now defines `--b2s-layer-dropdown` 10, `--b2s-layer-sticky` 20, `--b2s-layer-scrim` 30, `--b2s-layer-dialog` 40, `--b2s-layer-notice` 50 and `--b2s-layer-tooltip` 60, and states that these are every z-index in the catalog. It defines `--b2s-switch-block-size` 1.25rem, `--b2s-switch-inline-size` 2.25rem, `--b2s-switch-thumb-size` 1rem and `--b2s-switch-inset` as `var(--b2s-space-1)`, the same in both densities because the whole row is the target. It defines `--b2s-radio-dot-size` 0.5rem, `--b2s-multiline-rows-min` 3, `--b2s-multiline-rows-max` 8 and `--b2s-skeleton-opacity-min` 0.6, and states that a multiline field grows to eight rows then scrolls and that the pulse runs between 0.6 and 1. `Select`, `Switch`, `RadioGroup`, `TextField` and `Skeleton` name those tokens.
+
+**2026-09-26 — P03-T09-FIX.** `TextField` `number` and `identifier` did not state the digit ranges or the grouping characters, and `multiline` did not state its ceiling. Prior text:
+
+`**`number`** — for money, quantities and percentages. On input it accepts Latin **and** Arabic-Indic digits and both decimal separators, and normalises them before validation, because a person on an Arabic keyboard or pasting from another document may produce either. On blur it redisplays through the R1-25 formatter. The currency symbol sits in the `suffix`, after the value, as R1-25 defines.`
+
+`**`identifier`** — SKUs, GTINs, batch and invoice numbers. **Never normalised and never re-digited.** A scanned code has to match what is printed character for character, so an Arabic-Indic digit typed into an identifier is refused with a named error — "Use the digits 0 to 9" — rather than silently converted.`
+
+`**`multiline`** — grows with content to a limit, then scrolls. Guideline bodies use it through `BilingualField`.`
+
+`number` now states the two digit ranges, U+066B becoming ".", and U+066C and "," removed as grouping. `identifier` refuses every digit in both ranges with the named error. The Extended Arabic-Indic range adopts P03-T09's choice. `multiline` names the three-row floor and the eight-row ceiling.
+
+**2026-09-26 — P03-T09-FIX.** §2.10 did not say what a primitive does with an icon before the registry exists. Prior closing sentence:
+
+`If the icon set arrives as a package, it is an ADR for the landing task under `AGENTS.md` §2.`
+
+The section now states that until the icon registry lands, no primitive carries a direction-bearing icon, and a caller-supplied icon is rendered as given. The registry and every directional icon land together at P03-T10.
+
+**2026-09-26 — P03-T09-FIX.** The CF-172 row of §10 did not name z-index or the definition site. Prior text:
+
+`| CF-172 | Static | §2.1; §1; §0 items 1 and 2 | Raw colour, spacing, radius, duration, shadow or font-family values outside token definitions; every chrome neutral achromatic; font families only the two `OD-G23` names |`
+
+The row now includes z-index, every stylesheet and inline style, and the `app/globals.css` definition site. §10 gains the static contrast row for pairs declared together. That row is not CF-177.
