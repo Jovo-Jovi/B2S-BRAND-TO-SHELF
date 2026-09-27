@@ -3,7 +3,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { Skeleton } from "../skeleton/skeleton";
 import styles from "./brand-frame.module.css";
 
-export type BrandFrameVariant = "preview" | "editor_preview";
+export type BrandFrameVariant = "preview";
 export type BrandFrameSize = "comfortable";
 
 export type BrandFrameVisual = "default" | "loading" | "error" | "empty" | "incomplete";

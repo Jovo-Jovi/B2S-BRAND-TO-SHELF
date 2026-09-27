@@ -10,8 +10,8 @@ const CATALOGS = [
   "app/[locale]/dictionaries/ar.json",
 ];
 
-// Namespaces present as of P03-T08.
-const MINIMUM_NAMESPACES = 2;
+// Namespaces present as of P03-T08 were 2. P03-T12 adds data: 3.
+const MINIMUM_NAMESPACES = 3;
 
 // access.title is the page name. access.signInSubmit is the submit control.
 // They are the same words in both locales because that is the name of the

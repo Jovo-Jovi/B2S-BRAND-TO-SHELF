@@ -29,6 +29,10 @@ import { TextLink, type TextLinkVisual } from "./text-link/text-link";
 import { Tooltip, type TooltipVisual } from "./tooltip/tooltip";
 import { BrandFrame, type BrandFrameVisual } from "./brand-frame/brand-frame";
 import { ColorField, type ColorFieldVisual } from "./color-field/color-field";
+import { DataTable, type DataTableVisual } from "./data-table/data-table";
+import { byteUnits, dateNames } from "./data-catalog";
+import { DateField, type DateFieldCopy, type DateFieldVisual } from "./date-field/date-field";
+import { FileDrop, type FileDropCopy, type FileDropVisual } from "./file-drop/file-drop";
 import { Dialog, type DialogVisual } from "./dialog/dialog";
 import { Glyph } from "./glyphs";
 import { Notice, type NoticeVisual } from "./notice/notice";
@@ -432,6 +436,111 @@ describe("component accessibility tier", () => {
             </BrandFrame>
           );
         },
+      },
+      {
+        name: "DateField",
+        states: ["default", "hover", "focus", "active", "disabled", "error", "empty", "selected"],
+        render: (state) => {
+          const names = dateNames("en");
+          const copy: DateFieldCopy = {
+            months: names.months,
+            weekdaysShort: names.weekdaysShort,
+            weekdaysFull: names.weekdaysFull,
+            monthHeading: names.monthHeading,
+            placeholder: names.placeholder,
+            previousMonth: "Previous month",
+            nextMonth: "Next month",
+            openCalendar: "Open calendar",
+            invalid: "Use DD/MM/YYYY",
+          };
+          return (
+            <DateField
+              locale="en"
+              copy={copy}
+              state={state as DateFieldVisual}
+              viewYear={2026}
+              viewMonth={9}
+              accessibleName="Delivery date"
+              value={state === "selected" ? "2026-09-01" : ""}
+              disabled={state === "disabled"}
+            />
+          );
+        },
+      },
+      {
+        name: "FileDrop",
+        states: ["default", "hover", "focus", "active", "disabled", "loading", "error", "empty", "done"],
+        render: (state) => {
+          const copy: FileDropCopy = {
+            instruction: "Choose a file",
+            dropInstruction: "Drop to upload",
+            browse: "Browse",
+            acceptedTypes: "PNG",
+            percentPattern: dateNames("en").percent,
+            retry: "Retry",
+            replace: "Replace",
+            remove: "Remove",
+            typeError: "That type is not accepted",
+            sizeError: "That file is too large",
+            failureError: "That file failed",
+          };
+          const files =
+            state === "loading"
+              ? [{ id: "file-1", name: "pack.png", sizeBytes: 1000, phase: "uploading" as const, progress: 0.5 }]
+              : state === "error"
+                ? [{ id: "file-1", name: "pack.png", sizeBytes: 1000, phase: "error" as const, error: "type" as const }]
+                : state === "done"
+                  ? [{ id: "file-1", name: "pack.png", sizeBytes: 1000, phase: "done" as const }]
+                  : [];
+          return (
+            <FileDrop
+              locale="en"
+              units={byteUnits("en")}
+              copy={copy}
+              state={state as FileDropVisual}
+              sizeLimit={1000}
+              files={files}
+              disabled={state === "disabled"}
+            />
+          );
+        },
+      },
+      {
+        name: "DataTable",
+        states: ["default", "hover", "focus", "loading", "error", "empty", "selected"],
+        render: (state) => (
+          <DataTable
+            locale="en"
+            variant="selectable"
+            state={state as DataTableVisual}
+            columns={[
+              { key: "sku", caption: "SKU", kind: "identifier" },
+              { key: "name", caption: "Name", kind: "text", sortable: true },
+            ]}
+            rows={
+              state === "empty" || state === "loading" || state === "error"
+                ? []
+                : [{ id: "row-1", cells: { sku: "SKU-10001", name: "Mint" }, actions: <Button variant="quiet">Edit</Button> }]
+            }
+            rangePattern="{from}:{to}:{total}"
+            regionName="Lines"
+            pageSizeCaption="Page size"
+            listEmpty="None"
+            previousPage="Previous page"
+            nextPage="Next page"
+            selectAllName="Select all"
+            selectRowName="Select row"
+            actionsCaption="Actions"
+            empty={{ kind: state === "empty" ? "first-use" : "no-results", content: "Nothing here" }}
+            failure={{
+              message: "The list failed",
+              requestIdentifier: "req-14",
+              retry: "Retry",
+              onRetry: () => undefined,
+            }}
+            selectedIds={state === "selected" ? ["row-1"] : []}
+          />
+        ),
       },
     ];
 

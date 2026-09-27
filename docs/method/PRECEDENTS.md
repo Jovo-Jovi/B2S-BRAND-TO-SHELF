@@ -476,6 +476,19 @@ filled. Most were harmless. The danger Button's text was not: it produced
 gap was the reviewer's. The halt existed so a gap would reach the reviewer
 rather than being closed plausibly.
 
+**PR-45 — A claim about how the system behaves is measured under the
+configuration the system actually runs.**
+A measurement taken under a forced condition — a rule enabled by `runOnly`,
+an environment substituted for the run — is evidence about that condition,
+not about the system. Where a check must decide whether a tool can observe
+something, the test is a known-bad fixture: a case that fails the criterion
+by construction. A rule that passes it, or cannot evaluate it, cannot
+observe that criterion. Origin: P03-T11's verdict, where the reviewer
+forced a disabled rule on and reported the result as the tier's default
+behaviour; and P03-T11-FIX, where a geometry-perturbation method the
+reviewer specified found nothing and the builder substituted the known-bad
+test.
+
 ---
 
 ## 2. Environment quirks — never re-discover

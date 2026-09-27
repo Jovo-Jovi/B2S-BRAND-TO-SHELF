@@ -116,9 +116,11 @@ const SHORTHANDS = new Set(PHYSICAL_SHORTHANDS);
 // emptied globals.css still falls short of the new declaration floor, and
 // PROVEN_PAIRS does not gain a pair. Button's loading width lock writes
 // element.style.inlineSize, which this scan does not parse, so that write
-// is not part of the declaration count.
-const MINIMUM_STYLESHEETS = 20;
-const MINIMUM_DECLARATIONS = 964;
+// is not part of the declaration count. P03-T12 raises both floors
+// to the counts measured after DateField, FileDrop and DataTable: 23
+// stylesheets, 1204 declarations.
+const MINIMUM_STYLESHEETS = 23;
+const MINIMUM_DECLARATIONS = 1204;
 const MINIMUM_MAPPED = 60;
 
 let violations = 0;

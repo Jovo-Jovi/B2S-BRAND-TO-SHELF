@@ -297,7 +297,7 @@ The six `--b2s-layer-*` tokens are every z-index in the catalog, and no other va
 3. **Flex and grid flow follow direction automatically.** Order is never reversed by hand.
 4. **Icons flip only by their registry flag** (§2.10). A flag, not a judgement made per page.
 5. **Mixed direction is isolated.** Every identifier, email, URL, hex colour, SKU, GTIN, batch number, invoice number, request identifier and file name renders in a direction-isolated span, left-to-right. Tenant text from a `TranslationEntry` renders in its own locale's direction, isolated. So an Arabic brand name inside an English sentence, or a Latin SKU inside an Arabic one, cannot reorder the text around it.
-6. **`lib/locale/` formats every number `CALC_SPEC.md` does not govern — counts, upload percentages, byte sizes — and dates.** Money and domain quantities, which `CALC_SPEC.md` governs, are formatted through `lib/money/` at P05 under ADR-011. A formatted number is never assembled by hand (CF-175). Under R1-25's locale definitions both locales use Latin digits, so a number is a left-to-right run that bidirectional layout places correctly in an Arabic line.
+6. **`lib/locale/` formats every number `CALC_SPEC.md` does not govern — counts, upload percentages, byte sizes — and dates.** Counts are integers, grouped by R1-25's locale definition. Percentages of progress are integers from 0 to 100, the completed fraction rounded down, so 100 appears only when the work is complete. The sign follows the value in both locales, as a catalog pattern. Byte sizes use decimal SI units, 1 kB = 1000 B, the largest of B, kB, MB and GB whose value is at least 1, one fractional digit below 10 and none from 10 upward, rounded half-up. The unit words are catalog strings. Money and domain quantities, which `CALC_SPEC.md` governs, are formatted through `lib/money/` at P05 under ADR-011. A formatted number is never assembled by hand (CF-175). Under R1-25's locale definitions both locales use Latin digits, so a number is a left-to-right run that bidirectional layout places correctly in an Arabic line.
 7. **Numeric table columns align to the cell's end edge**, with tabular figures, so decimals line up in both directions.
 8. **Arrow keys follow visual direction.** In a right-to-left tab list, ArrowLeft moves to the next tab.
 9. **Steppers and progress** flow from start to end.
@@ -596,7 +596,7 @@ mirrors: file name isolated left-to-right; actions at inline-end
 tokens: [radius-md, color-border-control, color-sunken, color-text, color-text-muted, color-danger, color-success, space-5, text-sm]
 ```
 
-**Always `comfortable`.** An upload is a brand task, never a dense operation. The accepted types and size limit come from the consuming module's specification, not from this component; the component only shows them. Where the object lands is `ADR-008` and `OD-G20`'s business, not this document's.
+**Always `comfortable`.** An upload is a brand task, never a dense operation. FileDrop is presentation only. It performs no upload and chooses no storage. Accepted types, the size limit and progress arrive as props. The limit and each file's size are shown through `lib/locale/`'s byte format, and progress through its percentage format. The accepted types and size limit come from the consuming module's specification, not from this component; the component only shows them. Where the object lands is `ADR-008` and `OD-G20`'s business, not this document's.
 
 ### ColorField
 
@@ -651,6 +651,8 @@ tokens: [control-height, radius-md, color-surface, color-raised, color-border-co
 
 **Display order, calendar and first weekday come from `CALC_SPEC.md` R1-25's locale block** (§0 item 3) — `DD/MM/YYYY`, Gregorian, weeks from Saturday — and are never restated in code. Stored and transmitted as ISO 8601. **Typing is never slower than picking** — the calendar is an aid, not a gate.
 
+**Calendar words are catalog strings.** No month or weekday name comes from `Intl` or any locale API (CF-175). Month names, Egyptian Gregorian forms: ar يناير، فبراير، مارس، أبريل، مايو، يونيو، يوليو، أغسطس، سبتمبر، أكتوبر، نوفمبر، ديسمبر; en January through December. Weekday headers, from Saturday: ar سبت، أحد، اثنين، ثلاثاء، أربعاء، خميس، جمعة; en Sat, Sun, Mon, Tue, Wed, Thu, Fri. Full names for each day cell's accessible name: ar السبت، الأحد، الإثنين، الثلاثاء، الأربعاء، الخميس، الجمعة; en Saturday through Friday. The month heading is a catalog pattern of the month name and the year, in that order. The popover uses `--b2s-layer-dropdown`, the elevation-1 layer already used by an elevation-1 popover.
+
 ### DataTable
 
 ```component
@@ -674,13 +676,13 @@ mirrors: column order follows reading direction; the selection column sits at in
 tokens: [row-height, cell-padding-block, cell-padding-inline, border-width, color-surface, color-sunken, color-border, color-text, color-text-muted, text-body, radius-md, delay-loader]
 ```
 
-**Numbers:** end-aligned, tabular, and only through the R1-25 formatter. **Identifiers are never truncated**, because a truncated SKU cannot be matched; prose truncates with the full value available on hover and on focus. **Numbers are never truncated.**
+**Numeric cells render what the caller passes**, end-aligned and tabular. Money and domain quantities are formatted by the caller through `lib/money/` at P05, never by the table. Counts the table itself shows go through `lib/locale/`. **Identifiers are never truncated**, because a truncated SKU cannot be matched; prose truncates with the full value available on hover and on focus. **Numbers are never truncated.**
 
 **A table scrolls inside its own container** (`UX_PRINCIPLES.md` §8), with a sticky header and, where the first column identifies the row, a sticky first column.
 
 **Native table semantics, not the grid pattern**, in Release 1. The grid pattern's keyboard model is heavy and easy to break, and native semantics give screen readers the structure they already understand. Revisit only when a real workflow needs cell-by-cell editing.
 
-**Pagination** shows a formatted range and total. The page size is a member preference.
+**Pagination** shows a catalog pattern of from, to and total, each a count through `lib/locale/`. Page sizes are 25, 50 and 100, default 25, held for the session only. Persisting that choice is not decided. Sort `direction` is `ascending`, `descending`, or absent. The words between from, to and total are not stated; the table fills the pattern the caller supplies and does not invent the sentence.
 
 ### Tabs
 
@@ -812,7 +814,7 @@ tokens: [radius-sm, color-success-bg, color-warning-bg, color-danger-bg, color-i
 ```component
 name: BrandFrame
 parts: [mount_boundary, surround, brand_canvas, brand_content, gap_markers?]
-variants: [preview, editor_preview]
+variants: [preview]
 sizes: [comfortable]
 states:
   default: brand_canvas in --brand-background inside a neutral surround and a boundary of border-width in border-control
@@ -1160,3 +1162,35 @@ Prior CF-198 row:
 `| CF-198 | Static | §2.2 | Text and background declared together, or through a state selector of the same component, at 4.5:1 in both themes; a boundary token against the surface declared with it at 3:1. Pairs inherited from an ancestor are outside it. Not a substitute for CF-177 |`
 
 CF-171 now states the selector split and that a `--brand-*` definition is an expression. CF-198 now measures `border-control` against the four surfaces and exempts the decorative border. Brand pairs stay unevaluated.
+
+**2026-09-27 — P03-T12.** §4 rule 6 named the formats and did not state their rules. Prior text:
+
+`` `lib/locale/` formats every number `CALC_SPEC.md` does not govern — counts, upload percentages, byte sizes — and dates. Money and domain quantities, which `CALC_SPEC.md` governs, are formatted through `lib/money/` at P05 under ADR-011. ``
+
+Counts are integers, grouped by R1-25. Progress percentages are the completed fraction rounded down, 0 to 100. Byte sizes are decimal SI, half-up, with catalog unit words. The sign of a percentage follows the value in both locales.
+
+**2026-09-27 — P03-T12.** FileDrop did not say that it performs no upload. Prior text:
+
+`` **Always `comfortable`.** An upload is a brand task, never a dense operation. The accepted types and size limit come from the consuming module's specification, not from this component; the component only shows them. Where the object lands is `ADR-008` and `OD-G20`'s business, not this document's. ``
+
+The component is presentation only. Accepted types, the size limit and progress arrive as props and are shown through `lib/locale/`.
+
+**2026-09-27 — P03-T12.** DateField did not state the calendar words. Prior text:
+
+`` **Display order, calendar and first weekday come from `CALC_SPEC.md` R1-25's locale block** (§0 item 3) — `DD/MM/YYYY`, Gregorian, weeks from Saturday — and are never restated in code. Stored and transmitted as ISO 8601. **Typing is never slower than picking** — the calendar is an aid, not a gate. ``
+
+Month names, weekday headers and full weekday names are catalog strings, Egyptian Gregorian forms, Saturday first. The month heading is a catalog pattern of month name and year. The popover takes `--b2s-layer-dropdown`.
+
+**2026-09-27 — P03-T12.** DataTable sent numeric cells through the R1-25 formatter and called the page size a member preference without a size. Prior text:
+
+`` **Numbers:** end-aligned, tabular, and only through the R1-25 formatter. ``
+
+`` **Pagination** shows a formatted range and total. The page size is a member preference. ``
+
+Numeric cells render what the caller passes. Page sizes are 25, 50 and 100, default 25, held for the session. Sort direction is `ascending`, `descending`, or absent. The words between from, to and total are not stated.
+
+**2026-09-27 — P03-T12.** BrandFrame's `editor_preview` differed in nothing from `preview`. Prior variants line:
+
+`` variants: [preview, editor_preview] ``
+
+The block now declares `[preview]` alone.

@@ -103,6 +103,64 @@ export function formatCalendarDate(iso: string, locale: CalendarLocale): string 
   return `${day}/${month}/${year}`;
 }
 
+export function saturdayIndex(iso: string): number | null {
+  const parts = partsOf(iso);
+  if (!parts) {
+    return null;
+  }
+  const probe = new Date(Date.UTC(parts.year, parts.month - 1, parts.day));
+  return (probe.getUTCDay() + 1) % 7;
+}
+
+export function addDays(iso: string, days: number): string | null {
+  const parts = partsOf(iso);
+  if (!parts) {
+    return null;
+  }
+  const probe = new Date(Date.UTC(parts.year, parts.month - 1, parts.day + days));
+  return isoFromParts(probe.getUTCFullYear(), probe.getUTCMonth() + 1, probe.getUTCDate());
+}
+
+export function shiftMonth(year: number, month: number, delta: number): { year: number; month: number } {
+  const index = year * 12 + (month - 1) + delta;
+  const nextYear = Math.floor(index / 12);
+  const nextMonth = index - nextYear * 12 + 1;
+  return { year: nextYear, month: nextMonth };
+}
+
+export function daysInMonth(year: number, month: number): number {
+  return new Date(Date.UTC(year, month, 0)).getUTCDate();
+}
+
+export type MonthCell = { iso: string; day: number } | null;
+
+export function monthGrid(year: number, month: number): MonthCell[][] | null {
+  const first = isoFromParts(year, month, 1);
+  if (!realDate(year, month, 1)) {
+    return null;
+  }
+  const lead = saturdayIndex(first);
+  if (lead === null) {
+    return null;
+  }
+  const count = daysInMonth(year, month);
+  const cells: MonthCell[] = [];
+  for (let index = 0; index < lead; index += 1) {
+    cells.push(null);
+  }
+  for (let day = 1; day <= count; day += 1) {
+    cells.push({ iso: isoFromParts(year, month, day), day });
+  }
+  while (cells.length % 7 !== 0) {
+    cells.push(null);
+  }
+  const weeks: MonthCell[][] = [];
+  for (let index = 0; index < cells.length; index += 7) {
+    weeks.push(cells.slice(index, index + 7));
+  }
+  return weeks;
+}
+
 export function startOfWeek(iso: string): string | null {
   const parsed = parseCalendarDate(iso);
   if (parsed === null) {

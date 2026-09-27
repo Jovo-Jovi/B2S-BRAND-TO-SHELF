@@ -30,3 +30,79 @@ export function formatNumber(value: number, locale: CalendarLocale, fractionDigi
 export function formatContrastRatio(value: number, locale: CalendarLocale): string {
   return formatNumber(value, locale, CONTRAST_RATIO_FRACTION_DIGITS);
 }
+
+export function formatCount(value: number, locale: CalendarLocale): string {
+  return formatNumber(Math.trunc(value), locale, 0);
+}
+
+/**
+ * Completed fraction, rounded down. 100 only when the fraction is at least 1.
+ * The sign is a catalog pattern applied by fillPattern, and it follows the
+ * value in both locales.
+ */
+export function progressPercent(completed: number): number {
+  const percent = Math.floor(completed * 100);
+  if (percent < 0) {
+    return 0;
+  }
+  if (percent > 100) {
+    return 100;
+  }
+  return percent;
+}
+
+export function formatProgress(completed: number, locale: CalendarLocale): string {
+  return formatNumber(progressPercent(completed), locale, 0);
+}
+
+export const BYTE_UNITS = ["B", "kB", "MB", "GB"] as const;
+export type ByteUnit = (typeof BYTE_UNITS)[number];
+export type ByteUnitWords = Record<ByteUnit, string>;
+
+const BYTE_SCALE: Record<ByteUnit, number> = {
+  B: 1,
+  kB: 1000,
+  MB: 1_000_000,
+  GB: 1_000_000_000,
+};
+
+function byteUnit(bytes: number): ByteUnit {
+  if (bytes >= BYTE_SCALE.GB) {
+    return "GB";
+  }
+  if (bytes >= BYTE_SCALE.MB) {
+    return "MB";
+  }
+  if (bytes >= BYTE_SCALE.kB) {
+    return "kB";
+  }
+  return "B";
+}
+
+function scaleBytes(bytes: number, unit: ByteUnit, digits: number): number {
+  const scale = BYTE_SCALE[unit];
+  if (scale === 1) {
+    return bytes;
+  }
+  const places = 10 ** digits;
+  const half = Math.floor(scale / 2);
+  const rounded = Math.floor((bytes * places + half) / scale);
+  return rounded / places;
+}
+
+export function formatByteSize(bytes: number, locale: CalendarLocale, units: ByteUnitWords): string {
+  const magnitude = bytes < 0 ? -bytes : bytes;
+  const unit = byteUnit(magnitude);
+  const scaled = magnitude / BYTE_SCALE[unit];
+  const digits = unit === "B" || scaled >= 10 ? 0 : 1;
+  const shown = formatNumber(scaleBytes(magnitude, unit, digits), locale, digits);
+  return `${shown} ${units[unit]}`;
+}
+
+const SLOT = /\{([A-Za-z]+)\}/g;
+
+export function fillPattern(pattern: string, slots: Record<string, string>): string {
+  return pattern.replace(SLOT, (token, name: string) =>
+    Object.prototype.hasOwnProperty.call(slots, name) ? slots[name] : token,
+  );
+}

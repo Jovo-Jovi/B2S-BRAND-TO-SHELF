@@ -25,8 +25,9 @@ const TEXT_MINIMUM = 4.5;
 const BOUNDARY_MINIMUM = 3;
 const BOUNDARY_TOKEN = "--b2s-color-border-control";
 const SURFACES = ["--b2s-color-canvas", "--b2s-color-surface", "--b2s-color-sunken", "--b2s-color-raised"];
-const MINIMUM_STYLESHEETS = 20;
-const MINIMUM_TEXT_PAIRS = 49;
+// P03-T12 — measured after DateField, FileDrop and DataTable.
+const MINIMUM_STYLESHEETS = 23;
+const MINIMUM_TEXT_PAIRS = 82;
 const MINIMUM_SURFACES = 4;
 const MINIMUM_BOUNDARY_PAIRS = 8;
 const MINIMUM_THEMES = 2;

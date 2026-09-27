@@ -3845,4 +3845,35 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       2026-09-27T10:49:30Z, completed 2026-09-27T11:06:16Z).
       Owner: **P03-T13**, before a second slow job is added beside this
       one.
+      AMENDED (P03-T12). The sentence above, that run 36199604440 was
+      cancelled at 20m15s, stands. Measured correction: the isolation
+      job's timeout-minutes was 20 from P03-T01-RESUME, and that timeout
+      stopped the run at 20m15s. It was not a person cancelling it. The
+      suite failed to finish within its bound at least once. The bound
+      is now 30 minutes, which prevents that kill and also lets a
+      slowing suite hide for longer. The cause matters more than the
+      ceiling.
+- [x] CF-205 — The reviewer's P03-T11 verdict of FAIL rested on two
+      mismeasurements. The reviewer ran axe-core's target-size rule with
+      runOnly, which enables a rule the engine ships disabled, and
+      generalised to the tier's default run — where target-size never
+      executed. The reviewer also stated the isolation job had no
+      timeout; it had timeout-minutes 20 from P03-T01-RESUME, which means
+      run 36199604440 was stopped by that timeout at 20m15s rather than
+      cancelled. On the measured facts P03-T11 was PASS with a DOC
+      CORRECTION: a committed comment stated target-size does not exist.
+      P03-T11's done-steps verdict cell stays as written.
+      CLOSED (P03-T12) by PR-45. Owner: none outstanding.
+- [ ] CF-206 — The known-bad-fixture criterion was applied to the two
+      rules the reviewer named. Whether any other rule the component
+      tier runs, whose WCAG criterion concerns visual presentation,
+      would pass a known-bad fixture in the simulated DOM is unmeasured.
+      Every such rule is either proven observable in the component tier
+      by a known-bad fixture it correctly fails, or disabled there and
+      owned by a browser-tier gate. Owner: **P03-T13**.
+- [ ] CF-207 — DESIGN_SURFACE.md calls a DataTable page size and an
+      explicit theme choice member preferences, and nothing persists
+      either — no column, no table, no decision on where a member
+      preference lives. Both are held for the session until that is
+      decided. Owner: **the owner**.
 

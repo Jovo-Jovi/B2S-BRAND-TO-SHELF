@@ -108,8 +108,8 @@ describe("BrandFrame", () => {
     expect(html).toContain('data-state="incomplete"');
   });
 
-  it("offers both variants", () => {
-    for (const variant of ["preview", "editor_preview"] as const) {
+  it("offers the preview variant", () => {
+    for (const variant of ["preview"] as const) {
       const html = renderToStaticMarkup(
         <BrandFrame variant={variant} profile={profile()} previewLocale="en" regionName="Mint" missingRegionName="Name missing" markers={markers} />,
       );

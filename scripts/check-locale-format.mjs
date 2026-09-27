@@ -19,7 +19,8 @@ const ROOTS = ["app", "components", "features", "lib"];
 const ALLOWED = ["lib/locale/", "lib/money/"];
 const INTL_APIS = new Set(["DateTimeFormat", "NumberFormat", "RelativeTimeFormat"]);
 const METHOD_APIS = new Set(["toLocaleString", "toLocaleDateString", "toLocaleTimeString", "toFixed"]);
-const MINIMUM_FILES = 65;
+// P03-T12 — measured after the data family: 72.
+const MINIMUM_FILES = 72;
 
 function fail(message) {
   console.error(`FAIL: ${message}`);

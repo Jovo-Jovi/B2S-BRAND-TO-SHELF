@@ -52,9 +52,10 @@ const MINIMUM_TOKENS = 234;
 const MINIMUM_ACHROMATIC = 68;
 const MINIMUM_CHROMATIC = 11;
 const MINIMUM_FONT_FAMILIES = 13;
-const MINIMUM_STYLESHEETS = 20;
-const MINIMUM_DECLARATIONS = 964;
-const MINIMUM_SOURCES = 75;
+// P03-T12 — measured after DateField, FileDrop and DataTable.
+const MINIMUM_STYLESHEETS = 23;
+const MINIMUM_DECLARATIONS = 1204;
+const MINIMUM_SOURCES = 85;
 
 const FAMILIES = new Set(["IBM Plex Sans", "IBM Plex Sans Arabic"]);
 const GENERICS = new Set(["system-ui", "sans-serif"]);
