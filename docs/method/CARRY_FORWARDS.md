@@ -3840,8 +3840,9 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       sits inside the observed range. P03-T11-FIX raises it to 30 so a
       run at the observed duration is not cancelled and a hang still
       cannot burn hours of runner time. This task does not investigate
-      the slowdown. The duration of the isolation run this change
-      triggers is added by the follow-up commit once that run completes.
+      the slowdown. This task's isolation run 36313765551, on head
+      00b15f8, concluded success in 16m46s (job started
+      2026-09-27T10:49:30Z, completed 2026-09-27T11:06:16Z).
       Owner: **P03-T13**, before a second slow job is added beside this
       one.
 
