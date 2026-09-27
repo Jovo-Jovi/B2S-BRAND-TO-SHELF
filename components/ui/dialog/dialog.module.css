@@ -4,8 +4,7 @@
   margin-inline: auto;
   padding-block: var(--b2s-space-7);
   padding-inline: var(--b2s-space-7);
-  border-block-style: none;
-  border-inline-style: none;
+  border: var(--b2s-border-width) solid transparent;
   border-radius: var(--b2s-radius-lg);
   background-color: var(--b2s-color-raised);
   color: var(--b2s-color-text);
@@ -74,6 +73,18 @@
   display: flex;
   justify-content: end;
   column-gap: var(--b2s-space-4);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .dialog {
+    border-block-color: var(--b2s-color-border);
+    border-inline-color: var(--b2s-color-border);
+  }
+}
+
+:root[data-theme="dark"] .dialog {
+  border-block-color: var(--b2s-color-border);
+  border-inline-color: var(--b2s-color-border);
 }
 
 @media (width < 640px) {

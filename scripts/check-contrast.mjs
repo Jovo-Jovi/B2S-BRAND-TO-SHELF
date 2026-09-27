@@ -1,26 +1,33 @@
 #!/usr/bin/env node
-// Static contrast gate. For every rule that declares both a text colour and
-// a background colour — directly, or through a state selector of the same
-// component — resolve both tokens in each theme and compute WCAG 2.2
-// contrast. Text needs 4.5:1. A boundary token against the surface declared
-// in the same rule needs 3:1. A state selector does not move the boundary
-// check onto a background the state did not declare with the border.
+// Static contrast gate. Text: every rule that declares both a text colour
+// and a background colour — directly, or through a state selector of the
+// same component — resolves both tokens in each theme. Text needs 4.5:1.
 //
-// This check sees pairs declared together. It does not resolve a colour
-// inherited from an ancestor, so it is a recurrence guard and not a
-// substitute for CF-177's rendered check. transparent, inherit and
-// currentcolor are not a pair. A boundary whose two resolved colours are
-// equal is not a pair.
+// Boundary: only --b2s-color-border-control owes 3:1. --b2s-color-border is
+// decorative and exempt (DESIGN_SURFACE.md §2.2). A boundary is measured
+// against the surfaces around a control, not the fill declared in the same
+// rule. The four surfaces a control can sit on are canvas, surface, sunken
+// and raised, in both themes. Rule-level boundary pairing is not used.
+//
+// Brand pairs are runtime data. This check does not evaluate them.
+// BRAND_CONFIG.md §11 binds foreground against background at profile
+// completion. A colour inherited from an ancestor is outside this check,
+// so it is a recurrence guard and not a substitute for CF-177.
+// transparent, inherit and currentcolor are not a pair.
 
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 
 const GLOBALS = "app/globals.css";
 const SCAN_ROOTS = ["app", "components", "features"];
 const TEXT_MINIMUM = 4.5;
 const BOUNDARY_MINIMUM = 3;
-const MINIMUM_STYLESHEETS = 18;
-const MINIMUM_TEXT_PAIRS = 44;
+const BOUNDARY_TOKEN = "--b2s-color-border-control";
+const SURFACES = ["--b2s-color-canvas", "--b2s-color-surface", "--b2s-color-sunken", "--b2s-color-raised"];
+const MINIMUM_STYLESHEETS = 20;
+const MINIMUM_TEXT_PAIRS = 49;
+const MINIMUM_SURFACES = 4;
 const MINIMUM_BOUNDARY_PAIRS = 8;
 const MINIMUM_THEMES = 2;
 
@@ -178,6 +185,9 @@ function resolveColour(value, theme, depth = 0) {
     }
     return { channels, label: trimmed };
   }
+  if (trimmed.includes("--brand-")) {
+    return { skip: true };
+  }
   const named = trimmed.match(/^var\((--[a-zA-Z0-9-]+)\)$/);
   if (named) {
     const next = theme.get(named[1]);
@@ -213,6 +223,15 @@ function contrast(a, b) {
   const lighter = Math.max(left, right);
   const darker = Math.min(left, right);
   return (lighter + 0.05) / (darker + 0.05);
+}
+
+export function contrastHex(foreground, background) {
+  const a = hexChannels(foreground);
+  const b = hexChannels(background);
+  if (!a || !b) {
+    throw new Error("unresolved hex");
+  }
+  return contrast(a, b);
 }
 
 function sameColour(a, b) {
@@ -311,24 +330,6 @@ function textPairs(rules) {
   return pairs;
 }
 
-function boundaryPairs(rules) {
-  const pairs = [];
-  for (const [selector, props] of rules) {
-    if (!props.background || props.borders.length === 0) {
-      continue;
-    }
-    const seen = new Set();
-    for (const border of props.borders) {
-      if (seen.has(border)) {
-        continue;
-      }
-      seen.add(border);
-      pairs.push({ selector, border, background: props.background });
-    }
-  }
-  return pairs;
-}
-
 function checkPair(rel, selector, theme, kind, left, right, minimum) {
   const a = resolveColour(left, theme.values);
   const b = resolveColour(right, theme.values);
@@ -373,6 +374,25 @@ function main() {
 
   let textCount = 0;
   let boundaryCount = 0;
+  if (SURFACES.length < MINIMUM_SURFACES) {
+    fail(`${SURFACES.length} surface(s), minimum ${MINIMUM_SURFACES}`);
+  }
+  for (const theme of themes) {
+    for (const surface of SURFACES) {
+      const seen = checkPair(
+        GLOBALS,
+        `${BOUNDARY_TOKEN} on ${surface}`,
+        theme,
+        "boundary",
+        `var(${BOUNDARY_TOKEN})`,
+        `var(${surface})`,
+        BOUNDARY_MINIMUM,
+      );
+      if (seen) {
+        boundaryCount += 1;
+      }
+    }
+  }
   for (const rel of stylesheets) {
     const rules = rulesIn(stripComments(readFileSync(rel, "utf8")));
     for (const pair of textPairs(rules)) {
@@ -383,16 +403,6 @@ function main() {
       }
       if (counted) {
         textCount += 1;
-      }
-    }
-    for (const pair of boundaryPairs(rules)) {
-      let counted = false;
-      for (const theme of themes) {
-        const seen = checkPair(rel, pair.selector, theme, "boundary", pair.border, pair.background, BOUNDARY_MINIMUM);
-        counted = counted || seen;
-      }
-      if (counted) {
-        boundaryCount += 1;
       }
     }
   }
@@ -412,8 +422,10 @@ function main() {
   }
 
   console.log(
-    `OK: declared contrast pairs; ${stylesheets.length} stylesheet(s) scanned, minimum ${MINIMUM_STYLESHEETS}; ${textCount} text pair(s), minimum ${MINIMUM_TEXT_PAIRS}; ${boundaryCount} boundary pair(s), minimum ${MINIMUM_BOUNDARY_PAIRS}; ${themes.length} theme(s), minimum ${MINIMUM_THEMES}. Pairs inherited from an ancestor are outside this check; it is not a substitute for CF-177`,
+    `OK: declared contrast pairs; ${stylesheets.length} stylesheet(s) scanned, minimum ${MINIMUM_STYLESHEETS}; ${textCount} text pair(s), minimum ${MINIMUM_TEXT_PAIRS}; ${boundaryCount} boundary pair(s) of ${BOUNDARY_TOKEN} against ${SURFACES.length} surface(s), minimum ${MINIMUM_BOUNDARY_PAIRS}; ${themes.length} theme(s), minimum ${MINIMUM_THEMES}. --b2s-color-border is decorative and exempt. Brand pairs are runtime data and are not evaluated; BRAND_CONFIG.md §11 binds them at profile completion. Pairs inherited from an ancestor are outside this check; it is not a substitute for CF-177`,
   );
 }
 
-main();
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main();
+}

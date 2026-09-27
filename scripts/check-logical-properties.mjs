@@ -117,8 +117,8 @@ const SHORTHANDS = new Set(PHYSICAL_SHORTHANDS);
 // PROVEN_PAIRS does not gain a pair. Button's loading width lock writes
 // element.style.inlineSize, which this scan does not parse, so that write
 // is not part of the declaration count.
-const MINIMUM_STYLESHEETS = 18;
-const MINIMUM_DECLARATIONS = 874;
+const MINIMUM_STYLESHEETS = 20;
+const MINIMUM_DECLARATIONS = 950;
 const MINIMUM_MAPPED = 60;
 
 let violations = 0;

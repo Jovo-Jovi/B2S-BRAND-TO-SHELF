@@ -4,6 +4,7 @@ import {
   cloneElement,
   useEffect,
   useId,
+  useRef,
   useState,
   type FocusEvent,
   type KeyboardEvent,
@@ -55,6 +56,8 @@ export function Tooltip({
   const bubbleId = useId();
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
+  const [placement, setPlacement] = useState<"block-start" | "block-end">("block-start");
+  const bubbleRef = useRef<HTMLSpanElement>(null);
   const triggerProps = children.props as TriggerProps;
   const disabled = triggerProps.disabled === true;
   const visible = state === "hover" || state === "focus" || (state === undefined && open);
@@ -75,6 +78,15 @@ export function Tooltip({
       window.clearTimeout(timer);
     };
   }, [pending]);
+
+  useEffect(() => {
+    const bubble = bubbleRef.current;
+    if (!visible || !bubble) {
+      return;
+    }
+    const rect = bubble.getBoundingClientRect();
+    setPlacement(rect.top < 0 ? "block-end" : "block-start");
+  }, [visible]);
 
   function showNow() {
     setPending(false);
@@ -125,7 +137,7 @@ export function Tooltip({
         },
       })}
       {visible ? (
-        <span id={bubbleId} role="tooltip" className={styles.bubble}>
+        <span id={bubbleId} ref={bubbleRef} role="tooltip" className={styles.bubble} data-placement={placement}>
           {text}
           <span className={styles.pointer} aria-hidden="true" />
         </span>

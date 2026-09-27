@@ -1,0 +1,40 @@
+.mount {
+  border: var(--b2s-border-width) solid var(--b2s-color-border-control);
+}
+
+.surround {
+  padding-block: var(--b2s-space-5);
+  padding-inline: var(--b2s-space-5);
+  background-color: var(--b2s-color-canvas);
+  color: var(--b2s-color-text);
+}
+
+.canvas {
+  background-color: var(--brand-background);
+}
+
+.content {
+  color: var(--brand-foreground);
+}
+
+.content[lang="en"] {
+  font-family: var(--brand-font-body-latin);
+}
+
+.content[lang="ar"] {
+  font-family: var(--brand-font-body-arabic);
+}
+
+.message,
+.markers {
+  margin-block: 0;
+  margin-inline: 0;
+}
+
+.identifier {
+  unicode-bidi: isolate;
+}
+
+.surround .markers {
+  padding-inline-start: var(--b2s-space-5);
+}

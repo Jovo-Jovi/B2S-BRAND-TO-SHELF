@@ -133,6 +133,8 @@ PROVEN_PAIRS = [
     ("scripts/check-locale-format.mjs", "scan roots [app, components, features, lib]"),
     ("scripts/check-icon-registry.mjs", "components/ui/glyphs.tsx"),
     ("scripts/check-icon-registry.mjs", "docs/product/DESIGN_SURFACE.md"),
+    ("scripts/check-brand-tokens.mjs", "components/ui/brand-frame/brand-frame.module.css"),
+    ("scripts/check-brand-tokens.mjs", "components"),
 ]
 
 KNOWN_GAPS = [
@@ -554,6 +556,11 @@ def main():
             ["node", "scripts/check-icon-registry.mjs"], FileProbe("components/ui/glyphs.tsx"))
     do_pair(results, "scripts/check-icon-registry.mjs",
             ["node", "scripts/check-icon-registry.mjs"], FileProbe("docs/product/DESIGN_SURFACE.md"))
+    do_pair(results, "scripts/check-brand-tokens.mjs",
+            ["node", "scripts/check-brand-tokens.mjs"],
+            FileProbe("components/ui/brand-frame/brand-frame.module.css"))
+    do_pair(results, "scripts/check-brand-tokens.mjs",
+            ["node", "scripts/check-brand-tokens.mjs"], DirProbe("components"))
 
     proven = sum(1 for r in results if r["proven"])
     print(f"\n=== {proven}/{len(results)} pairs proven this run ===")

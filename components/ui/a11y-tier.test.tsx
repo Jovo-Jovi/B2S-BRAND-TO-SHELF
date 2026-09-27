@@ -20,6 +20,8 @@ import { Tabs, type TabsVisual } from "./tabs/tabs";
 import { TextField, type TextFieldVisual } from "./text-field/text-field";
 import { TextLink, type TextLinkVisual } from "./text-link/text-link";
 import { Tooltip, type TooltipVisual } from "./tooltip/tooltip";
+import { BrandFrame, type BrandFrameVisual } from "./brand-frame/brand-frame";
+import { ColorField, type ColorFieldVisual } from "./color-field/color-field";
 import { Dialog, type DialogVisual } from "./dialog/dialog";
 import { Glyph } from "./glyphs";
 import { Notice, type NoticeVisual } from "./notice/notice";
@@ -40,20 +42,43 @@ function boot() {
   if (!target.axe) {
     target.eval(axeSource);
   }
-  // jsdom's elementsFromPoint is missing or throws. axe uses it to decide
-  // which open dialog is the modal, and a throw becomes an incomplete
-  // result on every rule rather than a check of the dialog.
-  const elementsFromPoint = document.elementsFromPoint?.bind(document);
+  return target.axe;
+}
+
+// Installed only while a dialog is open, then removed. axe decides which
+// dialog is the modal by calling elementsFromPoint. jsdom's own throws, and
+// the throw is reported as incomplete before the rule reads the dialog.
+// Measured with the stand-in on and off: the rules that change are only
+// Dialog's — aria-allowed-attr, aria-conditional-attr, aria-deprecated-role,
+// aria-dialog-name, aria-hidden-focus, aria-prohibited-attr,
+// aria-required-attr, aria-required-children, aria-required-parent,
+// aria-roles, aria-valid-attr, aria-valid-attr-value, autocomplete-valid,
+// button-name, empty-heading, heading-order, nested-interactive,
+// scrollable-region-focusable, tabindex and valid-lang. Each is incomplete
+// without the stand-in and passes, or is inapplicable, with it. No other
+// primitive's rule outcome changes. target-size is not a rule in axe-core
+// 4.13.0, so this tier does not claim it. Rendered geometry belongs to the
+// browser tier.
+function storedColour(digits: string): string {
+  return `#${digits}`;
+}
+
+function installDialogHitTest() {
+  const previous = document.elementsFromPoint?.bind(document);
   document.elementsFromPoint = (x: number, y: number) => {
     try {
-      const found = elementsFromPoint?.(x, y);
+      const found = previous?.(x, y);
       if (found) return found;
     } catch {
-      // The jsdom stub throws. Fall through to the open dialogs.
+      // jsdom throws. The open dialog is what a modal covers.
     }
     return [...document.querySelectorAll("dialog[open]")];
   };
-  return target.axe;
+  return () => {
+    if (previous) {
+      document.elementsFromPoint = previous;
+    }
+  };
 }
 
 function paint(element: ReactElement, locale: "en" | "ar") {
@@ -318,24 +343,101 @@ describe("component accessibility tier", () => {
           <StatusBadge variant="success" state={state as StatusBadgeVisual} text="Ready" icon={<Glyph name="check" />} />
         ),
       },
+      {
+        name: "ColorField",
+        states: ["default", "hover", "focus", "active", "disabled", "error", "empty"],
+        render: (state) => (
+          <Field caption="Ink">
+            <ColorField
+              variant="standard"
+              size="comfortable"
+              state={state as ColorFieldVisual}
+              value={state === "empty" ? "" : storedColour("1a1a1a")}
+              emptyName="No colour"
+              disabled={state === "disabled"}
+            />
+          </Field>
+        ),
+      },
+      {
+        name: "BrandFrame",
+        states: ["default", "loading", "error", "empty", "incomplete"],
+        render: (state) => {
+          const face = { family: "Example Face", weight: "400", italic: false };
+          const complete = state !== "incomplete";
+          return (
+            <BrandFrame
+              variant="preview"
+              size="comfortable"
+              state={state as BrandFrameVisual}
+              profile={
+                state === "empty" || state === "error"
+                  ? null
+                  : {
+                      colors: complete
+                        ? {
+                            primary: storedColour("112233"),
+                            secondary: storedColour("223344"),
+                            accent: storedColour("334455"),
+                            background: storedColour("ffffff"),
+                            foreground: storedColour("1a1a1a"),
+                            muted: storedColour("545454"),
+                            critical: storedColour("b3261e"),
+                          }
+                        : { background: storedColour("ffffff") },
+                      typefaces: complete
+                        ? {
+                            "heading-latin": face,
+                            "heading-arabic": face,
+                            "body-latin": face,
+                            "body-arabic": face,
+                          }
+                        : { "body-latin": face },
+                      strings: complete
+                        ? [{ field: "brand", locale: "en", value: "Mint" }]
+                        : [{ field: "brand", locale: "ar", value: null }],
+                    }
+              }
+              previewLocale="en"
+              regionName={complete ? "Mint" : null}
+              missingRegionName="Name missing"
+              markers={{
+                role: (role) => role,
+                localeString: (field, locale) => `${field}/${locale}`,
+                typeface: (pair) => pair,
+              }}
+              emptyMessage="No current profile"
+              unresolvedMessage="Could not resolve"
+              requestIdentifier="req-14"
+            >
+              Preview
+            </BrandFrame>
+          );
+        },
+      },
     ];
 
     for (const locale of locales) {
       for (const sample of cases) {
         for (const state of sample.states) {
-          paint(sample.render(state), locale);
-          const root = document.getElementById("root");
-          if (!root) {
-            throw new Error("root missing after paint");
+          const restore = sample.name === "Dialog" ? installDialogHitTest() : null;
+          try {
+            paint(sample.render(state), locale);
+            const root = document.getElementById("root");
+            if (!root) {
+              throw new Error("root missing after paint");
+            }
+            const result = await axe.run(root);
+            for (const item of result.incomplete) {
+              observed.add(item.id);
+            }
+            const violations = result.violations.map((item) => item.id);
+            const unlisted = result.incomplete.map((item) => item.id).filter((id) => !EXCLUSION_IDS.includes(id));
+            expect(violations, `${sample.name} ${state} ${locale}`).toEqual([]);
+            expect(unlisted, `${sample.name} ${state} ${locale}`).toEqual([]);
+          } finally {
+            restore?.();
           }
-          const result = await axe.run(root);
-          for (const item of result.incomplete) {
-            observed.add(item.id);
-          }
-          const violations = result.violations.map((item) => item.id);
-          const unlisted = result.incomplete.map((item) => item.id).filter((id) => !EXCLUSION_IDS.includes(id));
-          expect(violations, `${sample.name} ${state} ${locale}`).toEqual([]);
-          expect(unlisted, `${sample.name} ${state} ${locale}`).toEqual([]);
         }
       }
     }
@@ -344,5 +446,5 @@ describe("component accessibility tier", () => {
     expect(verdict.silent).toEqual([]);
     expect(verdict.unlisted).toEqual([]);
     expect(verdict.ok).toBe(true);
-  });
+  }, 30000);
 });

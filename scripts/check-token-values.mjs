@@ -51,10 +51,10 @@ const CHROMATIC_TOKENS = [
 const MINIMUM_TOKENS = 234;
 const MINIMUM_ACHROMATIC = 68;
 const MINIMUM_CHROMATIC = 11;
-const MINIMUM_FONT_FAMILIES = 11;
-const MINIMUM_STYLESHEETS = 18;
-const MINIMUM_DECLARATIONS = 874;
-const MINIMUM_SOURCES = 69;
+const MINIMUM_FONT_FAMILIES = 13;
+const MINIMUM_STYLESHEETS = 20;
+const MINIMUM_DECLARATIONS = 950;
+const MINIMUM_SOURCES = 75;
 
 const FAMILIES = new Set(["IBM Plex Sans", "IBM Plex Sans Arabic"]);
 const GENERICS = new Set(["system-ui", "sans-serif"]);

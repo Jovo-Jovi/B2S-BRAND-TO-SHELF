@@ -55,6 +55,22 @@ describe("Notice", () => {
         <Notice variant="toast" tone="danger" title="Four" message="Stored" icon={icon} />
       </NoticeRegion>,
     );
+    expect(html).not.toContain("One");
+    expect(html).toContain("Two");
+    expect(html).toContain("Three");
+    expect(html).toContain("Four");
+    expect(html.indexOf("Two")).toBeLessThan(html.indexOf("Four"));
+  });
+
+  it("queues a toast when the visible three all persist", () => {
+    const html = renderToStaticMarkup(
+      <NoticeRegion>
+        <Notice variant="toast" tone="warning" title="One" message="Stored" icon={icon} />
+        <Notice variant="toast" tone="danger" title="Two" message="Stored" icon={icon} />
+        <Notice variant="toast" tone="warning" title="Three" message="Stored" icon={icon} />
+        <Notice variant="toast" tone="info" title="Four" message="Stored" icon={icon} />
+      </NoticeRegion>,
+    );
     expect(html).toContain("One");
     expect(html).toContain("Three");
     expect(html).not.toContain("Four");

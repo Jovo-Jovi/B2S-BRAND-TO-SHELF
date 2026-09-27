@@ -1,6 +1,6 @@
 "use client";
 
-import { Children, useEffect, useId, useRef, type KeyboardEvent, type ReactNode } from "react";
+import { Children, isValidElement, useEffect, useId, useRef, type KeyboardEvent, type ReactElement, type ReactNode } from "react";
 
 import { Button } from "../button/button";
 import { classes } from "../classes";
@@ -175,11 +175,42 @@ export function Notice({
   );
 }
 
+type NoticeElement = ReactElement<{ tone: NoticeTone; title: string; onDismiss?: () => void }>;
+
+function isNotice(child: ReactNode): child is NoticeElement {
+  return isValidElement(child);
+}
+
+function visibleToasts(children: ReactNode): { visible: NoticeElement[]; dismissed: NoticeElement[] } {
+  const visible: NoticeElement[] = [];
+  const dismissed: NoticeElement[] = [];
+  for (const item of Children.toArray(children).filter(isNotice)) {
+    if (visible.length < TOAST_CAP) {
+      visible.push(item);
+      continue;
+    }
+    const index = visible.findIndex((entry) => entry.props.tone === "success" || entry.props.tone === "info");
+    if (index === -1) {
+      continue;
+    }
+    dismissed.push(visible[index]);
+    visible.splice(index, 1);
+    visible.push(item);
+  }
+  return { visible, dismissed };
+}
+
 export function NoticeRegion({ children }: { children: ReactNode }) {
-  const notices = Children.toArray(children).slice(0, TOAST_CAP);
+  const { visible, dismissed } = visibleToasts(children);
+  const dismissedNames = dismissed.map((item) => item.props.title).join("|");
+  useEffect(() => {
+    for (const item of visibleToasts(children).dismissed) {
+      item.props.onDismiss?.();
+    }
+  }, [children, dismissedNames]);
   return (
     <div className={styles.region} data-notice-region="">
-      {notices}
+      {visible}
     </div>
   );
 }

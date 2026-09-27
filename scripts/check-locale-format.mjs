@@ -19,7 +19,7 @@ const ROOTS = ["app", "components", "features", "lib"];
 const ALLOWED = ["lib/locale/", "lib/money/"];
 const INTL_APIS = new Set(["DateTimeFormat", "NumberFormat", "RelativeTimeFormat"]);
 const METHOD_APIS = new Set(["toLocaleString", "toLocaleDateString", "toLocaleTimeString", "toFixed"]);
-const MINIMUM_FILES = 57;
+const MINIMUM_FILES = 65;
 
 function fail(message) {
   console.error(`FAIL: ${message}`);

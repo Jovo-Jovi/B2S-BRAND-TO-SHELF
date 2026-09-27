@@ -174,6 +174,8 @@ jobs:
 
       - name: check-icon-registry
         run: node scripts/check-icon-registry.mjs
+      - name: check-brand-tokens
+        run: node scripts/check-brand-tokens.mjs
 
   # ARCHITECTURE.md §5 — types are generated from staging (ADR-013), and a
   # diff between the generated types and the committed ones fails the

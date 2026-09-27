@@ -25,6 +25,7 @@ describe("Tooltip", () => {
           expect(html).not.toContain('role="tooltip"');
         } else {
           expect(html).toContain('role="tooltip"');
+          expect(html).toContain('data-placement="block-start"');
           expect(html).toContain("Full trading name");
         }
       }

@@ -27,7 +27,7 @@ Every primitive carries one fenced `component` block. **The block binds; the pro
 3. **Date presentation** — `CALC_SPEC.md` R1-25's locale block, amended 2026-09-23: Gregorian calendar; `DD/MM/YYYY` for display in both locales (`23/09/2026`); ISO 8601 for every machine-readable value; weeks start on Saturday. `DateField` references it and states none of it (PR-43).
 4. **The brand contrast constant** — `BRAND_CONFIG.md` §11, amended 2026-09-23: `foreground` meets **4.5:1** against `background` in every theme, because `foreground` is the text role. `ColorField` references it.
 
-**Formatting homes, added 2026-09-26 — P03-T10.** Date formatting is complete at P03 through `lib/locale/`. Money and quantity formatting, TextField `number` redisplay and DataTable numeric cells complete at P05 through `lib/money/`, under ADR-011.
+**Formatting homes.** `lib/locale/` formats every number `CALC_SPEC.md` does not govern — counts, upload percentages, byte sizes — and dates. Money and domain quantities, which `CALC_SPEC.md` governs, are formatted through `lib/money/` at P05 under ADR-011.
 
 ## 1. The one idea: the chrome is a proofing surround
 
@@ -100,7 +100,7 @@ That is where this system spends its boldness: in one place, inside the brand fr
 | danger on danger-bg | 5.78 | 6.78 | 4.5 |
 | info on info-bg | 5.69 | 7.14 | 4.5 |
 
-A control's boundary is measured against the surface around it, which pressing does not change, so `border-control` against `surface-active` (2.78 in dark) is not a WCAG 2.2 1.4.11 requirement.
+A control's boundary is measured against the surface around it, which pressing does not change, so `border-control` against `surface-active` (2.78 in dark) is not a WCAG 2.2 1.4.11 requirement. Only `--b2s-color-border-control` owes 3:1, and it owes it against every platform surface a control can sit on — canvas, surface, sunken and raised — in both themes. `--b2s-color-border` is decorative and exempt. The WCAG contrast function has one home, `lib/colour/`. `ColorField` uses it, and `BRAND_CONFIG.md` §11's validation will. The static contrast gate does not evaluate brand pairs; they are runtime data, bound at profile completion.
 
 Placeholders use `text-subtle` and meet 4.5:1, but a placeholder is never a substitute for a caption (§6, `Field`).
 
@@ -297,7 +297,7 @@ The six `--b2s-layer-*` tokens are every z-index in the catalog, and no other va
 3. **Flex and grid flow follow direction automatically.** Order is never reversed by hand.
 4. **Icons flip only by their registry flag** (§2.10). A flag, not a judgement made per page.
 5. **Mixed direction is isolated.** Every identifier, email, URL, hex colour, SKU, GTIN, batch number, invoice number, request identifier and file name renders in a direction-isolated span, left-to-right. Tenant text from a `TranslationEntry` renders in its own locale's direction, isolated. So an Arabic brand name inside an English sentence, or a Latin SKU inside an Arabic one, cannot reorder the text around it.
-6. **Formatted numbers pass through the locale formatter only** (`CALC_SPEC.md` R1-25; CF-175) and are never assembled by hand. Under R1-25's locale definitions both locales use Latin digits, so a number is a left-to-right run that bidirectional layout places correctly in an Arabic line.
+6. **`lib/locale/` formats every number `CALC_SPEC.md` does not govern — counts, upload percentages, byte sizes — and dates.** Money and domain quantities, which `CALC_SPEC.md` governs, are formatted through `lib/money/` at P05 under ADR-011. A formatted number is never assembled by hand (CF-175). Under R1-25's locale definitions both locales use Latin digits, so a number is a left-to-right run that bidirectional layout places correctly in an Arabic line.
 7. **Numeric table columns align to the cell's end edge**, with tabular figures, so decimals line up in both directions.
 8. **Arrow keys follow visual direction.** In a right-to-left tab list, ArrowLeft moves to the next tab.
 9. **Steppers and progress** flow from start to end.
@@ -726,7 +726,7 @@ states:
 keyboard: [Escape closes unless a destructive action is pending, Tab cycles within, Enter submits when a form's primary action is focusable]
 aria: role dialog with aria-modal true, labelled by the title, described by the description; focus returns to the trigger on close
 mirrors: close_button at inline-end of the title; footer actions from inline-end, primary last in reading order
-tokens: [color-raised, color-scrim, elevation-2, radius-lg, dialog-width-small, dialog-width-medium, dialog-width-large, space-7, text-xl, duration-enter, duration-exit, ease-enter, ease-exit]
+tokens: [color-raised, color-border, color-scrim, elevation-2, radius-lg, dialog-width-small, dialog-width-medium, dialog-width-large, space-7, text-xl, duration-enter, duration-exit, ease-enter, ease-exit]
 ```
 
 **Sizes:** `small` for confirmations, `medium`, `large` — `--b2s-dialog-width-*`. **Below 640px every dialog becomes a full-height bottom sheet.** The size identifiers are `small`, `medium` and `large`, not densities.
@@ -752,10 +752,10 @@ states:
 keyboard: [its actions are Buttons; Escape dismisses a focused toast]
 aria: success and info use role status, polite; danger uses role alert, assertive; warning uses status unless it blocks work
 mirrors: toasts stack at the inline-end bottom corner; the status bar sits at inline-start
-tokens: [color-raised, elevation-3, radius-lg, status-bar-width, color-success, color-warning, color-danger, color-info, space-5, text-sm, duration-enter, duration-exit, notice-dismiss]
+tokens: [color-raised, color-text, elevation-3, radius-lg, status-bar-width, color-success, color-warning, color-danger, color-info, space-5, text-sm, duration-enter, duration-exit, notice-dismiss]
 ```
 
-**Toasts:** at most three stacked; success and info dismiss after `--b2s-notice-dismiss`, paused on hover and focus; **warning and danger stay until dismissed**. **Inline notices** sit inside the section they concern and persist.
+**Toasts:** at most three are visible. When a fourth arrives, the oldest success or info toast is dismissed early to make room. If all three visible are warning or danger, which persist, the new toast queues until one is dismissed. The newest sits nearest the inline-end bottom corner. Success and info otherwise dismiss after `--b2s-notice-dismiss`, paused on hover and focus. **Inline notices** sit inside the section they concern and persist.
 
 **Never for validation.** A field's error belongs to the field. A notice is for the outcome of an action.
 
@@ -783,7 +783,7 @@ mirrors: placement is logical; the pointer follows the placement
 tokens: [color-text, color-surface, elevation-1, radius-sm, text-xs, space-2, space-3, duration-quick, delay-tooltip]
 ```
 
-**Supplementary only.** Never the only place essential information lives, never interactive content, no more than about sixty characters. It is how a truncated value is shown in full on hover and focus.
+**Supplementary only.** Never the only place essential information lives, never interactive content, no more than about sixty characters. It is how a truncated value is shown in full on hover and focus. Placement is block-start by default, and block-end when the viewport lacks room at block-start. Never inline-start or inline-end.
 
 ### StatusBadge
 
@@ -967,9 +967,9 @@ Every gate the catalog landing task builds, and the part of this document it hol
 | CF-168 | Static | §4 rule 2 | Style sources for physical `left` and `right` properties |
 | CF-169 | Static | `UX_PRINCIPLES.md` §4; §4 rule 11 here | `en` and `ar` key sets, including every plural category |
 | CF-170 | Static | `UX_PRINCIPLES.md` §4 (CF-74) | Duplicate values per catalog namespace |
-| CF-171 | Static | §3 rules 2 and 7 | `--brand-*` references outside `BrandFrame`; `--b2s-*` references inside it |
+| CF-171 | Static | §3 rules 2 and 7 | `--brand-*` is referenced only in `BrandFrame`'s stylesheet; within it, `--brand-*` only on canvas and content selectors, and `--b2s-*` only on mount and surround selectors; `--brand-*` is defined only by `BrandFrame`, and only from expressions |
 | CF-172 | Static | §2.1; §1; §0 items 1 and 2 | Raw colour, spacing, radius, duration, shadow, font-family or z-index outside token definitions, in every stylesheet and inline style; a `--b2s-` custom property defined only in `app/globals.css`; every chrome neutral achromatic; font families only the two `OD-G23` names |
-| CF-198 | Static | §2.2 | Text and background declared together, or through a state selector of the same component, at 4.5:1 in both themes; a boundary token against the surface declared with it at 3:1. Pairs inherited from an ancestor are outside it. Not a substitute for CF-177 |
+| CF-198 | Static | §2.2 | Text and background declared together, or through a state selector of the same component, at 4.5:1 in both themes. Only `--b2s-color-border-control` is a boundary, at 3:1 against canvas, surface, sunken and raised, in both themes. `--b2s-color-border` is decorative and exempt. Brand pairs are not evaluated. Pairs inherited from an ancestor are outside it. Not a substitute for CF-177 |
 | CF-173 | Static | §5; every `component` block | Each primitive implements every state not marked `n/a` |
 | CF-174 | Static | Every `component` block | Variant and size names match exactly |
 | CF-175 | Static | §4 rule 6; `TextField` `number` | Formatted numbers only through the R1-25 formatter |
@@ -1112,3 +1112,51 @@ The row now includes z-index, every stylesheet and inline style, and the `app/gl
 `## 1. The one idea: the chrome is a proofing surround`
 
 A paragraph now sits between them: date formatting is complete at P03 through `lib/locale/`. Money and quantity formatting, TextField `number` redisplay and DataTable numeric cells complete at P05 through `lib/money/`, under ADR-011. Item 3's date rules are unchanged.
+
+**2026-09-27 — P03-T11.** Notice's block did not name `--b2s-color-text`. Prior tokens line:
+
+`tokens: [color-raised, elevation-3, radius-lg, status-bar-width, color-success, color-warning, color-danger, color-info, space-5, text-sm, duration-enter, duration-exit, notice-dismiss]`
+
+The tokens line now names `color-text`.
+
+**2026-09-27 — P03-T11.** Notice overflow did not say what happens when a fourth toast arrives, or where the newest sits. Prior text:
+
+`**Toasts:** at most three stacked; success and info dismiss after `--b2s-notice-dismiss`, paused on hover and focus; **warning and danger stay until dismissed**. **Inline notices** sit inside the section they concern and persist.`
+
+At most three toasts are visible. When a fourth arrives, the oldest success or info toast is dismissed early to make room. If all three visible are warning or danger, which persist, the new toast queues until one is dismissed. The newest sits nearest the inline-end bottom corner.
+
+**2026-09-27 — P03-T11.** Tooltip placement did not name a side. Prior text:
+
+`**Supplementary only.** Never the only place essential information lives, never interactive content, no more than about sixty characters. It is how a truncated value is shown in full on hover and focus.`
+
+Placement is block-start by default, and block-end when the viewport lacks room at block-start. Never inline-start or inline-end.
+
+**2026-09-27 — P03-T11.** §0 and §4 rule 6 sent every formatted number through one home. Prior §0 text:
+
+`**Formatting homes, added 2026-09-26 — P03-T10.** Date formatting is complete at P03 through `lib/locale/`. Money and quantity formatting, TextField `number` redisplay and DataTable numeric cells complete at P05 through `lib/money/`, under ADR-011.`
+
+Prior §4 rule 6:
+
+`6. **Formatted numbers pass through the locale formatter only** (`CALC_SPEC.md` R1-25; CF-175) and are never assembled by hand. Under R1-25's locale definitions both locales use Latin digits, so a number is a left-to-right run that bidirectional layout places correctly in an Arabic line.`
+
+`lib/locale/` formats every number `CALC_SPEC.md` does not govern — counts, upload percentages, byte sizes — and dates. Money and domain quantities, which `CALC_SPEC.md` governs, are formatted through `lib/money/` at P05 under ADR-011.
+
+**2026-09-27 — P03-T11.** The WCAG contrast function had no home, and the boundary sentence did not say which token owes 3:1 or that brand pairs are outside the static gate. Prior text, which still stands and is now followed by the new sentences:
+
+`A control's boundary is measured against the surface around it, which pressing does not change, so `border-control` against `surface-active` (2.78 in dark) is not a WCAG 2.2 1.4.11 requirement.`
+
+Only `--b2s-color-border-control` owes 3:1, against canvas, surface, sunken and raised, in both themes. `--b2s-color-border` is decorative and exempt. The function's one home is `lib/colour/`. `ColorField` uses it, and `BRAND_CONFIG.md` §11's validation will. The static gate does not evaluate brand pairs.
+
+**2026-09-27 — P03-T11.** Dialog's dark elevation border is restored, so the block names `color-border`. Prior tokens line:
+
+`tokens: [color-raised, color-scrim, elevation-2, radius-lg, dialog-width-small, dialog-width-medium, dialog-width-large, space-7, text-xl, duration-enter, duration-exit, ease-enter, ease-exit]`
+
+**2026-09-27 — P03-T11.** The CF-171 and CF-198 rows of §10 described a narrower claim than the gates now hold. Prior CF-171 row:
+
+`| CF-171 | Static | §3 rules 2 and 7 | `--brand-*` references outside `BrandFrame`; `--b2s-*` references inside it |`
+
+Prior CF-198 row:
+
+`| CF-198 | Static | §2.2 | Text and background declared together, or through a state selector of the same component, at 4.5:1 in both themes; a boundary token against the surface declared with it at 3:1. Pairs inherited from an ancestor are outside it. Not a substitute for CF-177 |`
+
+CF-171 now states the selector split and that a `--brand-*` definition is an expression. CF-198 now measures `border-control` against the four surfaces and exempts the decorative border. Brand pairs stay unevaluated.

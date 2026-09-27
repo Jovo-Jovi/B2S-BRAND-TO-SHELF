@@ -3425,10 +3425,20 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       CLOSED (P03-T08) by `scripts/check-catalog-duplicates.mjs`. The
       `access.title` / `access.signInSubmit` pair is justified there, not
       merged. Owner: none outstanding.
-- [ ] CF-171 — STATIC. Brand tokens are referenced only inside the brand
+- [x] CF-171 — STATIC. Brand tokens are referenced only inside the brand
       frame component. A script over the source. No new dependency. A gate
       which cannot observe what it checks is not a gate (PR-21). Owner:
       **the task that lands the design-surface catalog**.
+      CLOSED (P03-T11) by `scripts/check-brand-tokens.mjs`. `--brand-*` is
+      referenced only in BrandFrame's stylesheet. Within it, `--brand-*`
+      only on canvas and content selectors, and `--b2s-*` only on mount
+      and surround selectors. `--brand-*` is defined only by BrandFrame,
+      and only from an expression. Floor: 75 files scanned, 11 definitions,
+      4 brand references, 5 platform references. Plants, each restored
+      byte-identical: a `--brand-*` reference in another primitive; a
+      `--b2s-*` token on the canvas; a `--brand-*` token on the mount; a
+      literal colour defining a `--brand-*` property; a `--brand-*`
+      definition outside BrandFrame. Owner: none outstanding.
 - [x] CF-172 — STATIC. No raw colour, spacing or radius value outside the
       token layer. A script over the source. No new dependency. A gate
       which cannot observe what it checks is not a gate (PR-21). Owner:
@@ -3711,6 +3721,14 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       samples. This task did not turn the behaviour off. It fires under a
       condition outside the repository. The push of `697bbe6` did not open
       one. Owner: **the owner**.
+      AMENDED (P03-T11). A fourth pull request, #7, opened itself at
+      2026-09-26T14:57:59Z. Same shape as #4, #5 and #6: author the
+      repository account, title "Phase/03 brand and onboarding", empty
+      body, head `phase/03-brand-and-onboarding`, base `main`.
+      `performed_via_github_app` is null, so a GitHub App did not create
+      it; the owner's credentials did. It has not fired on every push.
+      This task closed #7 and did not turn the behaviour off. Owner:
+      **the owner**.
 - [x] CF-198 — Declared text and background colours were not checked for
       contrast. CF-177 remains the rendered check.
       CLOSED (P03-T09-FIX) by `scripts/check-contrast.mjs`. It resolves
@@ -3739,4 +3757,42 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       CLOSED (P03-T10). The last row's commit cell admits only the declared
       placeholder or a well-formed backticked short sha. A plant of that
       cell set to "garbage not a sha" fails. Owner: none outstanding.
+- [x] CF-201 — `scripts/check-contrast.mjs` treated every border as a
+      control boundary and measured it against the fill declared in the
+      same rule. A planted `--b2s-color-border` on a raised fill failed at
+      1.11:1 in dark. Both halves contradict `DESIGN_SURFACE.md`: §2.2
+      makes `--b2s-color-border` decorative and exempt, with only
+      `border-control` owing 3:1; and a boundary is measured against the
+      surface around a component, not its own fill. The gate forced Dialog
+      to omit the §2.6 dark-elevation border. The reviewer's P03-T09-FIX
+      wording asked for both "the surface it sits on" and "pairs declared
+      together", which contradict. Owner: **P03-T11**.
+      CLOSED (P03-T11). Only `--b2s-color-border-control` is a boundary,
+      measured at the token level against canvas, surface, sunken and
+      raised, in both themes. Rule-level boundary pairing is removed.
+      Text pairs stay rule-level at 4.5:1. `--b2s-color-border` is
+      exempt. Dialog's dark-elevation border is restored. Brand pairs are
+      not evaluated. Floor: 20 stylesheets, 49 text pairs, 8 boundary
+      pairs, 4 surfaces, 2 themes. A decorative border on a raised fill
+      passes. `border-control` darkened to the decorative dark value fails
+      in dark at 1.32:1 against canvas. Owner: none outstanding.
+- [x] CF-202 — `components/ui/a11y-tier.test.tsx` installed an
+      `elementsFromPoint` stand-in on `document` for every primitive's
+      run, returning every open dialog for any point when jsdom's own
+      throws. For Dialog that simulates a modal; for every other primitive
+      it returns nothing anywhere, so any rule that consults hit-testing
+      is evaluated against invented geometry. Owner: **P03-T11**.
+      CLOSED (P03-T11). The stand-in is installed only while a dialog
+      test is open, and removed after it. Measured with the stand-in on
+      and off, the rules whose outcome changes are only Dialog's:
+      aria-allowed-attr, aria-conditional-attr, aria-deprecated-role,
+      aria-dialog-name, aria-hidden-focus, aria-prohibited-attr,
+      aria-required-attr, aria-required-children, aria-required-parent,
+      aria-roles, aria-valid-attr, aria-valid-attr-value,
+      autocomplete-valid, button-name, empty-heading, heading-order,
+      nested-interactive, scrollable-region-focusable, tabindex and
+      valid-lang. Each is incomplete without the stand-in. No other
+      primitive's rule outcome changes. `target-size` is not a rule in
+      axe-core 4.13.0, so the component tier does not claim it. Rendered
+      geometry belongs to the browser tier. Owner: none outstanding.
 
