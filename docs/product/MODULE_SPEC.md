@@ -113,6 +113,9 @@ components/                       the design-surface catalog
     status-badge/                 StatusBadge
     color-field/                  ColorField
     brand-frame/                  BrandFrame
+    date-field/                   DateField
+    file-drop/                    FileDrop
+    data-table/                   DataTable
   shared/                         deferred
 
 lib/
