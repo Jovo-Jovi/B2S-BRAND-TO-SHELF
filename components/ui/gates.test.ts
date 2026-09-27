@@ -1,7 +1,11 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-import { assertExclusionUnion, EXCLUSION_IDS } from "../../scripts/component-a11y-exclusions.mjs";
+import {
+  assertDisabledSet,
+  assertKnownBad,
+  EXCLUSION_IDS,
+} from "../../scripts/component-a11y-exclusions.mjs";
 import {
   coveredStatesInSource,
   setDiff,
@@ -33,16 +37,28 @@ describe("component gates, planted in memory", () => {
     expect(readFileSync(path, "utf8")).toBe(original);
   });
 
-  it("rejects an exclusion list that gained an id and one that lost the only id", () => {
-    const listed = [...EXCLUSION_IDS];
-    const extra = assertExclusionUnion([...listed, "button-name"], listed);
-    expect(extra.ok).toBe(false);
-    expect(extra.unlisted).toEqual(["button-name"]);
-    const dropped = assertExclusionUnion([], listed);
-    expect(dropped.ok).toBe(false);
-    expect(dropped.silent).toEqual(listed);
-    const held = assertExclusionUnion(listed, listed);
+  it("rejects a disabled set that re-enables a rule, gains a rule with no cause, or drops a known-bad fixture", () => {
+    const held = assertDisabledSet();
     expect(held.ok).toBe(true);
-    expect(EXCLUSION_IDS).toEqual(["color-contrast"]);
+    expect(held.disabled).toEqual(held.listed);
+    expect(held.listed).toEqual(["color-contrast", "target-size"]);
+    const reenabled = assertDisabledSet({
+      "color-contrast": { enabled: false },
+      "target-size": { enabled: true },
+    });
+    expect(reenabled.ok).toBe(false);
+    expect(reenabled.notDisabled).toEqual(["target-size"]);
+    const noCause = assertDisabledSet({
+      "color-contrast": { enabled: false },
+      "target-size": { enabled: false },
+      region: { enabled: false },
+    });
+    expect(noCause.ok).toBe(false);
+    expect(noCause.disabledWithoutCause).toEqual(["region"]);
+    const dropped = assertKnownBad(["color-contrast"]);
+    expect(dropped.ok).toBe(false);
+    expect(dropped.missing).toEqual(["target-size"]);
+    const proven = assertKnownBad([...EXCLUSION_IDS]);
+    expect(proven.ok).toBe(true);
   });
 });

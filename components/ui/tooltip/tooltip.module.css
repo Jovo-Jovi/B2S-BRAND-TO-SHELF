@@ -12,6 +12,7 @@
   border-radius: var(--b2s-radius-sm);
   background-color: var(--b2s-color-surface);
   color: var(--b2s-color-text);
+  border: var(--b2s-border-width) solid transparent;
   box-shadow: var(--b2s-elevation-1);
   font-size: var(--b2s-text-xs);
   transition-property: opacity;
@@ -49,4 +50,26 @@
   .bubble {
     transition-property: none;
   }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .bubble {
+    background-color: var(--b2s-color-raised);
+    border-block-color: var(--b2s-color-border);
+    border-inline-color: var(--b2s-color-border);
+  }
+
+  :root:not([data-theme="light"]) .pointer {
+    background-color: var(--b2s-color-raised);
+  }
+}
+
+:root[data-theme="dark"] .bubble {
+  background-color: var(--b2s-color-raised);
+  border-block-color: var(--b2s-color-border);
+  border-inline-color: var(--b2s-color-border);
+}
+
+:root[data-theme="dark"] .pointer {
+  background-color: var(--b2s-color-raised);
 }

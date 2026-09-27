@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { readFileSync } from "node:fs";
 import { act } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
@@ -157,5 +158,15 @@ describe("Notice", () => {
     expect(isolated?.textContent).toBe("req-14");
     await view.unmount();
     vi.useRealTimers();
+  });
+
+  it("keeps a raised fill and a dark-theme border in the decorative border colour", () => {
+    const css = readFileSync("components/ui/notice/notice.module.css", "utf8");
+    expect(css).toContain("background-color: var(--b2s-color-raised)");
+    expect(css).toContain("border: var(--b2s-border-width) solid transparent");
+    expect(css).toContain(':root[data-theme="dark"] .root');
+    expect(css).toContain("border-block-color: var(--b2s-color-border)");
+    expect(css).toContain("border-inline-color: var(--b2s-color-border)");
+    expect(css).toContain('@media (prefers-color-scheme: dark)');
   });
 });

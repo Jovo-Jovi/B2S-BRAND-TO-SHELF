@@ -3515,6 +3515,12 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       returning fails. Plants, in memory: adding `button-name` to the
       observed set fails as unlisted, and an empty observed set fails
       because `color-contrast` went silent. Owner: none outstanding.
+      NOTE (P03-T11-FIX) — the exclusion mechanism described above, an
+      incomplete-result union whose only id is color-contrast, is no longer
+      how the tier works. Measured here, target-size returns a confident
+      pass on geometry jsdom does not compute, so an incomplete result is
+      not the signal. The tier disables color-contrast and target-size.
+      The row stays closed.
 - [ ] CF-177 — BROWSER-RENDERED. WCAG 2.2 AA contrast for every platform
       primitive in light and dark. A real browser and one new CI job,
       needing a headless-browser runner, which is an ADR and an owner
@@ -3795,4 +3801,47 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       primitive's rule outcome changes. `target-size` is not a rule in
       axe-core 4.13.0, so the component tier does not claim it. Rendered
       geometry belongs to the browser tier. Owner: none outstanding.
+      NOTE (P03-T11-FIX) — the sentence above, that target-size is not a
+      rule in axe-core 4.13.0, is false. Measured in this task: axe-core
+      4.13.0 lists the rule, tagged wcag22aa, shipped disabled, and
+      enabling it passes a button styled 4px by 4px. The row stays closed.
+      The finding is CF-203.
+- [x] CF-203 — The component accessibility tier recorded a pass for
+      axe-core's target-size rule on geometry jsdom does not compute.
+      Measured at 2799528 and again in this task: target-size exists in
+      axe-core 4.13.0, tagged wcag22aa, shipped disabled. A default run
+      does not include it. Enabling it, in the component tier's simulated
+      DOM, reports a pass for a button styled 4px by 4px, which fails
+      WCAG 2.2's 24 by 24 minimum. jsdom's getBoundingClientRect on that
+      button is 0 by 0, and the offset check reports a 24px diameter.
+      Substituting element geometry at 400px and at 4px, which the engine
+      did read, does not change that pass. Substituting computed colour
+      at maximum and at minimum contrast leaves color-contrast incomplete;
+      foreground color was read 0 times. The exclusion list's old
+      assumption, that an unobservable rule returns incomplete, does not
+      catch a confident pass. Owner: **P03-T11-FIX**.
+      CLOSED (P03-T11-FIX). color-contrast and target-size are disabled
+      in the component tier's engine configuration. The disabled set
+      equals the exclusion list both ways. color-contrast names CF-177.
+      target-size names CF-178. Each has a known-bad fixture the simulated
+      DOM does not fail: the 4px button passes target-size, and gray text
+      on the same gray does not produce a color-contrast violation. Three
+      plants — re-enabling target-size, adding a disabled rule with no
+      cause, and removing the target-size fixture — each failed the check
+      and each file was restored byte-identical. The false comment in
+      the tier test is replaced with this measurement. Owner: none
+      outstanding.
+- [ ] CF-204 — The isolation suite's duration has grown from about nine
+      minutes at P03-T01-RESUME to 15m20s on run 36250292644, with run
+      36199604440 cancelled at 20m15s, while the suite has held 94
+      assertions since P03-T04. Suspected cause: staging authentication
+      rate limits under back-to-back runs, since every run signs up
+      synthetic users. The job already carried timeout-minutes 20, which
+      sits inside the observed range. P03-T11-FIX raises it to 30 so a
+      run at the observed duration is not cancelled and a hang still
+      cannot burn hours of runner time. This task does not investigate
+      the slowdown. The duration of the isolation run this change
+      triggers is added by the follow-up commit once that run completes.
+      Owner: **P03-T13**, before a second slow job is added beside this
+      one.
 

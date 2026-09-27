@@ -5,7 +5,14 @@ import { type ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
-import { assertExclusionUnion, EXCLUSION_IDS } from "../../scripts/component-a11y-exclusions.mjs";
+import {
+  assertDisabledSet,
+  assertKnownBad,
+  DISABLED_RULES,
+  FLOOR_DISABLED,
+  FLOOR_KNOWN_BAD,
+  FLOOR_RULES_RUN,
+} from "../../scripts/component-a11y-exclusions.mjs";
 import { BilingualField, type BilingualFieldVisual } from "./bilingual-field/bilingual-field";
 import { Button, type ButtonVisual } from "./button/button";
 import { Checkbox, type CheckboxVisual } from "./checkbox/checkbox";
@@ -32,12 +39,14 @@ const axeSource = readFileSync(require.resolve("axe-core/axe.js"), "utf8");
 type AxeResult = {
   violations: Array<{ id: string }>;
   incomplete: Array<{ id: string }>;
+  passes: Array<{ id: string }>;
+  inapplicable: Array<{ id: string }>;
 };
 
 function boot() {
   const target = window as unknown as {
     eval: (source: string) => void;
-    axe?: { run: (node: Element) => Promise<AxeResult> };
+    axe?: { run: (node: Element, options?: unknown) => Promise<AxeResult> };
   };
   if (!target.axe) {
     target.eval(axeSource);
@@ -56,9 +65,13 @@ function boot() {
 // button-name, empty-heading, heading-order, nested-interactive,
 // scrollable-region-focusable, tabindex and valid-lang. Each is incomplete
 // without the stand-in and passes, or is inapplicable, with it. No other
-// primitive's rule outcome changes. target-size is not a rule in axe-core
-// 4.13.0, so this tier does not claim it. Rendered geometry belongs to the
-// browser tier.
+// primitive's rule outcome changes. Measured in axe-core 4.13.0: target-size
+// is a rule, tagged wcag22aa, and the engine ships it disabled. Enabling it
+// passes a button styled 4px by 4px. jsdom's getBoundingClientRect on that
+// button is 0 by 0, and the offset check still reports a 24px diameter, so
+// the pass is not a measurement. This tier disables target-size. Rendered
+// size belongs to the browser tier, CF-178. color-contrast is disabled for
+// the same class of reason and belongs to CF-177.
 function storedColour(digits: string): string {
   return `#${digits}`;
 }
@@ -109,7 +122,12 @@ describe("component accessibility tier", () => {
     if (!axe) {
       throw new Error("axe-core did not attach to the window");
     }
-    const observed = new Set<string>();
+    const disabled = assertDisabledSet();
+    expect(disabled.ok, JSON.stringify(disabled)).toBe(true);
+    expect(disabled.disabled).toEqual(disabled.listed);
+    expect(disabled.listed).toEqual(disabled.disabled);
+    expect(disabled.disabled.length).toBeGreaterThanOrEqual(FLOOR_DISABLED);
+    let rulesRun = Number.POSITIVE_INFINITY;
     const locales = ["en", "ar"] as const;
 
     const cases: Array<{ name: string; states: readonly string[]; render: (state: string) => ReactElement }> = [
@@ -427,14 +445,14 @@ describe("component accessibility tier", () => {
             if (!root) {
               throw new Error("root missing after paint");
             }
-            const result = await axe.run(root);
-            for (const item of result.incomplete) {
-              observed.add(item.id);
-            }
+            const result = await axe.run(root, { rules: DISABLED_RULES });
+            const examined =
+              result.violations.length + result.incomplete.length + result.passes.length + result.inapplicable.length;
+            rulesRun = Math.min(rulesRun, examined);
             const violations = result.violations.map((item) => item.id);
-            const unlisted = result.incomplete.map((item) => item.id).filter((id) => !EXCLUSION_IDS.includes(id));
+            const incomplete = result.incomplete.map((item) => item.id);
             expect(violations, `${sample.name} ${state} ${locale}`).toEqual([]);
-            expect(unlisted, `${sample.name} ${state} ${locale}`).toEqual([]);
+            expect(incomplete, `${sample.name} ${state} ${locale}`).toEqual([]);
           } finally {
             restore?.();
           }
@@ -442,9 +460,56 @@ describe("component accessibility tier", () => {
       }
     }
 
-    const verdict = assertExclusionUnion([...observed]);
-    expect(verdict.silent).toEqual([]);
-    expect(verdict.unlisted).toEqual([]);
-    expect(verdict.ok).toBe(true);
-  }, 30000);
+    expect(rulesRun).toBeGreaterThanOrEqual(FLOOR_RULES_RUN);
+
+    const proven: string[] = [];
+    paint(<button type="button">Go</button>, "en");
+    const tiny = document.querySelector("button");
+    if (!tiny) {
+      throw new Error("the 4px button was not painted");
+    }
+    tiny.style.setProperty("width", "4px");
+    tiny.style.setProperty("height", "4px");
+    tiny.style.setProperty("padding-block", "0");
+    tiny.style.setProperty("padding-inline", "0");
+    tiny.style.setProperty("display", "block");
+    const targetSize = await axe.run(tiny, { rules: { "target-size": { enabled: true } } });
+    if (targetSize.violations.some((item) => item.id === "target-size")) {
+      throw new Error(
+        "target-size failed its known-bad fixture. The simulated DOM can observe it, so the exclusion must be revisited.",
+      );
+    }
+    if (!targetSize.passes.some((item) => item.id === "target-size")) {
+      throw new Error("target-size did not pass its 4px button, so the known-bad fixture was not proven");
+    }
+    proven.push("target-size");
+
+    paint(<button type="button">Save the line</button>, "en");
+    const gray = document.querySelector("button");
+    if (!gray) {
+      throw new Error("the gray button was not painted");
+    }
+    const sameGray = "rgb(118, 118, 118)";
+    gray.style.setProperty("color", sameGray);
+    gray.style.setProperty("background-color", sameGray);
+    gray.style.setProperty("font-size", "16px");
+    const contrast = await axe.run(gray, { rules: { "color-contrast": { enabled: true } } });
+    if (contrast.violations.some((item) => item.id === "color-contrast")) {
+      throw new Error(
+        "color-contrast failed its known-bad fixture. The simulated DOM can observe it, so the exclusion must be revisited.",
+      );
+    }
+    const contrastSeen = [...contrast.passes, ...contrast.incomplete].some((item) => item.id === "color-contrast");
+    if (!contrastSeen) {
+      throw new Error("color-contrast did not run against its known-bad fixture");
+    }
+    proven.push("color-contrast");
+
+    const fixtures = assertKnownBad(proven);
+    expect(fixtures.ok, JSON.stringify(fixtures)).toBe(true);
+    expect(fixtures.proven).toBeGreaterThanOrEqual(FLOOR_KNOWN_BAD);
+    const line = `A11Y_TIER rules=${rulesRun} disabled=${disabled.disabled.length} knownBad=${fixtures.proven}\n`;
+    process.stderr.write(line);
+    console.log(line.trim());
+  }, 60000);
 });

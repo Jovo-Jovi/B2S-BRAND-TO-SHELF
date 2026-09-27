@@ -7,6 +7,7 @@
   border-radius: var(--b2s-radius-lg);
   background-color: var(--b2s-color-raised);
   color: var(--b2s-color-text);
+  border: var(--b2s-border-width) solid transparent;
   font-size: var(--b2s-text-sm);
   transition-property: opacity;
   transition-duration: var(--b2s-duration-enter);
@@ -112,4 +113,16 @@
   .root {
     transition-property: none;
   }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .root {
+    border-block-color: var(--b2s-color-border);
+    border-inline-color: var(--b2s-color-border);
+  }
+}
+
+:root[data-theme="dark"] .root {
+  border-block-color: var(--b2s-color-border);
+  border-inline-color: var(--b2s-color-border);
 }

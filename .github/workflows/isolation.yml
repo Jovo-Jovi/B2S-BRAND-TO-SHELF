@@ -65,7 +65,13 @@ env:
 jobs:
   isolation:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # The suite ran about nine minutes at P03-T01-RESUME and has reached 15 to
+    # 20 minutes since, with no change to its 94 assertions. This job was
+    # already bounded at 20, which sits inside that range, so a slow run can
+    # be cancelled as a timeout. 30 sits above the observed duration and still
+    # stops a hang from burning hours of runner time. The slowdown itself
+    # belongs to P03-T13.
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v7

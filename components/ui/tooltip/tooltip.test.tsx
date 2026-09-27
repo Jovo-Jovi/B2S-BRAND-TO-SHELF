@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { readFileSync } from "node:fs";
 import { act } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
@@ -81,5 +82,16 @@ describe("Tooltip", () => {
     expect(hovered.host.querySelector("[role=tooltip]")).toBeNull();
     await hovered.unmount();
     vi.useRealTimers();
+  });
+
+  it("uses a raised fill and a decorative border in the dark theme", () => {
+    const css = readFileSync("components/ui/tooltip/tooltip.module.css", "utf8");
+    expect(css).toContain("background-color: var(--b2s-color-surface)");
+    expect(css).toContain("border: var(--b2s-border-width) solid transparent");
+    expect(css).toContain(':root[data-theme="dark"] .bubble');
+    expect(css).toContain("background-color: var(--b2s-color-raised)");
+    expect(css).toContain("border-block-color: var(--b2s-color-border)");
+    expect(css).toContain("border-inline-color: var(--b2s-color-border)");
+    expect(css).toContain('@media (prefers-color-scheme: dark)');
   });
 });
