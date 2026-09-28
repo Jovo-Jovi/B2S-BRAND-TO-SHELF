@@ -5,6 +5,7 @@ import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import {
   addDays,
   formatCalendarDate,
+  daysInMonth,
   monthGrid,
   parseCalendarDate,
   saturdayIndex,
@@ -35,6 +36,7 @@ export type DateFieldCopy = {
   months: readonly string[];
   weekdaysShort: readonly string[];
   weekdaysFull: readonly string[];
+  dayAccessibleName: string;
   monthHeading: string;
   placeholder: string;
   previousMonth: string;
@@ -59,12 +61,16 @@ type DateFieldProps = {
   name?: string;
 };
 
-function parts(iso: string): { year: number; month: number } | null {
+function parts(iso: string): { year: number; month: number; day: number } | null {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
   if (!match) {
     return null;
   }
-  return { year: Number(match[1]), month: Number(match[2]) };
+  return { year: Number(match[1]), month: Number(match[2]), day: Number(match[3]) };
+}
+
+function calendarIso(year: number, month: number, day: number): string {
+  return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
 export function DateField({
@@ -199,10 +205,16 @@ export function DateField({
     }
     if (event.key === "PageUp" || event.key === "PageDown") {
       event.preventDefault();
-      const next = shiftMonth(visible.year, visible.month, event.key === "PageUp" ? -1 : 1);
+      const source = parts(focusedIso);
+      if (!source) {
+        return;
+      }
+      const step = event.shiftKey ? 12 : 1;
+      const delta = event.key === "PageUp" ? -step : step;
+      const next = shiftMonth(source.year, source.month, delta);
+      const day = Math.min(source.day, daysInMonth(next.year, next.month));
       setVisible(next);
-      const iso = `${String(next.year).padStart(4, "0")}-${String(next.month).padStart(2, "0")}-01`;
-      setFocusedIso(iso);
+      setFocusedIso(calendarIso(next.year, next.month, day));
       return;
     }
     if (event.key === "Enter") {
@@ -297,7 +309,14 @@ export function DateField({
                     return <span key={cellIndex} role="gridcell" className={styles.blank} />;
                   }
                   const index = saturdayIndex(cell.iso) ?? 0;
-                  const full = copy.weekdaysFull[index] ?? "";
+                  const weekday = copy.weekdaysFull[index] ?? "";
+                  const cellParts = parts(cell.iso);
+                  const dayName = fillPattern(copy.dayAccessibleName, {
+                    weekday,
+                    day: String(cell.day),
+                    month: copy.months[(cellParts?.month ?? 1) - 1] ?? "",
+                    year: cell.iso.slice(0, 4),
+                  });
                   const selected = parsed === cell.iso;
                   return (
                     <button
@@ -308,7 +327,7 @@ export function DateField({
                       className={classes(styles.day, selected && styles.selectedDay)}
                       data-selected={selected ? "true" : "false"}
                       aria-selected={selected}
-                      aria-label={full}
+                      aria-label={dayName}
                       tabIndex={cell.iso === focusedIso ? 0 : -1}
                       onClick={() => {
                         commit(cell.iso);

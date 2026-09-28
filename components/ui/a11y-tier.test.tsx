@@ -446,6 +446,7 @@ describe("component accessibility tier", () => {
             months: names.months,
             weekdaysShort: names.weekdaysShort,
             weekdaysFull: names.weekdaysFull,
+            dayAccessibleName: names.dayAccessibleName,
             monthHeading: names.monthHeading,
             placeholder: names.placeholder,
             previousMonth: "Previous month",

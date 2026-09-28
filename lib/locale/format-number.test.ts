@@ -134,6 +134,21 @@ describe("formatNumber", () => {
       expect(formatByteSize(1250000, locale, units)).toBe(`1.3 ${units.MB}`);
       expect(formatByteSize(12500000, locale, units)).toBe(`13 ${units.MB}`);
       expect(formatByteSize(2500000000, locale, units)).toBe(`2.5 ${units.GB}`);
+      for (const refuse of [
+        () => formatCount(-1, locale),
+        () => formatByteSize(-1500, locale, units),
+        () => formatProgress(-0.01, locale),
+        () => formatProgress(1.01, locale),
+      ]) {
+        let caught: unknown;
+        try {
+          refuse();
+        } catch (error) {
+          caught = error;
+        }
+        expect(caught).toBeInstanceOf(RangeError);
+        expect((caught as RangeError).name).toBe("RangeError");
+      }
       const pattern = locale === "en" ? en.data.percent : ar.data.percent;
       expect(pattern.startsWith("{value}")).toBe(true);
       expect(pattern.endsWith("%")).toBe(true);

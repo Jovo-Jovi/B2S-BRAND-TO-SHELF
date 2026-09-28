@@ -56,6 +56,7 @@ export function dateNames(locale: CalendarLocale) {
       data.weekdayFull7,
     ],
     monthHeading: data.monthHeading,
+    dayAccessibleName: data.dayAccessibleName,
     placeholder: data.datePlaceholder,
     percent: data.percent,
   };

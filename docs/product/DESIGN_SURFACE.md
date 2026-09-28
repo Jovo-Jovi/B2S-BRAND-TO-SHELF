@@ -297,7 +297,7 @@ The six `--b2s-layer-*` tokens are every z-index in the catalog, and no other va
 3. **Flex and grid flow follow direction automatically.** Order is never reversed by hand.
 4. **Icons flip only by their registry flag** (§2.10). A flag, not a judgement made per page.
 5. **Mixed direction is isolated.** Every identifier, email, URL, hex colour, SKU, GTIN, batch number, invoice number, request identifier and file name renders in a direction-isolated span, left-to-right. Tenant text from a `TranslationEntry` renders in its own locale's direction, isolated. So an Arabic brand name inside an English sentence, or a Latin SKU inside an Arabic one, cannot reorder the text around it.
-6. **`lib/locale/` formats every number `CALC_SPEC.md` does not govern — counts, upload percentages, byte sizes — and dates.** Counts are integers, grouped by R1-25's locale definition. Percentages of progress are integers from 0 to 100, the completed fraction rounded down, so 100 appears only when the work is complete. The sign follows the value in both locales, as a catalog pattern. Byte sizes use decimal SI units, 1 kB = 1000 B, the largest of B, kB, MB and GB whose value is at least 1, one fractional digit below 10 and none from 10 upward, rounded half-up. The unit words are catalog strings. Money and domain quantities, which `CALC_SPEC.md` governs, are formatted through `lib/money/` at P05 under ADR-011. A formatted number is never assembled by hand (CF-175). Under R1-25's locale definitions both locales use Latin digits, so a number is a left-to-right run that bidirectional layout places correctly in an Arabic line.
+6. **`lib/locale/` formats every number `CALC_SPEC.md` does not govern — counts, upload percentages, byte sizes — and dates.** Counts are integers, grouped by R1-25's locale definition. Percentages of progress are integers from 0 to 100, the completed fraction rounded down, so 100 appears only when the work is complete. The sign follows the value in both locales, as a catalog pattern. Byte sizes use decimal SI units, 1 kB = 1000 B, the largest of B, kB, MB and GB whose value is at least 1, one fractional digit below 10 and none from 10 upward, rounded half-up. The unit words are catalog strings. A count or a byte size below zero, or a progress value outside 0 to 1, is refused with a named RangeError and is never displayed. A value outside its domain is a defect upstream, and a formatter that hides it makes the defect invisible. Money and domain quantities, which `CALC_SPEC.md` governs, are formatted through `lib/money/` at P05 under ADR-011. A formatted number is never assembled by hand (CF-175). Under R1-25's locale definitions both locales use Latin digits, so a number is a left-to-right run that bidirectional layout places correctly in an Arabic line.
 7. **Numeric table columns align to the cell's end edge**, with tabular figures, so decimals line up in both directions.
 8. **Arrow keys follow visual direction.** In a right-to-left tab list, ArrowLeft moves to the next tab.
 9. **Steppers and progress** flow from start to end.
@@ -590,13 +590,13 @@ states:
   error: per file — a named error for type, size or failure, with retry; nothing else in the list is affected
   empty: the default state is the empty state
   done: per file — thumbnail, file name isolated, formatted size, replace and remove actions outside any brand frame
-keyboard: [browse_button is a Button; each file's actions are Buttons]
+keyboard: [browse_button is a secondary Button; each file's actions are Buttons]
 aria: dragging is never the only way — browse_button always works; progress uses a progressbar role with a formatted value; completion is announced politely
 mirrors: file name isolated left-to-right; actions at inline-end
 tokens: [radius-md, color-border-control, color-sunken, color-text, color-text-muted, color-danger, color-success, space-5, text-sm]
 ```
 
-**Always `comfortable`.** An upload is a brand task, never a dense operation. FileDrop is presentation only. It performs no upload and chooses no storage. Accepted types, the size limit and progress arrive as props. The limit and each file's size are shown through `lib/locale/`'s byte format, and progress through its percentage format. The accepted types and size limit come from the consuming module's specification, not from this component; the component only shows them. Where the object lands is `ADR-008` and `OD-G20`'s business, not this document's.
+**browse_button is a `secondary` Button.** A FileDrop sits inside a form region whose primary action is elsewhere, and Button allows one primary per region. **Always `comfortable`.** An upload is a brand task, never a dense operation. FileDrop is presentation only. It performs no upload and chooses no storage. Accepted types, the size limit and progress arrive as props. The limit and each file's size are shown through `lib/locale/`'s byte format, and progress through its percentage format. The accepted types and size limit come from the consuming module's specification, not from this component; the component only shows them. Where the object lands is `ADR-008` and `OD-G20`'s business, not this document's.
 
 ### ColorField
 
@@ -643,15 +643,15 @@ states:
   error: an unparseable or out-of-range date is named with the expected format
   empty: placeholder shows the expected format from the catalog
   selected: the chosen day in the grid carries action fill
-keyboard: [typing a date is always allowed; the calendar grid moves with arrow keys in visual direction, PageUp and PageDown change month, Home and End go to the week's start and end, Enter selects, Escape closes]
-aria: the text input is the primary control; the calendar follows the date-picker dialog pattern with grid semantics
+keyboard: [typing a date is always allowed; the calendar grid moves with arrow keys in visual direction, Page Up and Page Down move focus to the same day number in the previous or next month clamped to that month's last day, Shift with Page Up or Page Down does the same across a year, Home and End go to the week's start and end, Enter selects, Escape closes]
+aria: the text input is the primary control; the calendar follows the date-picker dialog pattern with grid semantics; a day cell's accessible name is the full date
 mirrors: the calendar grid runs from inline-start; weekday order starts from the locale's first day of the week
 tokens: [control-height, radius-md, color-surface, color-raised, color-border-control, color-action, color-action-text, elevation-1, color-focus]
 ```
 
 **Display order, calendar and first weekday come from `CALC_SPEC.md` R1-25's locale block** (§0 item 3) — `DD/MM/YYYY`, Gregorian, weeks from Saturday — and are never restated in code. Stored and transmitted as ISO 8601. **Typing is never slower than picking** — the calendar is an aid, not a gate.
 
-**Calendar words are catalog strings.** No month or weekday name comes from `Intl` or any locale API (CF-175). Month names, Egyptian Gregorian forms: ar يناير، فبراير، مارس، أبريل، مايو، يونيو، يوليو، أغسطس، سبتمبر، أكتوبر، نوفمبر، ديسمبر; en January through December. Weekday headers, from Saturday: ar سبت، أحد، اثنين، ثلاثاء، أربعاء، خميس، جمعة; en Sat, Sun, Mon, Tue, Wed, Thu, Fri. Full names for each day cell's accessible name: ar السبت، الأحد، الإثنين، الثلاثاء، الأربعاء، الخميس، الجمعة; en Saturday through Friday. The month heading is a catalog pattern of the month name and the year, in that order. The popover uses `--b2s-layer-dropdown`, the elevation-1 layer already used by an elevation-1 popover.
+**Calendar words are catalog strings.** No month or weekday name comes from `Intl` or any locale API (CF-175). Month names, Egyptian Gregorian forms: ar يناير، فبراير، مارس، أبريل، مايو، يونيو، يوليو، أغسطس، سبتمبر، أكتوبر، نوفمبر، ديسمبر; en January through December. Weekday headers, from Saturday: ar سبت، أحد، اثنين، ثلاثاء، أربعاء، خميس، جمعة; en Sat, Sun, Mon, Tue, Wed, Thu, Fri. Full weekday names, from Saturday: ar السبت، الأحد، الإثنين، الثلاثاء، الأربعاء، الخميس، الجمعة; en Saturday through Friday. A day cell's accessible name is the full date, a catalog pattern `{weekday} {day} {month} {year}` in both locales — en `Saturday 19 September 2026`, ar `السبت 19 سبتمبر 2026` — using those full weekday and month names, with the day and the year as ungrouped digits. The month heading is a catalog pattern of the month name and the year, in that order. The popover uses `--b2s-layer-dropdown`, the elevation-1 layer already used by an elevation-1 popover.
 
 ### DataTable
 
@@ -682,7 +682,7 @@ tokens: [row-height, cell-padding-block, cell-padding-inline, border-width, colo
 
 **Native table semantics, not the grid pattern**, in Release 1. The grid pattern's keyboard model is heavy and easy to break, and native semantics give screen readers the structure they already understand. Revisit only when a real workflow needs cell-by-cell editing.
 
-**Pagination** shows a catalog pattern of from, to and total, each a count through `lib/locale/`. Page sizes are 25, 50 and 100, default 25, held for the session only. Persisting that choice is not decided. Sort `direction` is `ascending`, `descending`, or absent. The words between from, to and total are not stated; the table fills the pattern the caller supplies and does not invent the sentence.
+**Pagination** shows a catalog pattern of from, to and total, each a count through `lib/locale/`. The pattern for the pages that use the table is `{from}–{to} of {total}` in English and `{from}–{to} من {total}` in Arabic. Page sizes are 25, 50 and 100, default 25, held for the session only. Persisting that choice is not decided. The sort cycle is absent, then ascending, then descending, then absent.
 
 ### Tabs
 
@@ -1194,3 +1194,39 @@ Numeric cells render what the caller passes. Page sizes are 25, 50 and 100, defa
 `` variants: [preview, editor_preview] ``
 
 The block now declares `[preview]` alone.
+
+**2026-09-28 — P03-T12-FIX.** A day cell's accessible name was the full weekday name alone. Prior sentence, the reviewer's ambiguous wording that caused the defect:
+
+`Full names for each day cell's accessible name`
+
+The sentence stood in:
+
+`Full names for each day cell's accessible name: ar السبت، الأحد، الإثنين، الثلاثاء، الأربعاء، الخميس، الجمعة; en Saturday through Friday.`
+
+The accessible name is now the full date, catalog pattern `{weekday} {day} {month} {year}` in both locales. The full weekday names remain the weekday part of that date. Prior keyboard line:
+
+`keyboard: [typing a date is always allowed; the calendar grid moves with arrow keys in visual direction, PageUp and PageDown change month, Home and End go to the week's start and end, Enter selects, Escape closes]`
+
+Prior aria line:
+
+`aria: the text input is the primary control; the calendar follows the date-picker dialog pattern with grid semantics`
+
+Page Up and Page Down keep the same day number, clamped to the destination month's last day. Shift with either key moves by a year. The aria line now says a day cell's accessible name is the full date.
+
+**2026-09-28 — P03-T12-FIX.** FileDrop's browse_button had no variant, so the implementation took Button's default. Prior keyboard line:
+
+`keyboard: [browse_button is a Button; each file's actions are Buttons]`
+
+browse_button is a secondary Button, because a FileDrop sits in a form region whose primary action is elsewhere and Button allows one primary per region.
+
+**2026-09-28 — P03-T12-FIX.** `lib/locale/` displayed a count, a byte size or a progress value outside its domain. Prior text, the close of §4 rule 6's byte-size sentence running into the money sentence:
+
+`` The unit words are catalog strings. Money and domain quantities, which `CALC_SPEC.md` governs, are formatted through `lib/money/` at P05 under ADR-011. ``
+
+A count or a byte size below zero, or a progress value outside 0 to 1, is refused with a named RangeError and is never displayed.
+
+**2026-09-28 — P03-T12-FIX.** DataTable named the sort directions and did not state the cycle or the pagination words. Prior text:
+
+`` Sort `direction` is `ascending`, `descending`, or absent. The words between from, to and total are not stated; the table fills the pattern the caller supplies and does not invent the sentence. ``
+
+The sort cycle is absent, then ascending, then descending, then absent. Adopted from P03-T12. The pagination pattern is `{from}–{to} of {total}` in English and `{from}–{to} من {total}` in Arabic.

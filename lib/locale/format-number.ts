@@ -32,23 +32,23 @@ export function formatContrastRatio(value: number, locale: CalendarLocale): stri
 }
 
 export function formatCount(value: number, locale: CalendarLocale): string {
+  if (value < 0) {
+    throw new RangeError("count is below zero");
+  }
   return formatNumber(Math.trunc(value), locale, 0);
 }
 
 /**
- * Completed fraction, rounded down. 100 only when the fraction is at least 1.
+ * Completed fraction in the closed interval from 0 to 1, rounded down.
+ * 100 only when the fraction is 1. A value outside that interval is refused.
  * The sign is a catalog pattern applied by fillPattern, and it follows the
  * value in both locales.
  */
 export function progressPercent(completed: number): number {
-  const percent = Math.floor(completed * 100);
-  if (percent < 0) {
-    return 0;
+  if (completed < 0 || completed > 1) {
+    throw new RangeError("progress is outside 0 to 1");
   }
-  if (percent > 100) {
-    return 100;
-  }
-  return percent;
+  return Math.floor(completed * 100);
 }
 
 export function formatProgress(completed: number, locale: CalendarLocale): string {
@@ -91,11 +91,13 @@ function scaleBytes(bytes: number, unit: ByteUnit, digits: number): number {
 }
 
 export function formatByteSize(bytes: number, locale: CalendarLocale, units: ByteUnitWords): string {
-  const magnitude = bytes < 0 ? -bytes : bytes;
-  const unit = byteUnit(magnitude);
-  const scaled = magnitude / BYTE_SCALE[unit];
+  if (bytes < 0) {
+    throw new RangeError("byte size is below zero");
+  }
+  const unit = byteUnit(bytes);
+  const scaled = bytes / BYTE_SCALE[unit];
   const digits = unit === "B" || scaled >= 10 ? 0 : 1;
-  const shown = formatNumber(scaleBytes(magnitude, unit, digits), locale, digits);
+  const shown = formatNumber(scaleBytes(bytes, unit, digits), locale, digits);
   return `${shown} ${units[unit]}`;
 }
 

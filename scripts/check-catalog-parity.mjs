@@ -9,8 +9,10 @@ const AR = "app/[locale]/dictionaries/ar.json";
 
 // Leaf count of both catalogs as of P03-T08. P03-T06 recorded 19; the files
 // on this branch held 17. P03-T12 adds the data namespace and raises the
-// floor to the count this check reads: 50.
-const MINIMUM_LEAVES = 50;
+// floor to the count this check reads: 50. P03-T12-FIX adds the day
+// accessible-name pattern and raises the floor to the count this check
+// reads: 51.
+const MINIMUM_LEAVES = 51;
 
 let violations = 0;
 

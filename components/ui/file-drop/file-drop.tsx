@@ -150,7 +150,7 @@ export function FileDrop({
             event.target.value = "";
           }}
         />
-        <Button disabled={disabled} onClick={() => inputRef.current?.click()}>
+        <Button variant="secondary" disabled={disabled} onClick={() => inputRef.current?.click()}>
           {copy.browse}
         </Button>
       </div>

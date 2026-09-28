@@ -489,6 +489,18 @@ behaviour; and P03-T11-FIX, where a geometry-perturbation method the
 reviewer specified found nothing and the builder substituted the known-bad
 test.
 
+**PR-46 — Before a push, every check in the static conformance set runs
+locally against the commit being pushed.**
+Before a push, every check in the static conformance set runs locally
+against the commit being pushed — the Python docs-integrity checks as
+well as the guards — and the push waits until all of them pass. A commit
+that fails a check its author could have run locally is the defect PR-42
+names, and continuous integration catching it after the push is the
+failure of this rule, not its enforcement. Origin: 68969b9, which added
+two component directories without naming them in MODULE_SPEC.md §1 and
+was repaired by 31d34f0 after docs-integrity failed on CI; the second
+breach of PR-42, after abd3efd.
+
 ---
 
 ## 2. Environment quirks — never re-discover

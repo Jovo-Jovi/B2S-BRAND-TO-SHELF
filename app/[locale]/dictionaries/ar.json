@@ -53,6 +53,7 @@
     "byteGB": "جيجابايت",
     "monthHeading": "{month} {year}",
     "percent": "{value}%",
-    "datePlaceholder": "DD/MM/YYYY"
+    "datePlaceholder": "DD/MM/YYYY",
+    "dayAccessibleName": "{weekday} {day} {month} {year}"
   }
 }

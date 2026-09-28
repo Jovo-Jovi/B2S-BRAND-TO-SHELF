@@ -3876,4 +3876,37 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       either — no column, no table, no decision on where a member
       preference lives. Both are held for the session until that is
       decided. Owner: **the owner**.
+- [x] CF-208 — DateField's day cells took only the weekday name as their
+      accessible name (date-field.tsx:311 at 31d34f0,
+      aria-label set to the full weekday and nothing else). The aria-label
+      replaces the visible day number for assistive technology, so each
+      cell was announced as the weekday alone, with no day, month or year,
+      and every Saturday was indistinguishable — a WCAG 2.2 4.1.2 failure
+      the component tier cannot detect, because it checks that a name
+      exists rather than what it says. Cause: the reviewer's P03-T12
+      prompt specified "full names for each day cell's accessible name",
+      meaning the full weekday name as part of a full date; the builder
+      implemented the sentence as written.
+      CLOSED (P03-T12-FIX). A day cell's accessible name is the full date,
+      catalog pattern `{weekday} {day} {month} {year}` in both locales.
+      Owner: none outstanding.
+- [x] CF-209 — Three P03-T12 derivations contradicted the specification
+      or a convention: FileDrop's browse Button took the default primary
+      variant, making two primaries in any form region with its own
+      primary action; formatByteSize showed a negative value as its
+      magnitude, hiding an upstream defect; and Page Up and Page Down
+      moved focus to day 1 rather than the same day number, clamped, as
+      the date-picker pattern does. None was stated; each was a fill
+      reported as a derivation.
+      CLOSED (P03-T12-FIX). browse_button is a secondary Button. A count
+      or a byte size below zero, or a progress value outside 0 to 1, is
+      refused with a named RangeError. Page Up and Page Down keep the day
+      number, clamped; Shift with either key moves by a year.
+      Owner: none outstanding.
+- [x] CF-210 — Commit 68969b9 fails check_module_spec_tree.py: it adds
+      date-field/ and file-drop/ without naming them in MODULE_SPEC.md §1,
+      and 31d34f0 names them after CI caught it. That breaks PR-42 for the
+      second time, after abd3efd. The Python docs-integrity checks were
+      not run locally before the push.
+      CLOSED (P03-T12-FIX) by PR-46. Owner: none outstanding.
 

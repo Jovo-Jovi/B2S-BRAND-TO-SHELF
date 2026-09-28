@@ -59,6 +59,8 @@ describe("FileDrop", () => {
         expect(html).toContain(`data-state="${state}"`);
         expect(html).toContain(`lang="${locale}"`);
         expect(html).toContain("Browse");
+        expect(html).toContain('data-variant="secondary"');
+        expect(html).not.toContain('data-variant="primary"');
         expect(html).toContain(formatByteSize(2500000000, locale, byteUnits(locale)));
         if (state === "active") {
           expect(html).toContain("Drop to upload");
@@ -106,6 +108,7 @@ describe("FileDrop", () => {
       />,
     );
     const browse = [...view.host.querySelectorAll("button")].find((button) => button.textContent === "Browse");
+    expect(browse?.getAttribute("data-variant")).toBe("secondary");
     expect(browse?.hasAttribute("disabled")).toBe(false);
     const input = view.host.querySelector("input[type='file']") as HTMLInputElement;
     const file = new File(["pack"], "pack.png", { type: "image/png" });

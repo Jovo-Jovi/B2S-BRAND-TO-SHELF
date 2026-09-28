@@ -5,6 +5,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import { addDays, parseCalendarDate, saturdayIndex } from "../../../lib/locale/calendar-date";
+import { fillPattern } from "../../../lib/locale/format-number";
 import { dateNames } from "../data-catalog";
 import { mount, setInputValue } from "../mount";
 import { DateField, type DateFieldCopy, type DateFieldVisual } from "./date-field";
@@ -15,6 +16,7 @@ function copy(locale: "en" | "ar"): DateFieldCopy {
     months: names.months,
     weekdaysShort: names.weekdaysShort,
     weekdaysFull: names.weekdaysFull,
+    dayAccessibleName: names.dayAccessibleName,
     monthHeading: names.monthHeading,
     placeholder: names.placeholder,
     previousMonth: "Previous month",
@@ -159,10 +161,124 @@ describe("DateField", () => {
       focused?.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
     });
     const next = addDays("2026-01-12", 1);
+    const names = dateNames("en");
+    const index = saturdayIndex("2026-01-12") ?? 0;
     expect(saturdayIndex("2026-01-12")).not.toBeNull();
-    expect(before).toBe(dateNames("en").weekdaysFull[saturdayIndex("2026-01-12") ?? 0]);
+    expect(before).toBe(
+      fillPattern(names.dayAccessibleName, {
+        weekday: names.weekdaysFull[index],
+        day: "12",
+        month: names.months[0],
+        year: "2026",
+      }),
+    );
     expect(next).toBe("2026-01-13");
     expect(view.host.querySelector("button[tabindex='0']")?.textContent).toBe("13");
     await view.unmount();
+  });
+
+  it("names every day by the full date, and no two days in the month share a name", async () => {
+    for (const locale of ["en", "ar"] as const) {
+      const names = dateNames(locale);
+      const view = await mount(
+        <DateField
+          locale={locale}
+          copy={copy(locale)}
+          state="active"
+          viewYear={2026}
+          viewMonth={9}
+          accessibleName="Delivery date"
+        />,
+      );
+      const cells = [...view.host.querySelectorAll("button[role='gridcell']")];
+      const labels = cells.map((cell) => cell.getAttribute("aria-label") ?? "");
+      expect(cells.length).toBe(30);
+      expect(new Set(labels).size).toBe(cells.length);
+      for (const cell of cells) {
+        const day = cell.textContent ?? "";
+        const iso = `2026-09-${day.padStart(2, "0")}`;
+        const index = saturdayIndex(iso);
+        expect(index).not.toBeNull();
+        const label = cell.getAttribute("aria-label") ?? "";
+        const tokens = label.split(/\s+/);
+        expect(tokens).toContain(day);
+        expect(label).toContain(names.months[8]);
+        expect(tokens).toContain("2026");
+        expect(label).toBe(
+          fillPattern(names.dayAccessibleName, {
+            weekday: names.weekdaysFull[index ?? 0],
+            day,
+            month: names.months[8],
+            year: "2026",
+          }),
+        );
+      }
+      const nineteenth = cells.find((cell) => cell.textContent === "19");
+      const example = fillPattern(names.dayAccessibleName, {
+        weekday: names.weekdaysFull[saturdayIndex("2026-09-19") ?? 0],
+        day: "19",
+        month: names.months[8],
+        year: "2026",
+      });
+      expect(saturdayIndex("2026-09-19")).toBe(0);
+      expect(nineteenth?.getAttribute("aria-label")).toBe(example);
+      if (locale === "en") {
+        expect(example).toBe("Saturday 19 September 2026");
+      }
+      await view.unmount();
+    }
+  });
+
+  it("keeps the day number across Page Up and Page Down, clamped, and Shift moves a year", async () => {
+    const names = dateNames("en");
+
+    async function move(value: string, key: string, shiftKey = false) {
+      const view = await mount(
+        <DateField
+          locale="en"
+          copy={copy("en")}
+          state="active"
+          viewYear={2026}
+          viewMonth={1}
+          value={value}
+          accessibleName="Delivery date"
+        />,
+      );
+      const focused = view.host.querySelector("button[tabindex='0']") as HTMLButtonElement;
+      await act(async () => {
+        focused.dispatchEvent(new KeyboardEvent("keydown", { key, shiftKey, bubbles: true }));
+      });
+      const next = view.host.querySelector("button[tabindex='0']");
+      const result = {
+        text: next?.textContent ?? "",
+        heading: view.host.querySelector("h2")?.textContent ?? "",
+      };
+      await view.unmount();
+      return result;
+    }
+
+    const fromJanuary = await move("2026-01-31", "PageDown");
+    expect(fromJanuary.text).toBe("28");
+    expect(fromJanuary.heading).toBe(fillPattern(names.monthHeading, { month: names.months[1], year: "2026" }));
+
+    const leap = await move("2024-01-31", "PageDown");
+    expect(leap.text).toBe("29");
+    expect(leap.heading).toBe(fillPattern(names.monthHeading, { month: names.months[1], year: "2024" }));
+
+    const fromMarch = await move("2026-03-31", "PageUp");
+    expect(fromMarch.text).toBe("28");
+    expect(fromMarch.heading).toBe(fillPattern(names.monthHeading, { month: names.months[1], year: "2026" }));
+
+    const sameDay = await move("2026-09-15", "PageDown");
+    expect(sameDay.text).toBe("15");
+    expect(sameDay.heading).toBe(fillPattern(names.monthHeading, { month: names.months[9], year: "2026" }));
+
+    const nextYear = await move("2026-01-31", "PageDown", true);
+    expect(nextYear.text).toBe("31");
+    expect(nextYear.heading).toBe(fillPattern(names.monthHeading, { month: names.months[0], year: "2027" }));
+
+    const previousYear = await move("2026-01-31", "PageUp", true);
+    expect(previousYear.text).toBe("31");
+    expect(previousYear.heading).toBe(fillPattern(names.monthHeading, { month: names.months[0], year: "2025" }));
   });
 });
