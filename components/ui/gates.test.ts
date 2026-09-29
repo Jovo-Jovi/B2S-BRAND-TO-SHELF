@@ -41,21 +41,28 @@ describe("component gates, planted in memory", () => {
     const held = assertDisabledSet();
     expect(held.ok).toBe(true);
     expect(held.disabled).toEqual(held.listed);
-    expect(held.listed).toEqual(["color-contrast", "target-size"]);
-    const reenabled = assertDisabledSet({
+    const listed = [
+      "avoid-inline-spacing",
+      "color-contrast",
+      "link-in-text-block",
+      "meta-viewport",
+      "target-size",
+    ];
+    expect(held.listed).toEqual(listed);
+    const disabled = {
+      "avoid-inline-spacing": { enabled: false },
       "color-contrast": { enabled: false },
-      "target-size": { enabled: true },
-    });
+      "link-in-text-block": { enabled: false },
+      "meta-viewport": { enabled: false },
+      "target-size": { enabled: false },
+    };
+    const reenabled = assertDisabledSet({ ...disabled, "target-size": { enabled: true } });
     expect(reenabled.ok).toBe(false);
     expect(reenabled.notDisabled).toEqual(["target-size"]);
-    const noCause = assertDisabledSet({
-      "color-contrast": { enabled: false },
-      "target-size": { enabled: false },
-      region: { enabled: false },
-    });
+    const noCause = assertDisabledSet({ ...disabled, region: { enabled: false } });
     expect(noCause.ok).toBe(false);
     expect(noCause.disabledWithoutCause).toEqual(["region"]);
-    const dropped = assertKnownBad(["color-contrast"]);
+    const dropped = assertKnownBad(listed.filter((id) => id !== "target-size"));
     expect(dropped.ok).toBe(false);
     expect(dropped.missing).toEqual(["target-size"]);
     const proven = assertKnownBad([...EXCLUSION_IDS]);

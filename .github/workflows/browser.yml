@@ -1,0 +1,67 @@
+# Browser-rendered tier (ADR-015).
+#
+# Chromium is installed natively on the runner. This workflow does not use
+# Docker (OD-H14). The job runs when a push touches the surfaces the tier
+# renders, the dictionaries, or this file. app/** covers app/globals.css and
+# the dictionaries; they are listed as well so the filter states the decision.
+
+name: browser
+
+on:
+  push:
+    branches:
+      - "**"
+    paths:
+      - "components/**"
+      - "app/**"
+      - "app/globals.css"
+      - "app/[locale]/dictionaries/**"
+      - "lib/locale/**"
+      - "__tests__/browser/**"
+      - "playwright.config.ts"
+      - ".github/workflows/browser.yml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "components/**"
+      - "app/**"
+      - "app/globals.css"
+      - "app/[locale]/dictionaries/**"
+      - "lib/locale/**"
+      - "__tests__/browser/**"
+      - "playwright.config.ts"
+      - ".github/workflows/browser.yml"
+
+env:
+  NODE_VERSION: "24"
+
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run the browser tier
+        run: |
+          start=$(date +%s)
+          set +e
+          npx playwright test
+          code=$?
+          set -e
+          end=$(date +%s)
+          echo "browser-tier duration_seconds=$((end - start))"
+          exit "$code"

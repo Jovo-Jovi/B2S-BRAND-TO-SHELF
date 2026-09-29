@@ -3521,25 +3521,35 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       pass on geometry jsdom does not compute, so an incomplete result is
       not the signal. The tier disables color-contrast and target-size.
       The row stays closed.
-- [ ] CF-177 — BROWSER-RENDERED. WCAG 2.2 AA contrast for every platform
+- [x] CF-177 — BROWSER-RENDERED. WCAG 2.2 AA contrast for every platform
       primitive in light and dark. A real browser and one new CI job,
       needing a headless-browser runner, which is an ADR and an owner
       decision under `AGENTS.md` §2. No Docker (OD-H14). This task does
       not add the runner. A contrast check without computed styles passes
       on nothing (PR-21). Owner: **the task that lands the design-surface
       catalog**.
-- [ ] CF-178 — BROWSER-RENDERED. Every primitive and the wizard's first
+      CLOSED (P03-T13) by ADR-015 and the browser tier, in Chromium.
+      Grey on the same grey is not a pass. A pair below 4.5:1 is a
+      violation. Owner: none outstanding.
+- [x] CF-178 — BROWSER-RENDERED. Every primitive and the wizard's first
       step usable at 360 CSS pixels and at desktop width, with no
       horizontal page scroll. A real browser and one new CI job, needing
       a headless-browser runner. No Docker (OD-H14). A layout check
       without layout passes on nothing (PR-21). Owner: **the task that
       lands the design-surface catalog**.
-- [ ] CF-179 — BROWSER-RENDERED. Every primitive rendered in `ar` with
+      CLOSED (P03-T13). At 360 CSS pixels and at the xl breakpoint,
+      1280, the gallery does not scroll horizontally, and target-size
+      fails a 4px button that touches a second target. A lone 4px button
+      is exempt by the spacing exception. Owner: none outstanding.
+- [x] CF-179 — BROWSER-RENDERED. Every primitive rendered in `ar` with
       correct mirroring, and with the never-mirror exceptions
       `UX_PRINCIPLES.md` §3 names left unmirrored. A real browser and one
       new CI job, needing a headless-browser runner. No Docker (OD-H14).
       A mirroring check without a rendered direction observes nothing
       (PR-21). Owner: **the task that lands the design-surface catalog**.
+      CLOSED (P03-T13). Arabic rendering flips a mirroring glyph and
+      leaves a never-mirror glyph unflipped, measured by transform and
+      by position. Owner: none outstanding.
 - [ ] CF-180 — ACCEPTANCE. The onboarding wizard's first step is composed
       from catalog primitives alone, with no page-level styling, in both
       locales and both themes. A catalog that cannot compose the first
@@ -3709,11 +3719,15 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       tokens, 11 chromatic tokens, 11 font-family declarations, 52 source
       files. `PROVEN_PAIRS` gains `components/` and `features/`. Owner:
       none outstanding.
-- [ ] CF-196 — No check asserts page landmarks or a single `h1`. The
+- [x] CF-196 — No check asserts page landmarks or a single `h1`. The
       component tier's exclusion list does not cover them, and CF-187
       records why those axe rules return incomplete in jsdom. Owner:
       **the task that builds CF-180**.
-- [ ] CF-197 — A pull request against `main` opened itself within about a
+      CLOSED (P03-T13). The gallery has one main, one h1 and heading
+      order, and the page rules pass in Chromium. meta-viewport is
+      disabled in the component tier and owned here. Owner: none
+      outstanding.
+- [x] CF-197 — A pull request against `main` opened itself within about a
       minute of the push that landed P03-T09, as the repository account,
       with no workflow in the repo creating it. The owner closed it. The
       source is outside the repository and is not yet identified. Owner:
@@ -3735,6 +3749,9 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       it; the owner's credentials did. It has not fired on every push.
       This task closed #7 and did not turn the behaviour off. Owner:
       **the owner**.
+      CLOSED (P03-T13) by the amendment to BRANCHING.md §3. A phase may
+      hold one draft pull request against main. #8 is that draft.
+      Owner: none outstanding.
 - [x] CF-198 — Declared text and background colours were not checked for
       contrast. CF-177 remains the rendered check.
       CLOSED (P03-T09-FIX) by `scripts/check-contrast.mjs`. It resolves
@@ -3853,6 +3870,13 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       is now 30 minutes, which prevents that kill and also lets a
       slowing suite hide for longer. The cause matters more than the
       ceiling.
+      AMENDED (P03-T13). Measured on a local run of the unchanged
+      assertions, 664.55s, 94 PASS, 0 FAIL, 0 LOST, D last. 2138 requests,
+      zero retries, zero 429s, zero 5xx. Auth was 106 requests and 22s.
+      SQL was 687 requests and 418s. PostgREST was 1345 requests and 177s.
+      Seed and teardown were about 16s. The time is staging round-trip
+      latency inside the proofs, not harness setup. The harness is
+      unchanged. Owner: **the owner**.
 - [x] CF-205 — The reviewer's P03-T11 verdict of FAIL rested on two
       mismeasurements. The reviewer ran axe-core's target-size rule with
       runOnly, which enables a rule the engine ships disabled, and
@@ -3864,13 +3888,20 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       CORRECTION: a committed comment stated target-size does not exist.
       P03-T11's done-steps verdict cell stays as written.
       CLOSED (P03-T12) by PR-45. Owner: none outstanding.
-- [ ] CF-206 — The known-bad-fixture criterion was applied to the two
+- [x] CF-206 — The known-bad-fixture criterion was applied to the two
       rules the reviewer named. Whether any other rule the component
       tier runs, whose WCAG criterion concerns visual presentation,
       would pass a known-bad fixture in the simulated DOM is unmeasured.
       Every such rule is either proven observable in the component tier
       by a known-bad fixture it correctly fails, or disabled there and
       owned by a browser-tier gate. Owner: **P03-T13**.
+      CLOSED (P03-T13). link-in-text-block, avoid-inline-spacing and
+      meta-viewport are disabled in the component tier, where each
+      known-bad fixture does not violate, and owned in the browser tier,
+      where each violates. color-contrast and target-size stay with
+      CF-177 and CF-178. color-contrast-enhanced is not in the AA run.
+      meta-viewport-large has no WCAG tag and stays enabled, unclaimed.
+      Owner: none outstanding.
 - [ ] CF-207 — DESIGN_SURFACE.md calls a DataTable page size and an
       explicit theme choice member preferences, and nothing persists
       either — no column, no table, no decision on where a member

@@ -57,6 +57,7 @@ app/                              route surface only, thin
       sign-in/                    email-and-password and Google (OD-G13)
       callback/                   Google OAuth return
       invitation/                 accept — deferred, P02
+      gallery/                    catalog gallery — refused when the deployment is production
     (app)/                        authenticated tenant surface — deferred, P02
       onboarding/
       brand/
@@ -139,6 +140,7 @@ types/
 
 __tests__/                        cross-cutting suites only
   isolation/                      the tenant-isolation harness and suite
+  browser/                        the browser-rendered tier
   *.test.tsx                      shell and cross-cutting tests
 
 scripts/                          CI guards and integrity checks

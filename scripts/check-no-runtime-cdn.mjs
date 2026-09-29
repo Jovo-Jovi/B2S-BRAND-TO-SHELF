@@ -26,8 +26,8 @@ const EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx", ".html", ".css"]);
 // (app/globals.css). P03-T09 adds components/ and raises the floor to the
 // true count measured with that root present. Changed condition, not a new
 // premise: the two-way pair stays the scan roots [app, proxy.ts, lib, docs, features].
-// P03-T12 — measured after the data family: 98.
-const MINIMUM_FILES = 98;
+// P03-T12 — measured after the data family: 98. P03-T13 adds the gallery: 102.
+const MINIMUM_FILES = 102;
 const MINIMUM_FONT_SOURCES = 6;
 
 const EXTERNAL_TAG = /<(script|link)\b[^>]*\b(?:src|href)\s*=\s*["'`]((?:https?:)?\/\/[^"'`]+)["'`]/gi;

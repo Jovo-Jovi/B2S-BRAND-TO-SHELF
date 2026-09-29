@@ -18,8 +18,8 @@ const REPO = dirname(dirname(fileURLToPath(import.meta.url)));
 const SCAN_ROOTS = ["app", "components", "features"];
 const STYLESHEET = "components/ui/brand-frame/brand-frame.module.css";
 const SOURCE = "components/ui/brand-frame/brand-frame.tsx";
-// P03-T12 — measured after the data family: 85.
-const MINIMUM_FILES = 85;
+// P03-T12 — measured after the data family: 85. P03-T13 adds the gallery: 89.
+const MINIMUM_FILES = 89;
 const MINIMUM_DEFINITIONS = 11;
 const MINIMUM_BRAND_REFERENCES = 4;
 const MINIMUM_PLATFORM_REFERENCES = 5;

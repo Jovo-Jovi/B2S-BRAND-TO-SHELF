@@ -24,8 +24,9 @@ const EXEMPT_PATH_SEGMENT = `${sep}dictionaries${sep}`;
 // exists and raises the floor to the true count measured with that root
 // present. Changed condition, not a new premise: the two-way pair stays
 // the scan roots [app, proxy.ts, lib, features]. P03-T12 raises the floor
-// to the count measured after the data family: 73.
-const MINIMUM_FILES = 73;
+// to the count measured after the data family: 73. P03-T13 adds the gallery
+// route: 77.
+const MINIMUM_FILES = 77;
 
 const CHECKS = [
   { name: "hex colour", pattern: /#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3}(?:[0-9a-fA-F]{2})?)?\b/ },

@@ -12,7 +12,8 @@ const AR = "app/[locale]/dictionaries/ar.json";
 // floor to the count this check reads: 50. P03-T12-FIX adds the day
 // accessible-name pattern and raises the floor to the count this check
 // reads: 51.
-const MINIMUM_LEAVES = 51;
+// P03-T12 measured 51. P03-T13 adds the gallery namespace: 170.
+const MINIMUM_LEAVES = 170;
 
 let violations = 0;
 

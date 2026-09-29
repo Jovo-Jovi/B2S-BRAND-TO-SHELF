@@ -615,6 +615,82 @@ describe("component accessibility tier", () => {
     }
     proven.push("color-contrast");
 
+    paint(<p>See now</p>, "en");
+    const sentence = document.querySelector("p");
+    if (!sentence) {
+      throw new Error("the same-colour link was not painted");
+    }
+    sentence.textContent = "";
+    sentence.append("See ");
+    const sameLink = document.createElement("a");
+    sameLink.setAttribute("href", "#guide");
+    sameLink.textContent = "more";
+    sentence.append(sameLink);
+    sentence.append(" now");
+    sentence.style.setProperty("color", "rgb(26, 26, 26)");
+    sameLink.style.setProperty("color", "rgb(26, 26, 26)");
+    sameLink.style.setProperty("text-decoration", "none");
+    const linkRule = await axe.run(document.getElementById("root") ?? sentence, {
+      rules: { "link-in-text-block": { enabled: true } },
+    });
+    if (linkRule.violations.some((item) => item.id === "link-in-text-block")) {
+      throw new Error(
+        "link-in-text-block failed its known-bad fixture. The simulated DOM can observe it, so the exclusion must be revisited.",
+      );
+    }
+    const linkSeen = [...linkRule.passes, ...linkRule.incomplete, ...linkRule.inapplicable].some(
+      (item) => item.id === "link-in-text-block",
+    );
+    if (!linkSeen) {
+      throw new Error("link-in-text-block did not run against its known-bad fixture");
+    }
+    proven.push("link-in-text-block");
+
+    paint(<p>Locked spacing</p>, "en");
+    const locked = document.querySelector("p");
+    if (!locked) {
+      throw new Error("the locked paragraph was not painted");
+    }
+    locked.style.setProperty("line-height", "1.2", "important");
+    locked.style.setProperty("letter-spacing", "0.05em", "important");
+    locked.style.setProperty("word-spacing", "0.05em", "important");
+    const spacing = await axe.run(locked, { rules: { "avoid-inline-spacing": { enabled: true } } });
+    if (spacing.violations.some((item) => item.id === "avoid-inline-spacing")) {
+      throw new Error(
+        "avoid-inline-spacing failed its known-bad fixture. The simulated DOM can observe it, so the exclusion must be revisited.",
+      );
+    }
+    const spacingSeen = [...spacing.passes, ...spacing.incomplete, ...spacing.inapplicable].some(
+      (item) => item.id === "avoid-inline-spacing",
+    );
+    if (!spacingSeen) {
+      throw new Error("avoid-inline-spacing did not run against its known-bad fixture");
+    }
+    proven.push("avoid-inline-spacing");
+
+    const viewportMeta = document.createElement("meta");
+    viewportMeta.setAttribute("name", "viewport");
+    viewportMeta.setAttribute("content", "width=device-width, user-scalable=no");
+    document.head.appendChild(viewportMeta);
+    paint(<p>Page</p>, "en");
+    const viewportRoot = document.getElementById("root");
+    if (!viewportRoot) {
+      throw new Error("the viewport fixture has no root");
+    }
+    const viewport = await axe.run(viewportRoot, { rules: { "meta-viewport": { enabled: true } } });
+    if (viewport.violations.some((item) => item.id === "meta-viewport")) {
+      throw new Error(
+        "meta-viewport failed its known-bad fixture on the component root. The simulated DOM can observe it there, so the exclusion must be revisited.",
+      );
+    }
+    const viewportSeen = [...viewport.passes, ...viewport.incomplete, ...viewport.inapplicable].some(
+      (item) => item.id === "meta-viewport",
+    );
+    if (!viewportSeen) {
+      throw new Error("meta-viewport did not run against its known-bad fixture");
+    }
+    proven.push("meta-viewport");
+
     const fixtures = assertKnownBad(proven);
     expect(fixtures.ok, JSON.stringify(fixtures)).toBe(true);
     expect(fixtures.proven).toBeGreaterThanOrEqual(FLOOR_KNOWN_BAD);

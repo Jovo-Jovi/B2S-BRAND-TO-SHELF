@@ -19,8 +19,8 @@ const ROOTS = ["app", "components", "features", "lib"];
 const ALLOWED = ["lib/locale/", "lib/money/"];
 const INTL_APIS = new Set(["DateTimeFormat", "NumberFormat", "RelativeTimeFormat"]);
 const METHOD_APIS = new Set(["toLocaleString", "toLocaleDateString", "toLocaleTimeString", "toFixed"]);
-// P03-T12 — measured after the data family: 72.
-const MINIMUM_FILES = 72;
+// P03-T12 — measured after the data family: 72. P03-T13 adds the gallery: 76.
+const MINIMUM_FILES = 76;
 
 function fail(message) {
   console.error(`FAIL: ${message}`);

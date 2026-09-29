@@ -135,6 +135,10 @@ PROVEN_PAIRS = [
     ("scripts/check-icon-registry.mjs", "docs/product/DESIGN_SURFACE.md"),
     ("scripts/check-brand-tokens.mjs", "components/ui/brand-frame/brand-frame.module.css"),
     ("scripts/check-brand-tokens.mjs", "components"),
+    ("scripts/check-gallery-coverage.mjs", "docs/product/DESIGN_SURFACE.md"),
+    ("scripts/check-gallery-coverage.mjs", "app/[locale]/(public)/gallery/coverage.ts"),
+    ("scripts/check-gallery-coverage.mjs", "app/[locale]/(public)/gallery/gallery.tsx"),
+    ("scripts/check-gallery-coverage.mjs", "__tests__/browser/gallery.spec.ts"),
 ]
 
 KNOWN_GAPS = [
@@ -561,6 +565,17 @@ def main():
             FileProbe("components/ui/brand-frame/brand-frame.module.css"))
     do_pair(results, "scripts/check-brand-tokens.mjs",
             ["node", "scripts/check-brand-tokens.mjs"], DirProbe("components"))
+    do_pair(results, "scripts/check-gallery-coverage.mjs",
+            ["node", "scripts/check-gallery-coverage.mjs"], FileProbe("docs/product/DESIGN_SURFACE.md"))
+    do_pair(results, "scripts/check-gallery-coverage.mjs",
+            ["node", "scripts/check-gallery-coverage.mjs"],
+            FileProbe("app/[locale]/(public)/gallery/coverage.ts"))
+    do_pair(results, "scripts/check-gallery-coverage.mjs",
+            ["node", "scripts/check-gallery-coverage.mjs"],
+            FileProbe("app/[locale]/(public)/gallery/gallery.tsx"))
+    do_pair(results, "scripts/check-gallery-coverage.mjs",
+            ["node", "scripts/check-gallery-coverage.mjs"],
+            FileProbe("__tests__/browser/gallery.spec.ts"))
 
     proven = sum(1 for r in results if r["proven"])
     print(f"\n=== {proven}/{len(results)} pairs proven this run ===")

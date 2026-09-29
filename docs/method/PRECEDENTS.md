@@ -951,7 +951,17 @@ breach of PR-42, after abd3efd.
   run context is a component root. The component tier excludes only
   `color-contrast`, and it does not install `canvas`: a stub that made
   `getContext` succeed would change the incomplete result the exclusion
-  list asserts. P03-T08's journal line that local tests ran on Node
+  list asserts.   P03-T08's journal line that local tests ran on Node
   v24.11.1 is not reproducible on this machine; CF-193 records that, and
   CF-192 records that the v24.21.0 hardlink still needs an elevated nvm
   install and a SHASUMS256 check.
+- Learned at P03-T13, in Chromium with axe-core 4.13.0. A lone 4px button
+  passes `target-size`: the spacing exception gives it a 24px circle that
+  meets no neighbour. The fixture that fails is a 4px button touching a
+  second target. Grey text on the same grey is incomplete, with a 1:1
+  ratio, and is not a pass; a pair axe can resolve below 4.5:1 is a
+  violation. `link-in-text-block` ships `allowSameColor` and passes a link
+  whose text and background both match the paragraph. It violates when the
+  text colour matches and the background does not, and no other style
+  distinguishes the link. `color-contrast` and `target-size` ship disabled
+  and must be enabled to be observed.

@@ -415,3 +415,26 @@ devDependency that never reaches the client bundle.
 pass reported as a rendered pass; an accessibility claim this tier cannot
 observe; a matcher wrapper as a third dependency.
 
+## ADR-015 — Browser-rendered tier
+
+**Decision.** One devDependency, Playwright's test runner (`@playwright/test`
+1.63.0), with its browsers installed natively on the CI runner — never
+through Docker (OD-H14). A separate CI job runs it on every push that
+touches `components/`, `app/`, `lib/locale/`, `app/globals.css`, the
+dictionaries, the browser tests, or its own workflow file, with a timeout,
+and reports its duration.
+
+**Context.** The component tier runs in a simulated DOM that computes no
+layout and no rendered colour (ADR-014), so contrast, target size, reflow
+and right-to-left rendering cannot be observed there. P03-T11-FIX proved
+it: target-size passes a 4px button in the simulated DOM.
+
+**Consequences.** CF-177, CF-178 and CF-179 run here, against real
+rendering, in Chromium at minimum. Each rule this tier claims is proven
+observable by a known-bad fixture it correctly fails (PR-45). The package
+declares its licence as Apache-2.0. It is a devDependency and is absent
+from the client bundle.
+
+**Forecloses.** Docker in any form; a browser-tier claim not backed by a
+known-bad fixture; a rendered check run only locally.
+

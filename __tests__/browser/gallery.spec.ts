@@ -1,0 +1,250 @@
+import { expect, test, type Page } from "@playwright/test";
+import axe from "axe-core";
+
+import {
+  GALLERY_COVERAGE,
+  GALLERY_LOCALES,
+  GALLERY_THEMES,
+  GALLERY_WIDTHS,
+} from "../../app/[locale]/(public)/gallery/coverage";
+
+const CLAIMED = {
+  "color-contrast": { enabled: true },
+  "target-size": { enabled: true },
+  "link-in-text-block": { enabled: true },
+  "avoid-inline-spacing": { enabled: true },
+  "meta-viewport": { enabled: true },
+};
+
+const WATCHED = [
+  "color-contrast",
+  "target-size",
+  "link-in-text-block",
+  "avoid-inline-spacing",
+  "meta-viewport",
+  "landmark-one-main",
+  "page-has-heading-one",
+  "heading-order",
+];
+
+type AxeNode = { target: string; html: string; summary: string };
+type AxeReport = {
+  violations: Array<{ id: string; nodes: AxeNode[] }>;
+  notes: Array<{ id: string; html: string; summary: string }>;
+  buckets: Record<string, string>;
+};
+
+async function runAxe(page: Page, rules: Record<string, { enabled: boolean }>): Promise<AxeReport> {
+  await page.addScriptTag({ content: axe.source });
+  return page.evaluate(
+    async ({ enabled, watched }) => {
+      const engine = (window as unknown as { axe: { run: (node: Document, options: unknown) => Promise<{
+        violations: Array<{ id: string; nodes: Array<{ target: string[]; html?: string; failureSummary?: string }> }>;
+        passes: Array<{ id: string }>;
+        incomplete: Array<{ id: string; nodes: Array<{ failureSummary?: string; html?: string }> }>;
+        inapplicable: Array<{ id: string }>;
+      }> } }).axe;
+      const result = await engine.run(document, { rules: enabled });
+      const buckets: Record<string, string> = {};
+      for (const id of watched) {
+        const hit = (["violations", "passes", "incomplete", "inapplicable"] as const).find((key) =>
+          result[key].some((item) => item.id === id),
+        );
+        buckets[id] = hit ?? "absent";
+      }
+      return {
+        violations: result.violations.map((item) => ({
+          id: item.id,
+          nodes: item.nodes.slice(0, 4).map((node) => ({
+            target: node.target.join(" "),
+            html: (node.html ?? "").slice(0, 200),
+            summary: (node.failureSummary ?? "").slice(0, 300),
+          })),
+        })),
+        buckets,
+        notes: result.incomplete
+          .filter((item) => watched.includes(item.id))
+          .map((item) => ({
+            id: item.id,
+            html: (item.nodes[0]?.html ?? "").slice(0, 200),
+            summary: (item.nodes[0]?.failureSummary ?? "").slice(0, 300),
+          })),
+      };
+    },
+    { enabled: rules, watched: WATCHED },
+  );
+}
+
+test("grey text on the same grey is not a contrast pass", async ({ page }) => {
+  await page.setContent(
+    '<!doctype html><html lang="en"><head><title>T</title></head><body><p style="background-color:#767676;color:#767676;font-size:16px;font-weight:400">Grey on grey</p></body></html>',
+  );
+  const result = await runAxe(page, { "color-contrast": { enabled: true } });
+  expect(result.buckets["color-contrast"]).not.toBe("passes");
+  expect(result.buckets["color-contrast"]).not.toBe("absent");
+  expect(JSON.stringify(result.notes) + JSON.stringify(result.violations)).toContain("1:1");
+});
+
+test("grey text below the AA threshold fails colour contrast", async ({ page }) => {
+  await page.setContent(
+    '<!doctype html><html lang="en"><head><title>T</title></head><body style="background:#fff"><main><h1 style="color:#111;background:#fff">T</h1><p style="color:#9a9a9a;background-color:#ffffff;font-size:16px">Soft grey</p></main></body></html>',
+  );
+  const result = await runAxe(page, { "color-contrast": { enabled: true } });
+  expect(result.violations.map((item) => item.id)).toContain("color-contrast");
+});
+
+test("a 4px button beside another target fails target size", async ({ page }) => {
+  // Measured: a lone 4px button passes axe target-size. The spacing exception
+  // gives it a 24px circle that meets no neighbour. The fixture that fails is
+  // the 4px button touching a second target, which is the rule as axe
+  // implements WCAG 2.2 2.5.8.
+  await page.setContent(
+    '<!doctype html><html lang="en"><head><title>T</title></head><body><main><h1>T</h1><button style="width:4px;height:4px;padding:0">Go</button><button style="width:4px;height:4px;padding:0">Go</button></main></body></html>',
+  );
+  const result = await runAxe(page, { "target-size": { enabled: true } });
+  expect(result.violations.map((item) => item.id)).toContain("target-size");
+});
+
+test("a same-colour link on a different background fails", async ({ page }) => {
+  // Measured in axe-core 4.13.0: the rule's allowSameColor option passes a
+  // link whose text and background both match the paragraph. It violates when
+  // the text colour matches and the background does not, and no other style
+  // distinguishes the link.
+  const shared =
+    "color:#1a1a1a;font-family:sans-serif;font-size:16px;font-weight:400;font-style:normal;text-decoration:none solid #1a1a1a";
+  await page.setContent(
+    `<!doctype html><html lang="en"><head><title>T</title></head><body><main><h1>T</h1><p style="${shared};background:#ffffff">See <a href="/guide" style="${shared};background:#d0d0d0">more</a> now</p></main></body></html>`,
+  );
+  const result = await runAxe(page, { "link-in-text-block": { enabled: true } });
+  expect(result.violations.map((item) => item.id)).toContain("link-in-text-block");
+});
+
+test("locked inline spacing fails", async ({ page }) => {
+  await page.setContent(
+    '<!doctype html><html lang="en"><head><title>T</title></head><body><main><h1>T</h1><p style="line-height:1.2 !important;letter-spacing:0.05em !important;word-spacing:0.05em !important">Locked</p></main></body></html>',
+  );
+  const result = await runAxe(page, { "avoid-inline-spacing": { enabled: true } });
+  expect(result.violations.map((item) => item.id)).toContain("avoid-inline-spacing");
+});
+
+test("a viewport that forbids zoom fails", async ({ page }) => {
+  await page.setContent(
+    '<!doctype html><html lang="en"><head><title>T</title><meta name="viewport" content="width=device-width, user-scalable=no"></head><body><main><h1>Page</h1></main></body></html>',
+  );
+  const result = await runAxe(page, { "meta-viewport": { enabled: true } });
+  expect(result.violations.map((item) => item.id)).toContain("meta-viewport");
+});
+
+test("an unflipped mirroring glyph and a flipped never-mirror glyph both fail", async ({ page }) => {
+  await page.setContent(`<!doctype html>
+    <html dir="rtl"><body>
+      <svg data-glyph="previous" data-mirrors="true" style="transform:none"></svg>
+      <svg data-glyph="check" data-mirrors="false" style="transform:scaleX(-1)"></svg>
+    </body></html>`);
+  const report = await page.evaluate(() => {
+    const failures: string[] = [];
+    for (const node of document.querySelectorAll("svg")) {
+      const name = node.getAttribute("data-glyph");
+      const mirrors = node.getAttribute("data-mirrors") === "true";
+      const transform = getComputedStyle(node).transform;
+      const flipped = transform.includes("-1");
+      if (mirrors && !flipped) failures.push(`unflipped ${name}`);
+      if (!mirrors && flipped) failures.push(`flipped ${name}`);
+    }
+    return failures;
+  });
+  expect(report).toContain("unflipped previous");
+  expect(report).toContain("flipped check");
+});
+
+async function hideDialogs(page: Page) {
+  await page.evaluate(() => {
+    for (const node of document.querySelectorAll("dialog")) {
+      if (node instanceof HTMLDialogElement && node.open) node.close();
+      node.removeAttribute("open");
+    }
+  });
+}
+
+for (const locale of GALLERY_LOCALES) {
+  for (const theme of GALLERY_THEMES) {
+    for (const width of GALLERY_WIDTHS) {
+      test(`gallery ${locale} ${theme} ${width}`, async ({ page }) => {
+        await page.setViewportSize({ width, height: 800 });
+        await page.emulateMedia({ colorScheme: theme === "dark" ? "dark" : "light" });
+        await page.addInitScript((next) => {
+          document.documentElement.dataset.theme = next;
+        }, theme);
+        await page.goto(`/${locale}/gallery?theme=${theme}`);
+        await page.waitForFunction((next) => {
+          const text = getComputedStyle(document.body).color;
+          return document.documentElement.dataset.theme === next &&
+            (next === "dark" ? text === "rgb(242, 242, 242)" : text === "rgb(26, 26, 26)");
+        }, theme);
+        await expect(page.locator("h1")).toHaveCount(1);
+        await expect(page.locator("main")).toHaveCount(1);
+        await expect(page.locator("[data-primitive]")).toHaveCount(GALLERY_COVERAGE.length);
+        await hideDialogs(page);
+
+        const overflow = await page.evaluate(() => ({
+          scroll: document.documentElement.scrollWidth,
+          client: document.documentElement.clientWidth,
+        }));
+        expect(overflow.scroll).toBeLessThanOrEqual(overflow.client);
+
+        const rendered = await runAxe(page, CLAIMED);
+        expect(rendered.violations, JSON.stringify(rendered.violations)).toEqual([]);
+        for (const rule of ["color-contrast", "target-size", "meta-viewport", "landmark-one-main", "page-has-heading-one", "heading-order"]) {
+          expect(rendered.buckets[rule], rule).toBe("passes");
+        }
+
+        const dialogs = page.locator('[data-primitive="Dialog"] dialog');
+        const dialogCount = await dialogs.count();
+        for (let index = 0; index < dialogCount; index += 1) {
+          await hideDialogs(page);
+          await dialogs.nth(index).evaluate((node) => {
+            if (node instanceof HTMLDialogElement) node.showModal();
+          });
+          const dialogReport = await runAxe(page, CLAIMED);
+          expect(dialogReport.violations, JSON.stringify(dialogReport.violations)).toEqual([]);
+        }
+        await hideDialogs(page);
+
+        const mirroring = await page.evaluate(() => {
+          function scaleX(node: Element): number {
+            const transform = getComputedStyle(node).transform;
+            if (!transform || transform === "none") return 1;
+            const match = transform.match(/matrix\(([^)]+)\)/);
+            if (!match) return 1;
+            return Number(match[1].split(",")[0]);
+          }
+          const previous = document.querySelector('[data-glyph="previous"]');
+          const check = document.querySelector('[data-glyph="check"]');
+          const button = document.querySelector('[data-primitive="Button"][data-state="default"] button');
+          const icon = button?.querySelector("svg");
+          const label = button?.querySelector("[data-label]");
+          const field = document.querySelector('[data-primitive="TextField"][data-state="default"] input');
+          return {
+            dir: document.documentElement.dir,
+            previous: previous ? scaleX(previous) : null,
+            check: check ? scaleX(check) : null,
+            iconBeforeLabel:
+              icon && label ? icon.getBoundingClientRect().x < label.getBoundingClientRect().x : null,
+            identifierDirection: field ? getComputedStyle(field).direction : null,
+          };
+        });
+        expect(mirroring.check).toBe(1);
+        expect(mirroring.identifierDirection).toBe("ltr");
+        if (locale === "ar") {
+          expect(mirroring.dir).toBe("rtl");
+          expect(mirroring.previous).toBe(-1);
+          expect(mirroring.iconBeforeLabel).toBe(false);
+        } else {
+          expect(mirroring.dir).toBe("ltr");
+          expect(mirroring.previous).toBe(1);
+          expect(mirroring.iconBeforeLabel).toBe(true);
+        }
+      });
+    }
+  }
+}

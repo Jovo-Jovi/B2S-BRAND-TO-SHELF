@@ -28,8 +28,9 @@ const SCANNED_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx", ".mts", ".mjs"
 // file floor to the true count measured with that root present. Import
 // sites stay 4: no component imports Supabase. Changed condition, not a
 // new premise: PROVEN_PAIRS does not gain a pair for this guard.
-// P03-T12 — measured after the data family: 76.
-const MINIMUM_FILES_SCANNED = 76;
+// P03-T12 — measured after the data family: 76. P03-T13 adds the gallery
+// and the browser tier: 82.
+const MINIMUM_FILES_SCANNED = 82;
 const MINIMUM_IMPORT_SITES = 4;
 
 // An import of any Supabase client package, in either module syntax.

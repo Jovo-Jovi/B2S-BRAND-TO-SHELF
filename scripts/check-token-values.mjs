@@ -53,9 +53,10 @@ const MINIMUM_ACHROMATIC = 68;
 const MINIMUM_CHROMATIC = 11;
 const MINIMUM_FONT_FAMILIES = 13;
 // P03-T12 — measured after DateField, FileDrop and DataTable.
+// P03-T13 — quiet fill is transparent, and the gallery is scanned: 1205 declarations, 89 sources.
 const MINIMUM_STYLESHEETS = 23;
-const MINIMUM_DECLARATIONS = 1204;
-const MINIMUM_SOURCES = 85;
+const MINIMUM_DECLARATIONS = 1205;
+const MINIMUM_SOURCES = 89;
 
 const FAMILIES = new Set(["IBM Plex Sans", "IBM Plex Sans Arabic"]);
 const GENERICS = new Set(["system-ui", "sans-serif"]);

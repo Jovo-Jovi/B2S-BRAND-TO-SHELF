@@ -23,8 +23,8 @@ const SCANNED_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx"]);
 // P02-T14; P03-T09 creates components/ and raises the floor to the true
 // count across the three roots. The floor is on the total examined, not on
 // each root existing. Changed condition, not a new premise.
-// P03-T12 — measured after the data family: 62.
-const MINIMUM_FILES = 62;
+// P03-T12 — measured after the data family: 62. P03-T13 adds the gallery: 66.
+const MINIMUM_FILES = 66;
 
 // PR-28 — and the quarantine has to hold something. An existing but EMPTY
 // server-only/ passed this guard at exit 0: the directory test succeeded, the

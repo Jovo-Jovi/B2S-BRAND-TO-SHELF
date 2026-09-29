@@ -118,9 +118,10 @@ const SHORTHANDS = new Set(PHYSICAL_SHORTHANDS);
 // element.style.inlineSize, which this scan does not parse, so that write
 // is not part of the declaration count. P03-T12 raises both floors
 // to the counts measured after DateField, FileDrop and DataTable: 23
-// stylesheets, 1204 declarations.
+// stylesheets, 1204 declarations. P03-T13 sets the quiet button's fill to
+// transparent, which is the stated text-only variant: 1205.
 const MINIMUM_STYLESHEETS = 23;
-const MINIMUM_DECLARATIONS = 1204;
+const MINIMUM_DECLARATIONS = 1205;
 const MINIMUM_MAPPED = 60;
 
 let violations = 0;

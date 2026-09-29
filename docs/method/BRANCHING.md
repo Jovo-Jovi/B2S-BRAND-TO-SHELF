@@ -30,6 +30,15 @@ a branch that has already landed.
 One PR per phase into `main`. The owner merges it. No reviewer, no approval gate,
 no required status check blocking the merge — CI reports, the owner decides.
 
+A phase may hold one pull request against main, opened as a draft at any
+point in the phase and marked ready for review only after the phase's exit
+gate passes. A draft cannot be merged, so this keeps §3's purpose — one pull
+request per phase, merged only after the gate — while giving every push to
+the phase branch a pull-request isolation run against staging. It is the
+only pull request the phase may hold. Origin: pull requests #4 to #8, each
+opened with the owner's credentials during the phase, each running the full
+isolation suite on every push.
+
 A signed mid-phase amendment gets its own branch and its own consolidated PR,
 on the same terms.
 

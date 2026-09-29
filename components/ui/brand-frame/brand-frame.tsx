@@ -163,14 +163,16 @@ export function BrandFrame({
         ) : null}
         {showCanvas ? (
           <div className={styles.canvas} style={brandProperties(profile)}>
-            <div
-              className={styles.content}
-              lang={previewLocale}
-              dir={previewLocale === "ar" ? "rtl" : "ltr"}
-              style={body ? { fontWeight: body.weight, fontStyle: body.italic ? "italic" : "normal" } : undefined}
-            >
-              {children}
-            </div>
+            {profile.colors.foreground ? (
+              <div
+                className={styles.content}
+                lang={previewLocale}
+                dir={previewLocale === "ar" ? "rtl" : "ltr"}
+                style={body ? { fontWeight: body.weight, fontStyle: body.italic ? "italic" : "normal" } : undefined}
+              >
+                {children}
+              </div>
+            ) : null}
           </div>
         ) : null}
       </div>

@@ -177,6 +177,9 @@ jobs:
       - name: check-brand-tokens
         run: node scripts/check-brand-tokens.mjs
 
+      - name: check-gallery-coverage
+        run: node scripts/check-gallery-coverage.mjs
+
   # ARCHITECTURE.md §5 — types are generated from staging (ADR-013), and a
   # diff between the generated types and the committed ones fails the
   # pipeline loudly, INCLUDING when the secret is absent. A job that

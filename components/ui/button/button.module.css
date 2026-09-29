@@ -62,6 +62,7 @@
 }
 
 .quiet {
+  background-color: transparent;
   color: var(--b2s-color-text);
 }
 
