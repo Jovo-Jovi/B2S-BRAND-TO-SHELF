@@ -55,7 +55,48 @@ jobs:
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
 
+      # The session proxy throws when the public config is absent, and the
+      # gallery never becomes ready. These are the staging secrets the
+      # isolation job already requires. The production repository secrets are
+      # not read here (ADR-013).
+      - name: Require staging public config and prove it is not production
+        env:
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+          SUPABASE_STAGING_PROJECT_ID: ${{ secrets.SUPABASE_STAGING_PROJECT_ID }}
+          SUPABASE_STAGING_URL: ${{ secrets.SUPABASE_STAGING_URL }}
+          SUPABASE_STAGING_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_STAGING_PUBLISHABLE_KEY }}
+        run: |
+          missing=""
+          for name in SUPABASE_PROJECT_ID SUPABASE_STAGING_PROJECT_ID SUPABASE_STAGING_URL SUPABASE_STAGING_PUBLISHABLE_KEY; do
+            eval "val=\$$name"
+            if [ -z "$val" ]; then
+              missing="$missing $name"
+            fi
+          done
+          if [ -n "$missing" ]; then
+            echo "FAIL: the browser tier cannot run. Absent repository secret(s):$missing"
+            echo "This job never skips. An absent secret is a failure, not a reason to pass."
+            exit 1
+          fi
+          if [ "$SUPABASE_STAGING_PROJECT_ID" = "$SUPABASE_PROJECT_ID" ]; then
+            echo "FAIL: SUPABASE_STAGING_PROJECT_ID equals SUPABASE_PROJECT_ID"
+            exit 1
+          fi
+          host="$(node -e "process.stdout.write(new URL(process.env.SUPABASE_STAGING_URL).hostname.split('.')[0])")"
+          if [ "$host" != "$SUPABASE_STAGING_PROJECT_ID" ]; then
+            echo "FAIL: SUPABASE_STAGING_URL hostname label is not SUPABASE_STAGING_PROJECT_ID"
+            exit 1
+          fi
+          if [ "$host" = "$SUPABASE_PROJECT_ID" ]; then
+            echo "FAIL: SUPABASE_STAGING_URL hostname label equals SUPABASE_PROJECT_ID"
+            exit 1
+          fi
+          echo "OK: staging public config present and resolves to a different ref than production"
+
       - name: Run the browser tier
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_STAGING_URL }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_STAGING_PUBLISHABLE_KEY }}
         run: |
           start=$(date +%s)
           set +e
