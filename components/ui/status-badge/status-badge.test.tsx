@@ -25,6 +25,19 @@ describe("StatusBadge", () => {
     }
   });
 
+  it("renders danger with an icon and words in both locales", () => {
+    for (const locale of ["en", "ar"] as const) {
+      const html = renderToStaticMarkup(
+        <div lang={locale} dir={locale === "ar" ? "rtl" : "ltr"}>
+          <StatusBadge variant="danger" text="Failed" />
+        </div>,
+      );
+      expect(html).toContain('data-glyph="danger"');
+      expect(html).toContain("Failed");
+      expect(html.replace(/<[^>]+>/g, "").trim().length).toBeGreaterThan(0);
+    }
+  });
+
   it("offers every declared variant", () => {
     for (const variant of ["neutral", "success", "warning", "danger", "info"] as const) {
       const html = renderToStaticMarkup(<StatusBadge variant={variant} text="Ready" />);

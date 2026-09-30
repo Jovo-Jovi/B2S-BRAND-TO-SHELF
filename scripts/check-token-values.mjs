@@ -3,11 +3,13 @@
 // z-index values live only in token definitions. The scan is every stylesheet
 // under app/, components/ and features/, module or global, and every inline
 // style attribute. A --b2s- custom property may be defined only in
-// app/globals.css. Every --b2s-color-* token, and every colour inside any
-// --b2s- definition, is achromatic unless the token is on the closed
-// chromatic list (OD-G22). That list, and the z-index layer list, are
-// asserted both ways against DESIGN_SURFACE.md. Font families are the two
-// OD-G23 faces plus generic fallbacks.
+// app/globals.css. The closed chromatic list is removed: OD-G24 and OD-G25
+// replace OD-G22, and an allow-list of chromatic tokens no longer describes
+// the platform. The colour-token set is closed against DESIGN_SURFACE.md
+// §2.2 and §2.11 in both directions. proof and proof-edge are achromatic.
+// The warmth ceiling and the Clay–danger CIE76 floor are computed from
+// this stylesheet. Font families are the two OD-G23 faces plus generic
+// fallbacks. The z-index layer list is still asserted both ways.
 //
 // Button's loading width lock writes element.style.inlineSize. That
 // imperative assignment is not an inline style attribute, and this scan
@@ -34,28 +36,16 @@ const GLOBALS = "app/globals.css";
 const DOCUMENT = "docs/product/DESIGN_SURFACE.md";
 const SCAN_ROOTS = ["app", "components", "features"];
 
-const CHROMATIC_TOKENS = [
-  "--b2s-color-danger-action",
-  "--b2s-color-danger-action-hover",
-  "--b2s-color-danger-action-active",
-  "--b2s-color-success",
-  "--b2s-color-success-bg",
-  "--b2s-color-warning",
-  "--b2s-color-warning-bg",
-  "--b2s-color-danger",
-  "--b2s-color-danger-bg",
-  "--b2s-color-info",
-  "--b2s-color-info-bg",
-];
-
-const MINIMUM_TOKENS = 234;
-const MINIMUM_ACHROMATIC = 68;
-const MINIMUM_CHROMATIC = 11;
+const MINIMUM_TOKENS = 267;
 const MINIMUM_FONT_FAMILIES = 13;
+const MINIMUM_CLOSED_COLOURS = 34;
+const MINIMUM_PROOF_CHANNELS = 4;
+const MINIMUM_CHROMA = 20;
+const MINIMUM_DELTA = 6;
 // P03-T12 — measured after DateField, FileDrop and DataTable.
 // P03-T13 — quiet fill is transparent, and the gallery is scanned: 1205 declarations, 89 sources.
 const MINIMUM_STYLESHEETS = 23;
-const MINIMUM_DECLARATIONS = 1205;
+const MINIMUM_DECLARATIONS = 1247;
 const MINIMUM_SOURCES = 89;
 
 const FAMILIES = new Set(["IBM Plex Sans", "IBM Plex Sans Arabic"]);
@@ -520,121 +510,222 @@ function stripFunctions(value) {
   return out.replace(/#(?:[0-9a-fA-F]{3,8})\b/g, " ");
 }
 
-function referenceOnly(value) {
-  const stripped = value
-    .replace(/var\(\s*--[a-zA-Z0-9-]+\s*\)/g, " ")
-    .replace(/[(),\s]/g, " ")
-    .trim();
-  if (!stripped) {
-    return true;
-  }
-  return stripped.split(/\s+/).every((word) => WIDE.has(word.toLowerCase()));
+function sectionSlice(markdown, startMark, endMark) {
+  const start = markdown.indexOf(startMark);
+  const end = markdown.indexOf(endMark, start + 1);
+  if (start < 0 || end < 0) return null;
+  return markdown.slice(start, end);
 }
 
-export function sectionChromaticTokens(markdown) {
-  const start22 = markdown.indexOf("### 2.2");
-  const end22 = markdown.indexOf("### 2.3", start22 + 1);
-  const start211 = markdown.indexOf("### 2.11");
-  const end211 = markdown.indexOf("\n## 3", start211 + 1);
-  if (start22 < 0 || end22 < 0 || start211 < 0 || end211 < 0) {
+function documentColourTokens(markdown) {
+  const colour = sectionSlice(markdown, "### 2.2", "### 2.3");
+  const dimensions = sectionSlice(markdown, "### 2.11", "\n## 3");
+  if (!colour || !dimensions) {
     return { error: "DESIGN_SURFACE.md is missing §2.2 or §2.11" };
   }
   const names = new Set();
-  for (const line of markdown.slice(start22, end22).split("\n")) {
-    if (!line.startsWith("|")) {
-      continue;
-    }
-    const cells = line.split("|").map((cell) => cell.trim()).filter((cell) => cell.length > 0);
-    if (cells.length < 2) {
-      continue;
-    }
-    const use = cells[cells.length - 1];
-    if (use !== "Status" && !use.startsWith("Destructive")) {
-      continue;
-    }
-    for (const token of cells[0].match(/--b2s-color-[a-z0-9-]+/g) ?? []) {
-      names.add(token);
-    }
-  }
-  for (const line of markdown.slice(start211, end211).split("\n")) {
-    if (!line.startsWith("|")) {
-      continue;
-    }
-    const cells = line.split("|").map((cell) => cell.trim()).filter((cell) => cell.length > 0);
-    if (cells.length < 2) {
-      continue;
-    }
-    const usedBy = cells[cells.length - 1];
-    if (!/danger/i.test(usedBy)) {
-      continue;
-    }
-    for (const token of cells[0].match(/--b2s-color-[a-z0-9-]+/g) ?? []) {
-      names.add(token);
+  for (const slice of [colour, dimensions]) {
+    for (const match of slice.matchAll(/--b2s-color-[a-z0-9-]+/g)) {
+      names.add(match[0]);
     }
   }
   return { names };
 }
 
-export function listViolations(listed, derived) {
-  const messages = [];
-  if (listed.length < MINIMUM_CHROMATIC) {
-    messages.push(`${listed.length} chromatic token(s) on the list, minimum ${MINIMUM_CHROMATIC}`);
-  }
-  for (const token of listed) {
-    if (!derived.has(token)) {
-      messages.push(`${token} is listed as chromatic and DESIGN_SURFACE.md does not name it as chromatic`);
-    }
-  }
-  for (const token of derived) {
-    if (!listed.includes(token)) {
-      messages.push(`${token} is named chromatic in DESIGN_SURFACE.md and the chromatic list omits it`);
-    }
-  }
-  return messages;
+function linearChannel(channel) {
+  const s = channel / 255;
+  return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
 }
 
-export function colourViolations(decls, listed) {
+function labOf(channels) {
+  const [r, g, b] = channels.map(linearChannel);
+  const x = (0.4124564 * r + 0.3575761 * g + 0.1804375 * b) / 0.95047;
+  const y = 0.2126729 * r + 0.7151522 * g + 0.072175 * b;
+  const z = (0.0193339 * r + 0.119192 * g + 0.9503041 * b) / 1.08883;
+  const f = (t) => (t > (6 / 29) ** 3 ? t ** (1 / 3) : t / (3 * (6 / 29) ** 2) + 4 / 29);
+  return [116 * f(y) - 16, 500 * (f(x) - f(y)), 200 * (f(y) - f(z))];
+}
+
+function chromaOf(channels) {
+  const [, a, b] = labOf(channels);
+  return Math.sqrt(a * a + b * b);
+}
+
+function deltaEOf(left, right) {
+  const a = labOf(left);
+  const b = labOf(right);
+  return Math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2);
+}
+
+function channelsOf(value) {
+  if (!value) return null;
+  const hex = value.match(/#(?:[0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b/);
+  if (hex) return hexChannels(hex[0]);
+  const rgb = value.match(/rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)/);
+  if (rgb) return [Number(rgb[1]), Number(rgb[2]), Number(rgb[3])];
+  return null;
+}
+
+function propsOf(body) {
+  const map = new Map();
+  for (const decl of declarations(body)) {
+    if (decl.prop.startsWith("--")) map.set(decl.prop, decl.value);
+  }
+  return map;
+}
+
+function themesOf(css) {
+  const light = new Map();
+  const dark = new Map();
+  for (const block of splitTop(css)) {
+    if (block.prelude === ":root" || block.prelude === ':root[data-theme="light"]') {
+      for (const [name, value] of propsOf(block.body)) light.set(name, value);
+    }
+    if (block.prelude.includes("prefers-color-scheme: dark")) {
+      for (const inner of splitTop(block.body)) {
+        if (inner.prelude.includes(":root")) {
+          for (const [name, value] of propsOf(inner.body)) dark.set(name, value);
+        }
+      }
+    }
+    if (block.prelude === ':root[data-theme="dark"]') {
+      for (const [name, value] of propsOf(block.body)) dark.set(name, value);
+    }
+  }
+  return [
+    { name: "light", values: light },
+    { name: "dark", values: dark },
+  ];
+}
+
+export function colourViolations(decls) {
   const messages = [];
-  let achromaticTokens = 0;
   let fontFamilies = 0;
-  const chromatic = new Set(listed);
   for (const decl of decls) {
     if (!decl.prop.startsWith("--b2s-")) {
-      if (decl.prop === "font-family") {
-        fontFamilies += 1;
-      }
+      if (decl.prop === "font-family") fontFamilies += 1;
       continue;
     }
-    if (decl.prop === "--b2s-font-family") {
-      fontFamilies += 1;
-    }
+    if (decl.prop === "--b2s-font-family") fontFamilies += 1;
     const parsed = coloursIn(decl.value);
     if (parsed.error) {
       messages.push(`${decl.prop} has a colour that could not be parsed (${parsed.error})`);
-      continue;
     }
-    const exempt = chromatic.has(decl.prop);
-    if (decl.prop.startsWith("--b2s-color-") && !exempt) {
-      achromaticTokens += 1;
-      if (parsed.found.length === 0 && !referenceOnly(decl.value)) {
-        messages.push(`${decl.prop} is a colour token with no parsed colour (${decl.value})`);
+  }
+  if (fontFamilies < MINIMUM_FONT_FAMILIES) {
+    messages.push(`${fontFamilies} font-family declaration(s), minimum ${MINIMUM_FONT_FAMILIES}`);
+  }
+  return { messages, fontFamilies };
+}
+
+export function identityViolations(markdown, css) {
+  const messages = [];
+  const documented = documentColourTokens(markdown);
+  const themes = themesOf(stripComments(css));
+  if (documented.error) {
+    messages.push(documented.error);
+    return { messages, closed: 0, proof: 0, chromaChecked: 0, deltaChecked: 0 };
+  }
+  const styled = new Set();
+  for (const theme of themes) {
+    for (const name of theme.values.keys()) {
+      if (name.startsWith("--b2s-color-")) styled.add(name);
+    }
+  }
+  for (const token of styled) {
+    if (!documented.names.has(token)) {
+      messages.push(`${token} is defined in ${GLOBALS} and DESIGN_SURFACE.md §2.2 and §2.11 do not name it`);
+    }
+  }
+  for (const token of documented.names) {
+    if (!styled.has(token)) {
+      messages.push(`${token} is named in DESIGN_SURFACE.md §2.2 or §2.11 and ${GLOBALS} does not define it`);
+    }
+  }
+  let proof = 0;
+  for (const theme of themes) {
+    for (const token of ["--b2s-color-proof", "--b2s-color-proof-edge"]) {
+      const value = theme.values.get(token);
+      const channels = value ? channelsOf(value) : null;
+      if (!channels) {
+        messages.push(`${token} has no colour in ${theme.name}`);
+        continue;
+      }
+      proof += 1;
+      if (!(channels[0] === channels[1] && channels[1] === channels[2])) {
+        messages.push(`${token} is tinted in ${theme.name} (${value})`);
       }
     }
-    if (!exempt) {
-      for (const colour of parsed.found) {
-        if (!colour.achromatic) {
-          messages.push(`${decl.prop} is not on the chromatic list and is not achromatic (${colour.label})`);
+  }
+  const colour = sectionSlice(markdown, "### 2.2", "### 2.3") ?? "";
+  const neutralSection = colour.split("**Neutrals.**")[1]?.split("**Clay")[0] ?? "";
+  const neutrals = [];
+  for (const line of neutralSection.split("\n")) {
+    if (!line.startsWith("|")) continue;
+    for (const token of line.match(/--b2s-color-([a-z0-9-]+)/g) ?? []) {
+      neutrals.push(token.slice("--b2s-color-".length));
+    }
+  }
+  const warm = colour.match(/`([^`]+)`, `([^`]+)`, `([^`]+)` and `([^`]+)` stay at or below \*\*(\d+)\*\*[\s\S]*?every other neutral at or below \*\*(\d+)\*\*/);
+  let chromaChecked = 0;
+  if (!warm || neutrals.length === 0) {
+    messages.push("DESIGN_SURFACE.md §2.2 does not state the warmth ceiling");
+  } else {
+    const large = new Set([warm[1], warm[2], warm[3], warm[4]]);
+    const largeCeiling = Number(warm[5]);
+    const otherCeiling = Number(warm[6]);
+    for (const name of neutrals) {
+      for (const theme of themes) {
+        const channels = channelsOf(theme.values.get(`--b2s-color-${name}`));
+        if (!channels) {
+          messages.push(`--b2s-color-${name} has no colour in ${theme.name}`);
+          continue;
+        }
+        chromaChecked += 1;
+        const ceiling = large.has(name) ? largeCeiling : otherCeiling;
+        const measured = chromaOf(channels);
+        if (measured > ceiling + 1e-9) {
+          messages.push(`--b2s-color-${name} chroma ${measured.toFixed(2)} in ${theme.name} is above ${ceiling}`);
         }
       }
     }
   }
-  if (achromaticTokens < MINIMUM_ACHROMATIC) {
-    messages.push(`${achromaticTokens} achromatic colour token(s) checked, minimum ${MINIMUM_ACHROMATIC}`);
+  const danger = colour.match(/Danger is not Clay\.[\s\S]*?at least (\d+)/);
+  const pairs = danger ? [...danger[0].matchAll(/`([a-z0-9-]+)` against `([a-z0-9-]+)`/g)] : [];
+  let deltaChecked = 0;
+  if (!danger || pairs.length === 0) {
+    messages.push("DESIGN_SURFACE.md §2.2 does not state the Clay–danger floor");
+  } else {
+    const floor = Number(danger[1]);
+    for (const match of pairs) {
+      for (const theme of themes) {
+        const left = channelsOf(theme.values.get(`--b2s-color-${match[1]}`));
+        const right = channelsOf(theme.values.get(`--b2s-color-${match[2]}`));
+        if (!left || !right) {
+          messages.push(`${match[1]} against ${match[2]} has no colour in ${theme.name}`);
+          continue;
+        }
+        deltaChecked += 1;
+        const measured = deltaEOf(left, right);
+        if (measured + 1e-9 < floor) {
+          messages.push(`${match[1]} against ${match[2]} is ΔE ${measured.toFixed(2)} in ${theme.name}, minimum ${floor}`);
+        }
+      }
+    }
   }
-  if (fontFamilies < MINIMUM_FONT_FAMILIES) {
-    messages.push(`${fontFamilies} font-family declaration(s) checked, minimum ${MINIMUM_FONT_FAMILIES}`);
+  if (documented.names.size < MINIMUM_CLOSED_COLOURS) {
+    messages.push(`${documented.names.size} colour token(s) in §2.2 and §2.11, minimum ${MINIMUM_CLOSED_COLOURS}`);
   }
-  return { messages, achromaticTokens, fontFamilies };
+  if (proof < MINIMUM_PROOF_CHANNELS) {
+    messages.push(`${proof} proof channel check(s), minimum ${MINIMUM_PROOF_CHANNELS}`);
+  }
+  if (chromaChecked < MINIMUM_CHROMA) {
+    messages.push(`${chromaChecked} chroma check(s), minimum ${MINIMUM_CHROMA}`);
+  }
+  if (deltaChecked < MINIMUM_DELTA) {
+    messages.push(`${deltaChecked} ΔE check(s), minimum ${MINIMUM_DELTA}`);
+  }
+  return { messages, closed: documented.names.size, proof, chromaChecked, deltaChecked };
 }
 
 function familiesIn(value) {
@@ -830,10 +921,6 @@ function examine(rel, text, stylesheet) {
 }
 
 function main() {
-  if (CHROMATIC_TOKENS.length < MINIMUM_CHROMATIC) {
-    fail(`${CHROMATIC_TOKENS.length} chromatic token(s) on the list, minimum ${MINIMUM_CHROMATIC}`);
-  }
-
   let documentText;
   try {
     documentText = readFileSync(DOCUMENT, "utf8");
@@ -841,12 +928,8 @@ function main() {
     fail(`${DOCUMENT}: ${err.message}`);
     process.exit(1);
   }
-  const derived = sectionChromaticTokens(documentText);
-  if (derived.error) {
-    fail(derived.error);
-    process.exit(1);
-  }
-  for (const message of listViolations(CHROMATIC_TOKENS, derived.names)) {
+  const identity = identityViolations(documentText, readFileSync(GLOBALS, "utf8"));
+  for (const message of identity.messages) {
     fail(message);
   }
   const layers = sectionLayerTokens(documentText);
@@ -897,7 +980,7 @@ function main() {
     decls.push(...inline);
   }
 
-  const colour = colourViolations(decls, CHROMATIC_TOKENS);
+  const colour = colourViolations(decls);
   for (const message of colour.messages) {
     fail(message);
   }
@@ -920,7 +1003,7 @@ function main() {
   }
 
   console.log(
-    `OK: token values stay inside definitions; ${stylesheets.length} stylesheet(s) scanned, minimum ${MINIMUM_STYLESHEETS}; ${decls.length} declaration(s) examined, minimum ${MINIMUM_DECLARATIONS}; ${tokens} token(s), minimum ${MINIMUM_TOKENS}; ${colour.achromaticTokens} achromatic colour token(s), minimum ${MINIMUM_ACHROMATIC}; ${CHROMATIC_TOKENS.length} chromatic token(s), minimum ${MINIMUM_CHROMATIC}; ${colour.fontFamilies} font-family declaration(s), minimum ${MINIMUM_FONT_FAMILIES}; ${sources.length} source file(s) scanned, minimum ${MINIMUM_SOURCES}`,
+    `OK: token values stay inside definitions; ${stylesheets.length} stylesheet(s) scanned, minimum ${MINIMUM_STYLESHEETS}; ${decls.length} declaration(s) examined, minimum ${MINIMUM_DECLARATIONS}; ${tokens} token(s), minimum ${MINIMUM_TOKENS}; ${identity.closed} colour token(s) closed against section 2.2 and 2.11, minimum ${MINIMUM_CLOSED_COLOURS}; ${identity.proof} proof channel check(s), minimum ${MINIMUM_PROOF_CHANNELS}; ${identity.chromaChecked} chroma check(s), minimum ${MINIMUM_CHROMA}; ${identity.deltaChecked} Clay-danger check(s), minimum ${MINIMUM_DELTA}; ${colour.fontFamilies} font-family declaration(s), minimum ${MINIMUM_FONT_FAMILIES}; the closed chromatic list is removed; ${sources.length} source file(s) scanned, minimum ${MINIMUM_SOURCES}`,
   );
 }
 

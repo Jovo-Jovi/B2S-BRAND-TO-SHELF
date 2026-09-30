@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { classes } from "../classes";
+import { Glyph } from "../glyphs";
 import styles from "./status-badge.module.css";
 
 export type StatusBadgeVariant = "neutral" | "success" | "warning" | "danger" | "info";
@@ -32,7 +33,9 @@ export function StatusBadge({
       data-density={size}
       data-tone={tone}
     >
-      {icon ? <span className={styles.icon}>{icon}</span> : null}
+      {icon || tone === "danger" ? (
+        <span className={styles.icon}>{icon ?? <Glyph name="danger" />}</span>
+      ) : null}
       {text}
     </span>
   );

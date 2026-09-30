@@ -1,10 +1,13 @@
 #!/usr/bin/env node
-// CF-171. Brand tokens are a structural boundary, not a banned word.
+// CF-171, extended. Brand tokens are a structural boundary, not a banned word.
 // --brand-* is referenced only in BrandFrame's stylesheet. Within that
 // stylesheet, --brand-* appears only on canvas and content selectors, and
-// --b2s-* appears only on mount and surround selectors. --brand-* is defined
-// only by BrandFrame, and only from an expression: a literal colour is not
-// a definition. A stored swatch colour is data and is not a brand token.
+// --b2s-* appears only on mount and surround selectors. Among those platform
+// tokens the stylesheet uses only proof, proof-edge, border-width, radius-xl
+// and spacing. proof and proof-edge are referenced nowhere else. --brand-*
+// is defined only by BrandFrame, and only from an expression: a literal
+// colour is not a definition. A stored swatch colour is data and is not a
+// brand token.
 
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -23,6 +26,8 @@ const MINIMUM_FILES = 89;
 const MINIMUM_DEFINITIONS = 11;
 const MINIMUM_BRAND_REFERENCES = 4;
 const MINIMUM_PLATFORM_REFERENCES = 5;
+const PLATFORM_TOKEN =
+  /^--b2s-(?:color-proof|color-proof-edge|border-width|radius-xl|space-[a-z0-9-]+)$/;
 
 let violations = 0;
 
@@ -253,6 +258,24 @@ function main() {
   }
   if (existsSync(stylesheet) && platformReferences < MINIMUM_PLATFORM_REFERENCES) {
     fail(`${platformReferences} --b2s-* reference(s) on mount or surround, minimum ${MINIMUM_PLATFORM_REFERENCES}`);
+  }
+  if (existsSync(stylesheet)) {
+    const sheet = stripComments(readFileSync(stylesheet, "utf8"));
+    const used = new Set(sheet.match(/var\(--b2s-[a-z0-9-]+\)/g) ?? []);
+    for (const reference of used) {
+      const name = reference.slice(4, -1);
+      if (!PLATFORM_TOKEN.test(name)) {
+        fail(`${STYLESHEET} uses ${name}, outside proof, proof-edge, border-width, radius-xl and spacing`);
+      }
+    }
+  }
+  for (const path of files) {
+    const relative = rel(path);
+    if (relative === STYLESHEET || !relative.endsWith(".css")) continue;
+    const text = stripComments(readFileSync(path, "utf8"));
+    if (/var\(--b2s-color-proof(?:-edge)?\)/.test(text)) {
+      fail(`${relative} references proof grey outside BrandFrame`);
+    }
   }
 
   if (violations > 0) process.exit(1);

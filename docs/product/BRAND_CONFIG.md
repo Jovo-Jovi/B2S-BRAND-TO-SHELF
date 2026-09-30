@@ -212,6 +212,8 @@ or through tenant.
 | Typography | `Typeface` |
 | Guidelines | `BrandGuideline` |
 
+**AMENDED 2026-09-30 — brand first.** The table above stands and is not edited (PR-07). The wizard captures the same data and writes it to the same places; only the order changes, so a business sees its packaging before it types its tax number. 0 Welcome — default language and base currency, asked first because bilingual fields order by the business's default language and nothing brand-scoped can be saved before the tenant exists (provisioning specified by the tenant business-data amendment). 1 Brand — name in both languages, default language first; colours; logo; line names optional. 2 Typography. 3 Company — legal and trading names, tax registration, addresses, contacts. 4 Guidelines, optional. 5 Review — the profile becomes current only when complete (§11). Resumability and partial profiles stand unchanged.
+
 Business data lands on `tenant` rather than in a new Settings-tier entity.
 `base_currency` and `default_locale` are already there; splitting the rest
 into a second table would mean two reads for one screen and two places for one

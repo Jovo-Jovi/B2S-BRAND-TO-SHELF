@@ -83,7 +83,7 @@ function pairsFrom(markdown: string, hexes: Map<string, { light: string; dark: s
     const labelled = label.match(/^(.+?) on (.+)$/);
     if (labelled) {
       const foreground = tokenName(labelled[1]);
-      const background = tokenName(labelled[2]);
+      const background = tokenName(labelled[2].replace(/,?\s*\d+(?:\.\d+)?:1$/, ""));
       const light = digitsIn(lightCell);
       const dark = digitsIn(darkCell);
       if (light === null || dark === null) {

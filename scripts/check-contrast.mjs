@@ -20,17 +20,21 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const GLOBALS = "app/globals.css";
+const DOCUMENT = "docs/product/DESIGN_SURFACE.md";
 const SCAN_ROOTS = ["app", "components", "features"];
 const TEXT_MINIMUM = 4.5;
 const BOUNDARY_MINIMUM = 3;
 const BOUNDARY_TOKEN = "--b2s-color-border-control";
 const SURFACES = ["--b2s-color-canvas", "--b2s-color-surface", "--b2s-color-sunken", "--b2s-color-raised"];
-// P03-T12 — measured after DateField, FileDrop and DataTable.
+// P03-T12 — measured after DateField, FileDrop and DataTable: 82.
+// P03-T14 — BrandFrame no longer declares a platform text colour, so the
+// pair that colour made is gone: 81.
 const MINIMUM_STYLESHEETS = 23;
-const MINIMUM_TEXT_PAIRS = 82;
+const MINIMUM_TEXT_PAIRS = 81;
 const MINIMUM_SURFACES = 4;
 const MINIMUM_BOUNDARY_PAIRS = 8;
 const MINIMUM_THEMES = 2;
+const MINIMUM_ENUMERATED = 92;
 
 const SKIP = new Set(["transparent", "inherit", "currentcolor"]);
 const STATE_PATTERN =
@@ -354,12 +358,91 @@ function checkPair(rel, selector, theme, kind, left, right, minimum) {
   return true;
 }
 
+function backticks(clause) {
+  return [...clause.matchAll(/`([a-z0-9-]+)`/g)].map((match) => match[1]);
+}
+
+export function enumeratedPairs(markdown) {
+  const section = markdown.slice(markdown.indexOf("### 2.2"), markdown.indexOf("### 2.3"));
+  const sentence = section.match(/Ninety-two pairs[^.]+\./s);
+  if (!sentence) return { error: "DESIGN_SURFACE.md §2.2 does not enumerate the contrast pairs", pairs: [] };
+  const body = sentence[0].replace(/\s+/g, " ").split(":").slice(1).join(":");
+  const clauses = body.split(";").map((clause) => clause.trim());
+  const pairs = [];
+  let four = [];
+  for (const clause of clauses) {
+    const minimum = clause.includes("3:1") ? 3 : 4.5;
+    if (clause.startsWith("each of")) {
+      const [left, right] = clause.split(" on ");
+      const foregrounds = backticks(left);
+      four = backticks(right ?? "");
+      for (const foreground of foregrounds) {
+        for (const background of four) pairs.push({ foreground, background, minimum });
+      }
+    } else if (clause.includes("against those four")) {
+      for (const foreground of backticks(clause)) {
+        for (const background of four) pairs.push({ foreground, background, minimum });
+      }
+    } else if (clause.startsWith("each status")) {
+      const status = section.split("**The proof")[0];
+      for (const line of status.split("\n")) {
+        if (!line.includes("| Status")) continue;
+        const names = [...line.matchAll(/--b2s-color-([a-z0-9-]+)/g)].map((match) => match[1]);
+        const foreground = names.find((name) => !name.endsWith("-bg"));
+        if (!foreground) continue;
+        pairs.push({ foreground, background: `${foreground}-bg`, minimum: 4.5 });
+        pairs.push({ foreground, background: "surface", minimum: 4.5 });
+      }
+    } else {
+      let pending = null;
+      for (const chunk of clause.split(/, | and /)) {
+        const names = backticks(chunk);
+        if (chunk.includes(" on ") && names.length >= 2) {
+          pending = names[0];
+          for (const background of names.slice(1)) pairs.push({ foreground: pending, background, minimum });
+        } else if (pending && names.length > 0) {
+          for (const background of names) pairs.push({ foreground: pending, background, minimum });
+        } else if (names.length === 2) {
+          pairs.push({ foreground: names[0], background: names[1], minimum });
+        }
+      }
+    }
+  }
+  return { pairs };
+}
+
 function main() {
   if (!existsSync(GLOBALS)) {
     fail(`${GLOBALS} is absent`);
     process.exit(1);
   }
   const themes = themesFrom(stripComments(readFileSync(GLOBALS, "utf8")));
+  let documentText = "";
+  try {
+    documentText = readFileSync(DOCUMENT, "utf8");
+  } catch (err) {
+    fail(`${DOCUMENT}: ${err.message}`);
+  }
+  const enumerated = enumeratedPairs(documentText);
+  if (enumerated.error) fail(enumerated.error);
+  let enumeratedCount = 0;
+  for (const pair of enumerated.pairs) {
+    for (const theme of themes) {
+      enumeratedCount += 1;
+      checkPair(
+        DOCUMENT,
+        `${pair.foreground} on ${pair.background}`,
+        theme,
+        pair.minimum === 3 ? "boundary" : "text",
+        `var(--b2s-color-${pair.foreground})`,
+        `var(--b2s-color-${pair.background})`,
+        pair.minimum,
+      );
+    }
+  }
+  if (enumeratedCount < MINIMUM_ENUMERATED) {
+    fail(`${enumeratedCount} enumerated pair(s), minimum ${MINIMUM_ENUMERATED}`);
+  }
   if (themes.length < MINIMUM_THEMES || themes.some((theme) => theme.values.size === 0)) {
     fail(`${themes.length} theme(s), minimum ${MINIMUM_THEMES}`);
   }
@@ -423,7 +506,7 @@ function main() {
   }
 
   console.log(
-    `OK: declared contrast pairs; ${stylesheets.length} stylesheet(s) scanned, minimum ${MINIMUM_STYLESHEETS}; ${textCount} text pair(s), minimum ${MINIMUM_TEXT_PAIRS}; ${boundaryCount} boundary pair(s) of ${BOUNDARY_TOKEN} against ${SURFACES.length} surface(s), minimum ${MINIMUM_BOUNDARY_PAIRS}; ${themes.length} theme(s), minimum ${MINIMUM_THEMES}. --b2s-color-border is decorative and exempt. Brand pairs are runtime data and are not evaluated; BRAND_CONFIG.md §11 binds them at profile completion. Pairs inherited from an ancestor are outside this check; it is not a substitute for CF-177`,
+    `OK: declared contrast pairs; ${stylesheets.length} stylesheet(s) scanned, minimum ${MINIMUM_STYLESHEETS}; ${textCount} text pair(s), minimum ${MINIMUM_TEXT_PAIRS}; ${boundaryCount} boundary pair(s) of ${BOUNDARY_TOKEN} against ${SURFACES.length} surface(s), minimum ${MINIMUM_BOUNDARY_PAIRS}; ${enumeratedCount} enumerated section 2.2 pair(s) from ${GLOBALS}, minimum ${MINIMUM_ENUMERATED}; ${themes.length} theme(s), minimum ${MINIMUM_THEMES}. --b2s-color-border is decorative and exempt. Brand pairs are runtime data and are not evaluated; BRAND_CONFIG.md §11 binds them at profile completion. Pairs inherited from an ancestor are outside this check; it is not a substitute for CF-177`,
   );
 }
 

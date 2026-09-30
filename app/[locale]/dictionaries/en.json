@@ -175,6 +175,11 @@
     "sampleActions": "Actions",
     "sampleEdit": "Edit the row",
     "sampleNothing": "Nothing here yet",
-    "sampleListFailed": "The list failed"
+    "sampleListFailed": "The list failed",
+    "welcomeTitle": "Welcome",
+    "welcomeLanguage": "Default language",
+    "welcomeCurrency": "Base currency",
+    "welcomeCurrencyPrimary": "Sample dinar",
+    "welcomeCurrencySecondary": "Sample pound"
   }
 }

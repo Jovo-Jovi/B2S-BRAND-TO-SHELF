@@ -4,7 +4,7 @@
   row-gap: var(--b2s-space-3);
   color: var(--b2s-color-text);
   background-color: var(--b2s-color-surface);
-  border-radius: var(--b2s-radius-md);
+  border-radius: var(--b2s-radius-lg);
 }
 
 .root[data-state="focus"] .scroller {
@@ -69,9 +69,12 @@
 }
 
 .row:hover,
-.root[data-state="hover"] .row,
-.row[data-selected="true"] {
+.root[data-state="hover"] .row {
   background-color: var(--b2s-color-sunken);
+}
+
+.row[data-selected="true"] {
+  background-color: var(--b2s-color-accent-soft);
 }
 
 .row:hover .cell,
@@ -79,11 +82,15 @@
 .row:hover .actions,
 .root[data-state="hover"] .row .cell,
 .root[data-state="hover"] .row .stickyCell,
-.root[data-state="hover"] .row .actions,
+.root[data-state="hover"] .row .actions {
+  background-color: var(--b2s-color-sunken);
+  color: var(--b2s-color-text);
+}
+
 .row[data-selected="true"] .cell,
 .row[data-selected="true"] .stickyCell,
 .row[data-selected="true"] .actions {
-  background-color: var(--b2s-color-sunken);
+  background-color: var(--b2s-color-accent-soft);
   color: var(--b2s-color-text);
 }
 

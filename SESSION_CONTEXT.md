@@ -1,8 +1,8 @@
 # SESSION CONTEXT
-Updated: 2026-09-29 · By: Grok 4.7 (heavyweight; prompt named Opus) · Phase: P03
-Last task: P03-T13 · Verdict: —. Last-row verdict is the declared
-placeholder; the follow-up commit fills the sha only. P03-T12-FIX's cell is
-PASS. Ledger 195 rows, **40** open. Full detail in the done-steps row below.
+Updated: 2026-10-01 · By: Grok 4.7 (heavyweight; prompt named Opus) · Phase: P03
+Last task: P03-T14 · Verdict: —. Last-row verdict is the declared
+placeholder; the follow-up commit fills the sha only. P03-T13's cell is
+PASS. Ledger 206 rows, **45** open. Full detail in the done-steps row below.
 
 ## Read these too
 - `docs/method/PRECEDENTS.md` — binding rulings and environment quirks.
@@ -91,7 +91,8 @@ Keep it short: if a paragraph is growing here, it belongs elsewhere.
 | P03-T12 | The data family: DateField, FileDrop, DataTable, and the numbers lib/locale can format now. On phase/03-brand-and-onboarding from bf3d9d4; no PR, no merge. PART 0: no open pull request against main. Node v24.21.0 matches .nvmrc 24. No new package. Egyptian month, weekday and byte-unit forms accepted. Implemented 21 of 21. Variant members 44, size members 38, enforced states 123. BrandFrame variant is preview alone. Counts, progress percentages and byte sizes match the acceptance cases in both locales. Pagination glue words are not stated; the table fills the caller pattern. Floors measured: literals 73, CDN 98, service-import 62, data-boundary 76 files and 4 import sites, locale-format 72, catalog leaves 50, namespaces 3, contrast 23 stylesheets and 82 text pairs and 8 boundary pairs and 2 themes, logical 23 stylesheets and 1204 declarations, token values 23/1204/234/68/11/13/85, brand tokens 85/11/4/5. Accessibility tier measured under its own configuration: 87 rules run, 2 disabled, 2 known-bad. Static set stays 28. PROVEN_PAIRS stays 59. fail() stays 138. 44 open at bf3d9d4 plus 2 landed open minus 0 closed equals 46. CF-205 closed by PR-45. CF-206 and CF-207 open. CF-204 amended. Prompt named Opus; this session ran as Grok 4.7. REVIEWER_CHAT unstaged. Tests: locale acceptance, three primitives in both locales and every enforced state, the variant gate, static conformance and the four npm scripts. Isolation suite not run. Acceptance: exact match for every format case, and FEATURES and ENTITIES against the three component blocks. Money: N/A, deliberately; nothing here formats money. Print: N/A. Tenant isolation: N/A, stated explicitly. | FAIL | `68969b9` |
 
 | P03-T12-FIX | DateField's accessible names, three derivations, and the pre-push rule. On phase/03-brand-and-onboarding from 31d34f0; no PR, no merge. PART 0: no open pull request against main. Node v24.21.0 matches .nvmrc 24. No new package. Reproduced before the fix: September 2026 day cells 1, 19 and 30 named by weekday only in both locales; FileDrop browse data-variant primary; formatByteSize of -1500 returned 1.5 kB in en and 1.5 with the Arabic kilobyte word in ar; Page Down from 31 January 2026 focused day 1. Day cells are now the full date in both locales. Page Up and Page Down keep the day number, clamped to the month; Shift moves a year. Browse is secondary. A count or byte size below zero, or progress outside 0 to 1, throws RangeError. The structural test failed on the planted weekday-only name, 7 distinct names across 30 cells, and date-field.tsx was restored byte-identical. Parser counts, no name added by hand: 21 implemented, 21 blocks, 44 variant members, 38 size members, 123 enforced states, 0 pending. Catalog leaves 51. PR-46. 46 open at 31d34f0 plus 0 landed open minus 0 closed equals 46. CF-208, CF-209 and CF-210 opened and closed, net zero. Prompt named Sonnet; this session ran as Grok 4.7. REVIEWER_CHAT unstaged. Static set 28, each exit 0 and each stating its floor. lint, typecheck, test (31 files, 106 tests) and build green. Tests: DateField, FileDrop and lib/locale in both locales, the day-name test and its plant. Isolation suite not run. Acceptance: FEATURES and ENTITIES against the corrected blocks, and WCAG 2.2 4.1.2 for DateField day cells by the structural test. Money: N/A. Print: N/A. Tenant isolation: N/A, stated explicitly. | PASS | `3ed0bd1` |
-| P03-T13 | Browser-rendered tier, catalog gallery, and the isolation timing. On phase/03-brand-and-onboarding from 74fabeb; pull request #8 is the one draft against main, not marked ready. Node v24.21.0 matches .nvmrc 24. Prompt named Opus; this session ran as Grok 4.7. PART 0: BRANCHING.md §3 allows one draft pull request per phase. CF-197 closed. PART 1: isolation 664.55s, 94 PASS, 0 FAIL, 0 LOST, D last. 2138 requests, 0 retries, 0 status 429, 0 status 5xx. Auth 22s, SQL 418s, PostgREST 177s, seed and teardown about 16s. Harness unchanged. CF-204 amended, owner the owner. PART 2: ADR-015, @playwright/test 1.63.0, licence Apache-2.0 as the package declares it. Chromium installed natively. No Docker. PART 3: gallery at app/[locale]/(public)/gallery, refused when VERCEL_ENV is production, served otherwise. Coverage is the 123 enforced states, both themes, both locales, widths 360 and xl 1280. PART 4: contrast, target size, reflow, Arabic mirroring and page structure run in Chromium. Known-bad fixtures fail before the gallery passes are believed. link-in-text-block, avoid-inline-spacing and meta-viewport moved from the component tier to the browser tier. Component tier floors 84 rules, 5 disabled, 5 known-bad. Quiet button fill is transparent, the stated text-only variant. Brand content is not painted without a brand foreground. Static set 29. PROVEN_PAIRS 63 of 64 enumerated, one documented gap. fail() 138. 46 open + 0 landed − 6 closed = 40. Closed CF-177, CF-178, CF-179, CF-196, CF-197, CF-206. CF-180 and CF-207 stay open. Acceptance: WCAG 2.2 AA as rendered for contrast, target size, reflow and page structure. Money: N/A. Print: N/A. Tenant isolation: N/A, the harness did not change. | — | `93c9356` |
+| P03-T13 | Browser-rendered tier, catalog gallery, and the isolation timing. On phase/03-brand-and-onboarding from 74fabeb; pull request #8 is the one draft against main, not marked ready. Node v24.21.0 matches .nvmrc 24. Prompt named Opus; this session ran as Grok 4.7. PART 0: BRANCHING.md §3 allows one draft pull request per phase. CF-197 closed. PART 1: isolation 664.55s, 94 PASS, 0 FAIL, 0 LOST, D last. 2138 requests, 0 retries, 0 status 429, 0 status 5xx. Auth 22s, SQL 418s, PostgREST 177s, seed and teardown about 16s. Harness unchanged. CF-204 amended, owner the owner. PART 2: ADR-015, @playwright/test 1.63.0, licence Apache-2.0 as the package declares it. Chromium installed natively. No Docker. PART 3: gallery at app/[locale]/(public)/gallery, refused when VERCEL_ENV is production, served otherwise. Coverage is the 123 enforced states, both themes, both locales, widths 360 and xl 1280. PART 4: contrast, target size, reflow, Arabic mirroring and page structure run in Chromium. Known-bad fixtures fail before the gallery passes are believed. link-in-text-block, avoid-inline-spacing and meta-viewport moved from the component tier to the browser tier. Component tier floors 84 rules, 5 disabled, 5 known-bad. Quiet button fill is transparent, the stated text-only variant. Brand content is not painted without a brand foreground. Static set 29. PROVEN_PAIRS 63 of 64 enumerated, one documented gap. fail() 138. 46 open + 0 landed − 6 closed = 40. Closed CF-177, CF-178, CF-179, CF-196, CF-197, CF-206. CF-180 and CF-207 stay open. Acceptance: WCAG 2.2 AA as rendered for contrast, target size, reflow and page structure. Money: N/A. Print: N/A. Tenant isolation: N/A, the harness did not change. | PASS | `93c9356` |
+| P03-T14 | Platform identity: OD-G24 and OD-G25, three beside-amendments, DESIGN_SURFACE Revision 2, the reskin and its gates. On phase/03-brand-and-onboarding from c5aebfe; pull request #8 stays the one draft against main, not marked ready. Node v24.21.0 matches .nvmrc 24. Prompt named Opus; this session ran as Grok 4.7. Register 98 to 100. OD-G21 and OD-G22 marked superseded, text unedited. Revision 2 mechanical claims re-derived: 21 blocks, 8 states, 55 n/a with reasons, 92 contrast pairs, warmth ceilings and Clay-danger floor held, proof channels equal. globals.css carries Revision 2. TextLink, Button, DataTable, FileDrop and BrandFrame updated. BrandFrame error text colour is unstated and was not invented. Floors: 267 tokens, 1247 declarations, 34 closed colours, 4 proof checks, 20 chroma checks, 6 delta checks, 92 enumerated pairs, 81 declared text pairs. Plants caught and restored byte-identical. Browser tier 16 passed, 36.7s. Screenshots of eight combinations. Static set stays 29. PROVEN_PAIRS 64. fail() stays 138. 40 open at c5aebfe plus 5 landed open minus 0 closed equals 45. Opened CF-211, CF-212, CF-213, CF-214, CF-221. Closed CF-215, CF-216, CF-217, CF-218, CF-219, CF-220. CF-204 amended. Compositions withdrawn to P03-T15. REVIEWER_CHAT unstaged. Tests: primitive component tests, browser tier in four combinations at both widths, every new plant, the new two-way pair, static conformance. Acceptance: FEATURES and ENTITIES against Revision 2, WCAG 2.2 AA as rendered. Money: N/A. Print: N/A. Tenant isolation: N/A, nothing reads or writes data. | — | — |
 
 > Commit column: one or more comma-separated backticked shas, or `—` where no
 > single commit tracks the step (P-00 through P-01c predate the one-task-one-commit
@@ -140,13 +141,18 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
 - CF-162 — owner: P03, before the wizard accepts real content
 - CF-163 — owner: the next amendment of scripts/check_stated_counts.py that can take ARCHITECTURE.md §6 as a subject, or a dedicated assertion; not silently both
 - CF-165 — owner: the owner
-- CF-180 — owner: the task that lands the design-surface catalog
+- CF-180 — owner: the task that lands the tenant business-data amendment
 - CF-181 — owner: the owner, for the PostgreSQL client binaries' provenance
 - CF-185 — owner: the P06 entry checklist, or the next task touching .cursor/rules/
 - CF-191 — owner: the owner
 - CF-192 — owner: the owner
-- CF-204 — owner: the owner, staging round-trip time inside the proofs
+- CF-204 — owner: a harness task before the P03 exit gate
 - CF-207 — owner: the owner
+- CF-211 — owner: the next task that corrects the component-tier known-bad fixtures
+- CF-212 — owner: the owner, to repoint .env.local at staging
+- CF-213 — owner: the reviewer, the tenant business-data amendment
+- CF-214 — owner: the task that lands the tenant business-data amendment
+- CF-221 — owner: P03-T15
 
 ## Frozen decisions in force
 - Freeze point 2026-07-29 (`legacy/FREEZE.md`) — tools RETIRING, not port
@@ -169,12 +175,13 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
   `TENANCY_MODEL`, `SECURITY_MODEL`, `CALC_SPEC`); the other thirteen frozen
   documents are just-in-time, each carrying its Gate 3 item to its own module
   gate. `CALC_SPEC.md`'s Gate 3 item covers its 25 Release 1 rows only.
-  `DECISIONS.md` now carries **98** signed ODs, verified by count — 80 promoted
+  `DECISIONS.md` now carries **100** signed ODs, verified by count — 80 promoted
   plus OD-H7, OD-H8 to OD-H11 signed 2026-08-04 at M-01, OD-G13 to OD-G16
   signed 2026-08-04 at P02-T01, OD-G17, OD-G18, OD-H12 signed 2026-08-05
   at P02-T07, OD-G19 signed 2026-08-31 at P02-T13, and OD-G20, OD-H13
   signed 2026-09-17 at P03-T01-RESUME, and OD-H14, OD-G21 signed 2026-09-22
-  at P03-T05, and OD-G22, OD-G23 signed 2026-09-23 at P03-T07.
+  at P03-T05, and OD-G22, OD-G23 signed 2026-09-23 at P03-T07, and OD-G24,
+  OD-G25 signed 2026-10-01 at P03-T14.
 - PR-16 through PR-19 landed 2026-08-01. PR-18 and PR-19 exist because the
   reviewer's own state assertion went stale between verdict and execution.
 - PR-20 landed 2026-08-01. Document hygiene batches into the next task touching
@@ -366,11 +373,15 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
     It moved again at P03-T13: 59 → 63, four new pairs for
     `check-gallery-coverage.mjs` against `DESIGN_SURFACE.md`, the gallery
     coverage list, the gallery renderer and the browser-tier spec.
-  - The proven two-way empty-target case count stands at **63**, last proved
-    at **P03-T13** — re-proven here by actually removing and then emptying
-    every premise the twenty-nine checks read — sixty-four pairs enumerated
-    (sixty-three in `PROVEN_PAIRS` plus the one documented gap),
-    sixty-three proven, one recorded as a documented gap rather than folded
+    It moved again at P03-T14: 63 → 64, one new pair for
+    `check-contrast.mjs` against `docs/product/DESIGN_SURFACE.md`.
+  - The proven two-way empty-target case count stands at **64**, last proved
+    at **P03-T14**. The new pair was proved by removing
+    `docs/product/DESIGN_SURFACE.md` and by emptying it; both produced a
+    one-line `FAIL:` at non-zero exit, and the file was restored
+    byte-identical each time. Sixty-five pairs are enumerated
+    (sixty-four in `PROVEN_PAIRS` plus the one documented gap),
+    sixty-four proven, one recorded as a documented gap rather than folded
     into either number:
     `check_module_spec_tree.py`'s reverse-direction premise (the live
     tracked directory tree via `git ls-files`) cannot be substituted on
@@ -438,12 +449,14 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
   (PR-29).
 
 ## Next action
-**P03-T14 builds the wizard (CF-180).** The catalog gallery is the browser
-tier's page. A page size and an explicit theme choice are member preferences
+**P03-T15 builds compositions against DESIGN_SURFACE Revision 2 (CF-221).**
+CF-180 stays open: criteria one to five can be a gallery specimen; criterion
+six waits on the tenant business-data amendment (CF-213, owner the reviewer;
+CF-214). A page size and an explicit theme choice are member preferences
 held for the session (CF-207) until the owner decides where a member
 preference lives. Do not persist a page size or a theme choice. The isolation
-suite's duration is CF-204, owned by the owner: the time is staging
-round-trips inside the proofs. Pull request #8 is the phase's one draft
+suite's duration is CF-204, owned by a harness task before the P03 exit gate:
+687 Management-API SQL calls inside the proofs. Pull request #8 is the phase's one draft
 against main. Money and
 domain quantities, which CALC_SPEC.md governs, complete at P05 through
 `lib/money/` (ADR-011). The local Node runtime (CF-192) is the owner's: verify the archive

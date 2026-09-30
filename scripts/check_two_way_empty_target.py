@@ -124,6 +124,7 @@ PROVEN_PAIRS = [
     ("scripts/check-token-values.mjs", "components/"),
     ("scripts/check-token-values.mjs", "features/"),
     ("scripts/check-contrast.mjs", "app/globals.css"),
+    ("scripts/check-contrast.mjs", "docs/product/DESIGN_SURFACE.md"),
     ("scripts/check-contrast.mjs", "components/"),
     ("scripts/check-component-variants.mjs", "docs/product/DESIGN_SURFACE.md"),
     ("scripts/check-component-variants.mjs", "components/ui"),
@@ -541,6 +542,8 @@ def main():
             ["node", "scripts/check-token-values.mjs"], DirProbe("features"))
     do_pair(results, "scripts/check-contrast.mjs",
             ["node", "scripts/check-contrast.mjs"], FileProbe("app/globals.css"))
+    do_pair(results, "scripts/check-contrast.mjs",
+            ["node", "scripts/check-contrast.mjs"], FileProbe("docs/product/DESIGN_SURFACE.md"))
     do_pair(results, "scripts/check-contrast.mjs",
             ["node", "scripts/check-contrast.mjs"], DirProbe("components"))
     do_pair(results, "scripts/check-component-variants.mjs",

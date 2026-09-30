@@ -1,8 +1,8 @@
 # DESIGN_SURFACE
 
-**Status:** SIGNED by the owner, 2026-09-23. Precedence slot 12, directly after `UX_PRINCIPLES.md`, and yields to it.
+**Status:** SIGNED by the owner. Revision 1, 2026-09-23. **Revision 2, 2026-09-30** — the visual foundation (§0 to §3, §10, §12) rewritten around the platform identity the owner chose; see the head of Corrections. Precedence slot 12, directly after `UX_PRINCIPLES.md`, and yields to it.
 **Specifies:** `UX_PRINCIPLES.md` in full. Every rule here is that document made implementable.
-**Depends on:** OD-G4, OD-G14, OD-G21, `OD-G22`, `OD-G23`, OD-H13, OD-H14, `ADR-014` · `BRAND_CONFIG.md` §3, §4, §5, §7, §9, §10, §11 · `CALC_SPEC.md` R1-25 · `DOMAIN_MODEL.md` D8 · `SECURITY_MODEL.md` §2 · `GLOSSARY.md` §5 · `DATA_MODEL.md` `tenant.default_locale`, `color_value.srgb`.
+**Depends on:** OD-G4, OD-G14, `OD-G24`, `OD-G25`, `OD-G23`, OD-H13, OD-H14, `ADR-014` · `BRAND_CONFIG.md` §3, §4, §5, §7, §9, §10, §11 · `CALC_SPEC.md` R1-25 · `DOMAIN_MODEL.md` D8 · `SECURITY_MODEL.md` §2 · `GLOSSARY.md` §5 · `DATA_MODEL.md` `tenant.default_locale`, `color_value.srgb`.
 **Reuses:** the `--b2s-` custom-property convention already in `app/globals.css`.
 **Scope:** `components/ui`, `components/shared`, and every page composed from them. Not print: page geometry belongs to the print engine (P06) and `PRINT_CONTRACT.md`.
 
@@ -20,22 +20,27 @@ Every primitive carries one fenced `component` block. **The block binds; the pro
 
 ## 0. Signed invariants and resolved dependencies
 
-**Four owner decisions of 2026-09-23 bind this document from above.** A component, a page or a later amendment to this document may not reinterpret them.
+**Owner decisions bind this document from above.** A component, a page or a later amendment to this document may not reinterpret them.
 
-1. **The chrome is achromatic** — `OD-G22`. Every chrome neutral has red, green and blue equal. No tinted, warm, cool or signature grey, and no gold. This is part of the proofing model, not an aesthetic: the platform must not introduce a colour cast that changes how a tenant's brand colour is perceived (§1).
-2. **The platform typeface is IBM Plex Sans with IBM Plex Sans Arabic** — `OD-G23`. One superfamily for both scripts, self-hosted, never loaded from a CDN (§2.3).
-3. **Date presentation** — `CALC_SPEC.md` R1-25's locale block, amended 2026-09-23: Gregorian calendar; `DD/MM/YYYY` for display in both locales (`23/09/2026`); ISO 8601 for every machine-readable value; weeks start on Saturday. `DateField` references it and states none of it (PR-43).
-4. **The brand contrast constant** — `BRAND_CONFIG.md` §11, amended 2026-09-23: `foreground` meets **4.5:1** against `background` in every theme, because `foreground` is the text role. `ColorField` references it.
+1. **The platform has its own identity, and tenant output is the tenant's** — `OD-G24`, which replaces OD-G21. The platform's interface uses Clay and warm neutrals. A tenant's brand appears on its outputs, inside the brand frame, and as its logo in the header — nowhere else. The platform identity never enters tenant output, and tenant output never mirrors or changes with the interface language.
+2. **The proofing surround is achromatic, and only the proofing surround** — `OD-G25`, which replaces OD-G22. Wherever a brand or packaging is shown for judgement, it sits on a surround whose red, green and blue are equal. The rest of the platform is not bound to be achromatic.
+3. **The platform typeface is IBM Plex Sans with IBM Plex Sans Arabic** — `OD-G23`. One superfamily for both scripts, self-hosted, never loaded from a CDN (§2.3).
+4. **Date presentation** — `CALC_SPEC.md` R1-25's locale block, amended 2026-09-23: Gregorian calendar; `DD/MM/YYYY` for display in both locales (`23/09/2026`); ISO 8601 for every machine-readable value; weeks start on Saturday. `DateField` references it and states none of it (PR-43).
+5. **The brand contrast constant** — `BRAND_CONFIG.md` §11, amended 2026-09-23: `foreground` meets **4.5:1** against `background` in every theme, because `foreground` is the text role. `ColorField` references it.
 
 **Formatting homes.** `lib/locale/` formats every number `CALC_SPEC.md` does not govern — counts, upload percentages, byte sizes — and dates. Money and domain quantities, which `CALC_SPEC.md` governs, are formatted through `lib/money/` at P05 under ADR-011.
 
-## 1. The one idea: the chrome is a proofing surround
+## 1. The one idea: a warm, confident platform around a neutral proof
 
-Print colour is judged against neutral grey. Proofing booths surround the sheet with an achromatic field because a tinted surround shifts how the colour beside it is perceived — a cool grey makes a warm brand read warmer, a warm grey makes it read cooler. B2S is where a brand owner decides what their packaging will look like, so the platform's chrome is that surround.
+B2S has two jobs on one screen, and each gets the colour it needs.
 
-Every chrome neutral in this document is **achromatic — red, green and blue equal** — and that is a signed invariant (`OD-G22`), not a style this document could revise. Not a cool zinc, not a warm stone. The tenant's brand is the only colour on screen that belongs to anyone, and nothing in the chrome competes with it or tints the judgement of it.
+**The platform** is where a business owner works: onboarding, catalog, stock, invoices. It carries its own identity — Clay, a restrained terracotta, over warm natural neutrals — because a platform that looks like nothing reads as unfinished, and people trust a tool that looks cared for. Warm, crafted, human; never loud.
 
-That is where this system spends its boldness: in one place, inside the brand frame. Everything outside it is disciplined, quiet and consistent, so that the brand is the loudest thing on the screen and the chrome is the easiest to stop noticing. It is also why there is no platform accent colour (OD-G21), and why the primary action is solid neutral rather than a hue.
+**The proof** is where a brand is judged. Print colour is judged against neutral grey, because a tinted surround shifts how the colour beside it is perceived. So wherever a tenant's brand or packaging is shown for judgement, it sits on an achromatic surround (`OD-G25`). That grey appears nowhere else, and nothing warm appears inside it.
+
+The system spends its boldness in exactly two places. **Clay marks the one thing to do next** — the primary action, the current place in navigation, progress, focus, a selection. **The tenant's brand fills the proof.** Everything else is quiet, so both are unmistakable.
+
+Warmth is restrained by measurement, not taste: every neutral's chroma is capped (§2.2), so the interface reads as a professional platform with a warm temperament, not a warm theme.
 
 ---
 
@@ -48,59 +53,87 @@ That is where this system spends its boldness: in one place, inside the brand fr
 - The tokens currently in `app/globals.css` are **unconsumed** — P03-T06's inventory found no rule assigning them — so this set replaces them and nothing breaks.
 - `leading` replaces `line-height` in token names so that no identifier carries a bare `line` (`GLOSSARY.md` §5).
 - No raw colour, spacing, radius, duration, shadow, font-family or z-index value appears anywhere outside the token definitions (CF-172). A `--b2s-` custom property is defined only in `app/globals.css`.
-- **A page or component never introduces a chrome colour.** It uses a platform token or it is a defect. Every platform colour token is defined in §2.2 and §2.11, and every chrome neutral among them is achromatic (`OD-G22`).
+- **A page or component never introduces a colour.** It uses a platform token or it is a defect. The set of platform colour tokens is closed: every one is defined in §2.2 or §2.11, and the check asserts the set against this document in both directions. The proofing tokens are achromatic (`OD-G25`); every other platform colour is chosen, not constrained to grey.
 
 ### 2.2 Colour — platform
 
+**Neutrals.** Warm, natural and restrained.
+
 | Token | Light | Dark | Use |
 |---|---|---|---|
-| `--b2s-color-canvas` | `#f4f4f4` | `#171717` | Page background |
-| `--b2s-color-surface` | `#ffffff` | `#1f1f1f` | Panels, fields, table body |
-| `--b2s-color-sunken` | `#ededed` | `#141414` | Wells, table header, read-only fields |
-| `--b2s-color-surface-active` | `#e3e3e3` | `#333333` | Secondary and quiet pressed fill |
-| `--b2s-color-raised` | `#ffffff` | `#262626` | Menus, popovers, dialogs, notices |
-| `--b2s-color-border` | `#e0e0e0` | `#2e2e2e` | Decorative dividers **only** — never a control boundary |
-| `--b2s-color-border-control` | `#7a7a7a` | `#767676` | Every control boundary: fields, checkboxes, switch tracks |
-| `--b2s-color-text` | `#1a1a1a` | `#f2f2f2` | Primary text |
-| `--b2s-color-text-muted` | `#545454` | `#b3b3b3` | Secondary text, help |
-| `--b2s-color-text-subtle` | `#6b6b6b` | `#999999` | Metadata, placeholders |
-| `--b2s-color-action` | `#1a1a1a` | `#f2f2f2` | Primary action fill |
-| `--b2s-color-action-text` | `#ffffff` | `#1a1a1a` | Text on primary action |
-| `--b2s-color-action-hover` | `#3d3d3d` | `#d6d6d6` | Primary action, hovered |
-| `--b2s-color-action-active` | `#000000` | `#bdbdbd` | Primary action, pressed |
-| `--b2s-color-focus` | `#1a1a1a` | `#f2f2f2` | Focus ring |
-| `--b2s-color-danger-action` | `#b3261e` | `#c62f26` | Destructive fill; text `--b2s-color-danger-action-text` |
-| `--b2s-color-danger-action-text` | `#ffffff` | `#ffffff` | Text on the danger action |
-| `--b2s-color-danger-action-active` | `#7a1a14` | `#8f211b` | Destructive fill, pressed |
-| `--b2s-color-success`, `--b2s-color-success-bg` | `#1f7a3d` / `#eef7f1` | `#6fcf8f` / `#16261b` | Status |
-| `--b2s-color-warning`, `--b2s-color-warning-bg` | `#8a5a00` / `#fbf5e6` | `#e6b450` / `#2a2212` | Status |
-| `--b2s-color-danger`, `--b2s-color-danger-bg` | `#b3261e` / `#fbeeed` | `#f08a82` / `#2e1a19` | Status |
-| `--b2s-color-info`, `--b2s-color-info-bg` | `#1f5fae` / `#edf3fb` | `#7fb0ec` / `#17222f` | Status |
+| `--b2s-color-canvas` | `#f7f4f0` | `#1a1715` | Page background |
+| `--b2s-color-surface` | `#fffdfa` | `#221f1c` | Cards, panels, fields, table body |
+| `--b2s-color-sunken` | `#f0ebe5` | `#171412` | Wells, table header, side panels, read-only fields |
+| `--b2s-color-surface-active` | `#e7e0d8` | `#36312d` | Secondary and quiet pressed fill |
+| `--b2s-color-raised` | `#ffffff` | `#2a2623` | Menus, popovers, dialogs, notices |
+| `--b2s-color-border` | `#e4ddd5` | `#36302b` | Decorative dividers **only** — never a control boundary |
+| `--b2s-color-border-control` | `#857a70` | `#8a8078` | Every control boundary: fields, checkboxes, switch tracks |
+| `--b2s-color-text` | `#262220` | `#f3efea` | Primary text |
+| `--b2s-color-text-muted` | `#57504a` | `#c5bdb5` | Secondary text, help |
+| `--b2s-color-text-subtle` | `#6e665f` | `#a39a92` | Metadata, placeholders |
 
-**Status colours are functional, not decorative.** They carry the four states and nothing else. They never appear as brand, accent, emphasis or illustration. The closed chromatic set is those four colours and their backgrounds, plus `danger-action`, `danger-action-hover` and `danger-action-active`. `danger-action-text` is `#ffffff` in both themes and is achromatic. `action-active` and `surface-active` are achromatic.
+**Clay — the platform accent.**
 
-**`border` and `border-control` are different jobs.** WCAG 2.2 1.4.11 requires 3:1 only where a boundary is needed to identify a control. Dividers are decorative and sit quieter; control boundaries meet 3:1 on every surface.
-
-**Contrast, computed rather than asserted** (PR-23). Fifty-six text and control pairs, both themes — each of `text`, `text-muted` and `text-subtle` on `canvas`, `surface`, `sunken` and `raised`; `border-control` and `focus` on those four surfaces; `action-text` on `action` and on `action-hover`; `danger-action-text` on `danger-action` and on `danger-action-hover`; and each status colour on its background. Every one meets WCAG 2.2 AA. Selected rows:
-
-| Pair | Light | Dark | Needs |
+| Token | Light | Dark | Use |
 |---|---|---|---|
-| text on surface | 17.40 | 14.72 | 4.5 |
-| text-muted on surface | 7.57 | 7.86 | 4.5 |
-| text-subtle on canvas (lowest) | 4.85 | 6.29 | 4.5 |
-| border-control, lowest | 3.67 on sunken | 3.33 on raised | 3.0 |
-| action-text on action | 17.40 | 15.55 | 4.5 |
-| action-text on action-active | 21.00 | 9.26 | 4.5 |
-| danger-action-text on danger-action | 6.54 | 5.47 | 4.5 |
-| danger-action-text on danger-action-hover | 8.57 | 7.02 | 4.5 |
-| danger-action-text on danger-action-active | 10.58 | 8.75 | 4.5 |
-| text on surface-active | 13.56 | 11.29 | 4.5 |
-| success on success-bg | 4.91 | 8.29 | 4.5 |
-| warning on warning-bg | 5.45 | 8.24 | 4.5 |
-| danger on danger-bg | 5.78 | 6.78 | 4.5 |
-| info on info-bg | 5.69 | 7.14 | 4.5 |
+| `--b2s-color-action` | `#b04f2c` | `#e08961` | Primary action fill, progress fill, checked controls, current-navigation indicator |
+| `--b2s-color-action-text` | `#ffffff` | `#1a1715` | Text and marks on Clay |
+| `--b2s-color-action-hover` | `#963f20` | `#eda07c` | Primary action, hovered |
+| `--b2s-color-action-active` | `#7e341a` | `#f2b696` | Primary action, pressed |
+| `--b2s-color-accent-soft` | `#f5e7e0` | `#3a2a22` | Selected and current states: navigation item, segmented option, selected row |
+| `--b2s-color-accent-text` | `#9a4424` | `#eda07c` | Clay text on a neutral: links, the current navigation label, an eyebrow |
+| `--b2s-color-focus` | `#b04f2c` | `#e08961` | Focus ring |
 
-A control's boundary is measured against the surface around it, which pressing does not change, so `border-control` against `surface-active` (2.78 in dark) is not a WCAG 2.2 1.4.11 requirement. Only `--b2s-color-border-control` owes 3:1, and it owes it against every platform surface a control can sit on — canvas, surface, sunken and raised — in both themes. `--b2s-color-border` is decorative and exempt. The WCAG contrast function has one home, `lib/colour/`. `ColorField` uses it, and `BRAND_CONFIG.md` §11's validation will. The static contrast gate does not evaluate brand pairs; they are runtime data, bound at profile completion.
+**Clay has five jobs and no others:** the primary action, the current place in navigation, progress, focus, and a selection. It is never a large background, never decoration, never a status, and never inside the proof (§3). One primary action per region still holds (§6, `Button`).
+
+**Support, status and danger.**
+
+| Token | Light | Dark | Use |
+|---|---|---|---|
+| `--b2s-color-support` | `#5b6a50` | `#a7b697` | Sage: supporting icons and completed setup steps. Subordinate to Clay, never a status |
+| `--b2s-color-support-soft` | `#e6ebdf` | `#262b22` | Sage tile behind a supporting icon |
+| `--b2s-color-danger-action` | `#9e1b32` | `#c4304b` | Destructive fill; text `--b2s-color-danger-action-text` |
+| `--b2s-color-danger-action-text` | `#ffffff` | `#ffffff` | Text on the danger action |
+| `--b2s-color-danger-action-active` | `#6c1223` | `#8e1f34` | Destructive fill, pressed |
+| `--b2s-color-success`, `--b2s-color-success-bg` | `#2e6b45` / `#e4efe7` | `#7cc196` / `#18261d` | Status |
+| `--b2s-color-warning`, `--b2s-color-warning-bg` | `#8a5a00` / `#faf0da` | `#e2b04d` / `#2a2211` | Status |
+| `--b2s-color-danger`, `--b2s-color-danger-bg` | `#9e1b32` / `#f9e3e6` | `#f59aaa` / `#33191e` | Status |
+| `--b2s-color-info`, `--b2s-color-info-bg` | `#3b5a7e` / `#e5ecf4` | `#9fb8d8` / `#1a2230` | Status |
+
+**The proof — achromatic, brand previews only** (`OD-G25`).
+
+| Token | Light | Dark | Use |
+|---|---|---|---|
+| `--b2s-color-proof` | `#e4e4e4` | `#3a3a3a` | The surround behind every brand and packaging preview. Red, green and blue equal |
+| `--b2s-color-proof-edge` | `#cccccc` | `#555555` | The mount boundary of a brand frame. Red, green and blue equal |
+
+These two are the only achromatic surfaces in the platform, and they appear only in `BrandFrame` (§3). A warm neutral never sits inside the proof, and proof grey never styles anything else.
+
+**Status colours are functional, not decorative.** They carry the four states and nothing else, and never appear as brand, accent, emphasis or illustration.
+
+**Danger is not Clay.** Clay is a warm terracotta; danger is a deeper, cooler crimson. Measured as CIE76 colour difference, `action` against `danger-action` is 25.6 in light and 39.0 in dark, `action` against `danger` 25.6 and 31.0, and `accent-text` against `danger` 24.1 and 26.8 — every pair at least 20, the floor this document sets. Colour is still never the only signal: every danger message carries its icon and words (§6, `Notice`, `StatusBadge`), and a destructive action names what it destroys (§6, `Dialog`).
+
+**Warmth, capped.** Warmth is measured as CIE L*a*b* chroma. `canvas`, `surface`, `sunken` and `raised` stay at or below **4** in both themes; every other neutral at or below **8**. Measured: canvas 2.3, surface 1.7, sunken 3.5 in light; the warmest neutral is `border-control` at 7.4. The large surfaces are about forty per cent less saturated than the mockups the owner reviewed, so the platform reads as warm without reading as tinted.
+
+**`border` and `border-control` are different jobs.** WCAG 2.2 1.4.11 requires 3:1 only where a boundary is needed to identify a control. Dividers are decorative and sit quieter; control boundaries meet 3:1 on every surface. A control's boundary is measured against the surface around it, which pressing does not change.
+
+**Contrast, computed rather than asserted** (PR-23). Ninety-two pairs, forty-six per theme: each of `text`, `text-muted`, `text-subtle` and `accent-text` on `canvas`, `surface`, `sunken` and `raised`; `border-control`, `focus` and `action` against those four surfaces at 3:1; `action-text` on `action`, `action-hover` and `action-active`; `danger-action-text` on `danger-action`, `danger-action-hover` and `danger-action-active`; each status colour on its background and on `surface`; and `accent-text` on `accent-soft`, `text` on `accent-soft`, `text` on `surface-active` and `support` on `support-soft`. Every one meets WCAG 2.2 AA. The lowest text pair is 4.75 in light and 5.42 in dark; the lowest boundary 3.53 and 3.89. Selected rows:
+
+| Pair | Light | Dark |
+|---|---|---|
+| text on surface | 15.53 | 14.32 |
+| text-subtle on canvas | 5.14 | 6.45 |
+| accent-text on canvas | 5.94 | 8.43 |
+| accent-text on accent-soft | 5.39 | 6.47 |
+| action-text on action | 5.25 | 6.73 |
+| action-text on action-active | 8.77 | 10.11 |
+| danger-action-text on danger-action | 7.90 | 5.42 |
+| border-control on sunken, 3:1 | 3.53 | 4.75 |
+| focus on surface, 3:1 | 5.17 | 6.18 |
+| danger on danger-bg | 6.46 | 7.77 |
+| support on support-soft | 4.78 | 6.74 |
+
+`--b2s-color-border` is decorative and exempt. The WCAG contrast function has one home, `lib/colour/`. `ColorField` uses it, and `BRAND_CONFIG.md` §11's validation will. The static contrast gate does not evaluate brand pairs; they are runtime data, bound at profile completion.
 
 Placeholders use `text-subtle` and meet 4.5:1, but a placeholder is never a substitute for a caption (§6, `Field`).
 
@@ -127,10 +160,10 @@ Chosen deliberately rather than by default. The two were designed as one superfa
 | `md` | 1rem · 16px | 1.5 · 24px | 1.75 · 28px | Comfortable body |
 | `lg` | 1.125rem · 18px | 1.44 · 26px | 1.67 · 30px | Section headings, compact |
 | `xl` | 1.25rem · 20px | 1.4 · 28px | 1.6 · 32px | Page headings compact; section headings comfortable |
-| `2xl` | 1.5rem · 24px | 1.33 · 32px | 1.5 · 36px | Page headings, comfortable |
+| `2xl` | 1.75rem · 28px | 1.29 · 36px | 1.5 · 42px | Page headings, comfortable |
 | `3xl` | 2rem · 32px | 1.25 · 40px | 1.44 · 46px | Wizard step titles. Sparingly |
 
-Each step is a token: `--b2s-text-xs`, `--b2s-text-sm`, `--b2s-text-md`, `--b2s-text-lg`, `--b2s-text-xl`, `--b2s-text-2xl`, `--b2s-text-3xl`, each with `--b2s-leading-{step}` resolved by `:lang(ar)` as the table states. Weights are tokens: `--b2s-weight-regular` (400), `--b2s-weight-medium` (500), `--b2s-weight-semibold` (600).
+Each step is a token: `--b2s-text-xs`, `--b2s-text-sm`, `--b2s-text-md`, `--b2s-text-lg`, `--b2s-text-xl`, `--b2s-text-2xl`, `--b2s-text-3xl`, each with its leading token — `--b2s-leading-xs`, `--b2s-leading-sm`, `--b2s-leading-md`, `--b2s-leading-lg`, `--b2s-leading-xl`, `--b2s-leading-2xl`, `--b2s-leading-3xl` — resolved by `:lang(ar)` as the table states. (Revision 2 names them one by one; Revision 1 gave only the pattern `--b2s-leading-{step}`, which a parser reading literal names cannot see.) Weights are tokens: `--b2s-weight-regular` (400), `--b2s-weight-medium` (500), `--b2s-weight-semibold` (600).
 
 **Numbers** use tabular figures in tables, numeric fields and totals, so digits align in columns. **A monospace face is never used for data**; tabular figures of the interface face do the job without making numbers look like code.
 
@@ -153,26 +186,31 @@ A 4px grid. Only these values; no raw `px` anywhere (CF-172).
 
 ### 2.5 Radius
 
-Radius grows with the size of the container. One radius on everything is a tell of an assembled kit, not a system.
+Radius grows with the size of the container: generous enough to feel crafted, controlled enough to stay a tool. One radius on everything is a tell of an assembled kit, not a system.
 
 | Token | Value | Use |
 |---|---|---|
-| `--b2s-radius-sm` | 4px | Checkboxes, badges, compact controls |
-| `--b2s-radius-md` | 6px | Controls, table containers, popovers |
-| `--b2s-radius-lg` | 10px | Dialogs, sheets, notices |
-| `--b2s-radius-full` | 9999px | Switch tracks and thumbs |
+| `--b2s-radius-sm` | 6px | Checkboxes, badges, swatches' label chips |
+| `--b2s-radius-md` | 10px | Controls: buttons, fields, selects, segmented options |
+| `--b2s-radius-lg` | 16px | Cards, table containers, dialogs, notices |
+| `--b2s-radius-xl` | 20px | The proof surround and large panels |
+| `--b2s-radius-full` | 9999px | Switch tracks and thumbs, colour swatches, avatars |
 
 ### 2.6 Elevation and containment
 
-The system is **flat by default**. Sections are separated by space and hierarchy, not by a card around everything. A bordered container appears only where it groups content that moves together — a table, a form section with its own save, a brand frame.
+**Subtle depth, where it clarifies.** Content that belongs together sits on a card — a surface with a `border-width` boundary in `border` and, in light, a soft shadow. Sections are still separated first by space and hierarchy; a shadow is added only where it makes the order of layers clearer, never as decoration.
 
 | Level | Light | Dark | Use |
 |---|---|---|---|
-| `--b2s-elevation-1` | `0 1px 2px rgb(0 0 0 / 0.06), 0 4px 12px rgb(0 0 0 / 0.08)` | none; `raised` fill and a `border-width` boundary in `border` | Menus, popovers, tooltips |
-| `--b2s-elevation-2` | `0 2px 4px rgb(0 0 0 / 0.06), 0 12px 32px rgb(0 0 0 / 0.14)` | none; `raised` fill and a `border-width` boundary in `border` | Dialogs, sheets |
-| `--b2s-elevation-3` | `0 2px 4px rgb(0 0 0 / 0.06), 0 8px 24px rgb(0 0 0 / 0.12)` | none; `raised` fill and a `border-width` boundary in `border` | Notices |
+| `--b2s-elevation-card` | `0 1px 2px rgb(38 34 32 / 0.04), 0 12px 32px -18px rgb(38 34 32 / 0.18)` | none; `surface` fill and a `border-width` boundary in `border` | Cards and panels |
+| `--b2s-elevation-action` | `0 1px 2px rgb(38 34 32 / 0.10), 0 6px 16px -8px rgb(176 79 44 / 0.45)` | none | The primary action only |
+| `--b2s-elevation-1` | `0 1px 2px rgb(38 34 32 / 0.06), 0 8px 20px -8px rgb(38 34 32 / 0.16)` | none; `raised` fill and a `border-width` boundary in `border` | Menus, popovers, tooltips |
+| `--b2s-elevation-2` | `0 2px 4px rgb(38 34 32 / 0.06), 0 16px 40px -12px rgb(38 34 32 / 0.22)` | none; `raised` fill and a `border-width` boundary in `border` | Dialogs, sheets |
+| `--b2s-elevation-3` | `0 2px 4px rgb(38 34 32 / 0.06), 0 12px 28px -10px rgb(38 34 32 / 0.18)` | none; `raised` fill and a `border-width` boundary in `border` | Notices |
 
-Shadows do nothing on a dark surface, so dark elevation is expressed as a lighter fill and a border.
+Shadows do nothing on a dark surface, so dark elevation is expressed as a lighter fill and a border. Shadow colour is the warm text colour at low alpha, never black, so depth reads as part of the palette; the one Clay-tinted shadow belongs to the primary action. No shadow ever appears inside the proof (§3).
+
+**Hover on an interactive card** raises it from `elevation-card` to `elevation-1` over `duration-base`; nothing translates. Under reduced motion the change is instant.
 
 ### 2.7 Density
 
@@ -243,7 +281,7 @@ Every fixed measure a component uses is a token here, so that no component carri
 | `--b2s-dialog-width-large` | 48rem | `Dialog` large |
 | `--b2s-logo-height` | 28px compact · 32px comfortable | `PageHeader` |
 | `--b2s-color-scrim` | `rgb(0 0 0 / 0.4)`, both themes | `Dialog` backdrop |
-| `--b2s-color-danger-action-hover` | `#931f18` light · `#a82820` dark | `Button` danger, hovered |
+| `--b2s-color-danger-action-hover` | `#84162a` light · `#a8263e` dark | `Button` danger, hovered |
 | `--b2s-duration-pulse` | 1200ms | `Skeleton` |
 | `--b2s-delay-loader` | 150ms | `Skeleton`, `Spinner`, every loading state |
 | `--b2s-delay-tooltip` | 500ms | `Tooltip` |
@@ -269,7 +307,7 @@ The six `--b2s-layer-*` tokens are every z-index in the catalog, and no other va
 
 ## 3. The brand layer
 
-`BrandFrame` is the only component that consumes brand tokens (OD-G21, `UX_PRINCIPLES.md` §2). Everything inside it renders in the brand; everything outside it renders in the platform.
+`BrandFrame` is the only component that consumes brand tokens (`OD-G24`, `UX_PRINCIPLES.md` §2). Everything inside it renders in the brand; everything outside it renders in the platform.
 
 **Brand tokens**, defined by `BrandFrame` from a resolved `BrandProfile`:
 
@@ -282,11 +320,13 @@ The six `--b2s-layer-*` tokens are every z-index in the catalog, and no other va
 
 1. **No platform control inside a frame.** Editing affordances — edit, replace, remove — sit outside the frame's boundary, in chrome. The platform cannot refuse a brand for being that brand, but it can refuse to put a platform control on top of one (`UX_PRINCIPLES.md` §7).
 2. **Inside a frame, no platform token is referenced. Outside one, no brand token is** (CF-171).
-3. **The frame is a proofing mount:** a `border-width` boundary in `border-control` and `space-5` of neutral surround between the chrome and the brand's own `background`.
+3. **The frame is a proofing mount:** the `proof` surround at `radius-xl`, a `border-width` boundary in `proof-edge`, and `space-5` of surround between the chrome and the brand's own `background`. These are the only platform tokens the frame uses (`OD-G25`).
 4. **Contrast inside a frame** is bound by `BRAND_CONFIG.md` §11's `foreground`/`background` constant, not by the platform's AA rule. The frame never "fixes" a brand's colours.
 5. **Missing values are named, never substituted** (`BRAND_CONFIG.md` §3, §9, §11). A missing role shows a named gap in that role's place. A missing locale string shows the field and the locale. A missing typeface pair renders the text in the platform face with a visible marker naming the pair — so the gap is seen, never hidden behind a plausible substitute.
 6. **The tenant's logo in the header is an image, not a brand-token consumer.** It needs no frame (§7, `PageHeader`).
 7. **A colour swatch in chrome is data, not a token.** A `ColorField` showing a stored `color_value` renders that value inline; it is not a brand-token reference, and CF-171 must not treat it as one.
+8. **The platform identity never enters the proof.** No Clay, no warm neutral, no platform shadow and no platform typeface styles anything inside the surround. A brand that happens to use terracotta shows its own terracotta, not the platform's (`OD-G24`).
+9. **Tenant output never mirrors.** What a frame shows keeps its physical layout, orientation, typography, numerals and imagery whatever the interface language. Switching the interface from English to Arabic mirrors the chrome around the frame and changes nothing inside it (`OD-G24`, §4 rule 12).
 
 ---
 
@@ -303,6 +343,7 @@ The six `--b2s-layer-*` tokens are every z-index in the catalog, and no other va
 9. **Steppers and progress** flow from start to end.
 10. **Arabic punctuation** — `،` `؛` `؟` — comes from the catalogs, never from code.
 11. **Plurals follow the locale's plural categories.** Arabic has six — zero, one, two, few, many, other — and every counted string carries all six in `ar`. **No string is ever built by concatenation**, because word order, gender and number agreement differ between the two languages.
+12. **Tenant output is outside interface direction.** A brand frame, a packaging preview and every generated output take their direction from the output, never from the interface. The chrome mirrors; the product does not. A bilingual field orders its locales by the business's default language, not the interface's, so switching the interface never reorders a tenant's fields (§6, `BilingualField`).
 
 CF-179 renders every primitive in `ar` and checks every rule above that a rendering can observe.
 
@@ -342,7 +383,7 @@ parts: [container, icon_start?, text, icon_end?, spinner?]
 variants: [primary, secondary, quiet, danger]
 sizes: [compact, comfortable]
 states:
-  default: primary is action fill with action-text; secondary is surface fill with border-control; quiet is text only; danger is danger-action fill with danger-action-text
+  default: primary is action fill with action-text and elevation-action; secondary is surface fill with border-control; quiet is text only; danger is danger-action fill with danger-action-text
   hover: primary to action-hover; secondary and quiet to sunken fill; danger to danger-action-hover
   focus: universal focus ring
   active: primary to action-active; secondary and quiet to surface-active; danger to danger-action-active; no movement, no scale
@@ -353,7 +394,7 @@ states:
 keyboard: [Enter activates, Space activates]
 aria: native button element; an icon-only button carries an accessible name from the catalog; loading sets aria-busy and aria-disabled and never moves focus away
 mirrors: icon_start and icon_end are logical; a directional icon flips by its registry flag
-tokens: [control-height, control-padding-inline, radius-md, color-action, color-action-text, color-action-hover, color-action-active, color-surface, color-surface-active, color-border-control, color-sunken, color-danger-action, color-danger-action-text, color-danger-action-hover, color-danger-action-active, color-focus, focus-width, focus-offset, text-body, icon-size, duration-quick, delay-loader]
+tokens: [control-height, control-padding-inline, radius-md, color-action, color-action-text, color-action-hover, color-action-active, color-surface, color-surface-active, color-border-control, color-sunken, color-danger-action, color-danger-action-text, color-danger-action-hover, color-danger-action-active, color-focus, focus-width, focus-offset, text-body, icon-size, duration-quick, delay-loader, elevation-action]
 ```
 
 **Use:** one `primary` per region, for the action the region exists for. `secondary` for alternatives. `quiet` for low-emphasis and repeated actions — every row action in a table. `danger` for irreversible actions only. Archiving is reversible and is `secondary`.
@@ -370,7 +411,7 @@ parts: [text, icon_end?]
 variants: [inline, standalone]
 sizes: [compact, comfortable]
 states:
-  default: text colour, underlined
+  default: accent-text colour, underlined
   hover: underline thickens to focus-width
   focus: universal focus ring
   active: text-muted
@@ -381,7 +422,7 @@ states:
 keyboard: [Enter follows]
 aria: native anchor; opening a new window is announced by an icon with an accessible name
 mirrors: icon_end is logical; the external-link arrow flips by its registry flag
-tokens: [color-text, color-text-muted, color-focus, text-body]
+tokens: [color-accent-text, color-text-muted, color-focus, text-body]
 ```
 
 **The underline is what makes it a link.** With no accent colour in the chrome, a link is never identified by colour — which WCAG requires anyway.
@@ -593,7 +634,7 @@ states:
 keyboard: [browse_button is a secondary Button; each file's actions are Buttons]
 aria: dragging is never the only way — browse_button always works; progress uses a progressbar role with a formatted value; completion is announced politely
 mirrors: file name isolated left-to-right; actions at inline-end
-tokens: [radius-md, color-border-control, color-sunken, color-text, color-text-muted, color-danger, color-success, space-5, text-sm]
+tokens: [radius-md, color-border-control, color-sunken, color-action, color-text, color-text-muted, color-danger, color-success, space-5, text-sm]
 ```
 
 **browse_button is a `secondary` Button.** A FileDrop sits inside a form region whose primary action is elsewhere, and Button allows one primary per region. **Always `comfortable`.** An upload is a brand task, never a dense operation. FileDrop is presentation only. It performs no upload and chooses no storage. Accepted types, the size limit and progress arrive as props. The limit and each file's size are shown through `lib/locale/`'s byte format, and progress through its percentage format. The accepted types and size limit come from the consuming module's specification, not from this component; the component only shows them. Where the object lands is `ADR-008` and `OD-G20`'s business, not this document's.
@@ -669,11 +710,11 @@ states:
   loading: skeleton rows at the current row height, preserving column widths, after delay-loader
   error: one full-width row within the body naming what failed, with retry and the request identifier
   empty: two distinct cases — first use says what goes here and offers the action that creates the first row; no results says nothing matches the filters and offers to clear them
-  selected: row fill to sunken with a checked selection cell; bulk_action_bar shows the formatted count
+  selected: row fill to accent-soft with a checked selection cell; bulk_action_bar shows the formatted count
 keyboard: [Tab moves through interactive elements only; Space toggles the focused row's selection; sort controls are Buttons]
 aria: native table element with th scope; sort state via aria-sort on the header; the status region announces result counts and completed bulk actions
 mirrors: column order follows reading direction; the selection column sits at inline-start and row_actions at inline-end; a sticky first column sticks at inline-start
-tokens: [row-height, cell-padding-block, cell-padding-inline, border-width, color-surface, color-sunken, color-border, color-text, color-text-muted, text-body, radius-md, delay-loader]
+tokens: [row-height, cell-padding-block, cell-padding-inline, border-width, color-surface, color-sunken, color-accent-soft, color-border, color-text, color-text-muted, text-body, radius-lg, delay-loader]
 ```
 
 **Numeric cells render what the caller passes**, end-aligned and tabular. Money and domain quantities are formatted by the caller through `lib/money/` at P05, never by the table. Counts the table itself shows go through `lib/locale/`. **Identifiers are never truncated**, because a truncated SKU cannot be matched; prose truncates with the full value available on hover and on focus. **Numbers are never truncated.**
@@ -817,7 +858,7 @@ parts: [mount_boundary, surround, brand_canvas, brand_content, gap_markers?]
 variants: [preview]
 sizes: [comfortable]
 states:
-  default: brand_canvas in --brand-background inside a neutral surround and a boundary of border-width in border-control
+  default: brand_canvas in --brand-background inside the achromatic proof surround at radius-xl, with a boundary of border-width in proof-edge
   hover: n/a — the frame is a container; its content is brand-rendered and not a platform control
   focus: n/a — nothing inside the frame is a platform control; editing affordances live outside it
   active: n/a — the frame is a container
@@ -829,7 +870,7 @@ states:
 keyboard: [none of its own]
 aria: region labelled with the brand or line name; gap markers are text, not colour alone
 mirrors: brand_content follows the direction of the locale being previewed, which may differ from the interface's
-tokens: [border-width, color-border-control, space-5, brand-primary, brand-secondary, brand-accent, brand-background, brand-foreground, brand-muted, brand-critical, brand-font-heading-latin, brand-font-heading-arabic, brand-font-body-latin, brand-font-body-arabic]
+tokens: [border-width, color-proof, color-proof-edge, radius-xl, space-5, brand-primary, brand-secondary, brand-accent, brand-background, brand-foreground, brand-muted, brand-critical, brand-font-heading-latin, brand-font-heading-arabic, brand-font-body-latin, brand-font-body-arabic]
 ```
 
 **The only component allowed to consume `--brand-*` tokens**, and the only one that defines them (§3). **The previewed locale can differ from the interface locale**: a member working in English can preview the Arabic label, and the frame renders that content right-to-left inside a left-to-right page.
@@ -970,7 +1011,7 @@ Every gate the catalog landing task builds, and the part of this document it hol
 | CF-169 | Static | `UX_PRINCIPLES.md` §4; §4 rule 11 here | `en` and `ar` key sets, including every plural category |
 | CF-170 | Static | `UX_PRINCIPLES.md` §4 (CF-74) | Duplicate values per catalog namespace |
 | CF-171 | Static | §3 rules 2 and 7 | `--brand-*` is referenced only in `BrandFrame`'s stylesheet; within it, `--brand-*` only on canvas and content selectors, and `--b2s-*` only on mount and surround selectors; `--brand-*` is defined only by `BrandFrame`, and only from expressions |
-| CF-172 | Static | §2.1; §1; §0 items 1 and 2 | Raw colour, spacing, radius, duration, shadow, font-family or z-index outside token definitions, in every stylesheet and inline style; a `--b2s-` custom property defined only in `app/globals.css`; every chrome neutral achromatic; font families only the two `OD-G23` names |
+| CF-172 | Static | §2.1; §2.2; §0 items 1 to 3 | Raw colour, spacing, radius, duration, shadow, font-family or z-index outside token definitions; the colour token set closed against §2.2 and §2.11 in both directions; `proof` and `proof-edge` achromatic; the warmth ceiling; the Clay–danger distinction floor; font families only the two `OD-G23` names |
 | CF-198 | Static | §2.2 | Text and background declared together, or through a state selector of the same component, at 4.5:1 in both themes. Only `--b2s-color-border-control` is a boundary, at 3:1 against canvas, surface, sunken and raised, in both themes. `--b2s-color-border` is decorative and exempt. Brand pairs are not evaluated. Pairs inherited from an ancestor are outside it. Not a substitute for CF-177 |
 | CF-173 | Static | §5; every `component` block | Each primitive implements every state not marked `n/a` |
 | CF-174 | Static | Every `component` block | Variant and size names match exactly |
@@ -1014,8 +1055,11 @@ AppShell
 
 ## 12. What this forecloses
 
-- A chrome neutral with any tint, and with it a surround that shifts how a brand's colour is judged.
-- A platform accent colour of any hue, including gold.
+- A proofing surround with any tint, and proof grey anywhere but around a brand.
+- The platform identity — Clay, a warm neutral, a platform shadow or face — inside tenant output.
+- Clay as a status, a large background or decoration, and a neutral warmer than the stated ceiling.
+- Tenant output that mirrors, reorders or restyles with the interface language.
+- Danger told apart from Clay by colour alone.
 - A brand token outside `BrandFrame`, a platform token inside it, and a platform control inside a brand.
 - A physical `left` or `right` anywhere in the catalog.
 - Letter-spacing on text that may be Arabic, and all-caps text anywhere.
@@ -1028,6 +1072,8 @@ AppShell
 - A value the implementer chooses because this document did not state it.
 
 ## Corrections
+
+**Revision 2 — 2026-09-30, signed by the owner.** The owner reviewed the rendered catalog, rejected the monochrome chrome, and chose a platform identity from rendered mockups: Clay over warm neutrals, with the achromatic surround kept only around brand and packaging previews. Revision 2 replaces §0, §1, §2.2, §2.5 and §2.6 in full, changes one row of §2.3 and names its leading tokens one by one, changes one row of §2.11, adds rules 8 and 9 to §3 and rule 12 to §4, updates the TextLink, Button, DataTable, FileDrop and BrandFrame blocks, and rewrites the CF-172 row of §10 and the first two items of §12. It follows `OD-G24` and `OD-G25`, which replace OD-G21 and OD-G22. Token names are unchanged except for nine additions — `accent-soft`, `accent-text`, `support`, `support-soft`, `proof`, `proof-edge`, `radius-xl`, `elevation-card`, `elevation-action` — so every primitive keeps its contract. The Revision 1 text stands in the repository at `c5aebfe`: `git show c5aebfe:docs/product/DESIGN_SURFACE.md`. That commit is its record under PR-07; this note says where to find it rather than copying ten thousand words into the document it replaced.
 
 A correction changes the text in place, because the component blocks are a machine contract that gates parse and a contract that is wrong where it binds is wrong. This section records each prior text verbatim. Git keeps the rest.
 

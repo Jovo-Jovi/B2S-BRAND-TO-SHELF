@@ -1,12 +1,13 @@
 .mount {
-  border: var(--b2s-border-width) solid var(--b2s-color-border-control);
+  border: var(--b2s-border-width) solid var(--b2s-color-proof-edge);
+  border-radius: var(--b2s-radius-xl);
 }
 
 .surround {
   padding-block: var(--b2s-space-5);
   padding-inline: var(--b2s-space-5);
-  background-color: var(--b2s-color-canvas);
-  color: var(--b2s-color-text);
+  background-color: var(--b2s-color-proof);
+  border-radius: var(--b2s-radius-xl);
 }
 
 .canvas {
@@ -15,6 +16,10 @@
 
 .content {
   color: var(--brand-foreground);
+  font-size: medium;
+  line-height: normal;
+  letter-spacing: normal;
+  word-spacing: normal;
 }
 
 .content[lang="en"] {

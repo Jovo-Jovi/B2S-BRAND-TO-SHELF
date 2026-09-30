@@ -12,7 +12,7 @@
   font-size: var(--b2s-text-body);
   font-weight: var(--b2s-weight-medium);
   text-decoration: none;
-  transition-property: background-color, color, border-block-color, border-inline-color;
+  transition-property: background-color, color, border-block-color, border-inline-color, box-shadow;
   transition-duration: var(--b2s-duration-quick);
   transition-timing-function: var(--b2s-ease-standard);
 }
@@ -28,6 +28,7 @@
 .primary {
   background-color: var(--b2s-color-action);
   color: var(--b2s-color-action-text);
+  box-shadow: var(--b2s-elevation-action);
 }
 
 .primary:hover,

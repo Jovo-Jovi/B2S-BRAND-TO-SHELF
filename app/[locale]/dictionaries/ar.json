@@ -175,6 +175,11 @@
     "sampleActions": "إجراءات",
     "sampleEdit": "تحرير السطر",
     "sampleNothing": "لا يوجد شيء هنا بعد",
-    "sampleListFailed": "فشلت القائمة"
+    "sampleListFailed": "فشلت القائمة",
+    "welcomeTitle": "الترحيب",
+    "welcomeLanguage": "اللغة الافتراضية",
+    "welcomeCurrency": "العملة الأساسية",
+    "welcomeCurrencyPrimary": "دينار نموذجي",
+    "welcomeCurrencySecondary": "جنيه نموذجي"
   }
 }

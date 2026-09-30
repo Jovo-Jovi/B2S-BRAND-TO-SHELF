@@ -20,7 +20,7 @@ never edited in place.
 
 ## 2. Decision register
 
-98 decisions, all signed. None open.
+100 decisions, all signed. None open.
 
 ### Group A — Product identity
 
@@ -137,9 +137,11 @@ never edited in place.
 | **G18** | **A `Member` may own at most three active `Tenant`s and perform at most three provisioning acts per rolling 24 hours. Both are policy values, hardcoded to the free plan in Release 1 and supplied by `Subscription` in Release 3.** | SIGNED 2026-08-05 |
 | **G19** | **`public.operator` is a system-managed table. An Operator is provisioned only by migration or by direct administrative access to the database. No API role holds INSERT, UPDATE or DELETE on it. Operator is the least-privileged platform administrator: account metadata, usage and billing (OD-G10) and nothing else. No text in this repository may describe it as a super-admin, superuser, admin or staff role.** | SIGNED 2026-08-31 |
 | **G20** | **Object storage stays Supabase Storage. `MediaAsset` and `AssetRendition` are objects under tenant-isolated paths governed by storage policies. ADR-008 stands. Cloudflare R2 is declined for Release 1 on isolation, not cost. No Asset-tier column, type or function name may contain the vendor. Revisit at P06 against measured object sizes and egress.** | SIGNED 2026-09-17 |
-| **G21** | **The platform's navigation, forms, tables, buttons and status indicators use one platform look for every tenant. A tenant's brand appears on its outputs, on the surfaces where that brand is being shown or edited, and as the tenant's logo in the header. The design-surface token layer is platform tokens for chrome, and the seven ColorRoles only where a brand is rendered or edited.** | SIGNED 2026-09-22 |
-| **G22** | **Every chrome neutral colour has red, green and blue equal. The platform introduces no colour cast: no tinted, warm, cool or signature grey, and no gold. A page or component uses a platform colour token or it is a defect.** | SIGNED 2026-09-23 |
+| **G21** | **The platform's navigation, forms, tables, buttons and status indicators use one platform look for every tenant. A tenant's brand appears on its outputs, on the surfaces where that brand is being shown or edited, and as the tenant's logo in the header. The design-surface token layer is platform tokens for chrome, and the seven ColorRoles only where a brand is rendered or edited.** | SUPERSEDED 2026-10-01 by OD-G24 |
+| **G22** | **Every chrome neutral colour has red, green and blue equal. The platform introduces no colour cast: no tinted, warm, cool or signature grey, and no gold. A page or component uses a platform colour token or it is a defect.** | SUPERSEDED 2026-10-01 by OD-G25 |
 | **G23** | **The platform's interface is set in IBM Plex Sans for Latin and IBM Plex Sans Arabic for Arabic, treated as one superfamily. The font files are self-hosted and committed as assets, and are never loaded from a content delivery network. A tenant's typefaces are used only inside the brand frame (OD-G21) and never replace the platform face in chrome.** | SIGNED 2026-09-23 |
+| **G24** | **The platform's interface carries its own identity: Clay, a restrained terracotta, as its single accent, over warm natural neutrals. Clay marks primary actions, the current place in navigation, progress, focus and selection, and nothing else. A tenant's brand appears on its outputs, inside the brand frame, and as its logo in the header, and nowhere else. The platform identity never enters tenant output. Tenant output never mirrors and never changes with the interface language. B2S's mark never appears on tenant output. Status belongs to the platform.** | SIGNED 2026-10-01 |
+| **G25** | **Wherever a tenant's brand or packaging is shown for judgement, it sits on an achromatic surround. These are the only achromatic surfaces the platform defines, and they appear nowhere else. The rest of the platform uses warm neutrals, with chroma capped as DESIGN_SURFACE.md §2.2 states.** | SIGNED 2026-10-01 |
 
 ### Group H — Quality & acceptance
 
@@ -548,6 +550,9 @@ unnecessary: ADR-013 points local development at staging.
 Postgres container.
 
 ### OD-G21 — The platform's own interface is neutral; tenant brand is rendered, not worn
+
+**SUPERSEDED 2026-10-01 by OD-G24.** The decision, reasoning and forecloses below are the original text, unedited.
+
 **Signed 2026-09-22.**
 
 Filed in Group G. The register's convention is the group title. Group D
@@ -583,6 +588,9 @@ restyle of navigation, forms, tables or status; B2S's mark on any
 tenant output.
 
 ### OD-G22 — The chrome is achromatic
+
+**SUPERSEDED 2026-10-01 by OD-G25.** The decision, reasoning, held-by and forecloses below are the original text, unedited.
+
 **Signed 2026-09-23.**
 
 Filed in Group G. It extends OD-G21 from no accent to no cast, and it
@@ -633,4 +641,26 @@ definitions other than these two and their generic fallbacks;
 
 **Forecloses.** A second chrome typeface, a runtime font CDN, a per-page
 font choice, and a monospace face for data.
+
+### OD-G24 — The platform has its own identity; tenant output is the tenant's
+**Signed 2026-10-01.**
+
+Filed in Group G. It replaces OD-G21. OD-G21's text stands, unedited.
+
+**Decision.** The platform's interface carries its own identity: Clay, a restrained terracotta, as its single accent, over warm natural neutrals (DESIGN_SURFACE.md §2.2). Clay marks primary actions, the current place in navigation, progress, focus and selection, and nothing else. A tenant's brand — its colour roles, typefaces, logo and imagery — appears on its outputs, inside the brand frame, and as its logo in the header, and nowhere else. The platform identity never enters tenant output: no platform colour, neutral, shadow or typeface styles anything inside a brand frame or on a generated output. Tenant output never mirrors and never changes with the interface language: its layout, orientation, typography, numerals and imagery are set by the output itself. The digit system printed on an output belongs to that output's specification; CALC_SPEC.md R1-25 continues to govern numbers the platform renders in its own interface. B2S's mark never appears on tenant output. Status belongs to the platform.
+
+**Reasoning.** The owner reviewed the rendered monochrome catalog on 2026-09-30 and rejected it: a platform with no identity reads as unfinished, and B2S is the product brand owners choose. White-label means the tenant's brand is never displaced on its own output — not that the tool around it must look like nothing. OD-G21's reasons for keeping tenant colours off platform controls stand unchanged. The mirroring rule is new: a pouch is a physical object, and it's the same pouch whichever language its owner reads the interface in.
+
+**Supersedes OD-G21, whose text stands (PR-07). Forecloses.** Tenant colours on platform controls; any platform colour, neutral, shadow or face inside tenant output; tenant output that mirrors or restyles with the interface language; B2S's mark on tenant output; Clay as a status, a large background or decoration.
+
+### OD-G25 — The proofing surround is achromatic, and only the proofing surround
+**Signed 2026-10-01.**
+
+Filed in Group G. It replaces OD-G22. OD-G22's text stands, unedited.
+
+**Decision.** Wherever a tenant's brand or packaging is shown for judgement, it sits on an achromatic surround — --b2s-color-proof and --b2s-color-proof-edge, red, green and blue equal, in both themes. These are the only achromatic surfaces the platform defines, and they appear nowhere else. The rest of the platform uses warm neutrals, with chroma capped as DESIGN_SURFACE.md §2.2 states.
+
+**Reasoning.** A tinted surround shifts how the colour beside it is perceived, which matters where a brand is judged and nowhere else. OD-G22 applied it to the whole platform and removed the platform's identity to protect a judgement made in one place.
+
+**Supersedes OD-G22, whose text stands (PR-07). Forecloses.** A tinted proof; proof grey as a platform surface; anything warm inside the proof; a neutral above the ceiling.
 

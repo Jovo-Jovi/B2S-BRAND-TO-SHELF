@@ -102,7 +102,7 @@
 .progress {
   flex: 1 1 auto;
   min-block-size: var(--b2s-space-2);
-  background-color: var(--b2s-color-sunken);
+  background-color: var(--b2s-color-action);
 }
 
 .fileError {

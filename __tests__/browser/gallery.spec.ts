@@ -179,11 +179,15 @@ for (const locale of GALLERY_LOCALES) {
         await page.waitForFunction((next) => {
           const text = getComputedStyle(document.body).color;
           return document.documentElement.dataset.theme === next &&
-            (next === "dark" ? text === "rgb(242, 242, 242)" : text === "rgb(26, 26, 26)");
+            (next === "dark" ? text === "rgb(243, 239, 234)" : text === "rgb(38, 34, 32)");
         }, theme);
         await expect(page.locator("h1")).toHaveCount(1);
         await expect(page.locator("main")).toHaveCount(1);
         await expect(page.locator("[data-primitive]")).toHaveCount(GALLERY_COVERAGE.length);
+        await page.screenshot({
+          path: `test-results/visual/gallery-${locale}-${theme}-${width}.png`,
+          fullPage: true,
+        });
         await hideDialogs(page);
 
         const overflow = await page.evaluate(() => ({
@@ -248,3 +252,80 @@ for (const locale of GALLERY_LOCALES) {
     }
   }
 }
+
+type OutputReading = {
+  direction: string | null;
+  marks: { x: number; y: number; w: number; h: number }[];
+};
+
+async function openGallery(page: Page, locale: string, theme: string, width: number) {
+  await page.setViewportSize({ width, height: 800 });
+  await page.emulateMedia({ colorScheme: theme === "dark" ? "dark" : "light" });
+  await page.addInitScript((next) => {
+    document.documentElement.dataset.theme = next;
+  }, theme);
+  await page.goto(`/${locale}/gallery?theme=${theme}`);
+  await page.waitForFunction((next) => document.documentElement.dataset.theme === next, theme);
+}
+
+async function readOutputs(page: Page): Promise<{ pinned: OutputReading; knownBad: OutputReading }> {
+  return page.evaluate(() => {
+    function reading(content: Element | null) {
+      if (!content) return { direction: null, marks: [] };
+      const origin = content.getBoundingClientRect();
+      const marks = [...content.querySelectorAll("[data-output-mark]")].map((node) => {
+        const rect = node.getBoundingClientRect();
+        return {
+          x: Math.round(rect.left - origin.left),
+          y: Math.round(rect.top - origin.top),
+          w: Math.round(rect.width),
+          h: Math.round(rect.height),
+        };
+      });
+      return { direction: getComputedStyle(content).direction, marks };
+    }
+    const pinned = document.querySelector('[data-specimen="pinned-output"] [lang="en"]');
+    const host = document.createElement("div");
+    host.dataset.knownBad = "inherit-direction";
+    const bad = document.createElement("div");
+    bad.dataset.badContent = "";
+    for (const label of ["Aa", "Bb"]) {
+      const mark = document.createElement("span");
+      mark.dataset.outputMark = label === "Aa" ? "lead" : "trail";
+      mark.textContent = label;
+      bad.appendChild(mark);
+    }
+    host.appendChild(bad);
+    document.body.appendChild(host);
+    return {
+      pinned: reading(pinned),
+      knownBad: reading(host.querySelector("[data-bad-content]")),
+    };
+  });
+}
+
+function sameOutput(left: OutputReading, right: OutputReading) {
+  return left.direction === right.direction && JSON.stringify(left.marks) === JSON.stringify(right.marks);
+}
+
+test("tenant output does not mirror the interface", async ({ page }) => {
+  const readings = new Map<string, { pinned: OutputReading; knownBad: OutputReading }>();
+  for (const locale of GALLERY_LOCALES) {
+    for (const theme of GALLERY_THEMES) {
+      for (const width of GALLERY_WIDTHS) {
+        await openGallery(page, locale, theme, width);
+        readings.set(`${locale}-${theme}-${width}`, await readOutputs(page));
+      }
+    }
+  }
+  for (const theme of GALLERY_THEMES) {
+    for (const width of GALLERY_WIDTHS) {
+      const english = readings.get(`en-${theme}-${width}`);
+      const arabic = readings.get(`ar-${theme}-${width}`);
+      expect(english?.pinned.direction).toBe("ltr");
+      expect(english?.pinned.marks.length).toBe(2);
+      expect(sameOutput(english!.pinned, arabic!.pinned)).toBe(true);
+      expect(sameOutput(english!.knownBad, arabic!.knownBad)).toBe(false);
+    }
+  }
+});

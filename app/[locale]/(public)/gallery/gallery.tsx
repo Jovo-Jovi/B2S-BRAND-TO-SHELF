@@ -507,6 +507,72 @@ export function Gallery({ locale, theme, copy, data }: GalleryProps) {
           {other === "ar" ? copy.localeAr : copy.localeEn}
         </TextLink>
       </p>
+      <section data-specimen="welcome">
+        <h2>{copy.welcomeTitle}</h2>
+        <Field caption={copy.welcomeLanguage}>
+          <Select
+            variant="native"
+            name="default-locale"
+            value="en"
+            noResults={copy.sampleNoResults}
+            options={[
+              { value: "en", caption: copy.localeEn },
+              { value: "ar", caption: copy.localeAr },
+            ]}
+          />
+        </Field>
+        <Field caption={copy.welcomeCurrency}>
+          <Select
+            variant="native"
+            name="base-currency"
+            value="primary"
+            noResults={copy.sampleNoResults}
+            options={[
+              { value: "primary", caption: copy.welcomeCurrencyPrimary },
+              { value: "secondary", caption: copy.welcomeCurrencySecondary },
+            ]}
+          />
+        </Field>
+      </section>
+      <section data-specimen="pinned-output">
+        <BrandFrame
+          variant="preview"
+          size="comfortable"
+          state="default"
+          previewLocale="en"
+          regionName={copy.sampleRegion}
+          missingRegionName={copy.sampleMissingRegion}
+          markers={{
+            role: (role) => role,
+            localeString: (field, itemLocale) => `${field}/${itemLocale}`,
+            typeface: (pair) => pair,
+          }}
+          emptyMessage={copy.sampleEmptyProfile}
+          unresolvedMessage={copy.sampleUnresolved}
+          requestIdentifier={copy.sampleRequest}
+          profile={{
+            colors: {
+              primary: swatch("112233"),
+              secondary: swatch("223344"),
+              accent: swatch("334455"),
+              background: swatch("ffffff"),
+              foreground: swatch("1a1a1a"),
+              muted: swatch("545454"),
+              critical: swatch("b3261e"),
+            },
+            typefaces: {
+              "heading-latin": { family: "sans-serif", weight: "400", italic: false },
+              "heading-arabic": { family: "sans-serif", weight: "400", italic: false },
+              "body-latin": { family: "sans-serif", weight: "400", italic: false },
+              "body-arabic": { family: "sans-serif", weight: "400", italic: false },
+            },
+            strings: [{ field: "brand", locale: "en", value: copy.sampleMint }],
+          }}
+        >
+          <span data-output-mark="lead">Mint</span>
+          <span data-output-mark="trail">12</span>
+        </BrandFrame>
+      </section>
       {primitives.map((primitive) => (
         <section key={primitive}>
           <h2>{copy[PRIMITIVE_LABEL[primitive]]}</h2>

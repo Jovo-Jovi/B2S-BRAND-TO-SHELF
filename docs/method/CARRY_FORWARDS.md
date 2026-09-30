@@ -3556,6 +3556,10 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       real screen it exists for is incomplete, whatever its inventory
       says. A gate which cannot observe what it checks is not a gate
       (PR-21). Owner: **the task that lands the design-surface catalog**.
+      AMENDED (P03-T14). Criteria one to five are satisfiable by a gallery
+      specimen now. Criterion six, save and finish later preserves both
+      partial values, needs the tenant business-data columns CF-213 names.
+      Owner: **the task that lands the tenant business-data amendment**.
 - [ ] CF-181 — Before the first production dump, the client binaries'
       provenance is verified: by a valid signature where the binary
       carries one, otherwise by the publisher's published checksum for
@@ -3877,6 +3881,12 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       Seed and teardown were about 16s. The time is staging round-trip
       latency inside the proofs, not harness setup. The harness is
       unchanged. Owner: **the owner**.
+      AMENDED (P03-T14). The measured cause is 687 Management-API SQL calls
+      inside the proofs, 418s of 664.55s, about 0.6s each; no retries, no
+      429s, no 5xx. The remedy is batching the catalog SQL the proofs
+      repeat, which is a harness change. The draft pull request's isolation
+      run took 18m51s against the 30-minute bound.
+      Owner: **a harness task before the P03 exit gate**.
 - [x] CF-205 — The reviewer's P03-T11 verdict of FAIL rested on two
       mismeasurements. The reviewer ran axe-core's target-size rule with
       runOnly, which enables a rule the engine ships disabled, and
@@ -3940,4 +3950,93 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       second time, after abd3efd. The Python docs-integrity checks were
       not run locally before the push.
       CLOSED (P03-T12-FIX) by PR-46. Owner: none outstanding.
+- [ ] CF-211 — The component tier's target-size and colour-contrast known-bad
+      fixtures are not known-bad. A lone 4px button passes target-size in a
+      real browser under WCAG 2.2 2.5.8's spacing exception, and text on the
+      identical grey is incomplete in axe by design, as P03-T13 measured in
+      Chromium. Both fixtures were prescribed by the reviewer at P03-T11 and
+      P03-T11-FIX. A fixture that every tier gives the same answer on cannot
+      show that one tier is blind, so two of the five fixtures the check
+      reports as proven prove nothing. The exclusions are still correct.
+      Owner: **the next task that corrects the component-tier known-bad fixtures**.
+- [ ] CF-212 — .env.local points local development at b2s-production, while
+      ARCHITECTURE.md:104 and ADR-013 point it at staging. The CI browser job
+      is pinned to staging with a hostname check, but the app and the browser
+      tier run locally call production's authentication on every request —
+      reads with no session so far.
+      Owner: **the owner**, to repoint .env.local at staging.
+- [ ] CF-213 — The reviewer never authored the tenant business-data columns
+      the owner signed under B4. DATA_MODEL.md §3.1 gives tenant only name,
+      slug, base_currency, default_locale and status. BRAND_CONFIG.md §10
+      routes legal name, trading name, tax registration, addresses and
+      contact details to tenant, and nothing receives them. The wizard's
+      first step cannot persist until the amendment exists. The Welcome step
+      asks for default_locale and base_currency before Brand, and the tenant
+      must be provisioned before any brand-scoped write; that amendment
+      specifies how.
+      Owner: **the reviewer**.
+- [ ] CF-214 — CF-180's sixth criterion, save and finish later preserves both
+      partial values, needs the schema CF-213 names. Criteria one to five
+      are satisfiable by a gallery specimen now.
+      Owner: **the task that lands the tenant business-data amendment**.
+- [x] CF-215 — STATIC. The platform colour-token set is closed against
+      DESIGN_SURFACE.md §2.2 and §2.11 in both directions. proof and
+      proof-edge are achromatic. The warmth ceiling and the Clay-danger
+      CIE76 floor hold, computed from app/globals.css. Font families stay
+      OD-G23's. The closed chromatic list CF-172 enforced no longer means
+      anything under OD-G24 and OD-G25, and it is removed. CF-172 stays
+      closed; this row records the changed condition.
+      CLOSED (P03-T14) by scripts/check-token-values.mjs. Floors: 267 tokens,
+      1247 declarations, 34 colour tokens, 4 proof channel checks, 20 chroma
+      checks, 6 delta checks, 13 font-family declarations. Plants, each
+      confirmed applied and restored byte-identical: a tinted proof; canvas
+      above chroma 4; danger moved to Clay; a colour token the stylesheet
+      defines and §2.2 does not; a §2.2 token removed from the stylesheet.
+      Owner: none outstanding.
+- [x] CF-216 — STATIC. check-contrast asserts §2.2's 92 enumerated pairs at
+      token level from app/globals.css, so the published table and the
+      stylesheet cannot drift apart.
+      CLOSED (P03-T14) by scripts/check-contrast.mjs. Floor: 92 enumerated
+      pairs, 81 declared text pairs. Plant: text-subtle lightened to 1.01:1
+      on canvas, restored byte-identical.
+      Owner: none outstanding.
+- [x] CF-217 — STATIC. Among platform tokens, BrandFrame's stylesheet uses
+      only proof, proof-edge, border-width, radius-xl and spacing. proof
+      and proof-edge are referenced nowhere else. CF-171 stays closed; this
+      row records the changed condition.
+      CLOSED (P03-T14) by scripts/check-brand-tokens.mjs. Floor: 89 files,
+      11 definitions, 4 brand references, 5 platform references. Plants,
+      restored byte-identical: a warm neutral in the surround; proof grey
+      on a Button.
+      Owner: none outstanding.
+- [x] CF-218 — BROWSER. A BrandFrame specimen's content has identical
+      rendered geometry and computed direction under the English and the
+      Arabic interface. A frame whose content inherits the interface
+      direction fails that criterion.
+      CLOSED (P03-T14) by the browser tier. The pinned specimen stays ltr
+      with the same mark geometry in both locales, both themes and both
+      widths. The inheriting fixture's geometry differs, and the test
+      requires that difference.
+      Owner: none outstanding.
+- [x] CF-219 — STATIC. The gallery completeness guard asserts the browser
+      tier iterates GALLERY_LOCALES, GALLERY_THEMES and GALLERY_WIDTHS
+      unfiltered, so every primitive and enforced state is rendered in all
+      four combinations of English and Arabic with light and dark, at both
+      widths.
+      CLOSED (P03-T14) by scripts/check-gallery-coverage.mjs. Plant: the
+      theme loop narrowed to light only, restored byte-identical.
+      Owner: none outstanding.
+- [x] CF-220 — COMPONENT. Danger is never colour alone. Notice's and
+      StatusBadge's danger variants render an icon and non-empty text in
+      both locales.
+      CLOSED (P03-T14) by the component tests. StatusBadge supplies the
+      danger glyph when the caller omits an icon. Plants: the Notice icon
+      removed, and the StatusBadge glyph removed; each test failed and each
+      file was restored byte-identical.
+      Owner: none outstanding.
+- [ ] CF-221 — The earlier P03-T14 prompt, compositions, is withdrawn.
+      Compositions become P03-T15 and are re-issued against DESIGN_SURFACE
+      Revision 2. This task built none.
+      Owner: **P03-T15**.
+
 

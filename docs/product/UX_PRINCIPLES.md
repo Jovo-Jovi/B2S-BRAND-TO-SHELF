@@ -26,6 +26,8 @@ The boundary is a component, not a convention: a brand frame is the only compone
 
 The platform has no signature accent. Its chrome is the quietest thing on the screen, so that the tenant's brand is the loudest.
 
+**AMENDED 2026-09-30 — the platform has its own identity.** §2's closing paragraph above and §10's first foreclosure below stand and are not edited (PR-07). Both are superseded by OD-G24 and OD-G25. The platform carries Clay as its single accent over warm neutrals; the tenant's brand stays the strongest identity inside its outputs and the proof, where no platform colour appears. Gold remains excluded as a platform identity. §2's other rules — two layers never mixed, status belongs to the platform, the boundary is a component — stand unchanged.
+
 ## 3. Bilingual and right-to-left
 
 Every screen exists in English and Arabic, and Arabic is not a translation layer applied afterwards. A screen designed only left-to-right and then mirrored is a screen designed once, badly.
@@ -92,6 +94,9 @@ Shared compositions: form section, data table with filters, empty state, error s
 ## 10. What this forecloses
 
 - A platform accent colour, including gold.
+
+**AMENDED 2026-09-30 — the platform has its own identity.** The foreclosure above stands and is not edited (PR-07). It is superseded by OD-G24 and OD-G25, together with §2's closing paragraph. The platform carries Clay as its single accent over warm neutrals; the tenant's brand stays the strongest identity inside its outputs and the proof, where no platform colour appears. Gold remains excluded as a platform identity.
+
 - A tenant ColorRole on a platform control, and a platform warning in a tenant's colour.
 - A physical left or right anywhere in the catalog.
 - An inline user-visible string, and the same string declared twice.

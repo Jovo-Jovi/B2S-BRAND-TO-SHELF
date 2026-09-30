@@ -136,6 +136,15 @@ function main() {
       fail(`the browser tier spec does not visit ${token}`);
     }
   }
+  const unfiltered =
+    /for\s*\(\s*const\s+locale\s+of\s+GALLERY_LOCALES\s*\)\s*\{[\s\S]*?for\s*\(\s*const\s+theme\s+of\s+GALLERY_THEMES\s*\)\s*\{[\s\S]*?for\s*\(\s*const\s+width\s+of\s+GALLERY_WIDTHS\s*\)/;
+  if (!unfiltered.test(spec)) {
+    fail("the browser tier does not iterate GALLERY_LOCALES, GALLERY_THEMES and GALLERY_WIDTHS unfiltered");
+  }
+  const narrowed = /for\s*\(\s*const\s+(?:locale|theme|width)\s+of\s+(?!GALLERY_(?:LOCALES|THEMES|WIDTHS)\b)/;
+  if (narrowed.test(spec)) {
+    fail("the browser tier filters a gallery combination instead of iterating the exported constants");
+  }
 
   const primitives = new Set(pairs.map((pair) => pair.split("/")[0])).size;
   if (primitives < MINIMUM_IMPLEMENTED) {

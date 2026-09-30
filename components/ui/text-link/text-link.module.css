@@ -1,5 +1,5 @@
 .root {
-  color: var(--b2s-color-text);
+  color: var(--b2s-color-accent-text);
   font-size: var(--b2s-text-body);
   text-decoration-line: underline;
   text-decoration-thickness: var(--b2s-border-width);

@@ -41,6 +41,25 @@ describe("Notice", () => {
     }
   });
 
+  it("renders danger with an icon and words in both locales", () => {
+    for (const locale of ["en", "ar"] as const) {
+      const html = renderToStaticMarkup(
+        <div lang={locale} dir={locale === "ar" ? "rtl" : "ltr"}>
+          <Notice
+            variant="inline"
+            tone="danger"
+            title="Not saved"
+            message="Try again"
+            icon={<Glyph name="danger" />}
+          />
+        </div>,
+      );
+      expect(html).toContain('data-glyph="danger"');
+      expect(html).toContain("Not saved");
+      expect(html).toContain("Try again");
+    }
+  });
+
   it("offers toast and inline, and stacks at most three", () => {
     for (const variant of ["toast", "inline"] as const) {
       const html = renderToStaticMarkup(

@@ -106,3 +106,11 @@ jobs:
           end=$(date +%s)
           echo "browser-tier duration_seconds=$((end - start))"
           exit "$code"
+
+      - name: Upload visual QA
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-qa
+          path: test-results/visual/
+          if-no-files-found: error
