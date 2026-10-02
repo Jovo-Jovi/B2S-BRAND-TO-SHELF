@@ -28,6 +28,15 @@ Five carried on `Membership` — the `public.role` enum, verbatim: **owner**,
   `Membership`, and never opens a session. Its row exists precisely because
   that is the fact most likely to be misread from the name alone.
 
+**ANNOTATED 2026-10-02 — P03-T16, the public site.** OD-A8 gives an
+unauthenticated visitor a capability: view the public site and enter sign-up
+or sign-in, owning phase P08. `scripts/check_roadmap.py` admits a row only
+when its Role cell is a `public.role` enum value or one of the two named
+non-enum actors, Operator and Buyer. Measured: those seven are the whole
+accepted set, and an unauthenticated visitor is none of them. No table row
+was added, and no role was added. The capability is carried as a
+carry-forward whose owner is the reviewer.
+
 ---
 
 ## The table

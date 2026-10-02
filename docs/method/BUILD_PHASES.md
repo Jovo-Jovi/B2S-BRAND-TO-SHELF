@@ -131,8 +131,11 @@ currency, tax on/off, locales.
 
 ### P08 — Operator surface and release readiness
 `FEATURE_INVENTORY.md`, `RISK_REGISTER.md` and `ACCEPTANCE.md` authored
-just-in-time · the operator surface, metadata and usage only · the pre-relaunch
-audit in `B2S_PREPARE_PHASE.md` §10 · CF-86's secret-scanning confirmation.
+just-in-time · the operator surface, metadata and usage only · the public site
+(OD-A8): the bilingual landing page, sign-in and sign-up entry, and the
+privacy policy and terms of service pages, text supplied by the owner · the
+pre-relaunch audit in `B2S_PREPARE_PHASE.md` §10 · CF-86's secret-scanning
+confirmation.
 
 ### P09 — Launch and operations
 `SECURITY_MODEL.md` §9's pre-launch audit, terminal · observability, alerting

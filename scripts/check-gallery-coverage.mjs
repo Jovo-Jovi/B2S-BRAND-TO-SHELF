@@ -54,9 +54,32 @@ function importedShared(source, fromFile) {
   return found;
 }
 
+function followImports(source, fromFile) {
+  const found = importedShared(source, fromFile);
+  for (const match of source.matchAll(/from "(\.[^"]+)"/g)) {
+    const specifier = match[1];
+    if (specifier.endsWith(".css") || specifier.endsWith(".ts") || specifier.endsWith(".json")) {
+      continue;
+    }
+    let resolved = normalize(join(dirname(fromFile), specifier)).split("\\").join("/");
+    if (!resolved.endsWith(".tsx")) {
+      resolved = `${resolved}.tsx`;
+    }
+    if (!resolved.startsWith("app/") || !resolved.includes("/gallery/")) {
+      continue;
+    }
+    const asModule = resolved.replace(/\.tsx$/, ".ts");
+    if (!existsSync(join(ROOT, resolved)) && existsSync(join(ROOT, asModule))) {
+      continue;
+    }
+    found.push(resolved);
+  }
+  return found;
+}
+
 function compositionClosure(gallerySource) {
   const seen = new Set();
-  const queue = importedShared(gallerySource, "app/[locale]/(public)/gallery/gallery.tsx");
+  const queue = followImports(gallerySource, "app/[locale]/(public)/gallery/gallery.tsx");
   const attributes = [];
   while (queue.length > 0) {
     const rel = queue.pop();
@@ -68,10 +91,12 @@ function compositionClosure(gallerySource) {
       continue;
     }
     const source = readFileSync(absolute, "utf8");
-    for (const match of source.matchAll(/data-composition="([^"]+)"/g)) {
-      attributes.push(match[1]);
+    if (rel.startsWith("components/shared/")) {
+      for (const match of source.matchAll(/data-composition="([^"]+)"/g)) {
+        attributes.push(match[1]);
+      }
     }
-    queue.push(...importedShared(source, rel));
+    queue.push(...followImports(source, rel));
   }
   return { files: seen, attributes };
 }

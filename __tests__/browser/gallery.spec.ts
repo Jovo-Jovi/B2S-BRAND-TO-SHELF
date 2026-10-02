@@ -10,6 +10,8 @@ import {
 import { readFileSync } from "node:fs";
 
 import { KNOWN_BAD_FIXTURES } from "../../scripts/known-bad-fixtures.mjs";
+import en from "../../app/[locale]/dictionaries/en.json";
+import ar from "../../app/[locale]/dictionaries/ar.json";
 
 const CLAIMED = {
   "color-contrast": { enabled: true },
@@ -47,7 +49,10 @@ async function runAxe(page: Page, rules: Record<string, { enabled: boolean }>): 
         incomplete: Array<{ id: string; nodes: Array<{ failureSummary?: string; html?: string }> }>;
         inapplicable: Array<{ id: string }>;
       }> } }).axe;
-      const result = await engine.run(document, { rules: enabled });
+      const result = await engine.run(document, {
+        rules: enabled,
+        exclude: [["[data-proof-content]"]],
+      });
       const buckets: Record<string, string> = {};
       for (const id of watched) {
         const hit = (["violations", "passes", "incomplete", "inapplicable"] as const).find((key) =>
@@ -168,6 +173,66 @@ test("an unflipped mirroring glyph and a flipped never-mirror glyph both fail", 
   expect(report).toContain("flipped check");
 });
 
+async function assertBrandStep(page: Page, locale: "en" | "ar") {
+  const copy = locale === "en" ? en.gallery : ar.gallery;
+  const screen = page.locator('[data-screen="brand-step"]');
+  const ownsSheet = await page.evaluate(() => {
+    for (const sheet of document.styleSheets) {
+      let rules: CSSRuleList;
+      try {
+        rules = sheet.cssRules;
+      } catch {
+        continue;
+      }
+      for (const rule of rules) {
+        if (rule.cssText.includes("brand-step")) return true;
+      }
+    }
+    return false;
+  });
+  expect(ownsSheet).toBe(false);
+  await expect(screen.getByText(copy.fictionalSample)).toBeVisible();
+  await expect(screen.locator("#brand-name [data-locale]").first()).toHaveAttribute("data-locale", "en");
+  await expect(screen.locator("#brand-name input").first()).toHaveAttribute("dir", "ltr");
+  await expect(screen.locator("#brand-name input").nth(1)).toHaveAttribute("dir", "rtl");
+  const frameDir = await screen.locator('[data-composition="WizardStep"]').evaluate((node) => getComputedStyle(node).direction);
+  expect(frameDir).toBe(locale === "ar" ? "rtl" : "ltr");
+  const help = screen.getByRole("button", { name: copy.compositionHelp });
+  await help.focus();
+  const outline = await help.evaluate((node) => getComputedStyle(node).outlineStyle);
+  expect(outline).not.toBe("none");
+  await screen.locator("#brand-name input").first().fill("");
+  await screen.getByRole("button", { name: copy.compositionContinue }).click();
+  const summary = screen.locator('[role="alert"]').filter({ has: page.locator('a[href="#brand-name"]') });
+  await expect(summary).toBeFocused();
+  const missingName = copy.missingName.replace("{locale}", copy.localeEn);
+  const missingPrimary = copy.missingRole.replace("{role}", copy.rolePrimary);
+  await expect(summary).toContainText(missingName);
+  await expect(summary).toContainText(missingPrimary);
+  await expect(screen.locator("#brand-name")).toContainText(missingName);
+  await screen.locator("#brand-name input").first().fill(copy.sampleBrandEn);
+  await expect(screen.locator('[data-specimen="label"] [data-part="name"]')).toHaveText(copy.sampleBrandEn);
+  await screen.locator("#role-primary").fill("#112233");
+  await expect
+    .poll(() => screen.locator('[data-part="band"]').evaluate((node) => getComputedStyle(node).backgroundColor))
+    .toBe("rgb(17, 34, 51)");
+  await screen.locator('input[type="file"]').setInputFiles({
+    name: "mark.svg",
+    mimeType: "image/svg+xml",
+    buffer: Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"></svg>'),
+  });
+  await expect(screen.locator('[data-specimen="label"] img[data-part="logo-slot"]')).toHaveAttribute("src", /^blob:/);
+  await screen.locator("#role-primary").fill("#ffffff");
+  await expect(screen.locator('[data-specimen="label"] img[data-part="logo-slot"]')).toHaveCount(0);
+  await expect(screen.getByText(copy.missingMark.replace("{ground}", copy.groundLight)).first()).toBeVisible();
+  await screen.getByRole("tab", { name: copy.tabSticker }).click();
+  await expect(screen.locator('[data-specimen="sticker"]')).toBeVisible();
+  await page.getByRole("button", { name: copy.compositionAccount }).click();
+  await expect(page.getByRole("radio", { name: copy.themeSystem })).toBeVisible();
+  await expect(page.getByRole("radio", { name: copy.themeLight })).toBeVisible();
+  await expect(page.getByRole("radio", { name: copy.themeDark })).toBeVisible();
+}
+
 async function hideDialogs(page: Page) {
   await page.evaluate(() => {
     for (const node of document.querySelectorAll("dialog")) {
@@ -263,6 +328,7 @@ for (const locale of GALLERY_LOCALES) {
           expect(mirroring.previous).toBe(1);
           expect(mirroring.iconBeforeLabel).toBe(true);
         }
+        await assertBrandStep(page, locale);
       });
     }
   }
@@ -271,6 +337,13 @@ for (const locale of GALLERY_LOCALES) {
 type OutputReading = {
   direction: string | null;
   marks: { x: number; y: number; w: number; h: number }[];
+};
+
+type SpecimenReadings = {
+  pinned: OutputReading;
+  knownBad: OutputReading;
+  label: OutputReading;
+  sticker: OutputReading;
 };
 
 async function openGallery(page: Page, locale: string, theme: string, width: number) {
@@ -283,8 +356,42 @@ async function openGallery(page: Page, locale: string, theme: string, width: num
   await page.waitForFunction((next) => document.documentElement.dataset.theme === next, theme);
 }
 
-async function readOutputs(page: Page): Promise<{ pinned: OutputReading; knownBad: OutputReading }> {
-  return page.evaluate(() => {
+async function readOutputs(page: Page): Promise<SpecimenReadings> {
+  const screen = page.locator('[data-screen="brand-step"]');
+  await hideDialogs(page);
+  await screen.getByRole("tab").first().click();
+  const label = await page.evaluate(() => {
+    const content = document.querySelector('[data-specimen="label"]');
+    if (!content) return { direction: null, marks: [] as { x: number; y: number; w: number; h: number }[] };
+    const origin = content.getBoundingClientRect();
+    const marks = [...content.querySelectorAll("[data-output-mark]")].map((node) => {
+      const rect = node.getBoundingClientRect();
+      return {
+        x: Math.round(rect.left - origin.left),
+        y: Math.round(rect.top - origin.top),
+        w: Math.round(rect.width),
+        h: Math.round(rect.height),
+      };
+    });
+    return { direction: getComputedStyle(content).direction, marks };
+  });
+  await screen.getByRole("tab").nth(1).click();
+  const sticker = await page.evaluate(() => {
+    const content = document.querySelector('[data-specimen="sticker"]');
+    if (!content) return { direction: null, marks: [] as { x: number; y: number; w: number; h: number }[] };
+    const origin = content.getBoundingClientRect();
+    const marks = [...content.querySelectorAll("[data-output-mark]")].map((node) => {
+      const rect = node.getBoundingClientRect();
+      return {
+        x: Math.round(rect.left - origin.left),
+        y: Math.round(rect.top - origin.top),
+        w: Math.round(rect.width),
+        h: Math.round(rect.height),
+      };
+    });
+    return { direction: getComputedStyle(content).direction, marks };
+  });
+  const pinned = await page.evaluate(() => {
     function reading(content: Element | null) {
       if (!content) return { direction: null, marks: [] };
       const origin = content.getBoundingClientRect();
@@ -317,6 +424,7 @@ async function readOutputs(page: Page): Promise<{ pinned: OutputReading; knownBa
       knownBad: reading(host.querySelector("[data-bad-content]")),
     };
   });
+  return { ...pinned, label, sticker };
 }
 
 function sameOutput(left: OutputReading, right: OutputReading) {
@@ -324,7 +432,7 @@ function sameOutput(left: OutputReading, right: OutputReading) {
 }
 
 test("tenant output does not mirror the interface", async ({ page }) => {
-  const readings = new Map<string, { pinned: OutputReading; knownBad: OutputReading }>();
+  const readings = new Map<string, SpecimenReadings>();
   for (const locale of GALLERY_LOCALES) {
     for (const theme of GALLERY_THEMES) {
       for (const width of GALLERY_WIDTHS) {
@@ -340,6 +448,12 @@ test("tenant output does not mirror the interface", async ({ page }) => {
       expect(english?.pinned.direction).toBe("ltr");
       expect(english?.pinned.marks.length).toBe(2);
       expect(sameOutput(english!.pinned, arabic!.pinned)).toBe(true);
+      expect(english?.label.direction).toBe("ltr");
+      expect(english?.label.marks.length).toBe(2);
+      expect(sameOutput(english!.label, arabic!.label)).toBe(true);
+      expect(english?.sticker.direction).toBe("ltr");
+      expect(english?.sticker.marks.length).toBe(1);
+      expect(sameOutput(english!.sticker, arabic!.sticker)).toBe(true);
       expect(sameOutput(english!.knownBad, arabic!.knownBad)).toBe(false);
     }
   }

@@ -301,6 +301,12 @@ Every fixed measure a component uses is a token here, so that no component carri
 | `--b2s-multiline-rows-min` | 3 | `TextField` multiline |
 | `--b2s-multiline-rows-max` | 8 | `TextField` multiline |
 | `--b2s-skeleton-opacity-min` | 0.6 | `Skeleton` |
+| `--b2s-nav-width` | 17rem | `AppShell` side navigation at `lg` and above |
+| `--b2s-drawer-width` | min(18rem, 85vw) | `AppShell` navigation drawer |
+| `--b2s-preview-label-max` | 30rem | Label preview specimen |
+| `--b2s-preview-sticker-max` | 15rem | Sticker preview specimen |
+| `--b2s-proof-height-narrow` | 15rem | Wizard preview below `lg` |
+| `--b2s-preview-rule-block` | 3px | Label preview specimen, the accent rule's block size (§3.1) |
 
 The six `--b2s-layer-*` tokens are every z-index in the catalog, and no other value is a z-index. The switch tokens are the same in both densities, because the whole row is the target. A multiline `TextField` grows to eight rows, then scrolls. The skeleton pulse runs between 0.6 and 1, so a placeholder never vanishes.
 
@@ -329,6 +335,22 @@ The six `--b2s-layer-*` tokens are every z-index in the catalog, and no other va
 8. **The platform identity never enters the proof.** No Clay, no warm neutral, no platform shadow and no platform typeface styles anything inside the surround. A brand that happens to use terracotta shows its own terracotta, not the platform's (`OD-G24`).
 9. **Tenant output never mirrors.** What a frame shows keeps its physical layout, orientation, typography, numerals and imagery whatever the interface language. Switching the interface from English to Arabic mirrors the chrome around the frame and changes nothing inside it (`OD-G24`, §4 rule 12).
 10. **Content inside a frame resets inherited font size, leading and spacing to their initial values**, so the interface's type never enters tenant output. Tenant output typography is specified by templates at P06; until then the reset is the stated behaviour, not a design. P03-T14 reported the reset. Filling a typeface here would be a design this document does not state.
+
+### 3.1 Preview specimens — interim, until templates
+
+A preview specimen is a fixed illustration drawn from a resolved BrandProfile inside BrandFrame, so a business sees its brand on a real format while it sets the brand up. It is not a template render, not a PackagingTemplate and not print output; template-driven previews replace it at P06. Release 1 formats only (SCOPE.md module 07): Label and Sticker.
+
+Both render in the output's own direction and never mirror with the interface (OD-G24, §3 rule 9). Typography comes from the profile's heading and body typefaces for each script; a missing pair renders in the interim reset type with its named gap (§3 rule 5). Colours come only from the default theme's roles, mapped as below, and are never adjusted (§3 rule 4): a combination that reads poorly here reads poorly on the shelf, which is what a proof is for.
+
+Label — a landscape rectangle, aspect ratio 48:29, at most preview-label-max wide, scaled to fit the proof with space-5 clear on every side, corner radius 3% of its width. An inline-start band, 33% of the width, in `primary`, holding the `mark` logo for the band's ground at 45% of the band's width. A content panel in `background`, a centred column: the brand name in the business's default locale in its script's heading face, in `foreground`; the name in the other locale in its script's heading face at 60% of that size, in `foreground`; a rule 10% of the label's width and 3px high in `accent`; a product-name line and a net-weight line in the body face, in `muted`. A strip along the block-end edge, 4% of the label's height, in `secondary`.
+
+Sticker — a circle, at most preview-sticker-max in diameter, scaled to fit. Fill `primary`; an inner ring 4% of the diameter thick, inset 6%, in `accent`; centred, the `mark` logo for the primary's ground at 40% of the diameter, and beneath it the brand name in the business's default locale, heading face, in `background`.
+
+Ground — dark when `primary`'s relative luminance, computed by lib/colour/, is below 0.179, the point at which black and white contrast with it equally; light otherwise. The matching `mark` variant is used. If it does not exist, the logo slot stays empty and a named gap in proof-text says which variant is missing — never a substituted variant (BRAND_CONFIG.md §9) and never a generated monogram.
+
+Placeholders — the product-name and net-weight lines are catalog strings in brackets, [PRODUCT NAME] and [NET WT], in the business's default locale, because they stand for content that does not exist yet.
+
+`critical` appears on neither specimen: it marks warnings and regulatory marks, and neither specimen carries one.
 
 ---
 
@@ -934,13 +956,15 @@ tokens: [icon-size, color-text, duration-base, delay-loader]
 The frame of every signed-in page: **header**, **navigation**, **main**.
 
 - **Header:** `PageHeader` — tenant logo, `TenantSwitcher`, locale switch, theme switch, account menu.
-- **Navigation:** at `lg` and above, a side navigation fixed at inline-start; below `lg`, a drawer opened from the header. The current section takes `accent-soft` fill, its label in `accent-text` at the semibold weight, and an inline-start bar of `indicator-width` in `action`. Weight and the bar carry it, so it is never colour alone.
+- **Navigation:** at `lg` and above, the side navigation is a sticky grid column of `nav-width`, adopting P03-T15's reading. Below `lg` it opens in a drawer: the native dialog element opened modally as a side sheet from inline-start, at `drawer-width` and full block size, over the scrim, focus contained, Escape closing it and focus returning to the menu button. The top layer places it; no z-index is used. This replaces P03-T15's in-flow disclosure. The current section takes `accent-soft` fill, its label in `accent-text` at the semibold weight, and an inline-start bar of `indicator-width` in `action`. Weight and the bar carry it, so it is never colour alone.
 - **Main:** full width for tables; forms and wizards capped at `--b2s-measure-form`.
 - **A skip link** is the first focusable element and moves focus to `main`. Landmarks: `banner`, `navigation`, `main`.
 
 ### PageHeader
 
 **The tenant's logo** uses the `LogoVariant` whose ground matches the platform theme: the `light`-ground variant in the light theme, `dark` in the dark. **If that combination does not exist, the tenant's name renders as text** — never a different variant pressed into service, and never a platform placeholder mark (`BRAND_CONFIG.md` §9). Logo height is `--b2s-logo-height`. **No B2S mark appears here or anywhere a tenant's output can reach** (OD-G21).
+
+**The theme choice** is a `RadioGroup` in the account menu — System, Light, Dark — where System follows `prefers-color-scheme`. This replaces P03-T15's two secondary buttons.
 
 ### TenantSwitcher
 
@@ -956,13 +980,15 @@ A filter bar above `DataTable`: search, then filters. Active filters appear as r
 
 ### EmptyState
 
-A title saying what goes here, one sentence on why it matters or how it fills, and one primary action. **First use** invites creation. **No results** offers to clear the filters. An empty screen is an invitation to act, never a mood.
+A title saying what goes here, one sentence on why it matters or how it fills, and one primary action. **First use** invites creation. **No results** offers to clear the filters. An empty screen is an invitation to act, never a mood. EmptyState is in-flow content, not a card, and takes no elevation, adopting P03-T15's reading.
 
 ### ErrorState
 
-What failed, in plain words; what to do next; a retry action; and the request identifier, isolated and copyable (OD-H13). Nothing that discloses whether an address, tenant or record exists (`SECURITY_MODEL.md` §2). No apology.
+What failed, in plain words; what to do next; a retry action; and the request identifier, isolated and copyable (OD-H13). Nothing that discloses whether an address, tenant or record exists (`SECURITY_MODEL.md` §2). No apology. ErrorState is in-flow content, not a card, and takes no elevation, adopting P03-T15's reading.
 
 ### WizardStep
+
+The wizard renders in its own frame, not AppShell — nothing in the navigation exists before onboarding completes. The frame's header carries the platform mark, the stepper, the language switch and help. WizardStep gains an optional preview region: at `lg` and above, an inline-end column on `sunken` with a `border-inline-start`, the form capped at `measure-form`; below `lg`, the preview precedes the form with its proof at `proof-height-narrow`, not sticky.
 
 - **Stepper:** numbered, because onboarding genuinely is a sequence. It numbers Brand to Review, five steps. Welcome precedes the stepper and is not numbered (`BRAND_CONFIG.md` §10 amendment). Steps are completed, current or upcoming. Completed steps are reachable; upcoming ones are not until reached. Progress is also stated in text — "Step 2 of 5" — so it is never carried by the graphic alone.
 - **Body:** a step title at `3xl`, one sentence of purpose, then one or more `FormSection`s.
@@ -1030,16 +1056,18 @@ Every gate the catalog landing task builds, and the part of this document it hol
 
 The catalog is finished when the first real screen it exists for can be built from it with **no page-level styling at all** (CF-180). Inventory is not the test; composition is.
 
-**The screen:** step 1, Brand. The §10 amendment moved company data to step 3. Welcome precedes Brand and is too small a screen to prove the catalog. Brand exercises the bilingual fields, the swatches, the logo, and a live preview inside `BrandFrame`. Its full specification arrives with P03-T16. This section does not specify that screen's tree.
+**The screen:** step 1, Brand (BRAND_CONFIG.md §10 amendment), in the wizard's own frame. FormSection "Brand name": a BilingualField, the business's default locale first. FormSection "Your brand's colours": ColorFields for primary, secondary and accent. FormSection "Text and background": a paired ColorField for background and foreground, and ColorFields for muted and critical, each showing its starting value as a starting value. FormSection "Logo": a FileDrop. The preview region: Tabs, Label and Sticker, each panel a BrandFrame holding its §3.1 specimen. Footer: Back to Welcome, Save and finish later, Continue.
 
-**It passes when**, in both locales and both themes, at 360px and at desktop width:
+**It passes when**, in both locales, both themes, at 360 and 1280 CSS pixels:
 
-1. The page's own stylesheet contains no rule — only composition.
-2. Continue with one locale of the legal name empty shows the error summary with a link to that field, focus on the summary, and the field's error naming the missing locale.
-3. In Arabic the stepper, footer and field order flow right-to-left; the English input inside each `BilingualField` stays left-to-right.
-4. Every string comes from the catalogs, with `en` and `ar` holding identical key sets.
-5. Every interactive element is reachable by keyboard in reading order with a visible focus ring, and meets AA contrast.
-6. Save and finish later preserves both partial values.
+1. The screen's own stylesheet holds no rule.
+2. Continue with one locale of the brand name empty shows the error summary with a link to that field, focus on the summary, and the field's error naming the missing locale — and an empty colour role is named the same way.
+3. In the Arabic interface the frame, stepper, footer and sections mirror, the bilingual field keeps the business's default locale first, each input keeps its own direction, and the preview is identical to the English interface's.
+4. Every string comes from the catalogs, with equal key sets.
+5. Every control is keyboard-reachable in reading order with a visible focus ring and AA contrast, the proof's content excepted under §3 rule 4.
+6. Editing the brand name, any colour, or the logo updates the specimen, switching tabs shows the label or the sticker, and a missing mark for the ground shows its named gap.
+
+Persistence — save and finish later keeping partial values — is not claimed here; it stays with CF-214.
 
 ---
 
@@ -1306,3 +1334,25 @@ The stepper numbers Brand to Review, five steps. Welcome precedes the stepper an
 and the tree that placed FormSection "Company identity" under WizardStep. The specimen is step 1, Brand. Criteria one to five stand. Criterion six stays with CF-214. The specimen's tree arrives with P03-T16.
 
 **2026-10-02 — P03-T15.** §10's CF-171 and CF-172 rows named two proof tokens. Prior CF-172 clause: `` `proof` and `proof-edge` achromatic ``. Both rows now name `proof`, `proof-edge` and `proof-text`.
+
+**2026-10-02 — P03-T16.** §2.11 gained the measures the compositions and the preview specimens use. Prior table ended at `--b2s-skeleton-opacity-min`. The new rows are `--b2s-nav-width` 17rem, `--b2s-drawer-width` min(18rem, 85vw), `--b2s-preview-label-max` 30rem, `--b2s-preview-sticker-max` 15rem, `--b2s-proof-height-narrow` 15rem, and `--b2s-preview-rule-block` 3px. The 3px row is §3.1's accent-rule block size. The raw-value gate admits that length only as a token, and §2.11 already says every fixed measure a component uses is a token.
+
+**2026-10-02 — P03-T16.** AppShell's navigation sentence specified a fixed panel and an undescribed drawer. Prior text:
+
+`at lg and above, a side navigation fixed at inline-start; below lg, a drawer opened from the header.`
+
+At lg and above the side navigation is a sticky grid column of nav-width. Below lg it is a native dialog opened modally as a side sheet from inline-start, at drawer-width and full block size, over the scrim, focus contained, Escape closing it and focus returning to the menu button. The top layer places it. No z-index is used.
+
+**2026-10-02 — P03-T16.** PageHeader did not name the theme control. Prior section ended at the sentence forbidding a B2S mark on tenant output. The theme choice is a RadioGroup in the account menu — System, Light, Dark — and System follows prefers-color-scheme.
+
+**2026-10-02 — P03-T16.** EmptyState and ErrorState did not say whether they were cards. Prior EmptyState ended at "An empty screen is an invitation to act, never a mood." Prior ErrorState ended at "No apology." Both are in-flow content, not cards, and take no elevation.
+
+**2026-10-02 — P03-T16.** WizardStep did not give the wizard its own frame or a preview region. Prior block opened on the stepper. The wizard renders in its own frame, not AppShell. The header carries the platform mark, the stepper, the language switch and help. The optional preview is an inline-end column on sunken at lg and above, and precedes the form below lg at proof-height-narrow, not sticky.
+
+**2026-10-02 — P03-T16.** §3 had no preview specimens. §3.1 is new. There is no prior text.
+
+**2026-10-02 — P03-T16.** §11 was rewritten for the Brand step. Prior text:
+
+`**The screen:** step 1, Brand. The §10 amendment moved company data to step 3. Welcome precedes Brand and is too small a screen to prove the catalog. Brand exercises the bilingual fields, the swatches, the logo, and a live preview inside BrandFrame. Its full specification arrives with P03-T16. This section does not specify that screen's tree.`
+
+and the six criteria that named the legal name, a page stylesheet, and save-and-finish-later. The screen is the Brand step in the wizard's own frame, with the four sections, the two specimens, and the footer named in the section. Criterion six is the live preview. Persistence stays with CF-214.

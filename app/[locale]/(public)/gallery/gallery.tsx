@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, type ReactNode } from "react";
+import { useLayoutEffect, useState, type ReactNode } from "react";
 
 import type en from "../../dictionaries/en.json";
 import { BilingualField, type BilingualFieldVisual } from "@/components/ui/bilingual-field/bilingual-field";
@@ -30,8 +30,9 @@ import { AppShell } from "@/components/shared/app-shell/app-shell";
 import { EmptyState } from "@/components/shared/empty-state/empty-state";
 import { ErrorState } from "@/components/shared/error-state/error-state";
 import { FilteredDataTable } from "@/components/shared/filtered-data-table/filtered-data-table";
-import { FormSection } from "@/components/shared/form-section/form-section";
-import { WizardStep } from "@/components/shared/wizard-step/wizard-step";
+import type { ThemeChoice } from "@/components/shared/page-header/page-header";
+
+import { BrandStep } from "./brand-step";
 import type { Locale } from "../../dictionaries";
 
 import { GALLERY_COVERAGE, type GalleryTheme } from "./coverage";
@@ -484,6 +485,7 @@ function specimen(
 
 export function Gallery({ locale, theme, copy, data }: GalleryProps) {
   const other: Locale = locale === "en" ? "ar" : "en";
+  const [choice, setChoice] = useState<ThemeChoice>(theme);
   const primitives = [...new Set(GALLERY_COVERAGE.map((entry) => entry[0]))];
 
   return (
@@ -498,7 +500,7 @@ export function Gallery({ locale, theme, copy, data }: GalleryProps) {
         { id: "samples", caption: copy.compositionNavSamples, href: "#app-main", current: false },
       ]}
       header={{
-        theme,
+        theme: choice,
         tenantName: copy.compositionTenant,
         logos: [
           { ground: "light", src: "/gallery/sample-mark-light.svg" },
@@ -506,10 +508,17 @@ export function Gallery({ locale, theme, copy, data }: GalleryProps) {
         ],
         localeHref: `/${other}/gallery?theme=${theme}`,
         localeCaption: other === "ar" ? copy.localeAr : copy.localeEn,
+        themeCaption: copy.themeCaption,
+        themeSystem: copy.themeSystem,
         themeLight: copy.themeLight,
         themeDark: copy.themeDark,
         onTheme: (next) => {
-          document.documentElement.dataset.theme = next;
+          setChoice(next);
+          if (next === "system") {
+            delete document.documentElement.dataset.theme;
+          } else {
+            document.documentElement.dataset.theme = next;
+          }
         },
         accountCaption: copy.compositionAccount,
         accountOptions: [{ id: "details", caption: copy.compositionAccountItem, onSelect: () => undefined }],
@@ -526,35 +535,7 @@ export function Gallery({ locale, theme, copy, data }: GalleryProps) {
     >
       <ThemeAttribute theme={theme} />
       <h1>{copy.title}</h1>
-      <WizardStep
-        locale={locale}
-        current="brand"
-        captions={{
-          welcome: copy.welcomeTitle,
-          brand: copy.compositionBrand,
-          typography: copy.compositionTypography,
-          company: copy.compositionCompany,
-          guidelines: copy.compositionGuidelines,
-          review: copy.compositionReview,
-        }}
-        progress={copy.compositionProgress}
-        title={copy.compositionBrand}
-        purpose={copy.compositionPurpose}
-        back={copy.compositionBack}
-        continueCaption={copy.compositionContinue}
-        save={copy.compositionSave}
-        onBack={() => undefined}
-        onContinue={() => undefined}
-        onSave={() => undefined}
-        onStep={() => undefined}
-        errors={[]}
-      >
-        <FormSection title={copy.compositionSectionTitle} description={copy.compositionSectionBody}>
-          <Field caption={copy.compositionField}>
-            <TextField variant="text" defaultValue="" />
-          </Field>
-        </FormSection>
-      </WizardStep>
+      <BrandStep locale={locale} copy={copy} otherLocale={other} />
       <FilteredDataTable
         locale={locale}
         searchCaption={copy.sampleCaption}

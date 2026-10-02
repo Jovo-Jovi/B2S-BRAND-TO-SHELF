@@ -51,6 +51,7 @@ type BrandFrameProps = {
   requestIdentifier?: string;
   emptyMessage?: string;
   loading?: boolean;
+  proofNotes?: string[];
   children?: ReactNode;
 };
 
@@ -113,6 +114,7 @@ export function BrandFrame({
   requestIdentifier,
   emptyMessage,
   loading = false,
+  proofNotes = [],
   children,
 }: BrandFrameProps) {
   const gaps = profile
@@ -159,6 +161,16 @@ export function BrandFrame({
             {missingTypefaces(profile).map((pair) => (
               <li key={pair}>{markers.typeface(pair)}</li>
             ))}
+            {proofNotes.map((note) => (
+              <li key={note}>{note}</li>
+            ))}
+          </ul>
+        ) : null}
+        {visual !== "incomplete" && proofNotes.length > 0 ? (
+          <ul className={styles.markers}>
+            {proofNotes.map((note) => (
+              <li key={note}>{note}</li>
+            ))}
           </ul>
         ) : null}
         {showCanvas ? (
@@ -166,6 +178,7 @@ export function BrandFrame({
             {profile.colors.foreground ? (
               <div
                 className={styles.content}
+                data-proof-content=""
                 lang={previewLocale}
                 dir={previewLocale === "ar" ? "rtl" : "ltr"}
                 style={body ? { fontWeight: body.weight, fontStyle: body.italic ? "italic" : "normal" } : undefined}

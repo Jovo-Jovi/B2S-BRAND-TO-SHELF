@@ -48,3 +48,121 @@
 .surround .markers {
   padding-inline-start: var(--b2s-space-5);
 }
+
+.content .label {
+  display: grid;
+  grid-template-columns: 33% minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) 4%;
+  inline-size: 100%;
+  aspect-ratio: 48 / 29;
+  background-color: var(--brand-background);
+  clip-path: inset(0 round 3%);
+}
+
+.content .band {
+  grid-column: 1;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--brand-primary);
+}
+
+.content .mark {
+  inline-size: 45%;
+  block-size: auto;
+}
+
+.content .mark img,
+.content .stickerMark img {
+  inline-size: 100%;
+  block-size: auto;
+}
+
+.content .panel {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--brand-background);
+  color: var(--brand-foreground);
+}
+
+.content .scriptLatin {
+  font-family: var(--brand-font-heading-latin);
+  color: var(--brand-foreground);
+}
+
+.content .scriptArabic {
+  font-family: var(--brand-font-heading-arabic);
+  color: var(--brand-foreground);
+}
+
+.content .otherName {
+  font-size: 60%;
+}
+
+.content .rule {
+  inline-size: 10%;
+  background-color: var(--brand-accent);
+}
+
+.content .bodyLatin {
+  font-family: var(--brand-font-body-latin);
+  color: var(--brand-muted);
+}
+
+.content .bodyArabic {
+  font-family: var(--brand-font-body-arabic);
+  color: var(--brand-muted);
+}
+
+.content .strip {
+  grid-column: 1 / span 2;
+  grid-row: 2;
+  background-color: var(--brand-secondary);
+}
+
+.content .sticker {
+  display: grid;
+  inline-size: 100%;
+  aspect-ratio: 1;
+  clip-path: circle(50%);
+}
+
+.content .sticker > * {
+  grid-area: 1 / 1;
+}
+
+.content .disc {
+  fill: var(--brand-primary);
+}
+
+.content .ring {
+  fill: none;
+  stroke: var(--brand-accent);
+}
+
+.content .stickerCenter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.content .stickerMark {
+  inline-size: 40%;
+  block-size: auto;
+}
+
+.content .stickerLatin {
+  font-family: var(--brand-font-heading-latin);
+  color: var(--brand-background);
+}
+
+.content .stickerArabic {
+  font-family: var(--brand-font-heading-arabic);
+  color: var(--brand-background);
+}

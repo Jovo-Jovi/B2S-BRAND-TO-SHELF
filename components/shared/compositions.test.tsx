@@ -30,6 +30,8 @@ const header = {
   logos: [] as { ground: "light" | "dark"; src: string }[],
   localeHref: "/ar/gallery",
   localeCaption: "Arabic",
+  themeCaption: "Theme",
+  themeSystem: "System theme",
   themeLight: "Light theme",
   themeDark: "Dark theme",
   onTheme: () => undefined,
@@ -140,9 +142,14 @@ describe("compositions", () => {
         back="Back"
         continueCaption="Continue"
         save="Save and finish later"
+        mark="B2S"
+        localeHref="/ar/gallery"
+        localeCaption="Arabic"
+        help="Help"
         onBack={() => undefined}
         onContinue={() => undefined}
         onSave={() => undefined}
+        onHelp={() => undefined}
         onStep={() => undefined}
         errors={[]}
       >

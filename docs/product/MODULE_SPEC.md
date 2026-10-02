@@ -2,7 +2,7 @@
 
 **Status:** AUTHORED. Precedence slot 12.
 **Authored:** 2026-08-01 by the reviewer surface.
-**Depends on:** `SCOPE.md` (22 modules), `ARCHITECTURE.md`, `GLOSSARY.md`.
+**Depends on:** `SCOPE.md` (23 modules), `ARCHITECTURE.md`, `GLOSSARY.md`.
 
 > The repository is the specification's index. A feature folder maps one-to-one
 > to a module in `SCOPE.md`. A folder that maps to nothing is out of scope by
@@ -52,12 +52,15 @@ enumerate every file, and the check does not pretend otherwise.
 app/                              route surface only, thin
   [locale]/
     dictionaries.ts
+    page.tsx                      placeholder until the public site, P08 (OD-A8)
     dictionaries/                 locale resolution, dictionary loading
     (public)/                     unauthenticated
       sign-in/                    email-and-password and Google (OD-G13)
       callback/                   Google OAuth return
       invitation/                 accept — deferred, P02
       gallery/                    catalog gallery — refused when the deployment is production
+      privacy/                    privacy policy — deferred, P08 (OD-A8)
+      terms/                      terms of service — deferred, P08 (OD-A8)
     (app)/                        authenticated tenant surface — deferred, P02
       onboarding/
       brand/

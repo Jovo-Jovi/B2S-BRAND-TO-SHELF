@@ -7,7 +7,7 @@
 
 ---
 
-## 1. The module set — 22 modules
+## 1. The module set — 23 modules
 
 Every module traces to at least one signed decision. `R1` / `R2` / `R3` is the
 release assignment.
@@ -36,10 +36,14 @@ release assignment.
 | 20 | **Notifications** | R2 | Approval waiting, low stock, failed import, expiring batch | Owns no triggering logic | F6 |
 | 21 | **Design Assistant** | R3 | `DesignSuggestion`. Reads brand config, template metadata, product names **only** | Never reads buyer, invoice, payment or financial data | G12 |
 | 22 | **Dashboard** | R1 | The role-aware landing surface | Reads everything, owns nothing | — |
+| 23 | **Public site** | R1 | A bilingual landing page at the root of each locale; entry to sign in and to sign up, sign-up leading into the wizard's Welcome step; a privacy policy and terms of service whose text the owner supplies | Owns no data, reads no tenant data, sets no tracking cookie and loads no analytics. Nothing else in R1. Built in P08 | A8 |
 | — | **Operator Console** | R1 | Tenants, usage, billing, `FeatureFlag`, `ConsentGrant` | **Never tenant business data** — separate surface, not a tenant module | G10 |
 
 **CF-29 closed.** The original map had 9 modules; 13 were missing and 3 more were
 required by decisions already signed. All 22 are now traced.
+
+**AMENDED 2026-09-30 — module 23.** The sentence above stands (PR-07). It is the
+record of the close. OD-A8 adds module 23, Public site. The table is 23 modules.
 
 ---
 

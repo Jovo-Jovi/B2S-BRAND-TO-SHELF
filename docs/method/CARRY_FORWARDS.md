@@ -3558,7 +3558,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       CLOSED (P03-T13). Arabic rendering flips a mirroring glyph and
       leaves a never-mirror glyph unflipped, measured by transform and
       by position. Owner: none outstanding.
-- [ ] CF-180 — ACCEPTANCE. The onboarding wizard's first step is composed
+- [x] CF-180 — ACCEPTANCE. The onboarding wizard's first step is composed
       from catalog primitives alone, with no page-level styling, in both
       locales and both themes. A catalog that cannot compose the first
       real screen it exists for is incomplete, whatever its inventory
@@ -3568,6 +3568,10 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       specimen now. Criterion six, save and finish later preserves both
       partial values, needs the tenant business-data columns CF-213 names.
       Owner: **the task that lands the tenant business-data amendment**.
+      CLOSED (P03-T16) by the Brand step gallery specimen. DESIGN_SURFACE.md
+      §11's six criteria pass in both locales, both themes, at 360 and at
+      1280. Persistence is not claimed here; it stays with CF-214.
+      Owner: none outstanding.
 - [ ] CF-181 — Before the first production dump, the client binaries'
       provenance is verified: by a valid signature where the binary
       carries one, otherwise by the publisher's published checksum for
@@ -4067,14 +4071,54 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       Plants: proof-text tinted, and proof-text used outside BrandFrame;
       each restored byte-identical.
       Owner: none outstanding.
-- [ ] CF-223 — The acceptance specimen is step 1, Brand, with its live
+- [x] CF-223 — The acceptance specimen is step 1, Brand, with its live
       preview inside BrandFrame. CF-180's criteria one to five travel with
       it. Its full specification arrives with P03-T16. This task did not
       build the specimen, the preview, or a wizard route.
       Owner: **P03-T16**.
-- [ ] CF-224 — The owner's wizard mockup offered Pouch and Box previews.
+      CLOSED (P03-T16) by the Brand step specimen and the §11 rewrite.
+      Owner: none outstanding.
+- [x] CF-224 — The owner's wizard mockup offered Pouch and Box previews.
       SCOPE.md module 07 places labels and stickers in Release 1 and boxes
       in Release 2. The real preview offers Label and Sticker only.
       Owner: **P03-T16**.
+      CLOSED (P03-T16). The specimen offers Label and Sticker only.
+      Owner: none outstanding.
+- [ ] CF-225 — Accepted logo formats and size limits are stated nowhere,
+      and which LogoVariant an upload creates is unspecified. The Brand
+      step's file control names no format and no byte limit, and a chosen
+      file replaces the sample's existing dark-ground mark in the gallery
+      preview only. That is not a variant-assignment rule.
+      Owner: **the task that builds the wizard's logo step with persistence**.
+- [x] CF-226 — P03-T15 rendered the theme choice as two secondary buttons,
+      because Button has no pressed state and Clay belongs only to a
+      region's primary action.
+      CLOSED (P03-T16). DESIGN_SURFACE.md §7 specifies a RadioGroup in the
+      account menu — System, Light, Dark — and PageHeader implements it.
+      System follows prefers-color-scheme.
+      Owner: none outstanding.
+- [x] CF-227 — P03-T15 specified a navigation drawer and stated neither a
+      width nor a layer, so below lg the navigation was an in-flow
+      disclosure.
+      CLOSED (P03-T16). §7 specifies the native dialog element opened
+      modally as a side sheet from inline-start, at drawer-width, with no
+      z-index. AppShell implements it.
+      Owner: none outstanding.
+- [x] CF-228 — At lg and above, P03-T15 rendered the side navigation as a
+      sticky grid column. That reading is better than a fixed panel, and
+      it had no stated width.
+      CLOSED (P03-T16). §2.11 states `--b2s-nav-width` at 17rem, and
+      AppShell's column uses it.
+      Owner: none outstanding.
+- [x] CF-229 — EmptyState and ErrorState are not cards. P03-T15 rendered
+      them as in-flow content, and the specification had called them cards.
+      CLOSED (P03-T16). §7 records both as in-flow content that take no
+      elevation.
+      Owner: none outstanding.
+- [ ] CF-230 — OD-A8's unauthenticated visitor cannot be a ROLE_JOURNEY.md
+      row. The check admits the role enum plus the named non-enum actors
+      Operator and Buyer, and no other actor. Adding a role was forbidden.
+      The capability is an annotation in ROLE_JOURNEY.md, not a table row.
+      Owner: **the reviewer**.
 
 

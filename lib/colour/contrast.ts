@@ -7,6 +7,13 @@
 /** BRAND_CONFIG.md §11. foreground against background, every theme. */
 export const FOREGROUND_CONTRAST_MINIMUM = 4.5;
 
+/** DESIGN_SURFACE.md §3.1. Black and white contrast equally here. */
+export const EQUAL_CONTRAST_LUMINANCE = 0.179;
+
+export function markGround(primary: string): "dark" | "light" {
+  return relativeLuminance(primary) < EQUAL_CONTRAST_LUMINANCE ? "dark" : "light";
+}
+
 function hexChannels(hex: string): [number, number, number] | null {
   let body = hex.startsWith("#") ? hex.slice(1) : hex;
   if (body.length === 3 || body.length === 4) {

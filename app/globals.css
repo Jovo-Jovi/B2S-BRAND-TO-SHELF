@@ -168,6 +168,12 @@
   --b2s-multiline-rows-min: 3;
   --b2s-multiline-rows-max: 8;
   --b2s-skeleton-opacity-min: 0.6;
+  --b2s-nav-width: 17rem;
+  --b2s-drawer-width: min(18rem, 85vw);
+  --b2s-preview-label-max: 30rem;
+  --b2s-preview-sticker-max: 15rem;
+  --b2s-proof-height-narrow: 15rem;
+  --b2s-preview-rule-block: 3px;
 }
 
 :root:lang(ar) {

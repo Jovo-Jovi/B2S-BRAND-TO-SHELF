@@ -20,7 +20,7 @@ never edited in place.
 
 ## 2. Decision register
 
-100 decisions, all signed. None open.
+101 decisions, all signed. None open.
 
 ### Group A — Product identity
 
@@ -33,6 +33,7 @@ never edited in place.
 | A5 | **Exclusions:** agencies serving unrelated clients from one login. Compliance guarantees (F2). Retail GTIN generation (H5). Legacy data migration as a built-in feature — CSV import replaces it. | SIGNED (derived) |
 | A6 | Done when many brands run their business from it. | SIGNED |
 | A7 | Every product links to business management, design, preparation, packaging and invoicing. Stock reaches component level. | SIGNED |
+| **A8** | **Release 1 includes a public site: a bilingual landing page at each locale root, sign-in and sign-up entry, and a privacy policy and terms of service whose text the owner supplies. It owns no data. It is built in P08.** | SIGNED 2026-09-30 |
 
 ### Group B — Legacy relationship
 
@@ -663,4 +664,15 @@ Filed in Group G. It replaces OD-G22. OD-G22's text stands, unedited.
 **Reasoning.** A tinted surround shifts how the colour beside it is perceived, which matters where a brand is judged and nowhere else. OD-G22 applied it to the whole platform and removed the platform's identity to protect a judgement made in one place.
 
 **Supersedes OD-G22, whose text stands (PR-07). Forecloses.** A tinted proof; proof grey as a platform surface; anything warm inside the proof; a neutral above the ceiling.
+
+### OD-A8 — Release 1 includes a public site
+**Signed 2026-09-30.**
+
+Filed in Group A. The register's convention is the group title, as OD-G21 records it. This decision adds a module to `SCOPE.md`. Group A is Product identity: what the product is, and what it excludes (A5). Group G holds the client, hosting and chrome identity, which this decision uses and does not redefine. Group H holds acceptance and method.
+
+**Decision.** SCOPE.md gains module 23, Public site, Release 1: a bilingual landing page at the root of each locale, explaining what B2S does for a brand owner; entry points to sign in and to sign up, with sign-up leading into the wizard's Welcome step (BRAND_CONFIG.md §10 amendment); and a privacy policy and terms of service, whose text is the owner's to supply — legal content the platform presents but does not author. Nothing else in R1. It owns no data, reads no tenant data, sets no tracking cookie and loads no analytics. Its copy claims only what Release 1 scope delivers. It is platform chrome — Clay and warm neutrals — except that any brand or packaging image sits on the achromatic proof (OD-G25) and is a clearly labelled fictional sample. It is built in P08, release readiness, so it exists before P09's launch and before the Google sign-in client is taken out of testing.
+
+**Reasoning.** The root URL currently shows a placeholder, and it is the first thing a prospective business sees. Google's verification of a sign-in client generally requires a public home page and a privacy-policy link — to be confirmed against Google's rules when P08 runs. A published privacy policy is needed anyway for the buyer data B2S holds. P03's wizard needs none of it; the first real business does.
+
+**Forecloses.** Analytics, tracking or advertising scripts in R1; pricing, a blog, testimonials or case studies until separately decided; naming any real customer without their written consent; a claim beyond Release 1 scope; any read of tenant data from a public page; a public page that is not bilingual.
 

@@ -63,7 +63,7 @@ type FileDropProps = {
   units: ByteUnitWords;
   copy: FileDropCopy;
   accept?: string;
-  sizeLimit: number;
+  sizeLimit?: number;
   files?: FileDropEntry[];
   disabled?: boolean;
   onChoose?: (files: File[]) => void;
@@ -100,7 +100,7 @@ export function FileDrop({
   const visual =
     state ??
     (disabled ? "disabled" : dragOver ? "active" : files.length === 0 ? "empty" : "default");
-  const limit = formatByteSize(sizeLimit, locale, units);
+  const limit = sizeLimit === undefined ? null : formatByteSize(sizeLimit, locale, units);
 
   function take(list: FileList | null) {
     if (!list || disabled) {
@@ -133,7 +133,7 @@ export function FileDrop({
         <p className={styles.instruction}>{dragOver || state === "active" ? copy.dropInstruction : copy.instruction}</p>
         <p className={styles.constraints}>
           <span>{copy.acceptedTypes}</span>
-          <span>{limit}</span>
+          {limit ? <span>{limit}</span> : null}
         </p>
         <input
           id={inputId}

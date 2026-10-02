@@ -5,6 +5,7 @@ import { useEffect, useRef, type ReactNode } from "react";
 import type { CalendarLocale } from "../../../lib/locale/calendar-date";
 import { fillPattern, formatCount } from "../../../lib/locale/format-number";
 import { Button } from "../../ui/button/button";
+import { TextLink } from "../../ui/text-link/text-link";
 import styles from "./wizard-step.module.css";
 
 export const WIZARD_STEPS = ["brand", "typography", "company", "guidelines", "review"] as const;
@@ -25,11 +26,17 @@ type WizardStepProps = {
   back: string;
   continueCaption: string;
   save: string;
+  mark: string;
+  localeHref: string;
+  localeCaption: string;
+  help: string;
   onBack: () => void;
   onContinue: () => void;
   onSave: () => void;
+  onHelp: () => void;
   onStep: (step: WizardStepId) => void;
   errors: WizardError[];
+  preview?: ReactNode;
   children: ReactNode;
 };
 
@@ -50,11 +57,17 @@ export function WizardStep({
   back,
   continueCaption,
   save,
+  mark,
+  localeHref,
+  localeCaption,
+  help,
   onBack,
   onContinue,
   onSave,
+  onHelp,
   onStep,
   errors,
+  preview,
   children,
 }: WizardStepProps) {
   const summaryRef = useRef<HTMLDivElement>(null);
@@ -68,8 +81,16 @@ export function WizardStep({
   const welcomeReached = current !== "welcome";
 
   return (
-    <section className={styles.step} data-composition="WizardStep">
-      <ol className={styles.stepper}>
+    <section className={styles.frame} data-composition="WizardStep">
+      <header className={styles.frameHeader}>
+        <p className={styles.mark}>{mark}</p>
+        <TextLink href={localeHref} variant="standalone">
+          {localeCaption}
+        </TextLink>
+        <Button type="button" variant="quiet" onClick={onHelp}>
+          {help}
+        </Button>
+        <ol className={styles.stepper}>
         <li>
           {welcomeReached ? (
             <Button type="button" variant="quiet" onClick={() => onStep("welcome")}>
@@ -111,7 +132,10 @@ export function WizardStep({
             </li>
           );
         })}
-      </ol>
+        </ol>
+      </header>
+      <div className={styles.layout}>
+        <div className={styles.formColumn}>
       {current !== "welcome" ? (
         <p>{fillPattern(progress, { current: formatCount(currentIndex + 1, locale), total: formatCount(WIZARD_STEPS.length, locale) })}</p>
       ) : null}
@@ -141,6 +165,9 @@ export function WizardStep({
             {continueCaption}
           </Button>
         </div>
+      </div>
+        </div>
+        {preview ? <div className={styles.preview}>{preview}</div> : null}
       </div>
     </section>
   );
