@@ -117,7 +117,15 @@ components/                       the design-surface catalog
     date-field/                   DateField
     file-drop/                    FileDrop
     data-table/                   DataTable
-  shared/                         deferred
+  shared/
+    app-shell/                    AppShell
+    page-header/                  PageHeader
+    tenant-switcher/              TenantSwitcher
+    form-section/                 FormSection
+    filtered-data-table/          the filtered data table
+    empty-state/                  EmptyState
+    error-state/                  ErrorState
+    wizard-step/                  WizardStep
 
 lib/
   supabase/

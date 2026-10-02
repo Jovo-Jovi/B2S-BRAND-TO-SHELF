@@ -488,6 +488,12 @@ forced a disabled rule on and reported the result as the tier's default
 behaviour; and P03-T11-FIX, where a geometry-perturbation method the
 reviewer specified found nothing and the builder substituted the known-bad
 test.
+A known-bad fixture is validated in a tier that can observe the
+criterion: it must fail there before its passing, or its being
+unevaluable, in another tier means that tier is blind to it. Origin:
+P03-T13, which measured in Chromium that the reviewer's two prescribed
+fixtures — a lone 4px button and text on the identical grey — are passed
+and left incomplete by a real browser, so they proved nothing.
 
 **PR-46 — Before a push, every check in the static conformance set runs
 locally against the commit being pushed.**

@@ -26,7 +26,7 @@ const EXEMPT_PATH_SEGMENT = `${sep}dictionaries${sep}`;
 // the scan roots [app, proxy.ts, lib, features]. P03-T12 raises the floor
 // to the count measured after the data family: 73. P03-T13 adds the gallery
 // route: 77.
-const MINIMUM_FILES = 77;
+const MINIMUM_FILES = 87;
 
 const CHECKS = [
   { name: "hex colour", pattern: /#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3}(?:[0-9a-fA-F]{2})?)?\b/ },

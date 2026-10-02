@@ -1,0 +1,108 @@
+.shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "banner" "nav" "main";
+}
+
+.banner {
+  grid-area: banner;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--b2s-space-3);
+  padding-block: var(--b2s-space-3);
+  padding-inline: var(--b2s-space-4);
+  background-color: var(--b2s-color-canvas);
+  color: var(--b2s-color-text);
+}
+
+.nav {
+  grid-area: nav;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  row-gap: var(--b2s-space-1);
+  padding-block: var(--b2s-space-3);
+  padding-inline: var(--b2s-space-3);
+  background-color: var(--b2s-color-canvas);
+  color: var(--b2s-color-text);
+}
+
+.main {
+  grid-area: main;
+  min-inline-size: 0;
+  padding-block: var(--b2s-space-4);
+  padding-inline: var(--b2s-space-4);
+  background-color: var(--b2s-color-canvas);
+  color: var(--b2s-color-text);
+}
+
+.measured {
+  max-inline-size: var(--b2s-measure-form);
+}
+
+.skip,
+.link {
+  color: var(--b2s-color-text);
+  background-color: var(--b2s-color-canvas);
+  text-decoration: none;
+}
+
+.skip {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: var(--b2s-control-height);
+}
+
+.skip:focus-visible,
+.link:focus-visible {
+  outline-style: solid;
+  outline-width: var(--b2s-focus-width);
+  outline-color: var(--b2s-color-focus);
+  outline-offset: var(--b2s-focus-offset);
+}
+
+.link {
+  display: flex;
+  align-items: center;
+  min-block-size: var(--b2s-control-height);
+  padding-inline: var(--b2s-space-3);
+  border-inline-start: var(--b2s-indicator-width) solid transparent;
+  font-weight: var(--b2s-weight-regular);
+}
+
+.current {
+  background-color: var(--b2s-color-accent-soft);
+  color: var(--b2s-color-accent-text);
+  font-weight: var(--b2s-weight-semibold);
+  border-inline-start-color: var(--b2s-color-action);
+}
+
+.drawer {
+  display: none;
+}
+
+@media (width < 1024px) {
+  .nav:not([data-open="true"]) {
+    display: none;
+  }
+
+  .drawer {
+    display: inline-flex;
+  }
+}
+
+@media (width >= 1024px) {
+  .shell {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      "banner banner"
+      "nav main";
+  }
+
+  .nav {
+    position: sticky;
+    inset-block-start: var(--b2s-space-0);
+    align-self: start;
+  }
+}

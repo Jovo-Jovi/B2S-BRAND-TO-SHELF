@@ -1,0 +1,18 @@
+.switcher {
+  display: flex;
+  flex-direction: column;
+  row-gap: var(--b2s-space-2);
+  background-color: var(--b2s-color-canvas);
+  color: var(--b2s-color-text);
+}
+
+.list {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: var(--b2s-space-2);
+  row-gap: var(--b2s-space-2);
+}
+
+.current {
+  font-weight: var(--b2s-weight-semibold);
+}

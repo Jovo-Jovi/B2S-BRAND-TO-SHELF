@@ -13,6 +13,7 @@ import {
   FLOOR_KNOWN_BAD,
   FLOOR_RULES_RUN,
 } from "../../scripts/component-a11y-exclusions.mjs";
+import { KNOWN_BAD_FIXTURES } from "../../scripts/known-bad-fixtures.mjs";
 import { BilingualField, type BilingualFieldVisual } from "./bilingual-field/bilingual-field";
 import { Button, type ButtonVisual } from "./button/button";
 import { Checkbox, type CheckboxVisual } from "./checkbox/checkbox";
@@ -572,38 +573,42 @@ describe("component accessibility tier", () => {
 
     expect(rulesRun).toBeGreaterThanOrEqual(FLOOR_RULES_RUN);
 
-    const proven: string[] = [];
-    paint(<button type="button">Go</button>, "en");
-    const tiny = document.querySelector("button");
-    if (!tiny) {
-      throw new Error("the 4px button was not painted");
+    function mountFixture(html: string) {
+      const parsed = new DOMParser().parseFromString(html, "text/html");
+      document.body.replaceChildren();
+      for (const node of document.head.querySelectorAll('meta[name="viewport"]')) {
+        node.remove();
+      }
+      const meta = parsed.head.querySelector('meta[name="viewport"]');
+      if (meta) {
+        document.head.appendChild(document.adoptNode(meta));
+      }
+      const root = document.createElement("div");
+      root.id = "root";
+      for (const child of [...parsed.body.childNodes]) {
+        root.appendChild(document.adoptNode(child));
+      }
+      document.body.appendChild(root);
+      return root;
     }
-    tiny.style.setProperty("width", "4px");
-    tiny.style.setProperty("height", "4px");
-    tiny.style.setProperty("padding-block", "0");
-    tiny.style.setProperty("padding-inline", "0");
-    tiny.style.setProperty("display", "block");
-    const targetSize = await axe.run(tiny, { rules: { "target-size": { enabled: true } } });
+
+    const fixtureById = new Map(KNOWN_BAD_FIXTURES.map((fixture) => [fixture.id, fixture.document]));
+    const proven: string[] = [];
+
+    const targetRoot = mountFixture(fixtureById.get("target-size") ?? "");
+    const targetSize = await axe.run(targetRoot, { rules: { "target-size": { enabled: true } } });
     if (targetSize.violations.some((item) => item.id === "target-size")) {
       throw new Error(
         "target-size failed its known-bad fixture. The simulated DOM can observe it, so the exclusion must be revisited.",
       );
     }
     if (!targetSize.passes.some((item) => item.id === "target-size")) {
-      throw new Error("target-size did not pass its 4px button, so the known-bad fixture was not proven");
+      throw new Error("target-size did not pass its adjacent 4px buttons, so the known-bad fixture was not proven");
     }
     proven.push("target-size");
 
-    paint(<button type="button">Save the line</button>, "en");
-    const gray = document.querySelector("button");
-    if (!gray) {
-      throw new Error("the gray button was not painted");
-    }
-    const sameGray = "rgb(118, 118, 118)";
-    gray.style.setProperty("color", sameGray);
-    gray.style.setProperty("background-color", sameGray);
-    gray.style.setProperty("font-size", "16px");
-    const contrast = await axe.run(gray, { rules: { "color-contrast": { enabled: true } } });
+    const contrastRoot = mountFixture(fixtureById.get("color-contrast") ?? "");
+    const contrast = await axe.run(contrastRoot, { rules: { "color-contrast": { enabled: true } } });
     if (contrast.violations.some((item) => item.id === "color-contrast")) {
       throw new Error(
         "color-contrast failed its known-bad fixture. The simulated DOM can observe it, so the exclusion must be revisited.",

@@ -6,7 +6,7 @@
 // state that the gallery does not render fails here, before the browser job.
 
 import { existsSync, readFileSync, statSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { enforcedStates, loadCatalog, MINIMUM_BLOCKS, MINIMUM_ENFORCED_STATES, MINIMUM_IMPLEMENTED } from "./component-blocks.mjs";
@@ -17,6 +17,64 @@ const GALLERY = join(ROOT, "app", "[locale]", "(public)", "gallery", "gallery.ts
 const SPEC = join(ROOT, "__tests__", "browser", "gallery.spec.ts");
 const SURFACE = join(ROOT, "docs", "product", "DESIGN_SURFACE.md");
 
+const MINIMUM_COMPOSITIONS = 8;
+
+function compositionHeadings(surface) {
+  const section = surface.split("## 7. Shared compositions")[1]?.split("\n## 8.")[0] ?? "";
+  return [...section.matchAll(/^### (.+)$/gm)].map((match) => match[1].trim());
+}
+
+function resolveSharedImport(fromFile, specifier) {
+  let resolved = null;
+  if (specifier.startsWith("@/components/shared/")) {
+    resolved = specifier.slice(2);
+  } else if (specifier.startsWith(".")) {
+    resolved = normalize(join(dirname(fromFile), specifier)).split("\\").join("/");
+  }
+  if (!resolved || !resolved.startsWith("components/shared/")) {
+    return null;
+  }
+  if (resolved.endsWith(".css")) {
+    return null;
+  }
+  if (!resolved.endsWith(".tsx")) {
+    resolved = `${resolved}.tsx`;
+  }
+  return resolved;
+}
+
+function importedShared(source, fromFile) {
+  const found = [];
+  for (const match of source.matchAll(/from "([^"]+)"/g)) {
+    const resolved = resolveSharedImport(fromFile, match[1]);
+    if (resolved && resolved.startsWith("components/shared/")) {
+      found.push(resolved);
+    }
+  }
+  return found;
+}
+
+function compositionClosure(gallerySource) {
+  const seen = new Set();
+  const queue = importedShared(gallerySource, "app/[locale]/(public)/gallery/gallery.tsx");
+  const attributes = [];
+  while (queue.length > 0) {
+    const rel = queue.pop();
+    if (!rel || seen.has(rel)) continue;
+    seen.add(rel);
+    const absolute = join(ROOT, rel);
+    if (!existsSync(absolute)) {
+      fail(`${rel} is imported by the gallery closure and does not exist`);
+      continue;
+    }
+    const source = readFileSync(absolute, "utf8");
+    for (const match of source.matchAll(/data-composition="([^"]+)"/g)) {
+      attributes.push(match[1]);
+    }
+    queue.push(...importedShared(source, rel));
+  }
+  return { files: seen, attributes };
+}
 const MINIMUM_THEMES = 2;
 const MINIMUM_LOCALES = 2;
 const MINIMUM_WIDTHS = 2;
@@ -126,8 +184,17 @@ function main() {
   if (unrendered.length > 0) {
     fail(`gallery renderer has no case for ${unrendered.join(",")}`);
   }
-  if (!gallery.includes("<main>") || !gallery.includes("<h1>")) {
-    fail("the gallery is not a page: it needs one main landmark and one h1 (CF-196)");
+  const pageSources = [gallery];
+  for (const rel of compositionClosure(gallery).files) {
+    pageSources.push(readFileSync(join(ROOT, rel), "utf8"));
+  }
+  const pageText = pageSources.join("\n");
+  const mains = pageText.match(/<main[\s>]/g) ?? [];
+  const pageHeadings = pageText.match(/<h1[\s>]/g) ?? [];
+  if (mains.length !== 1 || pageHeadings.length !== 1) {
+    fail(
+      `the gallery is not a page: it needs one main landmark and one h1 (CF-196); found ${mains.length} main(s) and ${pageHeadings.length} h1(s)`,
+    );
   }
 
   const spec = readText(SPEC, "browser tier spec");
@@ -146,6 +213,20 @@ function main() {
     fail("the browser tier filters a gallery combination instead of iterating the exported constants");
   }
 
+  const headings = compositionHeadings(surface);
+  if (headings.length < MINIMUM_COMPOSITIONS) {
+    fail(`${headings.length} composition(s) in section 7, minimum ${MINIMUM_COMPOSITIONS}`);
+  }
+  const closure = compositionClosure(gallery);
+  const rendered = [...new Set(closure.attributes)];
+  const missingCompositions = headings.filter((name) => !rendered.includes(name));
+  const extraCompositions = rendered.filter((name) => !headings.includes(name));
+  if (missingCompositions.length > 0 || extraCompositions.length > 0) {
+    fail(
+      `gallery compositions are not section 7; missing ${missingCompositions.join(",") || "(none)"}; extra ${extraCompositions.join(",") || "(none)"}`,
+    );
+  }
+
   const primitives = new Set(pairs.map((pair) => pair.split("/")[0])).size;
   if (primitives < MINIMUM_IMPLEMENTED) {
     fail(`${primitives} primitive(s) in the gallery, minimum ${MINIMUM_IMPLEMENTED}`);
@@ -154,6 +235,7 @@ function main() {
   console.log(
     `OK: gallery covers ${pairs.length} enforced state(s), minimum ${MINIMUM_ENFORCED_STATES}, ` +
       `across ${primitives} primitive(s), minimum ${MINIMUM_IMPLEMENTED}; ` +
+      `${rendered.length} composition(s), minimum ${MINIMUM_COMPOSITIONS}; ` +
       `${themes.length} theme(s), minimum ${MINIMUM_THEMES}; ` +
       `${locales.length} locale(s), minimum ${MINIMUM_LOCALES}; ` +
       `${widths.length} width(s) including 360 and xl ${desktop}, minimum ${MINIMUM_WIDTHS}`,

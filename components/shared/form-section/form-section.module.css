@@ -1,0 +1,30 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  row-gap: var(--b2s-field-gap);
+  max-inline-size: var(--b2s-measure-form);
+  background-color: var(--b2s-color-canvas);
+  color: var(--b2s-color-text);
+}
+
+.title {
+  margin-block: 0;
+  color: var(--b2s-color-text);
+}
+
+.description {
+  margin-block: 0;
+  color: var(--b2s-color-text-muted);
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  row-gap: var(--b2s-field-gap);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: var(--b2s-space-3);
+}

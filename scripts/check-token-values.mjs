@@ -6,7 +6,8 @@
 // app/globals.css. The closed chromatic list is removed: OD-G24 and OD-G25
 // replace OD-G22, and an allow-list of chromatic tokens no longer describes
 // the platform. The colour-token set is closed against DESIGN_SURFACE.md
-// §2.2 and §2.11 in both directions. proof and proof-edge are achromatic.
+// §2.2 and §2.11 in both directions. proof, proof-edge and proof-text are
+// achromatic.
 // The warmth ceiling and the Clay–danger CIE76 floor are computed from
 // this stylesheet. Font families are the two OD-G23 faces plus generic
 // fallbacks. The z-index layer list is still asserted both ways.
@@ -36,17 +37,17 @@ const GLOBALS = "app/globals.css";
 const DOCUMENT = "docs/product/DESIGN_SURFACE.md";
 const SCAN_ROOTS = ["app", "components", "features"];
 
-const MINIMUM_TOKENS = 267;
+const MINIMUM_TOKENS = 271;
 const MINIMUM_FONT_FAMILIES = 13;
-const MINIMUM_CLOSED_COLOURS = 34;
-const MINIMUM_PROOF_CHANNELS = 4;
+const MINIMUM_CLOSED_COLOURS = 35;
+const MINIMUM_PROOF_CHANNELS = 6;
 const MINIMUM_CHROMA = 20;
 const MINIMUM_DELTA = 6;
 // P03-T12 — measured after DateField, FileDrop and DataTable.
 // P03-T13 — quiet fill is transparent, and the gallery is scanned: 1205 declarations, 89 sources.
-const MINIMUM_STYLESHEETS = 23;
-const MINIMUM_DECLARATIONS = 1247;
-const MINIMUM_SOURCES = 89;
+const MINIMUM_STYLESHEETS = 30;
+const MINIMUM_DECLARATIONS = 1396;
+const MINIMUM_SOURCES = 106;
 
 const FAMILIES = new Set(["IBM Plex Sans", "IBM Plex Sans Arabic"]);
 const GENERICS = new Set(["system-ui", "sans-serif"]);
@@ -644,7 +645,7 @@ export function identityViolations(markdown, css) {
   }
   let proof = 0;
   for (const theme of themes) {
-    for (const token of ["--b2s-color-proof", "--b2s-color-proof-edge"]) {
+    for (const token of ["--b2s-color-proof", "--b2s-color-proof-edge", "--b2s-color-proof-text"]) {
       const value = theme.values.get(token);
       const channels = value ? channelsOf(value) : null;
       if (!channels) {

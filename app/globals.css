@@ -85,6 +85,7 @@
   --b2s-color-info-bg: #e5ecf4;
   --b2s-color-proof: #e4e4e4;
   --b2s-color-proof-edge: #cccccc;
+  --b2s-color-proof-text: #2e2e2e;
   --b2s-color-scrim: rgb(0 0 0 / 0.4);
   --b2s-elevation-card: 0 1px 2px rgb(38 34 32 / 0.04), 0 12px 32px -18px rgb(38 34 32 / 0.18);
   --b2s-elevation-action: 0 1px 2px rgb(38 34 32 / 0.10), 0 6px 16px -8px rgb(176 79 44 / 0.45);
@@ -255,6 +256,7 @@
     --b2s-color-info-bg: #1a2230;
     --b2s-color-proof: #3a3a3a;
     --b2s-color-proof-edge: #555555;
+    --b2s-color-proof-text: #e6e6e6;
     --b2s-color-scrim: rgb(0 0 0 / 0.4);
     --b2s-elevation-card: none;
     --b2s-elevation-action: none;
@@ -298,6 +300,7 @@
   --b2s-color-info-bg: #1a2230;
   --b2s-color-proof: #3a3a3a;
   --b2s-color-proof-edge: #555555;
+  --b2s-color-proof-text: #e6e6e6;
   --b2s-color-scrim: rgb(0 0 0 / 0.4);
   --b2s-elevation-card: none;
   --b2s-elevation-action: none;
@@ -340,6 +343,7 @@
   --b2s-color-info-bg: #e5ecf4;
   --b2s-color-proof: #e4e4e4;
   --b2s-color-proof-edge: #cccccc;
+  --b2s-color-proof-text: #2e2e2e;
   --b2s-color-scrim: rgb(0 0 0 / 0.4);
   --b2s-elevation-card: 0 1px 2px rgb(38 34 32 / 0.04), 0 12px 32px -18px rgb(38 34 32 / 0.18);
   --b2s-elevation-action: 0 1px 2px rgb(38 34 32 / 0.10), 0 6px 16px -8px rgb(176 79 44 / 0.45);

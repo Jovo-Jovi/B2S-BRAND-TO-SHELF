@@ -106,8 +106,9 @@ Warmth is restrained by measurement, not taste: every neutral's chroma is capped
 |---|---|---|---|
 | `--b2s-color-proof` | `#e4e4e4` | `#3a3a3a` | The surround behind every brand and packaging preview. Red, green and blue equal |
 | `--b2s-color-proof-edge` | `#cccccc` | `#555555` | The mount boundary of a brand frame. Red, green and blue equal |
+| `--b2s-color-proof-text` | `#2e2e2e` | `#e6e6e6` | Text the platform writes inside the proof — named gap markers and the frame's own error. Red, green and blue equal |
 
-These two are the only achromatic surfaces in the platform, and they appear only in `BrandFrame` (§3). A warm neutral never sits inside the proof, and proof grey never styles anything else.
+The proof's tokens are three: `proof`, `proof-edge` and `proof-text`. `proof` and `proof-edge` are the only achromatic surfaces in the platform, and all three appear only in `BrandFrame` (§3). A warm neutral never sits inside the proof, and proof grey never styles anything else. `proof-text` on `proof` meets 10.68 in light and 9.11 in dark; on `proof-edge` it meets 8.46 and 5.97.
 
 **Status colours are functional, not decorative.** They carry the four states and nothing else, and never appear as brand, accent, emphasis or illustration.
 
@@ -117,7 +118,7 @@ These two are the only achromatic surfaces in the platform, and they appear only
 
 **`border` and `border-control` are different jobs.** WCAG 2.2 1.4.11 requires 3:1 only where a boundary is needed to identify a control. Dividers are decorative and sit quieter; control boundaries meet 3:1 on every surface. A control's boundary is measured against the surface around it, which pressing does not change.
 
-**Contrast, computed rather than asserted** (PR-23). Ninety-two pairs, forty-six per theme: each of `text`, `text-muted`, `text-subtle` and `accent-text` on `canvas`, `surface`, `sunken` and `raised`; `border-control`, `focus` and `action` against those four surfaces at 3:1; `action-text` on `action`, `action-hover` and `action-active`; `danger-action-text` on `danger-action`, `danger-action-hover` and `danger-action-active`; each status colour on its background and on `surface`; and `accent-text` on `accent-soft`, `text` on `accent-soft`, `text` on `surface-active` and `support` on `support-soft`. Every one meets WCAG 2.2 AA. The lowest text pair is 4.75 in light and 5.42 in dark; the lowest boundary 3.53 and 3.89. Selected rows:
+**Contrast, computed rather than asserted** (PR-23). Ninety-four pairs, forty-seven per theme: each of `text`, `text-muted`, `text-subtle` and `accent-text` on `canvas`, `surface`, `sunken` and `raised`; `border-control`, `focus` and `action` against those four surfaces at 3:1; `action-text` on `action`, `action-hover` and `action-active`; `danger-action-text` on `danger-action`, `danger-action-hover` and `danger-action-active`; each status colour on its background and on `surface`; and `accent-text` on `accent-soft`, `text` on `accent-soft`, `text` on `surface-active` and `support` on `support-soft`; `proof-text` on `proof`. Every one meets WCAG 2.2 AA. The lowest text pair is 4.75 in light and 5.42 in dark; the lowest boundary 3.53 and 3.89. Selected rows:
 
 | Pair | Light | Dark |
 |---|---|---|
@@ -320,13 +321,14 @@ The six `--b2s-layer-*` tokens are every z-index in the catalog, and no other va
 
 1. **No platform control inside a frame.** Editing affordances — edit, replace, remove — sit outside the frame's boundary, in chrome. The platform cannot refuse a brand for being that brand, but it can refuse to put a platform control on top of one (`UX_PRINCIPLES.md` §7).
 2. **Inside a frame, no platform token is referenced. Outside one, no brand token is** (CF-171).
-3. **The frame is a proofing mount:** the `proof` surround at `radius-xl`, a `border-width` boundary in `proof-edge`, and `space-5` of surround between the chrome and the brand's own `background`. These are the only platform tokens the frame uses (`OD-G25`).
+3. **The frame is a proofing mount:** the `proof` surround at `radius-xl`, a `border-width` boundary in `proof-edge`, and `space-5` of surround between the chrome and the brand's own `background`. The frame's own error and its named gap markers are set in `proof-text`. These, with `radius-xl`, `border-width` and `space-5`, are the platform tokens the frame uses (`OD-G25`).
 4. **Contrast inside a frame** is bound by `BRAND_CONFIG.md` §11's `foreground`/`background` constant, not by the platform's AA rule. The frame never "fixes" a brand's colours.
 5. **Missing values are named, never substituted** (`BRAND_CONFIG.md` §3, §9, §11). A missing role shows a named gap in that role's place. A missing locale string shows the field and the locale. A missing typeface pair renders the text in the platform face with a visible marker naming the pair — so the gap is seen, never hidden behind a plausible substitute.
 6. **The tenant's logo in the header is an image, not a brand-token consumer.** It needs no frame (§7, `PageHeader`).
 7. **A colour swatch in chrome is data, not a token.** A `ColorField` showing a stored `color_value` renders that value inline; it is not a brand-token reference, and CF-171 must not treat it as one.
 8. **The platform identity never enters the proof.** No Clay, no warm neutral, no platform shadow and no platform typeface styles anything inside the surround. A brand that happens to use terracotta shows its own terracotta, not the platform's (`OD-G24`).
 9. **Tenant output never mirrors.** What a frame shows keeps its physical layout, orientation, typography, numerals and imagery whatever the interface language. Switching the interface from English to Arabic mirrors the chrome around the frame and changes nothing inside it (`OD-G24`, §4 rule 12).
+10. **Content inside a frame resets inherited font size, leading and spacing to their initial values**, so the interface's type never enters tenant output. Tenant output typography is specified by templates at P06; until then the reset is the stated behaviour, not a design. P03-T14 reported the reset. Filling a typeface here would be a design this document does not state.
 
 ---
 
@@ -864,13 +866,13 @@ states:
   active: n/a — the frame is a container
   disabled: n/a — a frame that cannot render shows its error or empty state instead
   loading: surround shows Skeleton at the frame's size while the profile resolves
-  error: surround shows a named error — the profile could not be resolved — with the request identifier
+  error: surround shows a named error — the profile could not be resolved — with the request identifier, its text in proof-text
   empty: the brand has no current profile — named, with the action to finish the brand outside the frame
-  incomplete: renders what exists and places a named gap marker for each missing role, locale string or typeface pair
+  incomplete: renders what exists and places a named gap marker for each missing role, locale string or typeface pair, the marker text in proof-text
 keyboard: [none of its own]
 aria: region labelled with the brand or line name; gap markers are text, not colour alone
 mirrors: brand_content follows the direction of the locale being previewed, which may differ from the interface's
-tokens: [border-width, color-proof, color-proof-edge, radius-xl, space-5, brand-primary, brand-secondary, brand-accent, brand-background, brand-foreground, brand-muted, brand-critical, brand-font-heading-latin, brand-font-heading-arabic, brand-font-body-latin, brand-font-body-arabic]
+tokens: [border-width, color-proof, color-proof-edge, color-proof-text, radius-xl, space-5, brand-primary, brand-secondary, brand-accent, brand-background, brand-foreground, brand-muted, brand-critical, brand-font-heading-latin, brand-font-heading-arabic, brand-font-body-latin, brand-font-body-arabic]
 ```
 
 **The only component allowed to consume `--brand-*` tokens**, and the only one that defines them (§3). **The previewed locale can differ from the interface locale**: a member working in English can preview the Arabic label, and the frame renders that content right-to-left inside a left-to-right page.
@@ -932,7 +934,7 @@ tokens: [icon-size, color-text, duration-base, delay-loader]
 The frame of every signed-in page: **header**, **navigation**, **main**.
 
 - **Header:** `PageHeader` — tenant logo, `TenantSwitcher`, locale switch, theme switch, account menu.
-- **Navigation:** at `lg` and above, a side navigation fixed at inline-start; below `lg`, a drawer opened from the header. The current section is marked by weight and an inline-start bar of `--b2s-indicator-width`, never by colour alone.
+- **Navigation:** at `lg` and above, a side navigation fixed at inline-start; below `lg`, a drawer opened from the header. The current section takes `accent-soft` fill, its label in `accent-text` at the semibold weight, and an inline-start bar of `indicator-width` in `action`. Weight and the bar carry it, so it is never colour alone.
 - **Main:** full width for tables; forms and wizards capped at `--b2s-measure-form`.
 - **A skip link** is the first focusable element and moves focus to `main`. Landmarks: `banner`, `navigation`, `main`.
 
@@ -962,7 +964,7 @@ What failed, in plain words; what to do next; a retry action; and the request id
 
 ### WizardStep
 
-- **Stepper:** numbered, because onboarding genuinely is a sequence. Steps are completed, current or upcoming. Completed steps are reachable; upcoming ones are not until reached. Progress is also stated in text — "Step 2 of 6" — so it is never carried by the graphic alone.
+- **Stepper:** numbered, because onboarding genuinely is a sequence. It numbers Brand to Review, five steps. Welcome precedes the stepper and is not numbered (`BRAND_CONFIG.md` §10 amendment). Steps are completed, current or upcoming. Completed steps are reachable; upcoming ones are not until reached. Progress is also stated in text — "Step 2 of 5" — so it is never carried by the graphic alone.
 - **Body:** a step title at `3xl`, one sentence of purpose, then one or more `FormSection`s.
 - **Footer:** **Back** as `quiet` at inline-start, **Continue** as `primary` at inline-end, and **Save and finish later** as `secondary`, because the wizard is resumable (`BRAND_CONFIG.md` §10).
 - **Validation on Continue:** an error summary appears at the top, lists each problem as a link to its field, and takes focus. Each field also shows its own error. Input is always preserved.
@@ -1010,8 +1012,8 @@ Every gate the catalog landing task builds, and the part of this document it hol
 | CF-168 | Static | §4 rule 2 | Style sources for physical `left` and `right` properties |
 | CF-169 | Static | `UX_PRINCIPLES.md` §4; §4 rule 11 here | `en` and `ar` key sets, including every plural category |
 | CF-170 | Static | `UX_PRINCIPLES.md` §4 (CF-74) | Duplicate values per catalog namespace |
-| CF-171 | Static | §3 rules 2 and 7 | `--brand-*` is referenced only in `BrandFrame`'s stylesheet; within it, `--brand-*` only on canvas and content selectors, and `--b2s-*` only on mount and surround selectors; `--brand-*` is defined only by `BrandFrame`, and only from expressions |
-| CF-172 | Static | §2.1; §2.2; §0 items 1 to 3 | Raw colour, spacing, radius, duration, shadow, font-family or z-index outside token definitions; the colour token set closed against §2.2 and §2.11 in both directions; `proof` and `proof-edge` achromatic; the warmth ceiling; the Clay–danger distinction floor; font families only the two `OD-G23` names |
+| CF-171 | Static | §3 rules 2 and 7 | `--brand-*` is referenced only in `BrandFrame`'s stylesheet; within it, `--brand-*` only on canvas and content selectors, and `--b2s-*` only on mount and surround selectors; `--brand-*` is defined only by `BrandFrame`, and only from expressions; `proof`, `proof-edge` and `proof-text` are referenced only in `BrandFrame` |
+| CF-172 | Static | §2.1; §2.2; §0 items 1 to 3 | Raw colour, spacing, radius, duration, shadow, font-family or z-index outside token definitions; the colour token set closed against §2.2 and §2.11 in both directions; `proof`, `proof-edge` and `proof-text` achromatic; the warmth ceiling; the Clay–danger distinction floor; font families only the two `OD-G23` names |
 | CF-198 | Static | §2.2 | Text and background declared together, or through a state selector of the same component, at 4.5:1 in both themes. Only `--b2s-color-border-control` is a boundary, at 3:1 against canvas, surface, sunken and raised, in both themes. `--b2s-color-border` is decorative and exempt. Brand pairs are not evaluated. Pairs inherited from an ancestor are outside it. Not a substitute for CF-177 |
 | CF-173 | Static | §5; every `component` block | Each primitive implements every state not marked `n/a` |
 | CF-174 | Static | Every `component` block | Variant and size names match exactly |
@@ -1028,19 +1030,7 @@ Every gate the catalog landing task builds, and the part of this document it hol
 
 The catalog is finished when the first real screen it exists for can be built from it with **no page-level styling at all** (CF-180). Inventory is not the test; composition is.
 
-**The screen:** "Company identity" — `BRAND_CONFIG.md` §10's first row: legal name and trading name, landing on `tenant` through `TranslationKey`.
-
-```
-AppShell
-└─ WizardStep  (step 1 of N, comfortable)
-   ├─ FormSection  "Company identity"
-   │  ├─ BilingualField  legal name     (tenant default_locale first)
-   │  └─ BilingualField  trading name
-   └─ footer
-      ├─ Button quiet      Back                  (inline-start; absent on step 1)
-      ├─ Button secondary  Save and finish later
-      └─ Button primary    Continue              (inline-end)
-```
+**The screen:** step 1, Brand. The §10 amendment moved company data to step 3. Welcome precedes Brand and is too small a screen to prove the catalog. Brand exercises the bilingual fields, the swatches, the logo, and a live preview inside `BrandFrame`. Its full specification arrives with P03-T16. This section does not specify that screen's tree.
 
 **It passes when**, in both locales and both themes, at 360px and at desktop width:
 
@@ -1276,3 +1266,43 @@ A count or a byte size below zero, or a progress value outside 0 to 1, is refuse
 `` Sort `direction` is `ascending`, `descending`, or absent. The words between from, to and total are not stated; the table fills the pattern the caller supplies and does not invent the sentence. ``
 
 The sort cycle is absent, then ascending, then descending, then absent. Adopted from P03-T12. The pagination pattern is `{from}–{to} of {total}` in English and `{from}–{to} من {total}` in Arabic.
+
+**2026-10-02 — P03-T15.** The proof had no text colour, so BrandFrame's named error and gap markers had nothing achromatic to be set in. Prior proof table ended at proof-edge, and the sentence after it read:
+
+`These two are the only achromatic surfaces in the platform, and they appear only in BrandFrame (§3). A warm neutral never sits inside the proof, and proof grey never styles anything else.`
+
+The table gains `--b2s-color-proof-text`, `#2e2e2e` light and `#e6e6e6` dark, red, green and blue equal. The proof's tokens are now three. Measured: proof-text on proof is 10.68 light and 9.11 dark; on proof-edge, 8.46 and 5.97.
+
+**2026-10-02 — P03-T15.** The contrast sentence enumerated ninety-two pairs. Prior opening:
+
+`Ninety-two pairs, forty-six per theme:`
+
+The sentence now enumerates ninety-four pairs, forty-seven per theme, and gains `proof-text` on `proof`.
+
+**2026-10-02 — P03-T15.** Rule 3 did not name the text the frame itself writes. Prior text:
+
+`3. **The frame is a proofing mount:** the proof surround at radius-xl, a border-width boundary in proof-edge, and space-5 of surround between the chrome and the brand's own background. These are the only platform tokens the frame uses (OD-G25).`
+
+The frame's error and named gap markers are set in proof-text. BrandFrame's block names color-proof-text.
+
+**2026-10-02 — P03-T15.** §3 did not state the reset P03-T14 reported. Content inside a frame resets inherited font size, leading and spacing to their initial values. Tenant output typography is specified by templates at P06; until then the reset is the stated behaviour, not a design. That is rule 10.
+
+**2026-10-02 — P03-T15.** AppShell's current section was weight and a bar, and did not name the fill or the label colour. Prior text:
+
+`The current section is marked by weight and an inline-start bar of --b2s-indicator-width, never by colour alone.`
+
+The current section takes accent-soft fill, its label in accent-text at the semibold weight, and an inline-start bar of indicator-width in action. Weight and the bar carry it, so it is never colour alone.
+
+**2026-10-02 — P03-T15.** The stepper did not name its steps, and the progress example counted six. Prior text:
+
+`**Stepper:** numbered, because onboarding genuinely is a sequence. Steps are completed, current or upcoming. Completed steps are reachable; upcoming ones are not until reached. Progress is also stated in text — "Step 2 of 6" — so it is never carried by the graphic alone.`
+
+The stepper numbers Brand to Review, five steps. Welcome precedes the stepper and is not numbered. The progress example is "Step 2 of 5".
+
+**2026-10-02 — P03-T15.** §11's specimen was "Company identity". Prior text:
+
+`**The screen:** "Company identity" — BRAND_CONFIG.md §10's first row: legal name and trading name, landing on tenant through TranslationKey.`
+
+and the tree that placed FormSection "Company identity" under WizardStep. The specimen is step 1, Brand. Criteria one to five stand. Criterion six stays with CF-214. The specimen's tree arrives with P03-T16.
+
+**2026-10-02 — P03-T15.** §10's CF-171 and CF-172 rows named two proof tokens. Prior CF-172 clause: `` `proof` and `proof-edge` achromatic ``. Both rows now name `proof`, `proof-edge` and `proof-text`.

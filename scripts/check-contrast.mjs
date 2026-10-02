@@ -29,12 +29,12 @@ const SURFACES = ["--b2s-color-canvas", "--b2s-color-surface", "--b2s-color-sunk
 // P03-T12 — measured after DateField, FileDrop and DataTable: 82.
 // P03-T14 — BrandFrame no longer declares a platform text colour, so the
 // pair that colour made is gone: 81.
-const MINIMUM_STYLESHEETS = 23;
-const MINIMUM_TEXT_PAIRS = 81;
+const MINIMUM_STYLESHEETS = 30;
+const MINIMUM_TEXT_PAIRS = 93;
 const MINIMUM_SURFACES = 4;
 const MINIMUM_BOUNDARY_PAIRS = 8;
 const MINIMUM_THEMES = 2;
-const MINIMUM_ENUMERATED = 92;
+const MINIMUM_ENUMERATED = 94;
 
 const SKIP = new Set(["transparent", "inherit", "currentcolor"]);
 const STATE_PATTERN =
@@ -364,7 +364,7 @@ function backticks(clause) {
 
 export function enumeratedPairs(markdown) {
   const section = markdown.slice(markdown.indexOf("### 2.2"), markdown.indexOf("### 2.3"));
-  const sentence = section.match(/Ninety-two pairs[^.]+\./s);
+  const sentence = section.match(/Ninety-four pairs[^.]+\./s);
   if (!sentence) return { error: "DESIGN_SURFACE.md §2.2 does not enumerate the contrast pairs", pairs: [] };
   const body = sentence[0].replace(/\s+/g, " ").split(":").slice(1).join(":");
   const clauses = body.split(";").map((clause) => clause.trim());

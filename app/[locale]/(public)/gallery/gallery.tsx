@@ -26,6 +26,12 @@ import { Tabs, type TabsVisual } from "@/components/ui/tabs/tabs";
 import { TextField, type TextFieldVisual } from "@/components/ui/text-field/text-field";
 import { TextLink, type TextLinkVisual } from "@/components/ui/text-link/text-link";
 import { Tooltip, type TooltipVisual } from "@/components/ui/tooltip/tooltip";
+import { AppShell } from "@/components/shared/app-shell/app-shell";
+import { EmptyState } from "@/components/shared/empty-state/empty-state";
+import { ErrorState } from "@/components/shared/error-state/error-state";
+import { FilteredDataTable } from "@/components/shared/filtered-data-table/filtered-data-table";
+import { FormSection } from "@/components/shared/form-section/form-section";
+import { WizardStep } from "@/components/shared/wizard-step/wizard-step";
 import type { Locale } from "../../dictionaries";
 
 import { GALLERY_COVERAGE, type GalleryTheme } from "./coverage";
@@ -481,32 +487,142 @@ export function Gallery({ locale, theme, copy, data }: GalleryProps) {
   const primitives = [...new Set(GALLERY_COVERAGE.map((entry) => entry[0]))];
 
   return (
-    <main>
+    <AppShell
+      skip={copy.compositionSkip}
+      openNavigation={copy.compositionOpenNavigation}
+      closeNavigation={copy.compositionCloseNavigation}
+      navigationLabel={copy.compositionNavigation}
+      measure="full"
+      navigation={[
+        { id: "catalog", caption: copy.compositionNavCatalog, href: "#app-main", current: true },
+        { id: "samples", caption: copy.compositionNavSamples, href: "#app-main", current: false },
+      ]}
+      header={{
+        theme,
+        tenantName: copy.compositionTenant,
+        logos: [
+          { ground: "light", src: "/gallery/sample-mark-light.svg" },
+          { ground: "dark", src: "/gallery/sample-mark-dark.svg" },
+        ],
+        localeHref: `/${other}/gallery?theme=${theme}`,
+        localeCaption: other === "ar" ? copy.localeAr : copy.localeEn,
+        themeLight: copy.themeLight,
+        themeDark: copy.themeDark,
+        onTheme: (next) => {
+          document.documentElement.dataset.theme = next;
+        },
+        accountCaption: copy.compositionAccount,
+        accountOptions: [{ id: "details", caption: copy.compositionAccountItem, onSelect: () => undefined }],
+        switcher: {
+          memberships: [
+            { id: "first", name: copy.compositionTenant, mark: copy.compositionMark },
+            { id: "second", name: copy.compositionTenantOther, mark: copy.compositionMark },
+          ],
+          resolvedId: "first",
+          searchCaption: copy.compositionSearchMemberships,
+          onSwitch: () => undefined,
+        },
+      }}
+    >
       <ThemeAttribute theme={theme} />
       <h1>{copy.title}</h1>
-      <p>
-        <Button
-          type="button"
-          variant={theme === "light" ? "primary" : "secondary"}
-          onClick={() => {
-            document.documentElement.dataset.theme = "light";
-          }}
-        >
-          {copy.themeLight}
-        </Button>
-        <Button
-          type="button"
-          variant={theme === "dark" ? "primary" : "secondary"}
-          onClick={() => {
-            document.documentElement.dataset.theme = "dark";
-          }}
-        >
-          {copy.themeDark}
-        </Button>
-        <TextLink href={`/${other}/gallery?theme=${theme}`} variant="standalone">
-          {other === "ar" ? copy.localeAr : copy.localeEn}
-        </TextLink>
-      </p>
+      <WizardStep
+        locale={locale}
+        current="brand"
+        captions={{
+          welcome: copy.welcomeTitle,
+          brand: copy.compositionBrand,
+          typography: copy.compositionTypography,
+          company: copy.compositionCompany,
+          guidelines: copy.compositionGuidelines,
+          review: copy.compositionReview,
+        }}
+        progress={copy.compositionProgress}
+        title={copy.compositionBrand}
+        purpose={copy.compositionPurpose}
+        back={copy.compositionBack}
+        continueCaption={copy.compositionContinue}
+        save={copy.compositionSave}
+        onBack={() => undefined}
+        onContinue={() => undefined}
+        onSave={() => undefined}
+        onStep={() => undefined}
+        errors={[]}
+      >
+        <FormSection title={copy.compositionSectionTitle} description={copy.compositionSectionBody}>
+          <Field caption={copy.compositionField}>
+            <TextField variant="text" defaultValue="" />
+          </Field>
+        </FormSection>
+      </WizardStep>
+      <FilteredDataTable
+        locale={locale}
+        searchCaption={copy.sampleCaption}
+        searchValue=""
+        onSearch={() => undefined}
+        filters={[{ id: "mint", caption: copy.compositionFilter }]}
+        active={[{ id: "mint", caption: copy.compositionFilter }]}
+        onToggle={() => undefined}
+        removePattern={copy.compositionRemove}
+        clearFilters={copy.compositionClear}
+        onClear={() => undefined}
+        resultCaption={copy.compositionResultCaption}
+        resultCount={2}
+        columns={[
+          { key: "sku", caption: copy.sampleSkuCaption, kind: "identifier" },
+          { key: "name", caption: copy.sampleNameCaption, kind: "text" },
+        ]}
+        rows={[
+          {
+            id: "row-mint",
+            cells: { sku: copy.sampleSku, name: copy.sampleMint },
+            actions: (
+              <Button type="button" variant="quiet">
+                {copy.sampleMint}
+              </Button>
+            ),
+          },
+          {
+            id: "row-rose",
+            cells: { sku: copy.sampleSku, name: copy.sampleRose },
+            actions: (
+              <Button type="button" variant="quiet">
+                {copy.sampleRose}
+              </Button>
+            ),
+          },
+        ]}
+        rangePattern={copy.range}
+        regionName={copy.sampleTableRegion}
+        pageSizeCaption={copy.samplePageSize}
+        listEmpty={copy.sampleListEmpty}
+        previousPage={copy.samplePreviousPage}
+        nextPage={copy.sampleNextPage}
+        actionsCaption={copy.sampleActions}
+        emptyKind="no-results"
+        empty={<p>{copy.sampleNothing}</p>}
+      />
+      <EmptyState
+        title={copy.compositionEmptyTitle}
+        description={copy.compositionEmptyBody}
+        action={copy.compositionEmptyAction}
+        onAction={() => undefined}
+      />
+      <EmptyState
+        title={copy.compositionNoTitle}
+        description={copy.compositionNoBody}
+        action={copy.compositionNoAction}
+        onAction={() => undefined}
+      />
+      <ErrorState
+        title={copy.compositionErrorTitle}
+        message={copy.compositionErrorMessage}
+        next={copy.compositionErrorNext}
+        retry={copy.compositionRetry}
+        onRetry={() => undefined}
+        requestIdentifier={copy.sampleRequest}
+        copyIdentifier={copy.compositionCopy}
+      />
       <section data-specimen="welcome">
         <h2>{copy.welcomeTitle}</h2>
         <Field caption={copy.welcomeLanguage}>
@@ -584,6 +700,6 @@ export function Gallery({ locale, theme, copy, data }: GalleryProps) {
           ))}
         </section>
       ))}
-    </main>
+    </AppShell>
   );
 }

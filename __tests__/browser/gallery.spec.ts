@@ -7,6 +7,9 @@ import {
   GALLERY_THEMES,
   GALLERY_WIDTHS,
 } from "../../app/[locale]/(public)/gallery/coverage";
+import { readFileSync } from "node:fs";
+
+import { KNOWN_BAD_FIXTURES } from "../../scripts/known-bad-fixtures.mjs";
 
 const CLAIMED = {
   "color-contrast": { enabled: true },
@@ -73,6 +76,14 @@ async function runAxe(page: Page, rules: Record<string, { enabled: boolean }>): 
     },
     { enabled: rules, watched: WATCHED },
   );
+}
+
+for (const fixture of KNOWN_BAD_FIXTURES) {
+  test(`component known-bad fixture fails in the browser: ${fixture.id}`, async ({ page }) => {
+    await page.setContent(fixture.document);
+    const result = await runAxe(page, { [fixture.id]: { enabled: true } });
+    expect(result.violations.map((item) => item.id), fixture.id).toContain(fixture.id);
+  });
 }
 
 test("grey text on the same grey is not a contrast pass", async ({ page }) => {
@@ -184,6 +195,10 @@ for (const locale of GALLERY_LOCALES) {
         await expect(page.locator("h1")).toHaveCount(1);
         await expect(page.locator("main")).toHaveCount(1);
         await expect(page.locator("[data-primitive]")).toHaveCount(GALLERY_COVERAGE.length);
+        const compositionNames = [...readFileSync("docs/product/DESIGN_SURFACE.md", "utf8").split("## 7. Shared compositions")[1].split("\n## 8.")[0].matchAll(/^### (.+)$/gm)].map((match) => match[1].trim());
+        for (const name of compositionNames) {
+          await expect(page.locator(`[data-composition="${name}"]`).first()).toBeAttached();
+        }
         await page.screenshot({
           path: `test-results/visual/gallery-${locale}-${theme}-${width}.png`,
           fullPage: true,

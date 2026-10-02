@@ -3438,14 +3438,22 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       byte-identical: a `--brand-*` reference in another primitive; a
       `--b2s-*` token on the canvas; a `--brand-*` token on the mount; a
       literal colour defining a `--brand-*` property; a `--brand-*`
-      definition outside BrandFrame. Owner: none outstanding.
+      definition outside BrandFrame.
+      AMENDED (P03-T15). The platform tokens the frame may use now include
+      proof-text with proof and proof-edge. proof-text is referenced only
+      on the surround, for the frame's own error and the named gap markers.
+      Floor: 106 files, 6 platform references. Plant: proof-text on a
+      Button, restored byte-identical. Owner: none outstanding.
 - [x] CF-172 — STATIC. No raw colour, spacing or radius value outside the
       token layer. A script over the source. No new dependency. A gate
       which cannot observe what it checks is not a gate (PR-21). Owner:
       **the task that lands the design-surface catalog**.
       CLOSED (P03-T08) by `scripts/check-token-values.mjs`. Floor: 204
       token definitions. It parses hex and `rgb()`, and it requires every
-      chrome-neutral colour token to have R = G = B. Owner: none
+      chrome-neutral colour token to have R = G = B.
+      AMENDED (P03-T15). proof, proof-edge and proof-text are achromatic:
+      red, green and blue equal in both themes. Plant: proof-text tinted
+      in light, restored byte-identical. Owner: none
       outstanding.
 - [x] CF-173 — STATIC. Every catalog primitive implements every state
       `DESIGN_SURFACE.md` requires of it. A script over the source. No new
@@ -3950,7 +3958,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       second time, after abd3efd. The Python docs-integrity checks were
       not run locally before the push.
       CLOSED (P03-T12-FIX) by PR-46. Owner: none outstanding.
-- [ ] CF-211 — The component tier's target-size and colour-contrast known-bad
+- [x] CF-211 — The component tier's target-size and colour-contrast known-bad
       fixtures are not known-bad. A lone 4px button passes target-size in a
       real browser under WCAG 2.2 2.5.8's spacing exception, and text on the
       identical grey is incomplete in axe by design, as P03-T13 measured in
@@ -3959,6 +3967,13 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       show that one tier is blind, so two of the five fixtures the check
       reports as proven prove nothing. The exclusions are still correct.
       Owner: **the next task that corrects the component-tier known-bad fixtures**.
+      CLOSED (P03-T15). The fixtures are now a 4px button adjacent to a
+      second target, and text at 3.54:1, below 4.5 and above 1, measured
+      with lib/colour. The browser tier asserts every fixture in
+      scripts/known-bad-fixtures.mjs fails there. The exclusions stay.
+      Plant: the lone 4px button, which a real browser passes; the
+      cross-tier assertion failed; the fixture was restored byte-identical.
+      Owner: none outstanding.
 - [ ] CF-212 — .env.local points local development at b2s-production, while
       ARCHITECTURE.md:104 and ADR-013 point it at staging. The CI browser job
       is pinned to staging with a hostname check, but the app and the browser
@@ -4034,9 +4049,32 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       removed, and the StatusBadge glyph removed; each test failed and each
       file was restored byte-identical.
       Owner: none outstanding.
-- [ ] CF-221 — The earlier P03-T14 prompt, compositions, is withdrawn.
+- [x] CF-221 — The earlier P03-T14 prompt, compositions, is withdrawn.
       Compositions become P03-T15 and are re-issued against DESIGN_SURFACE
       Revision 2. This task built none.
       Owner: **P03-T15**.
+      CLOSED (P03-T15) by the eight compositions in components/shared/,
+      named in MODULE_SPEC.md §1 in the same commit. The gallery and the
+      browser tier render them in all four combinations at both widths.
+      Owner: none outstanding.
+- [x] CF-222 — The proof had no text colour. BrandFrame's named error and
+      its gap markers sit on the achromatic proof, and P03-T14 did not
+      invent a colour. `--b2s-color-proof-text` is `#2e2e2e` in light and
+      `#e6e6e6` in dark, red green and blue equal. It meets 10.68 and 9.11
+      on proof, and 8.46 and 5.97 on proof-edge. The enumerated contrast
+      set is 94 pairs, 47 per theme.
+      CLOSED (P03-T15) by DESIGN_SURFACE.md, app/globals.css and BrandFrame.
+      Plants: proof-text tinted, and proof-text used outside BrandFrame;
+      each restored byte-identical.
+      Owner: none outstanding.
+- [ ] CF-223 — The acceptance specimen is step 1, Brand, with its live
+      preview inside BrandFrame. CF-180's criteria one to five travel with
+      it. Its full specification arrives with P03-T16. This task did not
+      build the specimen, the preview, or a wizard route.
+      Owner: **P03-T16**.
+- [ ] CF-224 — The owner's wizard mockup offered Pouch and Box previews.
+      SCOPE.md module 07 places labels and stickers in Release 1 and boxes
+      in Release 2. The real preview offers Label and Sticker only.
+      Owner: **P03-T16**.
 
 
