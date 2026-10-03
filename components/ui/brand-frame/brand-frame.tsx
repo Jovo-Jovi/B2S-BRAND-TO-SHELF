@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 
+import "@/lib/typeface/library.module.css";
 import { Skeleton } from "../skeleton/skeleton";
 import styles from "./brand-frame.module.css";
 
@@ -72,6 +73,20 @@ const FONT_PROPERTY: Record<TypefacePair, string> = {
   "body-arabic": "--brand-font-body-arabic",
 };
 
+const FONT_WEIGHT_PROPERTY: Record<TypefacePair, string> = {
+  "heading-latin": "--brand-font-weight-heading-latin",
+  "heading-arabic": "--brand-font-weight-heading-arabic",
+  "body-latin": "--brand-font-weight-body-latin",
+  "body-arabic": "--brand-font-weight-body-arabic",
+};
+
+const FONT_STYLE_PROPERTY: Record<TypefacePair, string> = {
+  "heading-latin": "--brand-font-style-heading-latin",
+  "heading-arabic": "--brand-font-style-heading-arabic",
+  "body-latin": "--brand-font-style-body-latin",
+  "body-arabic": "--brand-font-style-body-arabic",
+};
+
 function brandProperties(profile: BrandFrameProfile): CSSProperties {
   const style: Record<string, string> = {};
   for (const role of COLOR_ROLES) {
@@ -84,6 +99,8 @@ function brandProperties(profile: BrandFrameProfile): CSSProperties {
     const face = profile.typefaces[pair];
     if (face) {
       style[FONT_PROPERTY[pair]] = face.family;
+      style[FONT_WEIGHT_PROPERTY[pair]] = face.weight;
+      style[FONT_STYLE_PROPERTY[pair]] = face.italic ? "italic" : "normal";
     }
   }
   return style;

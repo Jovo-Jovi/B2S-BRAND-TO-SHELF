@@ -342,11 +342,11 @@ A preview specimen is a fixed illustration drawn from a resolved BrandProfile in
 
 Both render in the output's own direction and never mirror with the interface (OD-G24, §3 rule 9). Typography comes from the profile's heading and body typefaces for each script; a missing pair renders in the interim reset type with its named gap (§3 rule 5). Colours come only from the default theme's roles, mapped as below, and are never adjusted (§3 rule 4): a combination that reads poorly here reads poorly on the shelf, which is what a proof is for.
 
-Label — a landscape rectangle, aspect ratio 48:29, at most preview-label-max wide, scaled to fit the proof with space-5 clear on every side, corner radius 3% of its width. An inline-start band, 33% of the width, in `primary`, holding the `mark` logo for the band's ground at 45% of the band's width. A content panel in `background`, a centred column: the brand name in the business's default locale in its script's heading face, in `foreground`; the name in the other locale in its script's heading face at 60% of that size, in `foreground`; a rule 10% of the label's width and 3px high in `accent`; a product-name line and a net-weight line in the body face, in `muted`. A strip along the block-end edge, 4% of the label's height, in `secondary`.
+Label — a landscape rectangle, aspect ratio 48:29, at most preview-label-max wide, scaled to fit the proof with space-5 clear on every side, corner radius 3% of its width. An inline-start band, 33% of the width, in `primary`, holding the logo slot for the band's ground at 45% of the band's width. A content panel in `background`, a centred column: the brand name in the business's default locale in its script's heading face, in `foreground`; the name in the other locale in its script's heading face at 60% of that size, in `foreground`; a rule 10% of the label's width and 3px high in `accent`; a product-name line and a net-weight line in the body face, in `muted`. A strip along the block-end edge, 4% of the label's height, in `secondary`.
 
-Sticker — a circle, at most preview-sticker-max in diameter, scaled to fit. Fill `primary`; an inner ring 4% of the diameter thick, inset 6%, in `accent`; centred, the `mark` logo for the primary's ground at 40% of the diameter, and beneath it the brand name in the business's default locale, heading face, in `background`.
+Sticker — a circle, at most preview-sticker-max in diameter, scaled to fit. Fill `primary`; an inner ring 4% of the diameter thick, inset 6%, in `accent`; centred, the logo slot for the primary's ground at 40% of the diameter, and beneath it the brand name in the business's default locale, heading face, in `background`.
 
-Ground — dark when `primary`'s relative luminance, computed by lib/colour/, is below 0.179, the point at which black and white contrast with it equally; light otherwise. The matching `mark` variant is used. If it does not exist, the logo slot stays empty and a named gap in proof-text says which variant is missing — never a substituted variant (BRAND_CONFIG.md §9) and never a generated monogram.
+Ground — dark when `primary`'s relative luminance, computed by lib/colour/, is below 0.179, the point at which black and white contrast with it equally; light otherwise. The logo slot takes the `mark` logo for its ground, or, where that ground has no mark, the `full` logo for the same ground — never a logo made for the other ground (BRAND_CONFIG.md §9) and never a generated monogram. If that ground has neither, the slot stays empty and a named gap in proof-text says which variant is missing. The wizard creates full logos, and a slot accepting only a mark would show a gap on every new brand.
 
 Placeholders — the product-name and net-weight lines are catalog strings in brackets, [PRODUCT NAME] and [NET WT], in the business's default locale, because they stand for content that does not exist yet.
 
@@ -1065,7 +1065,7 @@ The catalog is finished when the first real screen it exists for can be built fr
 3. In the Arabic interface the frame, stepper, footer and sections mirror, the bilingual field keeps the business's default locale first, each input keeps its own direction, and the preview is identical to the English interface's.
 4. Every string comes from the catalogs, with equal key sets.
 5. Every control is keyboard-reachable in reading order with a visible focus ring and AA contrast, the proof's content excepted under §3 rule 4.
-6. Editing the brand name, any colour, or the logo updates the specimen, switching tabs shows the label or the sticker, and a missing mark for the ground shows its named gap.
+6. Editing the brand name, any colour, or the logo updates the specimen, switching tabs shows the label or the sticker, and a ground with neither a mark nor a full logo shows its named gap.
 
 Persistence — save and finish later keeping partial values — is not claimed here; it stays with CF-214.
 
@@ -1088,6 +1088,26 @@ Persistence — save and finish later keeping partial values — is not claimed 
 - An optimistic write the server may refuse.
 - A remembered tenant selection.
 - A value the implementer chooses because this document did not state it.
+
+---
+
+## 13. The onboarding screens
+
+Every screen renders in WizardStep's own frame (§7). Welcome is unnumbered; steps 1 to 5 are numbered. UI copy is the builder's to draft in both languages within the meanings stated here, and it is reviewed at the phase gate; headlines and help named here are binding in meaning.
+
+**Welcome** — a headline welcoming the owner and one sentence saying setup takes a few steps and can be resumed. A FormSection with: the business's main language, a RadioGroup of العربية and English, preselected to the interface language; the base currency, a Select of EGP, USD, SAR, AED and EUR (OD-G17), preselected to EGP, help "Prices and invoices use this currency"; the business's name, a TextField whose direction follows the chosen language, help saying the names that print on labels come next. Footer: Continue only. Continue validates all three, provisions the tenant (OD-G26) and opens the draft at `brand`.
+
+**1 Brand** — as §11.
+
+**2 Typography** — a FormSection "Arabic" with Selects for heading and body; a FormSection "Latin" with Selects for heading and body. Each lists the library's families for its script by name, in the platform face; help saying the choices appear on the label as they are made. No starting values; an unchosen pair is named on Continue (§11 rule 6 of BRAND_CONFIG.md). The preview region as in Brand, rendering the chosen faces at 700 for headings and 400 for body. Footer: Back, Save and finish later, Continue.
+
+**3 Company** — no preview region. FormSection "Legal details": BilingualField legal name, required; BilingualField trading name, optional; TextField `identifier` tax registration number, optional. FormSection "Registered address": a multiline BilingualField, required. FormSection "Contact": TextField email, optional; TextField phone, optional, accepting international form or an Egyptian national number, shown as stored, left-to-right and isolated. Footer: Back, Save and finish later, Continue.
+
+**4 Guidelines** — optional; help saying guidelines are rules the brand follows, shown to the team and never enforced by the platform (BRAND_CONFIG.md §8). Each guideline is a FormSection with a BilingualField title, a multiline BilingualField body and a quiet Remove button whose name says which guideline it removes. "Add a guideline" is a secondary Button. None at all is valid. Footer: Back, Save and finish later, Continue.
+
+**5 Review** — a summary FormSection per step, each with a TextLink whose name says which step it edits; the preview region; and a list of everything still needed, each item named by its rule and linked to where it is fixed. Footer: Back, and Finish setup as the primary action. Finish setup is never disabled: pressed with gaps, it shows the error summary listing each gap with its link. On success the profile becomes current, the draft is archived, and the owner arrives at the dashboard.
+
+**Resume** — an owner who returns with an unarchived draft lands on the draft's step, with every saved answer in place.
 
 ## Corrections
 
@@ -1356,3 +1376,17 @@ At lg and above the side navigation is a sticky grid column of nav-width. Below 
 `**The screen:** step 1, Brand. The §10 amendment moved company data to step 3. Welcome precedes Brand and is too small a screen to prove the catalog. Brand exercises the bilingual fields, the swatches, the logo, and a live preview inside BrandFrame. Its full specification arrives with P03-T16. This section does not specify that screen's tree.`
 
 and the six criteria that named the legal name, a page stylesheet, and save-and-finish-later. The screen is the Brand step in the wizard's own frame, with the four sections, the two specimens, and the footer named in the section. Criterion six is the live preview. Persistence stays with CF-214.
+
+**2026-10-03 — P03-T19.** §3.1's logo slot accepted only a mark. Prior label clause: `holding the `mark` logo for the band's ground at 45% of the band's width.` Prior sticker clause: `centred, the `mark` logo for the primary's ground at 40% of the diameter`. Prior ground paragraph:
+
+`Ground — dark when `primary`'s relative luminance, computed by lib/colour/, is below 0.179, the point at which black and white contrast with it equally; light otherwise. The matching `mark` variant is used. If it does not exist, the logo slot stays empty and a named gap in proof-text says which variant is missing — never a substituted variant (BRAND_CONFIG.md §9) and never a generated monogram.`
+
+The slot takes the mark for its ground, or, where that ground has no mark, the full logo for the same ground. Never a logo made for the other ground, and never a generated monogram. The wizard creates full logos, and a mark-only slot would show a gap on every new brand.
+
+**2026-10-03 — P03-T19.** §11 criterion 6 required a gap whenever the mark was missing. Prior text:
+
+`6. Editing the brand name, any colour, or the logo updates the specimen, switching tabs shows the label or the sticker, and a missing mark for the ground shows its named gap.`
+
+A gap is named when that ground has neither a mark nor a full logo.
+
+**2026-10-03 — P03-T19.** §13, The onboarding screens, is new. There is no prior text.

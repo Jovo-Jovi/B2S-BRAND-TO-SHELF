@@ -123,6 +123,26 @@ A `Typeface` records what the brand uses — family name, weight, style, and a
 reference to an uploaded font file where one was provided. It does not record
 licensing, which is the tenant's affair and not the platform's to assert.
 
+> **AMENDED 2026-10-03** — typefaces come from the platform's library in
+> Release 1. The platform ships a library of open-licence typefaces,
+> self-hosted. Arabic: Cairo, Tajawal, Almarai, Noto Naskh Arabic, Amiri,
+> Reem Kufi. Latin: Inter, Montserrat, Poppins, Fraunces, Playfair Display,
+> Lora. Each ships upright at weights 400 and 700. A Typeface's `family`
+> names a library family, `font_asset_id` stays null, headings take 700 and
+> body takes 400, and `is_italic` is false. The library's licences are the
+> platform's, verified from the publisher's files. §5's rule that licensing
+> is the tenant's affair continues to govern uploaded font files, which
+> arrive in a later release.
+>
+> Annotation 2026-10-03 — Almarai was not shipped. The publisher's `OFL.txt`
+> is the SIL Open Font License 1.1 and its copyright line names Boutros
+> International, not Almarai. The font's name table says "Copyright (c) 2019
+> by Almarai. All rights reserved." and states no licence. The shipped
+> licence file does not license that font, so the family was dropped rather
+> than shipped. The sentence above remains the owner's list. The library
+> holds the eleven families whose shipped licence files are the SIL Open
+> Font License 1.1. Provenance is `public/fonts/library/PROVENANCE.md`.
+
 ---
 
 ## 6. BrandProfile is immutable
@@ -193,6 +213,23 @@ A `LogoVariant` is a named use of a `MediaAsset`: `full`, `mark` or
 `wordmark`, each for light or dark ground. A profile need not carry every
 combination; it must carry at least one, and the renderer names the missing
 combination rather than substituting one that exists.
+
+> **AMENDED 2026-10-03** — the logo upload. Accepted formats are SVG and PNG,
+> each at most 5 MB, identified by their bytes and never by a file name or
+> a client's claimed type. A PNG must be at least 1000 pixels on its
+> shorter side, enough for a logo printed 8.5 cm wide at 300 dpi; a smaller
+> one is refused with an error naming the minimum. An SVG containing active
+> content — scripts, event-handler attributes, foreignObject, embedded or
+> external documents, javascript: or remote references, a DOCTYPE or
+> entity declarations — is refused with an error saying so; otherwise its
+> comments and metadata are removed and the cleaned file is stored. The
+> wizard asks for up to two files, one for light backgrounds and one for
+> dark, each a LogoVariant of kind `full` for its ground. At least one is
+> required before onboarding completes (§11 rule 5); mark and wordmark
+> versions are added later in the brand editor. In Release 1 the display
+> and print renditions are verified copies of the stored file; resized and
+> print-prepared renditions arrive with the print engine at P06. A logo is
+> always rendered as an image, never as inline markup.
 
 ---
 

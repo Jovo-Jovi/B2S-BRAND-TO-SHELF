@@ -92,11 +92,15 @@
 
 .content .scriptLatin {
   font-family: var(--brand-font-heading-latin);
+  font-weight: var(--brand-font-weight-heading-latin);
+  font-style: var(--brand-font-style-heading-latin);
   color: var(--brand-foreground);
 }
 
 .content .scriptArabic {
   font-family: var(--brand-font-heading-arabic);
+  font-weight: var(--brand-font-weight-heading-arabic);
+  font-style: var(--brand-font-style-heading-arabic);
   color: var(--brand-foreground);
 }
 
@@ -111,11 +115,15 @@
 
 .content .bodyLatin {
   font-family: var(--brand-font-body-latin);
+  font-weight: var(--brand-font-weight-body-latin);
+  font-style: var(--brand-font-style-body-latin);
   color: var(--brand-muted);
 }
 
 .content .bodyArabic {
   font-family: var(--brand-font-body-arabic);
+  font-weight: var(--brand-font-weight-body-arabic);
+  font-style: var(--brand-font-style-body-arabic);
   color: var(--brand-muted);
 }
 
@@ -159,10 +167,14 @@
 
 .content .stickerLatin {
   font-family: var(--brand-font-heading-latin);
+  font-weight: var(--brand-font-weight-heading-latin);
+  font-style: var(--brand-font-style-heading-latin);
   color: var(--brand-background);
 }
 
 .content .stickerArabic {
   font-family: var(--brand-font-heading-arabic);
+  font-weight: var(--brand-font-weight-heading-arabic);
+  font-style: var(--brand-font-style-heading-arabic);
   color: var(--brand-background);
 }

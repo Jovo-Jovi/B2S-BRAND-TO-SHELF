@@ -13,6 +13,7 @@ import { FormSection } from "@/components/shared/form-section/form-section";
 import { Tabs } from "@/components/ui/tabs/tabs";
 import { WizardStep } from "@/components/shared/wizard-step/wizard-step";
 import { fillPattern } from "@/lib/locale/format-number";
+import { libraryFace } from "@/lib/typeface/registry";
 
 import { LabelSpecimen, StickerSpecimen, missingMarkNote, type SpecimenMark } from "./specimens";
 
@@ -38,10 +39,6 @@ type BrandStepProps = {
   copy: GalleryCopy;
   otherLocale: Locale;
 };
-
-function face(family: string) {
-  return { family, weight: "400", italic: false };
-}
 
 export function BrandStep({ locale, copy, otherLocale }: BrandStepProps) {
   const [names, setNames] = useState({ en: copy.sampleBrandEn, ar: copy.sampleBrandAr });
@@ -84,10 +81,10 @@ export function BrandStep({ locale, copy, otherLocale }: BrandStepProps) {
       { field: "name", locale: "ar" as const, value: names.ar || null },
     ],
     typefaces: {
-      "heading-latin": face(copy.samplePreview),
-      "heading-arabic": face(copy.samplePreview),
-      "body-latin": face(copy.samplePreview),
-      "body-arabic": face(copy.samplePreview),
+      "heading-latin": libraryFace("latin", "heading"),
+      "heading-arabic": libraryFace("arabic", "heading"),
+      "body-latin": libraryFace("latin", "body"),
+      "body-arabic": libraryFace("arabic", "body"),
     },
   };
 

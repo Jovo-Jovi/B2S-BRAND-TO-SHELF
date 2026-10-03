@@ -23,8 +23,8 @@ const SCAN_ROOTS = ["app", "components", "features"];
 const STYLESHEET = "components/ui/brand-frame/brand-frame.module.css";
 const SOURCE = "components/ui/brand-frame/brand-frame.tsx";
 // P03-T12 — measured after the data family: 85. P03-T13 adds the gallery: 89.
-const MINIMUM_FILES = 106;
-const MINIMUM_DEFINITIONS = 11;
+const MINIMUM_FILES = 109;
+const MINIMUM_DEFINITIONS = 19;
 const MINIMUM_BRAND_REFERENCES = 4;
 const MINIMUM_PLATFORM_REFERENCES = 6;
 const PLATFORM_TOKEN =

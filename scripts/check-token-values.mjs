@@ -10,7 +10,10 @@
 // achromatic.
 // The warmth ceiling and the Clay–danger CIE76 floor are computed from
 // this stylesheet. Font families are the two OD-G23 faces plus generic
-// fallbacks. The z-index layer list is still asserted both ways.
+// fallbacks, except the typeface library's own stylesheet, whose families
+// are admitted and asserted both ways against lib/typeface/registry.ts.
+// No other stylesheet may name a library family. The z-index layer list
+// is still asserted both ways.
 //
 // Button's loading width lock writes element.style.inlineSize. That
 // imperative assignment is not an inline style attribute, and this scan
@@ -35,19 +38,25 @@ import { join } from "node:path";
 
 const GLOBALS = "app/globals.css";
 const DOCUMENT = "docs/product/DESIGN_SURFACE.md";
+const LIBRARY_STYLESHEET = "lib/typeface/library.module.css";
+const LIBRARY_REGISTRY = "lib/typeface/registry.ts";
+const LIBRARY_DIR = "public/fonts/library";
 const SCAN_ROOTS = ["app", "components", "features"];
+const MINIMUM_LIBRARY_FAMILIES = 11;
+const MINIMUM_LIBRARY_FILES = 19;
 
 const MINIMUM_TOKENS = 271;
-const MINIMUM_FONT_FAMILIES = 13;
+const MINIMUM_FONT_FAMILIES = 38;
 const MINIMUM_CLOSED_COLOURS = 35;
 const MINIMUM_PROOF_CHANNELS = 6;
 const MINIMUM_CHROMA = 20;
 const MINIMUM_DELTA = 6;
 // P03-T12 — measured after DateField, FileDrop and DataTable.
 // P03-T13 — quiet fill is transparent, and the gallery is scanned: 1205 declarations, 89 sources.
-const MINIMUM_STYLESHEETS = 30;
-const MINIMUM_DECLARATIONS = 1396;
-const MINIMUM_SOURCES = 106;
+// P03-T19 — the typeface library stylesheet is scanned: 31 stylesheets, 1597 declarations, 38 font families, 109 sources.
+const MINIMUM_STYLESHEETS = 31;
+const MINIMUM_DECLARATIONS = 1597;
+const MINIMUM_SOURCES = 109;
 
 const FAMILIES = new Set(["IBM Plex Sans", "IBM Plex Sans Arabic"]);
 const GENERICS = new Set(["system-ui", "sans-serif"]);
@@ -739,9 +748,10 @@ function familiesIn(value) {
   return [...quoted, ...rest];
 }
 
-function fontViolations(prop, value, fontFace) {
+function fontViolations(prop, value, fontFace, libraryStylesheet) {
   const messages = [];
-  if (prop === "--b2s-font-family" || (prop === "font-family" && !fontFace)) {
+  const admitLibraryFace = libraryStylesheet && fontFace && prop === "font-family";
+  if (!admitLibraryFace && (prop === "--b2s-font-family" || (prop === "font-family" && !fontFace))) {
     for (const name of familiesIn(value)) {
       if (name.startsWith("var(") || WIDE.has(name.toLowerCase())) {
         continue;
@@ -751,7 +761,7 @@ function fontViolations(prop, value, fontFace) {
       }
     }
   }
-  if (fontFace && prop === "font-family") {
+  if (!admitLibraryFace && fontFace && prop === "font-family") {
     const names = familiesIn(value);
     if (names.length !== 1 || !FAMILIES.has(names[0])) {
       messages.push(`@font-face family ${value} is outside OD-G23`);
@@ -890,6 +900,7 @@ function collect(css) {
 
 function examine(rel, text, stylesheet) {
   const { decls, faces } = collect(stripComments(text));
+  const libraryStylesheet = rel === LIBRARY_STYLESHEET;
   let tokens = 0;
   decls.forEach((decl, index) => {
     if (decl.prop.startsWith("--")) {
@@ -899,13 +910,13 @@ function examine(rel, text, stylesheet) {
       if (rel === GLOBALS) {
         tokens += 1;
       }
-      for (const message of fontViolations(decl.prop, decl.value, false)) {
+      for (const message of fontViolations(decl.prop, decl.value, false, libraryStylesheet)) {
         fail(`${rel}: ${message}`);
       }
       return;
     }
     if (stylesheet && faces[index]) {
-      for (const message of fontViolations(decl.prop, decl.value, true)) {
+      for (const message of fontViolations(decl.prop, decl.value, true, libraryStylesheet)) {
         fail(`${rel}: ${message}`);
       }
       return;
@@ -914,11 +925,132 @@ function examine(rel, text, stylesheet) {
     if (raw) {
       fail(`${rel}: ${raw}`);
     }
-    for (const message of fontViolations(decl.prop, decl.value, false)) {
+    for (const message of fontViolations(decl.prop, decl.value, false, libraryStylesheet)) {
       fail(`${rel}: ${message}`);
     }
   });
   return { decls, tokens };
+}
+
+function readLibraryRegistry(text) {
+  const families = [];
+  const pattern =
+    /family:\s*"([^"]+)"[\s\S]*?script:\s*"(arabic|latin)"[\s\S]*?weights:\s*\[([^\]]*)\][\s\S]*?files:\s*\[([^\]]*)\]/g;
+  for (const match of text.matchAll(pattern)) {
+    families.push({
+      family: match[1],
+      script: match[2],
+      weights: [...match[3].matchAll(/\d+/g)].map((item) => Number(item[0])),
+      files: [...match[4].matchAll(/"([^"]+)"/g)].map((item) => item[1]),
+    });
+  }
+  return families;
+}
+
+function readFontFaces(css) {
+  const faces = [];
+  const { decls, faces: flags } = collect(stripComments(css));
+  let current = null;
+  decls.forEach((decl, index) => {
+    if (!flags[index]) {
+      current = null;
+      return;
+    }
+    if (decl.prop === "font-family") {
+      current = { family: familiesIn(decl.value)[0], weights: [], files: [] };
+      faces.push(current);
+    }
+    if (!current) {
+      return;
+    }
+    if (decl.prop === "font-weight") {
+      current.weights.push(...[...decl.value.matchAll(/\d+/g)].map((item) => Number(item[0])));
+    }
+    if (decl.prop === "src") {
+      current.files.push(...[...decl.value.matchAll(/\/fonts\/library\/([^"')\s]+)/g)].map((item) => item[1]));
+    }
+  });
+  return faces;
+}
+
+function assertLibrary(stylesheetTexts) {
+  if (!existsSync(LIBRARY_REGISTRY)) {
+    fail(`${LIBRARY_REGISTRY} is absent`);
+    return;
+  }
+  if (!existsSync(LIBRARY_STYLESHEET)) {
+    fail(`${LIBRARY_STYLESHEET} is absent`);
+    return;
+  }
+  const registryText = readFileSync(LIBRARY_REGISTRY, "utf8");
+  const cssText = readFileSync(LIBRARY_STYLESHEET, "utf8");
+  if (!registryText.trim()) {
+    fail(`${LIBRARY_REGISTRY} is empty`);
+  }
+  if (!cssText.trim()) {
+    fail(`${LIBRARY_STYLESHEET} is empty`);
+  }
+  const registry = readLibraryRegistry(registryText);
+  const faces = readFontFaces(cssText);
+  if (registry.length < MINIMUM_LIBRARY_FAMILIES) {
+    fail(`${registry.length} library famil${registry.length === 1 ? "y" : "ies"}, minimum ${MINIMUM_LIBRARY_FAMILIES}`);
+  }
+  const registryNames = new Set(registry.map((item) => item.family));
+  const faceNames = new Set(faces.map((item) => item.family).filter(Boolean));
+  for (const name of registryNames) {
+    if (!faceNames.has(name)) {
+      fail(`library family ${name} has no @font-face rule`);
+    }
+  }
+  for (const name of faceNames) {
+    if (!registryNames.has(name)) {
+      fail(`@font-face family ${name} is not in the typeface registry`);
+    }
+  }
+  const registryFiles = new Set(registry.flatMap((item) => item.files));
+  const faceFiles = new Set(faces.flatMap((item) => item.files));
+  if (registryFiles.size < MINIMUM_LIBRARY_FILES) {
+    fail(`${registryFiles.size} library file(s), minimum ${MINIMUM_LIBRARY_FILES}`);
+  }
+  for (const file of registryFiles) {
+    if (!faceFiles.has(file)) {
+      fail(`library file ${file} has no @font-face src`);
+    }
+    if (!existsSync(join(LIBRARY_DIR, file))) {
+      fail(`library file ${file} is not in ${LIBRARY_DIR}`);
+    }
+  }
+  for (const file of faceFiles) {
+    if (!registryFiles.has(file)) {
+      fail(`@font-face src ${file} is not in the typeface registry`);
+    }
+  }
+  for (const entry of registry) {
+    const covered = new Set(
+      faces.filter((face) => face.family === entry.family).flatMap((face) => face.weights),
+    );
+    for (const weight of entry.weights) {
+      if (!covered.has(weight)) {
+        fail(`library family ${entry.family} does not cover weight ${weight}`);
+      }
+    }
+  }
+  for (const [rel, text] of stylesheetTexts) {
+    if (rel === LIBRARY_STYLESHEET) {
+      continue;
+    }
+    const { decls } = collect(stripComments(text));
+    for (const decl of decls) {
+      if (decl.prop !== "font-family" && decl.prop !== "--b2s-font-family") {
+        continue;
+      }
+      for (const name of familiesIn(decl.value)) {
+        if (registryNames.has(name)) {
+          fail(`${rel} names library family ${name}`);
+        }
+      }
+    }
+  }
 }
 
 function main() {
@@ -966,14 +1098,27 @@ function main() {
     stylesheets.push(...walkFiles(root, [".css"]));
     sources.push(...walkFiles(root, [".css", ".ts", ".tsx", ".js", ".jsx", ".mjs"]));
   }
+  if (!stylesheets.includes(LIBRARY_STYLESHEET)) {
+    stylesheets.push(LIBRARY_STYLESHEET);
+  }
 
   const decls = [];
+  const stylesheetTexts = [];
   let tokens = 0;
   for (const rel of stylesheets) {
-    const examined = examine(rel, readFileSync(rel, "utf8"), true);
+    let text = "";
+    try {
+      text = readFileSync(rel, "utf8");
+    } catch (err) {
+      fail(`${rel}: ${err.message}`);
+      continue;
+    }
+    stylesheetTexts.push([rel, text]);
+    const examined = examine(rel, text, true);
     decls.push(...examined.decls);
     tokens += examined.tokens;
   }
+  assertLibrary(stylesheetTexts);
   for (const rel of sources) {
     if (rel.endsWith(".css")) {
       continue;

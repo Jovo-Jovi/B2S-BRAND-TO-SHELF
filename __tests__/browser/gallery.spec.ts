@@ -211,7 +211,12 @@ async function assertBrandStep(page: Page, locale: "en" | "ar") {
   await expect(summary).toContainText(missingPrimary);
   await expect(screen.locator("#brand-name")).toContainText(missingName);
   await screen.locator("#brand-name input").first().fill(copy.sampleBrandEn);
-  await expect(screen.locator('[data-specimen="label"] [data-part="name"]')).toHaveText(copy.sampleBrandEn);
+  const name = screen.locator('[data-specimen="label"] [data-part="name"]');
+  await expect(name).toHaveText(copy.sampleBrandEn);
+  await expect(name).toHaveCSS("font-weight", "700");
+  await expect(name).toHaveCSS("font-family", /Inter/);
+  await expect(screen.locator('[data-specimen="label"] [data-part="product"]')).toHaveCSS("font-weight", "400");
+  await expect(screen.locator('[data-specimen="label"] [data-part="name-other"]')).toHaveCSS("font-family", /Cairo/);
   await screen.locator("#role-primary").fill("#112233");
   await expect
     .poll(() => screen.locator('[data-part="band"]').evaluate((node) => getComputedStyle(node).backgroundColor))
@@ -227,10 +232,34 @@ async function assertBrandStep(page: Page, locale: "en" | "ar") {
   await expect(screen.getByText(copy.missingMark.replace("{ground}", copy.groundLight)).first()).toBeVisible();
   await screen.getByRole("tab", { name: copy.tabSticker }).click();
   await expect(screen.locator('[data-specimen="sticker"]')).toBeVisible();
+  await assertTypographyStep(page, locale);
   await page.getByRole("button", { name: copy.compositionAccount }).click();
   await expect(page.getByRole("radio", { name: copy.themeSystem })).toBeVisible();
   await expect(page.getByRole("radio", { name: copy.themeLight })).toBeVisible();
   await expect(page.getByRole("radio", { name: copy.themeDark })).toBeVisible();
+}
+
+async function assertTypographyStep(page: Page, locale: "en" | "ar") {
+  const copy = locale === "en" ? en.gallery : ar.gallery;
+  const screen = page.locator('[data-screen="typography-step"]');
+  await expect(screen.locator("#typeface-heading-arabic")).toHaveValue("");
+  await expect(screen.locator("#typeface-body-latin")).toHaveValue("");
+  await screen.getByRole("button", { name: copy.compositionContinue }).click();
+  const missing = copy.typefaceMissing.replace("{role}", copy.typefaceHeading).replace("{script}", copy.typefaceArabic);
+  const summary = screen.locator('[role="alert"]').filter({ has: page.locator('a[href="#typeface-heading-arabic"]') });
+  await expect(summary).toContainText(missing);
+  await screen.locator("#typeface-heading-latin").selectOption("Inter");
+  await screen.locator("#typeface-body-latin").selectOption("Lora");
+  await screen.locator("#typeface-heading-arabic").selectOption("Cairo");
+  await screen.locator("#typeface-body-arabic").selectOption("Amiri");
+  const name = screen.locator('[data-specimen="label"] [data-part="name"]');
+  await expect(name).toHaveCSS("font-family", /Inter/);
+  await expect(name).toHaveCSS("font-weight", "700");
+  const product = screen.locator('[data-specimen="label"] [data-part="product"]');
+  await expect(product).toHaveCSS("font-family", /Lora/);
+  await expect(product).toHaveCSS("font-weight", "400");
+  await expect(screen.locator('[data-specimen="label"] [data-part="name-other"]')).toHaveCSS("font-family", /Cairo/);
+  await expect(screen.locator('[data-specimen="label"] [data-part="name-other"]')).toHaveCSS("font-weight", "700");
 }
 
 async function hideDialogs(page: Page) {

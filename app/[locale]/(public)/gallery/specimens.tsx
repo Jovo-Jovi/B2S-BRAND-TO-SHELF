@@ -7,6 +7,7 @@ import { fillPattern } from "@/lib/locale/format-number";
 export type SpecimenMark = {
   ground: "light" | "dark";
   src: string;
+  kind?: "full" | "mark" | "wordmark";
 };
 
 export type SpecimenCopy = {
@@ -46,7 +47,9 @@ export function markForGround(primary: string, marks: SpecimenMark[]): SpecimenM
     return null;
   }
   const ground = markGround(primary);
-  return marks.find((item) => item.ground === ground) ?? null;
+  const sameGround = marks.filter((item) => item.ground === ground);
+  const kindOf = (item: SpecimenMark) => item.kind ?? "mark";
+  return sameGround.find((item) => kindOf(item) === "mark") ?? sameGround.find((item) => kindOf(item) === "full") ?? null;
 }
 
 export function missingMarkNote(primary: string, marks: SpecimenMark[], copy: SpecimenCopy): string | null {

@@ -139,6 +139,7 @@ lib/
       service.ts                  the only construction of the privileged client
   locale/                         dates, and every number CALC_SPEC.md does not govern — P03
   colour/                         the WCAG contrast function, OD-H9 — P03
+  typeface/                       the platform typeface library — P03
   money/                          exact decimal, ADR-011 — deferred, P05
   print/                          the print engine, ADR-009 — deferred, P06
 

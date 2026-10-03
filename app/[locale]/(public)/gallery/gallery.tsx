@@ -33,6 +33,7 @@ import { FilteredDataTable } from "@/components/shared/filtered-data-table/filte
 import type { ThemeChoice } from "@/components/shared/page-header/page-header";
 
 import { BrandStep } from "./brand-step";
+import { TypographyStep } from "./typography-step";
 import type { Locale } from "../../dictionaries";
 
 import { GALLERY_COVERAGE, type GalleryTheme } from "./coverage";
@@ -536,6 +537,7 @@ export function Gallery({ locale, theme, copy, data }: GalleryProps) {
       <ThemeAttribute theme={theme} />
       <h1>{copy.title}</h1>
       <BrandStep locale={locale} copy={copy} otherLocale={other} />
+      <TypographyStep locale={locale} copy={copy} otherLocale={other} />
       <FilteredDataTable
         locale={locale}
         searchCaption={copy.sampleCaption}

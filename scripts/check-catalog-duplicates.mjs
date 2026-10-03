@@ -24,6 +24,11 @@ const JUSTIFIED = [
     keys: ["title", "signInSubmit"],
     reason: "page name and submit control",
   },
+  {
+    namespace: "gallery",
+    keys: ["localeAr", "typefaceArabic"],
+    reason: "the language name and the Arabic-script section are the same word",
+  },
 ];
 
 let violations = 0;

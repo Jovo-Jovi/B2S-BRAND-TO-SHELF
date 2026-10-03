@@ -27,8 +27,8 @@ const EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx", ".html", ".css"]);
 // true count measured with that root present. Changed condition, not a new
 // premise: the two-way pair stays the scan roots [app, proxy.ts, lib, docs, features].
 // P03-T12 — measured after the data family: 98. P03-T13 adds the gallery: 102.
-const MINIMUM_FILES = 119;
-const MINIMUM_FONT_SOURCES = 6;
+const MINIMUM_FILES = 125;
+const MINIMUM_FONT_SOURCES = 25;
 
 const EXTERNAL_TAG = /<(script|link)\b[^>]*\b(?:src|href)\s*=\s*["'`]((?:https?:)?\/\/[^"'`]+)["'`]/gi;
 const EXTERNAL_URL = /url\(\s*["']?((?:https?:)?\/\/[^"')]+)["']?\s*\)/gi;
