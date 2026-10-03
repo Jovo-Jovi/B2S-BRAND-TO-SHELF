@@ -3899,6 +3899,19 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       repeat, which is a harness change. The draft pull request's isolation
       run took 18m51s against the 30-minute bound.
       Owner: **a harness task before the P03 exit gate**.
+      AMENDED (P03-T17). The re-reads are one query per identity, or one
+      per proof, and the PostgREST probes are unchanged. A local staging
+      run of the same 94 assertions took 416.22s: 94 PASS, 0 FAIL, 0 LOST,
+      D last. Management-API SQL fell from 687 calls and 431951ms (57.8%
+      of 747238ms) to 315 calls and 195552ms (47.0% of 416221ms). The
+      longest assertion was 26 at 26455ms. 4d is 4 SQL calls and 148
+      PostgREST probes, 21872ms, where it had been 148 SQL calls and
+      110924ms. 4b is 7 SQL calls and 76 PostgREST probes, 12973ms. 33d
+      is 3 SQL calls and 72 PostgREST probes, 13003ms. The probes that
+      remain are the 1345 PostgREST calls, 195958ms. They stay one per
+      identity per target. The 10-minute budget is the CI runner's, and
+      this local run is not that measurement.
+      Owner: **the P03 exit gate**.
 - [x] CF-205 — The reviewer's P03-T11 verdict of FAIL rested on two
       mismeasurements. The reviewer ran axe-core's target-size rule with
       runOnly, which enables a rule the engine ships disabled, and
@@ -4120,5 +4133,22 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       Operator and Buyer, and no other actor. Adding a role was forbidden.
       The capability is an annotation in ROLE_JOURNEY.md, not a table row.
       Owner: **the reviewer**.
+- [x] CF-231 — The suite's ledger recorded PASS for a test vitest had
+      failed by timeout (run 37108339308, assertion 4d).
+      CLOSED (P03-T17). A record() that arrives after its test has
+      finished is stored as FAIL, and the summary is counted from the
+      ledger after it has been reconciled to vitest's own task.result.
+      A PASS written before a timeout or a throw does not survive that
+      reconciliation. Two plants, each restored by deleting the plant
+      file: a test that records PASS and then exceeds a 200ms timeout,
+      and a test that records PASS and then throws. The summary read
+      0 PASS and 3 FAIL, and the late record named the finished test.
+      Owner: none outstanding.
+- [ ] CF-232 — The business-data amendment must cover SCOPE.md:18,
+      OD-G18's named gap, SECURITY_MODEL.md:398 and :427,
+      BRAND_CONFIG.md:201 and :219, check_security_model_bypass.py's
+      count of historical definitions, and restate isolation assertions
+      25a, 25b, 25c, 25d and 25f under a signed decision.
+      Owner: **P03-T18**.
 
 

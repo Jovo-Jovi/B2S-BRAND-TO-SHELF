@@ -25,7 +25,10 @@ import {
   makeIdentity,
   makeProbes,
   makeSqlRunner,
+  installIsolationHooks,
+  noteSuiteStart,
   printLedger,
+  printTripReport,
   readConfig,
   record,
   recordedAssertions,
@@ -76,7 +79,85 @@ async function columnValue(table: TableName, id: string, column: string): Promis
   return rows.length === 0 ? null : rows[0].v;
 }
 
+type RowTarget = { table: TableName; id: string };
+type ColumnRead = { table: TableName; id: string; column: string };
+
+const targetKey = (table: string, id: string): string => `${table}:${id}`;
+
+function quoteLiteral(value: string): string {
+  return `'${value.replace(/'/g, "''")}'`;
+}
+
+function quoteIdent(name: string): string {
+  if (!/^[a-z_][a-z0-9_]*$/.test(name)) {
+    throw new Error(`refusing to interpolate identifier ${name}`);
+  }
+  return name;
+}
+
+function groupIds(targets: RowTarget[]): Map<TableName, string[]> {
+  const byTable = new Map<TableName, string[]>();
+  for (const target of targets) {
+    const ids = byTable.get(target.table) ?? [];
+    ids.push(target.id);
+    byTable.set(target.table, ids);
+  }
+  return byTable;
+}
+
+/**
+ * One privileged read for every target. The key is table:id. A target absent
+ * from the result is absent from the database. Failure messages stay per target.
+ */
+async function presentTargets(targets: RowTarget[]): Promise<Set<string>> {
+  const byTable = groupIds(targets);
+  if (byTable.size === 0) return new Set();
+  const parts = [...byTable.entries()].map(([table, ids]) => {
+    const list = ids.map(quoteLiteral).join(", ");
+    return `select '${table}' as tbl, id::text as id from public.${quoteIdent(table)} where id in (${list})`;
+  });
+  const rows = await sql<{ tbl: string; id: string }>(parts.join(" union all "));
+  return new Set(rows.map((row) => targetKey(row.tbl, row.id)));
+}
+
+/** One privileged read of every named column. Missing rows come back null, as columnValue does. */
+async function readColumns(reads: ColumnRead[]): Promise<Map<string, string | null>> {
+  const found = new Map<string, string | null>();
+  for (const read of reads) found.set(`${read.table}:${read.id}:${read.column}`, null);
+  if (reads.length === 0) return found;
+  const groups = new Map<string, ColumnRead & { ids: string[] }>();
+  for (const read of reads) {
+    const key = `${read.table}.${read.column}`;
+    const group = groups.get(key) ?? { ...read, ids: [] };
+    group.ids.push(read.id);
+    groups.set(key, group);
+  }
+  const parts = [...groups.values()].map((group) => {
+    const list = group.ids.map(quoteLiteral).join(", ");
+    return (
+      `select '${group.table}' as tbl, '${group.column}' as col, id::text as id, ` +
+      `${quoteIdent(group.column)}::text as v from public.${quoteIdent(group.table)} where id in (${list})`
+    );
+  });
+  const rows = await sql<{ tbl: string; col: string; id: string; v: string | null }>(parts.join(" union all "));
+  for (const row of rows) found.set(`${row.tbl}:${row.id}:${row.col}`, row.v);
+  return found;
+}
+
+/** Removes the same ids a per-row delete removed. One statement, one round trip. */
+async function deleteIds(targets: RowTarget[]): Promise<void> {
+  const byTable = groupIds(targets);
+  if (byTable.size === 0) return;
+  const parts = [...byTable.entries()].map(([table, ids], index) => {
+    const list = ids.map(quoteLiteral).join(", ");
+    return `d${index} as (delete from public.${quoteIdent(table)} where id in (${list}) returning 1)`;
+  });
+  const counts = [...byTable.keys()].map((_, index) => `(select count(*) from d${index}) as c${index}`);
+  await sql(`with ${parts.join(", ")} select ${counts.join(", ")}`);
+}
+
 beforeAll(async () => {
+  noteSuiteStart();
   config = readConfig();
   sql = makeSqlRunner(config);
   probe = makeProbes(config);
@@ -106,7 +187,10 @@ beforeAll(async () => {
 afterAll(async () => {
   if (config && sql) await teardown(config, sql);
   printLedger();
+  printTripReport();
 }, 240_000);
+
+installIsolationHooks();
 
 // ---------------------------------------------------------------------------
 
@@ -528,28 +612,44 @@ describe("proof 4 — cross-tenant reach on every table, both directions", () =>
       [b.owner, b.id],
       [unaffiliated, a.id],
     ] as [Identity, string][]) {
+      const attempts: { table: TableName; id: string; attempt: Attempt; allowed: boolean }[] = [];
       for (const [table, payload] of payloadsFor(identity, tenantId)) {
         probes += 1;
         const id = String(payload.id);
         const attempt = await probe.insert(identity, table, payload);
+        attempts.push({
+          table,
+          id,
+          attempt,
+          allowed: allowed[identity.label].includes(table),
+        });
+      }
+      // One read for this identity's targets, after every probe and before any
+      // cleanup delete, so a permitted insert is still visible and a refused
+      // one is not. The next identity runs only after those rows are removed,
+      // which is the order the per-row delete already enforced.
+      const present = await presentTargets(attempts.map(({ table, id }) => ({ table, id })));
+      const remove: RowTarget[] = [];
+      for (const { table, id, attempt, allowed: permitted } of attempts) {
         const label = `${identity.label} INSERT ${table}`;
-
-        if (allowed[identity.label].includes(table)) {
+        const exists = present.has(targetKey(table, id));
+        if (permitted) {
           if (!attempt.ok) {
             failures.push(`${label}: POSITIVE PATH REFUSED ${attempt.status} (${attempt.code}) ${attempt.message}`);
-          } else if (!(await rowExists(table, id))) {
+          } else if (!exists) {
             failures.push(`${label}: reported success but nothing persisted`);
           } else {
             permittedLanded += 1;
           }
-          await sql(`delete from public.${table} where id = '${id}'`);
+          remove.push({ table, id });
         } else if (attempt.ok) {
           failures.push(`${label}: ACCEPTED, and must not have been`);
-          await sql(`delete from public.${table} where id = '${id}'`);
-        } else if (await rowExists(table, id)) {
+          remove.push({ table, id });
+        } else if (exists) {
           failures.push(`${label}: refused but a row persisted anyway`);
         }
       }
+      await deleteIds(remove);
     }
 
     record(
@@ -731,7 +831,14 @@ describe("proof 4 — cross-tenant reach on every table, both directions", () =>
         } else if (!refusedByGrant(attempt)) {
           failures.push(`${identity.label} DELETE ${table}: refused as "${attempt.message}", expected a grant refusal`);
         }
-        if (!(await rowExists(table, id))) failures.push(`${identity.label} DELETE ${table}: the row is gone`);
+      }
+      // One re-read of every target after this identity's probes. The same
+      // rows, and the same per-target message when one is missing.
+      const present = await presentTargets(targets.map(([table, id]) => ({ table, id })));
+      for (const [table, id] of targets) {
+        if (!present.has(targetKey(table, id))) {
+          failures.push(`${identity.label} DELETE ${table}: the row is gone`);
+        }
       }
     }
 
@@ -903,6 +1010,7 @@ describe("proof 6 — no row may carry another tenant's tenant_id", () => {
       },
     };
 
+    const watched: RowTarget[] = [];
     for (const table of TENANT_SCOPED_TABLES) {
       const payload = payloads[table];
       const id = String(payload.id);
@@ -916,10 +1024,16 @@ describe("proof 6 — no row may carry another tenant's tenant_id", () => {
           `A-owner INSERT ${table} carrying tenant B's tenant_id: refused as "${attempt.message}", ` +
             `expected the row-level security WITH CHECK to be what rejected it`,
         );
-      } else if (await rowExists(table, id)) {
-        failures.push(`A-owner INSERT ${table} carrying tenant B's tenant_id: refused but a row persisted`);
+      } else {
+        watched.push({ table, id });
       }
       evidence.push(`${table}: ${attempt.code || "ACCEPTED"}`);
+    }
+    const present = await presentTargets(watched);
+    for (const { table, id } of watched) {
+      if (present.has(targetKey(table, id))) {
+        failures.push(`A-owner INSERT ${table} carrying tenant B's tenant_id: refused but a row persisted`);
+      }
     }
 
     record(
@@ -6128,6 +6242,7 @@ describe("proof 33 — Brand, Asset and TranslationKey isolation", () => {
     const evidence: string[] = [];
     const anon = anonCaller(config);
 
+    const watched: RowTarget[] = [];
     for (const table of BRAND_ASSET_TABLES) {
       const payload = ownTenantPayload(table, b);
       const id = String(payload.id);
@@ -6146,7 +6261,7 @@ describe("proof 33 — Brand, Asset and TranslationKey isolation", () => {
           `A-owner INSERT ${table} as tenant B: refused as "${asA.message}" (${asA.code}), expected WITH CHECK`,
         );
       }
-      if (await rowExists(table, id)) failures.push(`A-owner INSERT ${table}: a row persisted`);
+      watched.push({ table, id });
 
       const unaPayload = ownTenantPayload(table, a);
       const una = await probe.insert(unaffiliated, table, unaPayload);
@@ -6162,6 +6277,10 @@ describe("proof 33 — Brand, Asset and TranslationKey isolation", () => {
         await sql(`delete from public.${table} where id = '${String(anonPayload.id)}'`);
       }
       evidence.push(`${table}=A:${asA.code || "ok"} una:${una.code || "ok"} anon:${anonIns.status}`);
+    }
+    const present = await presentTargets(watched);
+    for (const { table, id } of watched) {
+      if (present.has(targetKey(table, id))) failures.push(`A-owner INSERT ${table}: a row persisted`);
     }
 
     record(
@@ -6192,19 +6311,28 @@ describe("proof 33 — Brand, Asset and TranslationKey isolation", () => {
       brand_guideline: { ordinal: 99 },
     };
 
-    for (const table of BRAND_ASSET_TABLES) {
+    const specs = BRAND_ASSET_TABLES.map((table) => {
       const patch = patches[table]!;
       const column = Object.keys(patch)[0];
-      const before = await columnValue(table, graphId(b, table), column);
-      const attempt = await probe.update(a.owner, table, graphId(b, table), patch);
+      return { table, column, id: graphId(b, table), patch };
+    });
+    const before = await readColumns(specs.map(({ table, id, column }) => ({ table, id, column })));
+    const attempts: { spec: (typeof specs)[number]; attempt: Attempt }[] = [];
+    for (const spec of specs) {
+      const attempt = await probe.update(a.owner, spec.table, spec.id, spec.patch);
+      attempts.push({ spec, attempt });
+    }
+    const after = await readColumns(specs.map(({ table, id, column }) => ({ table, id, column })));
+    for (const { spec, attempt } of attempts) {
       if (attempt.ok && attempt.count > 0) {
-        failures.push(`A-owner UPDATE tenant B ${table}: ACCEPTED count=${attempt.count}`);
+        failures.push(`A-owner UPDATE tenant B ${spec.table}: ACCEPTED count=${attempt.count}`);
       }
-      const after = await columnValue(table, graphId(b, table), column);
-      if (after !== before) {
-        failures.push(`A-owner UPDATE tenant B ${table}.${column}: ${before} -> ${after}`);
+      const beforeValue = before.get(`${spec.table}:${spec.id}:${spec.column}`);
+      const afterValue = after.get(`${spec.table}:${spec.id}:${spec.column}`);
+      if (afterValue !== beforeValue) {
+        failures.push(`A-owner UPDATE tenant B ${spec.table}.${spec.column}: ${beforeValue} -> ${afterValue}`);
       }
-      evidence.push(`${table}=${attempt.code || `count ${attempt.count}`}`);
+      evidence.push(`${spec.table}=${attempt.code || `count ${attempt.count}`}`);
     }
 
     record(
@@ -6222,6 +6350,7 @@ describe("proof 33 — Brand, Asset and TranslationKey isolation", () => {
     let probes = 0;
 
     for (const identity of [a.owner, a.viewer, unaffiliated]) {
+      const checked: RowTarget[] = [];
       for (const table of BRAND_ASSET_TABLES) {
         for (const id of [graphId(a, table), graphId(b, table)]) {
           probes += 1;
@@ -6235,9 +6364,13 @@ describe("proof 33 — Brand, Asset and TranslationKey isolation", () => {
               `${identity.label} DELETE ${table}: refused as "${attempt.message}", expected a grant refusal`,
             );
           }
-          if (!(await rowExists(table, id))) {
-            failures.push(`${identity.label} DELETE ${table}: the row is gone`);
-          }
+          checked.push({ table, id });
+        }
+      }
+      const stillThere = await presentTargets(checked);
+      for (const { table, id } of checked) {
+        if (!stillThere.has(targetKey(table, id))) {
+          failures.push(`${identity.label} DELETE ${table}: the row is gone`);
         }
       }
     }

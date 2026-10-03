@@ -38,9 +38,12 @@
 // these rows. Every row this harness creates is synthetic, carries the
 // reserved `zz-test-` prefix, and is torn down by the same run that seeded it.
 
+import { AsyncLocalStorage } from "node:async_hooks";
 import { randomUUID } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
+
+import { afterEach, beforeEach, type TestContext } from "vitest";
 
 export const SYNTHETIC_PREFIX = "zz-test-";
 
@@ -205,6 +208,191 @@ const TRANSPORT_RETRIES = 4;
 
 const wait = (ms: number) => new Promise((done) => setTimeout(done, ms));
 
+// ---------------------------------------------------------------------------
+// Round-trip instrumentation. Counts and times only — it never changes a
+// query, a probe, a verdict or a claim. A logical call that retries counts
+// every attempt, because each attempt is a round trip.
+// ---------------------------------------------------------------------------
+
+type TripKind = "sql" | "postgrest" | "auth";
+
+type TripCounts = {
+  sql: number;
+  postgrest: number;
+  auth: number;
+  sqlMs: number;
+  postgrestMs: number;
+  authMs: number;
+};
+
+type TripWindow = TripCounts & {
+  label: string;
+  started: number;
+  assertionId: string | null;
+};
+
+type TripSnap = TripCounts & { id: string; wallMs: number };
+
+const tripTotals: TripCounts = { sql: 0, postgrest: 0, auth: 0, sqlMs: 0, postgrestMs: 0, authMs: 0 };
+let suiteStartedAt = 0;
+let tripWindow: TripWindow | null = null;
+const tripSnaps: TripSnap[] = [];
+
+const emptyTrips = (): TripCounts => ({
+  sql: 0,
+  postgrest: 0,
+  auth: 0,
+  sqlMs: 0,
+  postgrestMs: 0,
+  authMs: 0,
+});
+
+export function noteSuiteStart(): void {
+  suiteStartedAt = performance.now();
+}
+
+export function openTripWindow(label: string): void {
+  tripWindow = { label, started: performance.now(), assertionId: null, ...emptyTrips() };
+}
+
+export function closeTripWindow(label: string): void {
+  if (!tripWindow) return;
+  if (tripWindow.assertionId === null) {
+    tripSnaps.push({
+      id: `(no record) ${label}`,
+      wallMs: performance.now() - tripWindow.started,
+      sql: tripWindow.sql,
+      postgrest: tripWindow.postgrest,
+      auth: tripWindow.auth,
+      sqlMs: tripWindow.sqlMs,
+      postgrestMs: tripWindow.postgrestMs,
+      authMs: tripWindow.authMs,
+    });
+  }
+  tripWindow = null;
+}
+
+/**
+ * Binds record() to the vitest task that is actually running.
+ *
+ * AsyncLocalStorage, not a module-level "current test". A test vitest has
+ * already finished — a timeout does not cancel the async function — keeps
+ * running, and a module-level pointer would by then name a later test. The
+ * store is the one entered when THIS test started, so a late record() still
+ * finds the task vitest failed.
+ */
+type BoundTest = {
+  task: TestContext["task"];
+  finished: boolean;
+  ids: string[];
+};
+
+const ledger: LedgerLine[] = [];
+
+const testBindings = new AsyncLocalStorage<BoundTest>();
+const bindingsByTask = new Map<string, BoundTest>();
+
+const LATE_RECORD = "record() arrived after its test had finished";
+const VITEST_FAILED = "vitest marked this test failed; the ledger does not keep PASS";
+
+export function bindTestStart(ctx: TestContext): void {
+  const bound: BoundTest = { task: ctx.task, finished: false, ids: [] };
+  bindingsByTask.set(ctx.task.id, bound);
+  testBindings.enterWith(bound);
+}
+
+export function bindTestFinish(ctx: TestContext): void {
+  const bound = bindingsByTask.get(ctx.task.id);
+  if (!bound) return;
+  bound.finished = true;
+  reconcileBinding(bound);
+}
+
+function vitestFailed(bound: BoundTest): boolean {
+  return bound.task.result?.state === "fail";
+}
+
+function reconcileBinding(bound: BoundTest): void {
+  if (!vitestFailed(bound)) return;
+  for (const id of bound.ids) {
+    const line = ledger.find((entry) => entry.id === id);
+    if (!line) continue;
+    line.verdict = "FAIL";
+    if (!line.failures.includes(VITEST_FAILED)) line.failures.push(VITEST_FAILED);
+  }
+}
+
+/** Reads vitest's task.result and overwrites any PASS the test's own record() stored. */
+function reconcileLedger(): void {
+  for (const bound of bindingsByTask.values()) reconcileBinding(bound);
+}
+
+export function installIsolationHooks(): void {
+  beforeEach((ctx) => {
+    openTripWindow(ctx.task.name);
+    bindTestStart(ctx);
+  });
+  afterEach((ctx) => {
+    bindTestFinish(ctx);
+    closeTripWindow(ctx.task.name);
+  });
+}
+
+export function ledgerLines(): readonly LedgerLine[] {
+  return ledger;
+}
+
+function noteTrip(kind: TripKind, ms: number): void {
+  tripTotals[kind] += 1;
+  if (kind === "sql") tripTotals.sqlMs += ms;
+  else if (kind === "postgrest") tripTotals.postgrestMs += ms;
+  else tripTotals.authMs += ms;
+  if (!tripWindow) return;
+  tripWindow[kind] += 1;
+  if (kind === "sql") tripWindow.sqlMs += ms;
+  else if (kind === "postgrest") tripWindow.postgrestMs += ms;
+  else tripWindow.authMs += ms;
+}
+
+function stampAssertionTrips(id: string): void {
+  if (!tripWindow || tripWindow.assertionId !== null) return;
+  tripWindow.assertionId = id;
+  tripSnaps.push({
+    id,
+    wallMs: performance.now() - tripWindow.started,
+    sql: tripWindow.sql,
+    postgrest: tripWindow.postgrest,
+    auth: tripWindow.auth,
+    sqlMs: tripWindow.sqlMs,
+    postgrestMs: tripWindow.postgrestMs,
+    authMs: tripWindow.authMs,
+  });
+}
+
+export function printTripReport(): void {
+  const suiteMs = suiteStartedAt === 0 ? 0 : performance.now() - suiteStartedAt;
+  const sqlShare = suiteMs === 0 ? 0 : (tripTotals.sqlMs / suiteMs) * 100;
+  const lines = [
+    "",
+    "=== ROUND TRIPS — instrumentation only, no claim changed ===",
+    "",
+    `suite wall ${suiteMs.toFixed(0)}ms`,
+    `sql ${tripTotals.sql} calls ${tripTotals.sqlMs.toFixed(0)}ms (${sqlShare.toFixed(1)}% of suite wall)`,
+    `postgrest ${tripTotals.postgrest} calls ${tripTotals.postgrestMs.toFixed(0)}ms`,
+    `auth ${tripTotals.auth} calls ${tripTotals.authMs.toFixed(0)}ms`,
+    "",
+    "slowest assertions (wall, sql calls, postgrest calls, auth calls):",
+  ];
+  const ranked = [...tripSnaps].sort((a, b) => b.wallMs - a.wallMs).slice(0, 10);
+  for (const snap of ranked) {
+    lines.push(
+      `  ${snap.id.padEnd(16)} wall ${snap.wallMs.toFixed(0)}ms  sql ${snap.sql} (${snap.sqlMs.toFixed(0)}ms)  postgrest ${snap.postgrest} (${snap.postgrestMs.toFixed(0)}ms)  auth ${snap.auth} (${snap.authMs.toFixed(0)}ms)`,
+    );
+  }
+  lines.push("");
+  console.log(lines.join("\n"));
+}
+
 /**
  * Retries gateway failures only, and never a 4xx.
  *
@@ -218,17 +406,21 @@ async function fetchResilient(
   url: string,
   init: RequestInit,
   what: string,
+  kind: TripKind,
 ): Promise<{ status: number; body: string }> {
   let lastFailure = "";
 
   for (let attempt = 0; attempt <= TRANSPORT_RETRIES; attempt += 1) {
     if (attempt > 0) await wait(400 * 2 ** (attempt - 1));
+    const started = performance.now();
     try {
       const response = await fetch(url, init);
       const body = await response.text();
+      noteTrip(kind, performance.now() - started);
       if (response.status < 500) return { status: response.status, body };
       lastFailure = `HTTP ${response.status} ${body.slice(0, 200)}`;
     } catch (cause) {
+      noteTrip(kind, performance.now() - started);
       lastFailure = cause instanceof Error ? cause.message : String(cause);
     }
   }
@@ -254,6 +446,7 @@ export function makeSqlRunner(config: Config): SqlRunner {
         body: JSON.stringify({ query }),
       },
       "privileged SQL",
+      "sql",
     );
     return { ok: result.status < 400, status: result.status, body: result.body };
   }
@@ -433,6 +626,7 @@ async function postgrest(
       body: body === undefined ? undefined : JSON.stringify(body),
     },
     `${caller.label} ${method} ${path}`,
+    "postgrest",
   );
   return parseAttempt(result.status, result.body);
 }
@@ -502,6 +696,7 @@ export function makeProbes(config: Config) {
         `${config.url}/rest/v1/rpc/${fn}`,
         { method: "POST", headers: buildHeaders(base, caller), body: JSON.stringify(args) },
         `${caller.label} rpc/${fn}`,
+        "postgrest",
       );
 
       let rows: RawRow[] = [];
@@ -564,6 +759,7 @@ function makeAuthAdmin(config: Config) {
           body: JSON.stringify({ email, password, email_confirm: true }),
         },
         `create synthetic identity ${email}`,
+        "auth",
       );
       if (result.status >= 400) {
         throw new Error(`create synthetic identity ${email}: ${result.status} ${result.body}`);
@@ -578,6 +774,7 @@ function makeAuthAdmin(config: Config) {
         `${base}/admin/users/${id}`,
         { method: "DELETE", headers: adminHeaders },
         "remove a synthetic identity",
+        "auth",
       );
       if (result.status >= 400 && result.status !== 404) {
         throw new Error(`teardown could not remove a synthetic identity: ${result.status} ${result.body}`);
@@ -593,6 +790,7 @@ function makeAuthAdmin(config: Config) {
           body: JSON.stringify({ email, password }),
         },
         "sign in a synthetic identity",
+        "auth",
       );
       if (result.status >= 400) {
         throw new Error(`sign-in failed for a synthetic identity: ${result.status} ${result.body}`);
@@ -1052,20 +1250,30 @@ export type LedgerLine = {
   failures: string[];
 };
 
-const ledger: LedgerLine[] = [];
-
 export function recordedAssertions(): string[] {
   return ledger.map((line) => line.id);
 }
 
 export function record(id: string, claim: string, failures: string[], evidence: string): string[] {
+  stampAssertionTrips(id);
+  const bound = testBindings.getStore() ?? null;
+  // A late call keeps the binding of the test that started it (AsyncLocalStorage),
+  // which bindTestFinish has already closed. vitest's task.result is not writable
+  // from here: a PASS stored below is overwritten in reconcileLedger whenever
+  // that result's state is "fail".
+  const late = bound === null || bound.finished;
+  const alreadyFailed = bound !== null && vitestFailed(bound);
+  const owned = [...failures];
+  if (late) owned.push(LATE_RECORD);
+  else if (alreadyFailed) owned.push(VITEST_FAILED);
   ledger.push({
     id,
     claim,
-    verdict: failures.length === 0 ? "PASS" : "FAIL",
+    verdict: owned.length === 0 ? "PASS" : "FAIL",
     evidence,
-    failures,
+    failures: owned,
   });
+  if (bound) bound.ids.push(id);
   return failures;
 }
 
@@ -1121,24 +1329,34 @@ export const EXPECTED_ASSERTIONS = [
 ];
 
 export function printLedger(): void {
-  const width = Math.max(20, ...ledger.map((line) => line.claim.length));
+  reconcileLedger();
+  // Snapshot after reconciliation. A record() that arrives while this function
+  // runs cannot change the line that was just counted.
+  const lines = ledger.map((line) => ({
+    verdict: line.verdict,
+    id: line.id,
+    claim: line.claim,
+    evidence: line.evidence,
+    failures: [...line.failures],
+  }));
+  const width = Math.max(20, ...lines.map((line) => line.claim.length));
   const out = ["", "=== TENANT-ISOLATION PROOF LEDGER — DATA_MODEL.md §5, live catalog ===", ""];
 
-  for (const line of ledger) {
+  for (const line of lines) {
     out.push(`${line.verdict}  ${line.id.padEnd(4)} ${line.claim.padEnd(width)}  ${line.evidence}`);
     for (const failure of line.failures) out.push(`        ! ${failure}`);
   }
 
-  const recorded = new Set(ledger.map((line) => line.id));
+  const recorded = new Set(lines.map((line) => line.id));
   const missing = EXPECTED_ASSERTIONS.filter((id) => !recorded.has(id));
   for (const id of missing) {
     out.push(`LOST  ${id.padEnd(4)} ${"assertion never recorded".padEnd(width)}  the proof threw before reaching a verdict`);
   }
 
-  const failed = ledger.filter((line) => line.verdict === "FAIL").length;
+  const failed = lines.filter((line) => line.verdict === "FAIL").length;
   out.push(
     "",
-    `${EXPECTED_ASSERTIONS.length} expected — ${ledger.length - failed} PASS, ${failed} FAIL, ${missing.length} LOST`,
+    `${EXPECTED_ASSERTIONS.length} expected — ${lines.length - failed} PASS, ${failed} FAIL, ${missing.length} LOST`,
     "",
   );
   console.log(out.join("\n"));

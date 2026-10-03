@@ -465,6 +465,9 @@ row in front of them; the builder found the contradiction and halted
 before the first edit. The defect was not the digit choice — it was one
 rule with two declaration sites, which `UX_PRINCIPLES.md` §4 forbids for
 strings and which is exactly how two documents drift.
+ANNOTATED 2026-10-03 (P03-T17, PR-07). The sentences above stand.
+Extended by PR-47: the search covers the assertions and checks that
+state the rule, not only the documents.
 
 **PR-44 — A value a specification does not state is reported, and the part
 that depends on it stops.**
@@ -506,6 +509,14 @@ failure of this rule, not its enforcement. Origin: 68969b9, which added
 two component directories without naming them in MODULE_SPEC.md §1 and
 was repaired by 31d34f0 after docs-integrity failed on CI; the second
 breach of PR-42, after abd3efd.
+
+**PR-47 — The search covers the assertions and checks that state the rule,
+not only the documents.**
+The search covers the assertions and checks that state the rule, not only
+the documents. Origin: P03-T17's halt, where the reviewer's amendment
+changed the slug rule without reading the five isolation proofs that
+assert it, and without the scope, decision, security and brand statements
+and the static check that state it too.
 
 ---
 
