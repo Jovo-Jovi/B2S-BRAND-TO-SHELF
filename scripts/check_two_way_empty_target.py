@@ -140,6 +140,9 @@ PROVEN_PAIRS = [
     ("scripts/check-gallery-coverage.mjs", "app/[locale]/(public)/gallery/coverage.ts"),
     ("scripts/check-gallery-coverage.mjs", "app/[locale]/(public)/gallery/gallery.tsx"),
     ("scripts/check-gallery-coverage.mjs", "__tests__/browser/gallery.spec.ts"),
+    ("scripts/check-token-values.mjs", "lib/typeface/library.module.css"),
+    ("scripts/check-token-values.mjs", "lib/typeface/registry.ts"),
+    ("scripts/check-token-values.mjs", "public/fonts/library (directory)"),
 ]
 
 KNOWN_GAPS = [
@@ -540,6 +543,12 @@ def main():
             ["node", "scripts/check-token-values.mjs"], DirProbe("components"))
     do_pair(results, "scripts/check-token-values.mjs",
             ["node", "scripts/check-token-values.mjs"], DirProbe("features"))
+    do_pair(results, "scripts/check-token-values.mjs",
+            ["node", "scripts/check-token-values.mjs"], FileProbe("lib/typeface/library.module.css"))
+    do_pair(results, "scripts/check-token-values.mjs",
+            ["node", "scripts/check-token-values.mjs"], FileProbe("lib/typeface/registry.ts"))
+    do_pair(results, "scripts/check-token-values.mjs",
+            ["node", "scripts/check-token-values.mjs"], DirProbe("public/fonts/library"))
     do_pair(results, "scripts/check-contrast.mjs",
             ["node", "scripts/check-contrast.mjs"], FileProbe("app/globals.css"))
     do_pair(results, "scripts/check-contrast.mjs",

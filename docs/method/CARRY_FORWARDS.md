@@ -4117,12 +4117,19 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       Owner: **P03-T16**.
       CLOSED (P03-T16). The specimen offers Label and Sticker only.
       Owner: none outstanding.
-- [ ] CF-225 — Accepted logo formats and size limits are stated nowhere,
+- [x] CF-225 — Accepted logo formats and size limits are stated nowhere,
       and which LogoVariant an upload creates is unspecified. The Brand
       step's file control names no format and no byte limit, and a chosen
       file replaces the sample's existing dark-ground mark in the gallery
       preview only. That is not a variant-assignment rule.
       Owner: **the task that builds the wizard's logo step with persistence**.
+      CLOSED (P03-T19). BRAND_CONFIG.md §9, amended 2026-10-03, states SVG
+      and PNG, at most 5 MB, identified by bytes, the PNG minimum of 1000
+      pixels on the shorter side, and the SVG cleaner. The wizard asks for
+      up to two files, each a LogoVariant of kind full for its ground.
+      The gallery control names SVG or PNG, at most 5 MB. Storage, the
+      policies and the upload path are CF-234.
+      Owner: none outstanding.
 - [x] CF-226 — P03-T15 rendered the theme choice as two secondary buttons,
       because Button has no pressed state and Clay belongs only to a
       region's primary action.
@@ -4184,5 +4191,12 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       only when the pull request is not a draft, on opened, synchronize,
       reopened and ready_for_review. The push trigger is unchanged.
       Owner: none outstanding.
-
+- [ ] CF-234 — Logo storage. A private, tenant-isolated bucket, storage
+      policies, the upload path through the cleaner, and the five OD-G20
+      proofs: guessed key, listed prefix, swapped signed URL, expired URL,
+      cross-tenant prefix.
+      Owner: **P03-T20**.
+- [ ] CF-235 — The six onboarding screens as routes, saving and resuming.
+      Carries CF-214.
+      Owner: **P03-T21**.
 

@@ -1,8 +1,8 @@
 # SESSION CONTEXT
 Updated: 2026-10-03 · By: Grok 4.7 (heavyweight; prompt named Opus) · Phase: P03
-Last task: P03-T18 · Verdict: —. Last-row verdict is the declared
+Last task: P03-T19 · Verdict: —. Last-row verdict is the declared
 placeholder; the follow-up commit fills the sha only. The previous
-P03-T17 cell is PASS. Ledger 218 rows, **42** open. Full detail in the done-steps row below.
+P03-T18 cell is PASS. Ledger 220 rows, **43** open. Full detail in the done-steps row below.
 
 ## Read these too
 - `docs/method/PRECEDENTS.md` — binding rulings and environment quirks.
@@ -97,7 +97,8 @@ Keep it short: if a paragraph is growing here, it belongs elsewhere.
 | P03-T16 | The Brand step with its live preview; the public-site decision; four specification gaps. On phase/03-brand-and-onboarding from 88ce022; pull request #8 stays the one draft against main, not marked ready. Node v24.21.0 matches .nvmrc 24. Prompt named Opus; this session ran as Grok 4.7. No new package. Nothing reads or writes data. OD-A8, group A, register 100 to 101. ROLE_JOURNEY admits no unauthenticated row; the capability is an annotation and CF-230 names the reviewer. DESIGN_SURFACE.md corrected in place. §3.1 Label and Sticker. Contrast ratios recomputed: foreground 16.48, muted 5.33, critical 6.57, against #ffffff. AppShell drawer and nav-width column, PageHeader theme RadioGroup, WizardStep frame and preview. Brand step is a gallery specimen. CF-180's six criteria pass in all four combinations at both widths. No-substitution and role-mapping plants each failed and restored byte-identical. The gallery closure now follows gallery-local imports; DESIGN_SURFACE.md and gallery.tsx were already premises, so PROVEN_PAIRS stays 64 and fail() stays 138. Static set stays 29. 45 open at 88ce022 plus CF-225, CF-226, CF-227, CF-228, CF-229 and CF-230 landed open, minus CF-180, CF-223, CF-224, CF-226, CF-227, CF-228 and CF-229 closed, equals 44. Ledger 209 to 215. REVIEWER_CHAT unstaged. | PASS | `eb05813` |
 | P03-T17 | HALT 3, before any amendment or migration. On phase/03-brand-and-onboarding from 71b3c8e; pull request #8 stays the one draft against main, not marked ready. Node v24.21.0 matches .nvmrc 24. Prompt named Opus; this session ran as Grok 4.7. No new package. Production counts by Management API, User-Agent B2S-P03-T17-independent/1.0, project b2s-production: public.tenant [{"count":0}] and auth.users [{"count":0}] at 2026-10-03T07:53:33Z and 07:53:34Z. PART 1 searched slots 1 through 6. HALT 3: existing isolation expectations name a caller-supplied slug. 25a expects tenant.slug to equal the supplied slug and a second call with that slug to be refused with counts unchanged. 25c expects the catalog signature p_name, p_slug, p_base_currency, p_default_locale and arity 4. 25d expects two tenants whose slugs are the two supplied strings. 25f names public.provision_tenant(text,text,text,text). Changing only the RPC argument list leaves those assertions FAIL or LOST. No schema, no types, no isolation run. Register stays 101. 44 open at 71b3c8e plus 0 landed minus 0 closed equals 44. CF-213 and CF-230 stay open. REVIEWER_CHAT unstaged. | PASS | `4f0517d` |
 | P03-T17 | The isolation harness: set-based privileged re-reads, and a ledger that cannot outlive its test. On phase/03-brand-and-onboarding from 09fe2da; pull request #8 stays the one draft against main, not marked ready. Node v24.21.0 matches .nvmrc 24. Prompt named Opus; this session ran as Grok 4.7. No new package. Instrumentation stays; it changes no claim. Before: 747.24s, 687 SQL calls, 431951ms, 57.8% of suite wall, 1345 PostgREST, 106 auth. Slowest 4d 110924ms (148 SQL, 148 PostgREST), 4b 73112ms (118 SQL, 76 PostgREST), 33d 54659ms (72 SQL, 72 PostgREST). After: 416.22s, 94 expected, 94 PASS, 0 FAIL, 0 LOST, D last and every teardown counter 0. SQL 315 calls, 195552ms, 47.0% of suite wall. PostgREST stays 1345. Slowest 26 at 26455ms. 4d is 4 SQL and 148 PostgREST, 21872ms. 4b is 7 SQL and 76 PostgREST, 12973ms. 33d is 3 SQL and 72 PostgREST, 13003ms. Plants: a PASS then a 200ms timeout, and a PASS then a throw, both read FAIL; a record after the timeout reads FAIL. Claims and ids identical to 09fe2da, 94 and 94. 44 open at 09fe2da plus CF-232 landed open minus 0 closed equals 45. CF-204 stays open: push run 37112365784 was 525.04s, and pull-request runs 37112367963 and 37113074857 were 763.98s and 745.37s. Longest assertion on those runs was 4d at 34488ms. CF-231 landed closed. PR-43 annotated, PR-47 landed. REVIEWER_CHAT unstaged. | PASS | `2d8ddb7` |
-| P03-T18 | The tenant business data, re-issued. On phase/03-brand-and-onboarding from 9195344. Pull request #8 stays the one draft against main, not marked ready. Node v24.21.0 matches .nvmrc 24. Prompt named Opus; this session ran as Grok 4.7. No new package. Production counts by Management API, User-Agent B2S-P03-T18-independent/1.0, project akpvvydmltmfmkmwivgn: public.tenant 0 and auth.users 0 before the push and after it. Before: 24 migrations ending 20260922120005, 19 tables, provision_tenant(text, text, text, text). After: 25 migrations ending 20261003120001, 22 tables, provision_tenant(text, text, text), 10 security-definer functions. OD-G26 generates the slug. OD-A9 gives onboarding one store, the draft, and lands business details on legal_entity. Register 101 to 103, verified against the register. Entities 89 to 92. Isolation against staging: 102 expected, 102 PASS, 0 FAIL, 0 LOST, D at zero, suite 367.85s. Slowest 4d at 20957ms. The bypass plant without the drop reads 11 and fails; restored, the live count is 10. Types regenerated with supabase@2.111.0. 45 open at 9195344 plus 0 landed open minus CF-213, CF-230 and CF-232 closed equals 42. CF-233 opened and closed. CF-214 stays open. CF-225 stays open. REVIEWER_CHAT unstaged. | — | `3aa44cf` |
+| P03-T18 | The tenant business data, re-issued. On phase/03-brand-and-onboarding from 9195344. Pull request #8 stays the one draft against main, not marked ready. Node v24.21.0 matches .nvmrc 24. Prompt named Opus; this session ran as Grok 4.7. No new package. Production counts by Management API, User-Agent B2S-P03-T18-independent/1.0, project akpvvydmltmfmkmwivgn: public.tenant 0 and auth.users 0 before the push and after it. Before: 24 migrations ending 20260922120005, 19 tables, provision_tenant(text, text, text, text). After: 25 migrations ending 20261003120001, 22 tables, provision_tenant(text, text, text), 10 security-definer functions. OD-G26 generates the slug. OD-A9 gives onboarding one store, the draft, and lands business details on legal_entity. Register 101 to 103, verified against the register. Entities 89 to 92. Isolation against staging: 102 expected, 102 PASS, 0 FAIL, 0 LOST, D at zero, suite 367.85s. Slowest 4d at 20957ms. The bypass plant without the drop reads 11 and fails; restored, the live count is 10. Types regenerated with supabase@2.111.0. 45 open at 9195344 plus 0 landed open minus CF-213, CF-230 and CF-232 closed equals 42. CF-233 opened and closed. CF-214 stays open. CF-225 stays open. REVIEWER_CHAT unstaged. | PASS | `3aa44cf` |
+| P03-T19 | The rest of the wizard, specified; the font library; the SVG cleaner. On phase/03-brand-and-onboarding from 2823a7e. Pull request #8 stays the one draft against main, not marked ready. Node v24.21.0 matches .nvmrc 24. Prompt named Opus; this session ran as Grok 4.7. No database and no object store. ADR-016 chooses @xmldom/xmldom 0.9.12, MIT as the package declares it. Almarai was not shipped: the publisher's OFL.txt names Boutros International and the font's name table reserves all rights. Eleven families shipped, each SIL Open Font License 1.1 from the publisher's file. Conversion, where used, is fontTools 4.58.2. Static set stays 29. PROVEN_PAIRS 64 to 67. fail() stays 138. 42 open at 2823a7e plus CF-234 and CF-235 landed open minus CF-225 closed equals 43. Ledger 218 to 220. Plants: a component stylesheet naming Cairo fails; a registry family with no @font-face fails; removing the script check fails the corpus; accepting a 999-pixel PNG fails its test. Each restored byte-identical. Known-good logos match after cleaning in the browser tier. Gallery matrix 8 passed. REVIEWER_CHAT unstaged. | — | — |
 
 > Commit column: one or more comma-separated backticked shas, or `—` where no
 > single commit tracks the step (P-00 through P-01c predate the one-task-one-commit
@@ -154,7 +155,8 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
 - CF-207 — owner: the owner
 - CF-212 — owner: the owner, to repoint .env.local at staging
 - CF-214 — owner: the task that builds the wizard routes
-- CF-225 — owner: the task that builds the wizard's logo step with persistence
+- CF-234 — owner: P03-T20
+- CF-235 — owner: P03-T21
 
 ## Frozen decisions in force
 - Freeze point 2026-07-29 (`legacy/FREEZE.md`) — tools RETIRING, not port
@@ -377,13 +379,15 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
     coverage list, the gallery renderer and the browser-tier spec.
     It moved again at P03-T14: 63 → 64, one new pair for
     `check-contrast.mjs` against `docs/product/DESIGN_SURFACE.md`.
-  - The proven two-way empty-target case count stands at **64**, last proved
-    at **P03-T14**. The new pair was proved by removing
-    `docs/product/DESIGN_SURFACE.md` and by emptying it; both produced a
-    one-line `FAIL:` at non-zero exit, and the file was restored
-    byte-identical each time. Sixty-five pairs are enumerated
-    (sixty-four in `PROVEN_PAIRS` plus the one documented gap),
-    sixty-four proven, one recorded as a documented gap rather than folded
+  - The proven two-way empty-target case count stands at **67**, last proved
+    at **P03-T19**. Three new pairs, `check-token-values.mjs` against
+    `lib/typeface/library.module.css`, `lib/typeface/registry.ts` and
+    `public/fonts/library`, were proved by removing each and by emptying
+    each; both produced a one-line `FAIL:` at non-zero exit, and each was
+    restored byte-identical. The whole enumeration was reproved in the same
+    run, 67 of 67. Sixty-eight pairs are enumerated
+    (sixty-seven in `PROVEN_PAIRS` plus the one documented gap),
+    sixty-seven proven, one recorded as a documented gap rather than folded
     into either number:
     `check_module_spec_tree.py`'s reverse-direction premise (the live
     tracked directory tree via `git ls-files`) cannot be substituted on
@@ -451,7 +455,7 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
   (PR-29).
 
 ## Next action
-**P03-T19** builds the wizard's routes. CF-214 stays open, owner the task that builds the wizard routes. CF-204 stays open for the P03 exit gate: one CI run finished in 525.04s, and two finished in 763.98s and 745.37s. This task's staging suite finished in 367.85s. No assertion exceeded 60 seconds. OD-A8 places the public site in P08. The Brand step is a gallery specimen; it is not a route and it persists nothing. Save and finish later stays with CF-214. Accepted logo formats, size limits and which LogoVariant an upload creates are CF-225. A page size and an explicit theme choice are member preferences
+**P03-T20** stores logos: a private tenant-isolated bucket, the policies, the upload path through the cleaner, and the five OD-G20 proofs (CF-234). **P03-T21** builds the six onboarding screens as routes, saving and resuming (CF-235, carrying CF-214). CF-214 stays open. CF-204 stays open for the P03 exit gate: one CI run finished in 525.04s, and two finished in 763.98s and 745.37s. OD-A8 places the public site in P08. The Brand and Typography specimens are gallery screens; they are not routes and they persist nothing. Save and finish later stays with CF-214. A page size and an explicit theme choice are member preferences
 held for the session (CF-207) until the owner decides where a member
 preference lives. Do not persist a page size or a theme choice. Pull request #8 is the phase's one draft
 against main. Do not mark it ready and do not open a second one. Money and
