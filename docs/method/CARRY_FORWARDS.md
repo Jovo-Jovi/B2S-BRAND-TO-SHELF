@@ -1014,15 +1014,39 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       document in none of the nine phases, so the worked justification for the
       no-literals rule is owed by nobody. That is not this row's defect and is
       not invented an owner here — it is CF-146, which also carries CF-74.
-- [ ] CF-74 — The report engine has no resource bundle outside the invoice
+      AMENDED (P03-T05) — the `UX_PRINCIPLES.md` half now has an owner.
+      `BUILD_PHASES.md` §P03 names that document, which is what CF-146
+      existed to decide, and CF-146 is CLOSED. Owner: **P08** for the
+      `FEATURE_INVENTORY.md` must-not-reproduce half, and **P03** for the
+      `UX_PRINCIPLES.md` half.
+      AMENDED (P03-T06) — the P03 half is discharged. `UX_PRINCIPLES.md` §4
+      is the worked justification for the no-literals rule, including the
+      corrupted return word this row names. The P08 half stays open.
+      Owner: **P08**, the `FEATURE_INVENTORY.md` must-not-reproduce
+      authoring.
+- [x] CF-74 — The report engine has no resource bundle outside the invoice
       template. `الإجمالي` is re-declared at bb-stock-costs.html:5652, :5743,
       :5746, :5798 and `المنتج` at :5651, :5712, :5757, :5782. Eight
       declarations of two strings. Requirement: one resource key per string,
       one declaration site. Owner: DOMAIN_MODEL.md and UX_PRINCIPLES.md.
       AMENDED (P-06a). DOMAIN_MODEL.md invariant 2 settles the storage half — no
       Arabic string is ever an identifier, and TranslationEntry is the only
-      home for display text. The single-declaration-site requirement remains.
+      home for display text. The       single-declaration-site requirement remains.
       Owner: UX_PRINCIPLES.md.
+      AMENDED (P03-T05) — `BUILD_PHASES.md` §P03 names `UX_PRINCIPLES.md`,
+      so this row's entire owner is that phase. Owner: **P03**, the
+      `UX_PRINCIPLES.md` authoring.
+      AMENDED (P03-T06) — stating the principle is not the whole of the
+      owed act. `UX_PRINCIPLES.md` §4 states one string, one declaration
+      site, and names a duplicate-value report as owed. The requirement
+      needs that check to hold it, so this row stays OPEN. The check is
+      CF-170. Owner: **the task that lands the design-surface catalog**.
+      CLOSED (P03-T08) by `scripts/check-catalog-duplicates.mjs`, which
+      holds the one-string requirement CF-170 was opened to check. The
+      sign-in page name and the submit control stay two keys, justified
+      in that check: they are different jobs, and one key would make a
+      button-label change rewrite the document title. Owner: none
+      outstanding.
 - [x] CF-75 — AGENTS.md and .cursor/rules/b2s-devos.mdc carried folder paths
       (`src/data/adapters/`, `src/print/`, `components/ui/`,
       `components/shared/`) and a named library (`zod`) in always-on rules,
@@ -1255,7 +1279,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       to close it. The builder correctly refused to invent text for an unbacked
       id. Owner: reviewer.
       CF-91 — CLOSED (P01-T02-RESUME) by PR-24.
-- [ ] CF-92 — ADR-012 runs B2S on a single Supabase environment. Its reinstatement
+- [x] CF-92 — ADR-012 runs B2S on a single Supabase environment. Its reinstatement
       trigger is a row count: the isolation suite may run against production only
       while it holds zero real tenants, and a staging project is created before
       the first real tenant is onboarded. Owner: the task that onboards the first
@@ -1270,7 +1294,14 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       teardown (2026-09-01T22:53:03.970932Z). The Phase 02 exit gate has
       run, so it is no longer a live owner. Stays OPEN. Owner: the task
       that onboards the first non-synthetic tenant.
-- [ ] CF-93 — Seven specification gaps in `DATA_MODEL.md`'s Platform tier, found by
+      CLOSED (P03-T01-RESUME) — ADR-013 withdraws ADR-012's permission in
+      full. Production never runs the isolation suite again, at any row
+      count, so the row-count trigger is deleted rather than adjudicated.
+      The backup-snapshot rule on production is not retired: it becomes
+      unconditional. There is no remaining owner. The 84-character
+      "first non-synthetic tenant" clause is discharged by that
+      unconditionality, not by an onboarding that has not happened.
+- [x] CF-93 — Seven specification gaps in `DATA_MODEL.md`'s Platform tier, found by
       building it at P01-T02-RESUME. None was resolved by invention: each was
       implemented on the narrowest reading available and is recorded here for the
       tier amendment. Owner: reviewer, at the next `DATA_MODEL.md` amendment.
@@ -1406,7 +1437,26 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       is still the live remainder. Owner: **the first P03 task that creates a
       table**, which must settle the `updated_at` maintenance trigger before
       or in that migration.
-- [ ] CF-94 — `check-no-runtime-cdn` and `check-no-hardcoded-literals` scan `app/`
+      CLOSED (P03-T03) — gap (6) is its last open remainder and is closed.
+      Migration `20260919120001_updated_at_maintenance` lands
+      `public.set_updated_at()`, not `security definer`, `search_path` pinned
+      to `''`, assigning `NEW.updated_at = now()` unconditionally, with a
+      BEFORE UPDATE FOR EACH ROW `{table}_set_updated_at` trigger on every
+      table that declares the column. Live staging catalog: five tables
+      (`consent_grant`, `invitation`, `member`, `membership`, `tenant`);
+      `operator` and `activity_event` declare none and carry none, matching
+      §3 and §1's departures table. Applied to staging then production;
+      catalogs agree on B2S-owned `public` objects. `DATA_MODEL.md` §1 rule 4
+      names the trigger. `scripts/check_data_model_schema.py` asserts both
+      directions with floors in the OK line, proven on six on-disk plants
+      and six isolated plants with the table/enum compare out of the path
+      (PR-38). Isolation 32a: an authenticated write of a granted column
+      moves `updated_at`. Isolation 32b: a caller-chosen timestamp does not
+      persist — grant-refused for authenticated, overwritten for
+      `service_role` HTTP and in-process SQL. Suite: 84 expected, 84 PASS,
+      0 FAIL, 0 LOST, line D at zero. Nothing of this row remains open. The
+      other six gaps stay closed by their earlier amendments, unedited.
+- [x] CF-94 — `check-no-runtime-cdn` and `check-no-hardcoded-literals` scan `app/`
       and `proxy.ts` only, which was the whole of the application source when
       P01-T01 authored them. `lib/` exists as of P01-T02-RESUME and is not
       scanned; `features/` and `components/` will not be either when they arrive.
@@ -1458,6 +1508,15 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       a mechanical builder task with its own consolidated pull request.
       That task has not run. Owner unchanged: **the task that creates
       `components/`, for that root.**
+      CLOSED (P03-T09) — **`components/` is covered.** The four guards reach
+      it and their floors moved to the true counts: hardcoded literals
+      17 to 45, runtime CDN 20 to 59, service-import 12 to 40, data-boundary
+      files 20 to 48. Import sites stay 4, because no component imports
+      Supabase. `check-logical-properties.mjs` already named `components`
+      as an optional root; its floors moved from 1 stylesheet and 239
+      declarations to 12 and 657, so an emptied `app/globals.css` still
+      fails. Those moves are changed conditions, not new premises, and
+      add no `PROVEN_PAIRS` entry. Owner: none outstanding.
 - [x] CF-95 — The deployment and drift pipeline is wired but not live, and both
       remaining steps are owner actions rather than builder work.
       (1) `vercel git connect` failed against the repository: the Vercel GitHub
@@ -1919,7 +1978,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       was removed from repository secrets — no CI job needs it, and on a public
       repository every secret is reachable by any workflow file, so it was
       exposure with no reader. It remains in Vercel, production target only.
-- [ ] CF-109 — The isolation suite runs by `npm run test:isolation` and is
+- [x] CF-109 — The isolation suite runs by `npm run test:isolation` and is
       deliberately outside `npm test`, so no CI job executes it. That was
       originally forced by absent secrets; the secrets now exist and the decision
       stands anyway, on a different ground. Under ADR-012 there is one Supabase
@@ -1976,6 +2035,48 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       the artefact when signing. This task does not pick an option.
       Owner: **the P03 task that stands up staging after the owner signs
       FORK 2**, per OD-H12.
+      AMENDED (P03-T01) — PART 0 HALTED. The owner signed FORK 2 in the
+      task prompt; the staging project is not there to stand up. Org
+      jiovanny, plan pro. One ACTIVE_HEALTHY B2S project, named
+      b2s-production. Three INACTIVE projects belong to other products.
+      Development branches on b2s-production: default main only.
+      Repository secrets last updated 2026-08-03; names
+      SUPABASE_ACCESS_TOKEN and SUPABASE_PROJECT_ID exist; no secret
+      name contains STAGING. GitHub Preview and Production environment
+      secrets: none. .env.local has no staging-named key. Independent
+      production counts (User-Agent B2S-P03-T01-independent/1.0, not
+      the isolation harness): public.tenant
+      2026-09-02T13:22:41.402262+00:00 HTTP 201 [{"count":0}];
+      auth.users 2026-09-02T13:22:42.087527+00:00 HTTP 201
+      [{"count":0}].       Creating the project is the owner's act, not the
+      builder's. Row stays OPEN. Owner: **the P03 task that stands up
+      staging after the owner creates the project and sets its access
+      token and project ref as repository secrets**, per OD-H12.
+      AMENDED (P03-STAGING-CREATE, 2026-09-17) — the owner act ran.
+      Org name currently reads B2S, plan pro, slug unchanged from the
+      P03-T01 measurement. `b2s-staging` created ACTIVE_HEALTHY in
+      `eu-central-2`, matching production. `b2s-production` name, ref
+      and role unchanged (PR-40). Four repository secrets set, last
+      updated 2026-09-17, names SUPABASE_STAGING_PROJECT_ID,
+      SUPABASE_STAGING_URL, SUPABASE_STAGING_PUBLISHABLE_KEY,
+      SUPABASE_STAGING_SERVICE_ROLE_KEY; none collides with the
+      production six, whose last-updated dates remain 2026-08-03.
+      Existing SUPABASE_ACCESS_TOKEN is account-scoped: GET
+      /v1/projects/{ref} returned HTTP 200 for both names with that
+      one token. Staging is virgin (0 public tables, 0 migrations).
+      Production counts this session: public.tenant [{"n":0}],
+      auth.users [{"n":0}]. Migrations not applied — reconstitution
+      of the schema from the chain is the resume's named proof. Row
+      stays OPEN. Owner: **the P03-T01 resume that stands up staging**,
+      per OD-H12.
+      CLOSED (P03-T01-RESUME) — ADR-013 landed. All 18 migrations applied to
+      virgin staging, each in source order. Isolation suite points at
+      staging-named variables with no production fallback, proven by a
+      start-up failure when those variables are unset. The suite is a
+      required CI job on schema-touching pull requests
+      (`.github/workflows/isolation.yml`) and fails rather than skips
+      without its secrets. `types-drift` reads
+      `SUPABASE_STAGING_PROJECT_ID`. CF-109's closing condition is met.
 - [x] CF-110 — P01-T03 verified `supabase/schema.sql` and the concatenated
       migrations byte-identical at 18,495 characters. After P01-T04 they are
       whitespace-normalised identical with ten blank lines differing at file
@@ -2699,6 +2800,14 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       staged path explicitly (PR-36) and by `git show --stat` on the
       resulting commit(s) after landing. Owner: the reviewer, to commit,
       amend or discard on their own document.
+      AMENDED (P03-T07) — the pending edit above is no longer the whole of
+      this row. Document precedence is now stated two ways.
+      `CLAUDE_PROJECT_INSTRUCTIONS.md` carries `UX_PRINCIPLES.md` and
+      `DESIGN_SURFACE.md` at slot 12. `REVIEWER_CHAT_INSTRUCTIONS.md` still
+      carries the old list, slot 12 as `MODULE_SPEC.md` alone, because that
+      file is the reviewer's uncommitted document and every task has left it
+      unstaged. This row now carries a substantive divergence, not only a
+      pending edit. The reviewer still owns the file.
 - [x] CF-141 — `scripts/check_two_way_empty_target.py` states when it must be
       run nowhere. P02-T09-FIX landed it permanently under PR-28 and recorded
       why it is not wired into `docs-integrity.yml` — several premises need a
@@ -2850,7 +2959,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       **11**, re-derived by the same command. Owner: none outstanding, closed in
       the task that performed the triage; the residue is carried by rows (c) and
       (d)'s own owners and by CF-146.
-- [ ] CF-146 — `UX_PRINCIPLES.md` is owed by no phase. It is one of OD-H7's
+- [x] CF-146 — `UX_PRINCIPLES.md` is owed by no phase. It is one of OD-H7's
       just-in-time documents and `BUILD_PHASES.md` names it in none of the nine
       phases, unlike `PRINT_CONTRACT.md` (P06), `IMPORT_SPEC.md` (P07) and
       `FEATURE_INVENTORY.md` / `RISK_REGISTER.md` / `ACCEPTANCE.md` (P08), each
@@ -2866,6 +2975,12 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       carry-forward, only by amending `BUILD_PHASES.md`, which is the
       reviewer's document. Owner: the reviewer, at the next method amendment
       that touches `BUILD_PHASES.md`.
+      CLOSED (P03-T05) — `BUILD_PHASES.md` §P03 names `UX_PRINCIPLES.md`,
+      authored just-in-time by the reviewer before the design-surface
+      catalog is designed. The catalog is the first design artifact in the
+      project and cannot be designed without a charter. OD-G21 is that
+      charter's first input. CF-74 is amended to name P03. Owner: none
+      outstanding.
 - [x] CF-147 — a done-steps row split into six columns, and both the shape check
       and the roadmap generator let it through. `SESSION_CONTEXT.md`'s
       P02-T09-FIX row described one of that task's new assertions by quoting a
@@ -3006,7 +3121,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       bumped one above truth fails; both reverted SHA-256-identical, never
       `git checkout --` (PR-26). Two new `fail()` sites. Owner: none
       outstanding, closed in the task that found it.
-- [ ] CF-154 — Four concurrent `provision_tenant` RPCs from a member owning
+- [x] CF-154 — Four concurrent `provision_tenant` RPCs from a member owning
       zero tenants: exactly three succeeded, one refused SQLSTATE 23514
       "a member may own at most three active tenants", owned=3 after,
       teardown returned tenant=0 and auth.users=0. The suite asserts 28d
@@ -3019,16 +3134,29 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       entity set, which is a `SECURITY_MODEL.md` §4 re-run condition, so
       the first P03 task that amends `__tests__/isolation/` is where this
       assertion lands, permanently per OD-H11. Owner unchanged.
-- [ ] CF-155 — `SECURITY_MODEL.md` §11b.5 states the six event-trigger
+      CLOSED (P03-T01-RESUME) — assertion 28f, permanently, in group 28.
+      Four concurrent `provision_tenant` RPCs from a member owning zero:
+      three succeed, one refused SQLSTATE 23514, owned=3 after. D stays
+      last. This task is the first post-P02 amendment of
+      `__tests__/isolation/`.
+- [x] CF-155 — `SECURITY_MODEL.md` §11b.5 states the six event-trigger
       functions carry an unpinned `search_path`. Live catalog at P02-GATE:
       all six have `proconfig=['search_path=""']` (pinned). Owner, schema,
       reachability and membership are unchanged, so this is not a §11 hard
       failure and not an unnamed mechanism. Found at P02-GATE. Owner: **the
       next `SECURITY_MODEL.md` amendment**.
-- [ ] CF-156 — `DECISIONS.md`'s preamble still reads "The 84 signed
+      CLOSED (P03-T01-RESUME) — original sentences stand (PR-07). Dated
+      corrections inserted at §11b.5: live `proconfig` is
+      `search_path=""`, pinned, on all six functions. Owner, schema,
+      reachability and membership unchanged.
+- [x] CF-156 — `DECISIONS.md`'s preamble still reads "The 84 signed
       operational decisions"; §2 states 92, and `check_stated_counts.py`
       asserts the §2 figure. Found at P02-GATE. Owner: **the next
       `DECISIONS.md` write**.
+      CLOSED (P03-T01-RESUME) — the 84 is the promoted set and stands
+      (PR-07). A sentence under it now states that the live total is the
+      figure in §2. §2 moved 92 → 94 with OD-G20 and OD-H13 in the same
+      write.
 - [ ] CF-157 — `TENANCY_MODEL.md` §3 Manager Can lists purchasing as a
       distinct business operation. `ROLE_JOURNEY.md` has Manager rows for
       catalog and inventory, sales, and CSV import, and none for
@@ -3036,7 +3164,11 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       nine-phase owning phase exists; the gap is still a capability with
       no row. Found at P02-GATE. Owner: **the next `ROLE_JOURNEY.md`
       amendment**.
-- [ ] CF-158 — Object storage for `MediaAsset` and `AssetRendition` is an
+      AMENDED (P03-T04) — that task amended `ROLE_JOURNEY.md` with Owner
+      and Manager brand-capability rows and raised `MINIMUM_ROLE_JOURNEY_ROWS`
+      17 → 19. It did not add a purchasing row. The gap stands; owner
+      remains the next amendment after this one.
+- [x] CF-158 — Object storage for `MediaAsset` and `AssetRendition` is an
       unsigned decide-and-document fork at P03 entry. ADR-008 signs Supabase
       Storage with tenant-isolated paths, governed by storage policies;
       table rows hold references, never content. `ARCHITECTURE.md` §2 cites
@@ -3104,6 +3236,10 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       option.
       Owner: **the owner, to sign the object-storage fork assembled at
       P03-ENTRY.**
+      CLOSED (P03-T01-RESUME) — OD-G20 signed. Object storage stays
+      Supabase Storage. ADR-008 stands. R2 declined for Release 1 on
+      isolation, not cost. Asset-tier names stay vendor-neutral. Revisit
+      at P06 against measured sizes and egress.
 - [x] CF-159 — No task reports the CI conclusion of its own push. PR-13 requires the
       remote comparison line and every P02 task supplied one; none reported
       whether the workflow run on that commit succeeded. P02-GATE's PART 1
@@ -3131,3 +3267,942 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       job, and its result — alongside the PR-13 remote comparison line; a red
       or skipped job is a finding, not an omission; the conclusion is the one
       on the final head, because the follow-up commit re-triggers CI.
+- [x] CF-160 — b2s-staging was created on 2026-09-17 outside a task prompt. Ref
+      bnjrgoaoujnrlvuxicca, region eu-central-2, ACTIVE_HEALTHY, Postgres
+      17.6.1.166, zero public tables, zero migrations applied. Production
+      b2s-production keeps ref akpvvydmltmfmkmwivgn, region eu-central-2,
+      Postgres 17.6.1.155. Cost $10/month, confirmed with the owner before
+      creation. Four repository secrets were added —
+      SUPABASE_STAGING_PROJECT_ID, SUPABASE_STAGING_URL,
+      SUPABASE_STAGING_PUBLISHABLE_KEY, SUPABASE_STAGING_SERVICE_ROLE_KEY — and
+      no name collides with the production six, which are untouched. The existing
+      SUPABASE_ACCESS_TOKEN returned HTTP 200 for both refs and is account-scoped,
+      so it is not what keeps the isolation suite off production; the project ref
+      and the URL are.
+      DEVIATION, recorded not excused: P03-T01's Do-NOT list reserved Supabase
+      project creation to the owner, and the creating session performed it. The
+      owner approved the cost before it ran, so the act was sanctioned, but it
+      happened outside a task prompt and therefore carried no done-steps row, no
+      verdict and no ledger line until this one. Infrastructure that costs money
+      and that the isolation venue will depend on should not be reachable only
+      through a chat transcript.
+      CF-160 — CLOSED (P03-T01a) by this row, which is the record it was missing.
+- [ ] CF-161 — Staging runs Postgres 17.6.1.166 and production runs 17.6.1.155, so the
+      rehearsal environment is AHEAD of the environment it rehearses for. That
+      inverts what staging is for: a migration that succeeds on 166 can still
+      fail on 155, and the catalog comparison the resume performs will attribute
+      platform-level differences to the migration chain unless the two are the
+      same patch level. Production's patch level appears upgradable from the
+      Supabase dashboard, which is the owner's act and not a builder's. Until the
+      levels match, any catalog difference between the two projects must be
+      classified as chain-derived or platform-derived before it is called a
+      finding. Owner: the owner, for the production upgrade; and
+      P03-T01-RESUME, which must carry the classification either way.
+      AMENDED (P03-T01-RESUME) — classification carried. Staging and
+      production public catalogs were compared by identical Management
+      API queries: tables, columns, enums, policies (cmd, roles, using,
+      check), table grants, column grants, function grants, triggers,
+      constraints, and `security definer` functions with owner and
+      `proconfig`. Every class MATCHED. `version()` both read PostgreSQL
+      17.6 / `server_version_num` 170006. Extension names and versions
+      MATCHED. The 17.6.1.155 vs 17.6.1.166 delta remains in the
+      Management API project metadata only, which is platform-derived
+      and is not a halt. No chain-derived difference in B2S-owned
+      `public` objects. Row stays OPEN. Owner: **the owner, for the
+      production upgrade**.
+- [ ] CF-162 — OD-H13 defines error visibility and does not implement it.
+      Nothing in the repository or in `.env.local` satisfies it today:
+      there is no error-tracking DSN, no log drain, no request identifier
+      in an unhandled-error surface, and no `error.tsx` that shows one.
+      Vercel runtime logs exist as a platform default; they do not by
+      themselves put a request identifier in what the person saw.
+      Owner: **P03, before the wizard accepts real content**.
+- [ ] CF-163 — `ARCHITECTURE.md` §6's guard table names
+      `check-print-containment` as the guard for "Page geometry is emitted
+      by the print engine only". No such script exists and no workflow
+      invokes one. `AGENTS.md` §3 and `.cursor/rules/b2s-devos.mdc` both
+      state NOT YET ENFORCED with owner P06 for that same rule, correctly,
+      since P02-T15. Three documents state the rule and one names a guard
+      that is not there.
+      `check_stated_counts.py`'s `check_rules_file_guards()` asserts the
+      two always-on files against `scripts/` and the workflows;
+      `ARCHITECTURE.md` §6 is outside its subject, which is why the drift
+      survived the task that closed CF-75. Either bring §6 into that
+      assertion's subject, or state in §6 that its table is aspirational
+      and `AGENTS.md` §3 is the enforced one — but not both silently.
+      Found by the reviewer at `4ce7eb2`.
+      Left OPEN: bringing §6 into `check_rules_file_guards()` is not a
+      small extension. §6 cites short guard names and a job name
+      (`types-drift`), not `scripts/` paths; the print row names a file
+      that does not exist, so extending the current exists-and-invoked
+      assertion over §6 as it stands would fail the tree; mapping those
+      short names onto `scripts/` would change the assertion's subject.
+      Owner: **the next amendment of `scripts/check_stated_counts.py` that
+      can take `ARCHITECTURE.md` §6 as a subject**, or a dedicated
+      assertion; not silently both.
+      AMENDED (P03-T04) — that task amended `check_stated_counts.py`
+      (`WORD_NUMBERS` through nineteen, and the DATA_MODEL §3 lead regex)
+      and did not take `ARCHITECTURE.md` §6 as a subject. The row stays
+      OPEN.
+- [x] CF-164 — CF-109 was closed on a mechanism that is now effectively gate-only again,
+      which is the condition CF-109 existed to end. isolation.yml fired on
+      pull_request with base main and on push to main; BRANCHING §3 allows one
+      pull request per phase, at the phase exit, after the gate, so across a
+      phase the suite ran at the exit PR and again after the merge — and
+      CF-109's own words were "an isolation regression between gates is not
+      caught until the next gate". The close satisfied CF-109's stated
+      condition literally, so closing it was defensible; the interaction with
+      §3 made that condition hollow. The fix is not to restore the
+      belt-and-braces: concurrency tenant-isolation-staging with
+      cancel-in-progress false is what serialises two runs against one
+      database, so the push trigger can cover phase branches without
+      reintroducing the race. Found by the reviewer at 0637f9b.
+      CF-164 — CLOSED (P03-T02). Push coverage restored to every branch,
+      matching ci.yml's `push: branches: ["**"]`, path filter unchanged,
+      concurrency group retained with `cancel-in-progress: false`. CF-109
+      stays CLOSED. The trigger is proven by a push that touches
+      `.github/workflows/isolation.yml` (in its own path filter) and by a
+      later push that does not.
+- [ ] CF-165 — The staging MCP entry is writable, so it exposes
+      `apply_migration`. ADR-006 says one applier per environment. An MCP
+      server that can apply a migration is a second applier — a migration
+      could reach staging without a commit, and staging and
+      `supabase/migrations` would silently disagree, which is the one thing
+      staging exists to prevent. Owner: **the owner**.
+- [x] CF-166 — When a check asserts two artifacts against each other in both
+      directions, those artifacts must land in the same commit. Spec-first
+      expressed as a separate commit fails the check by construction.
+      Origin: P03-T04. The reviewer's prompt required `DATA_MODEL.md` to
+      land in its own commit, before any migration.
+      `check_data_model_schema.py` asserts §3 against `supabase/schema.sql`
+      both ways, so commit `abd3efd`, declaring nineteen tables against a
+      schema holding seven, fails that check. Three commits were pushed
+      together and CI ran only on the head, so the red commit was never
+      reported. A bisect or a revert that lands on `abd3efd` gets a failing
+      tree. The defect was the reviewer's instruction, not the builder's
+      execution. History is not rewritten: a force-push on a shared branch
+      would be the larger harm, and PR-07 applies to this project's own
+      record. The ruling is PR-42.
+      CLOSED (P03-T05) by PR-42. Owner: none outstanding.
+- [x] CF-167 — `BRANCHING.md` does not state how a design-surface pull
+      request coexists with an open phase branch. §2 is one branch per
+      phase. §3 is one consolidated pull request per phase, and a signed
+      mid-phase amendment gets its own branch and its own pull request.
+      §3.2 sends a method change to `main`, and PR-32 and PR-34 put a
+      method change that touches the ledger on the open phase branch
+      instead. The design-surface catalog is product work, `components/`,
+      landed by its own consolidated pull request (`BUILD_PHASES.md`,
+      "The design surface"). It is not a method amendment and it is not
+      a signed mid-phase amendment. Two branches, each with one task at
+      a time, is the gap, and this task does not author the branching
+      rule. Owner: **the reviewer**.
+      CLOSED (P03-T08). `BUILD_PHASES.md` "The design surface" and
+      `BRANCHING.md` §3 now state that the catalog lands on the open phase
+      branch as a contiguous run of tasks, reviewed as one unit inside the
+      phase pull request. Owner: none outstanding.
+- [x] CF-168 — STATIC. No physical left or right, and no `margin-left`,
+      `padding-right` or equivalent, where a logical start or end property
+      exists. A script over the source. No new dependency. A gate which
+      cannot observe what it checks is not a gate (PR-21). Owner: **the
+      task that lands the design-surface catalog**.
+      CLOSED (P03-T08) by `scripts/check-logical-properties.mjs`, wired in
+      the guards job. Floor: 1 stylesheet and 250 declarations. Owner:
+      none outstanding.
+- [x] CF-169 — STATIC. The `en` and `ar` message catalogs hold exactly the
+      same key set. A script over the source. No new dependency. Measured
+      at P03-T06, before this row opened: both catalogs hold 19 keys and
+      the sets are equal. A gate which cannot observe what it checks is
+      not a gate (PR-21). Owner: **the task that lands the design-surface
+      catalog**.
+      AMENDED (P03-T08) — the 19-key measurement above stands. The catalogs
+      on this branch hold 17 leaves, and that is the check's floor.
+      CLOSED (P03-T08) by `scripts/check-catalog-parity.mjs`. Owner: none
+      outstanding.
+- [x] CF-170 — STATIC. A duplicate-value report per catalog namespace.
+      This is CF-74's check. A script over the source. No new dependency.
+      A gate which cannot observe what it checks is not a gate (PR-21).
+      Owner: **the task that lands the design-surface catalog**.
+      CLOSED (P03-T08) by `scripts/check-catalog-duplicates.mjs`. The
+      `access.title` / `access.signInSubmit` pair is justified there, not
+      merged. Owner: none outstanding.
+- [x] CF-171 — STATIC. Brand tokens are referenced only inside the brand
+      frame component. A script over the source. No new dependency. A gate
+      which cannot observe what it checks is not a gate (PR-21). Owner:
+      **the task that lands the design-surface catalog**.
+      CLOSED (P03-T11) by `scripts/check-brand-tokens.mjs`. `--brand-*` is
+      referenced only in BrandFrame's stylesheet. Within it, `--brand-*`
+      only on canvas and content selectors, and `--b2s-*` only on mount
+      and surround selectors. `--brand-*` is defined only by BrandFrame,
+      and only from an expression. Floor: 75 files scanned, 11 definitions,
+      4 brand references, 5 platform references. Plants, each restored
+      byte-identical: a `--brand-*` reference in another primitive; a
+      `--b2s-*` token on the canvas; a `--brand-*` token on the mount; a
+      literal colour defining a `--brand-*` property; a `--brand-*`
+      definition outside BrandFrame.
+      AMENDED (P03-T15). The platform tokens the frame may use now include
+      proof-text with proof and proof-edge. proof-text is referenced only
+      on the surround, for the frame's own error and the named gap markers.
+      Floor: 106 files, 6 platform references. Plant: proof-text on a
+      Button, restored byte-identical. Owner: none outstanding.
+- [x] CF-172 — STATIC. No raw colour, spacing or radius value outside the
+      token layer. A script over the source. No new dependency. A gate
+      which cannot observe what it checks is not a gate (PR-21). Owner:
+      **the task that lands the design-surface catalog**.
+      CLOSED (P03-T08) by `scripts/check-token-values.mjs`. Floor: 204
+      token definitions. It parses hex and `rgb()`, and it requires every
+      chrome-neutral colour token to have R = G = B.
+      AMENDED (P03-T15). proof, proof-edge and proof-text are achromatic:
+      red, green and blue equal in both themes. Plant: proof-text tinted
+      in light, restored byte-identical. Owner: none
+      outstanding.
+- [x] CF-173 — STATIC. Every catalog primitive implements every state
+      `DESIGN_SURFACE.md` requires of it. A script over the source. No new
+      dependency. `DESIGN_SURFACE.md` is not yet authored; a check against
+      a spec that does not exist observes nothing (PR-21). Owner: **the
+      task that lands the design-surface catalog**.
+      CLOSED (P03-T09) by `scripts/check-component-states.mjs`. A state is
+      covered when a test callback contains the state name as a string
+      literal, JSX, and an assertion. Floor: 11 implemented primitives, 21
+      component blocks, 66 enforced states. Ten blocks are pending by name.
+      An implementation with no block fails. Plants, from an in-memory
+      snapshot of `button.test.tsx`: removing the `active` literal makes
+      the state uncovered, and the file on disk stays byte-identical.
+      Owner: none outstanding.
+- [x] CF-174 — STATIC. Variant and size names match `DESIGN_SURFACE.md`
+      exactly. A script over the source. No new dependency.
+      `DESIGN_SURFACE.md` is not yet authored; a check against a spec that
+      does not exist observes nothing (PR-21). Owner: **the task that
+      lands the design-surface catalog**.
+      CLOSED (P03-T09) by `scripts/check-component-variants.mjs`. The
+      TypeScript compiler already in the repository parses each primitive's
+      `Variant` and `Size` aliases, including a single string-literal type.
+      Floor: 11 implemented primitives, 21 component blocks, 25 variant
+      members, 22 size members. Ten blocks are pending by name. An
+      implementation with no block fails. Plants, from an in-memory
+      snapshot of `button.tsx`: dropping `danger` from the variant union
+      no longer matches the block, and the file on disk stays
+      byte-identical. Owner: none outstanding.
+- [x] CF-175 — STATIC. Formatted numbers reach the screen only through the
+      locale formatter `CALC_SPEC.md` R1-25 defines, never a hand-built
+      digit string. A script over the source. No new dependency. A gate
+      which cannot observe what it checks is not a gate (PR-21). Owner:
+      **the task that lands the design-surface catalog**.
+      CLOSED (P03-T10) by `scripts/check-locale-format.mjs`. The TypeScript
+      compiler detects `Intl.DateTimeFormat`, `Intl.NumberFormat`,
+      `Intl.RelativeTimeFormat`, `toLocaleString`, `toLocaleDateString`,
+      `toLocaleTimeString` and `toFixed`. A call is allowed only inside
+      `lib/locale/` and, when it lands, `lib/money/`. The gate covers dates
+      now and extends to money and quantities when `lib/money/` lands.
+      Floor: 57 files under `app`, `components`, `features` and `lib`. A
+      plant of each API in `components/ui/button/button.tsx` failed the
+      check, naming every API, and the file was restored byte-identical.
+      Owner: none outstanding.
+- [x] CF-176 — COMPONENT-RENDERED. Accessible name, role and label on every
+      interactive primitive, in every state, in both locales. Runs inside
+      the existing unit tests. Needs one new dev dependency, an
+      accessibility-rule engine, which is an ADR and an owner decision
+      under `AGENTS.md` §2. This task does not add it. A unit environment
+      that does not render the primitive cannot observe a name, role or
+      label (PR-21). Owner: **the task that lands the design-surface
+      catalog**.
+      AMENDED (P03-T07) — the "one new dev dependency" clause above stands
+      (PR-07). The tier needs two: a DOM implementation and the
+      accessibility-rule engine. ADR-014 names jsdom and axe-core, used
+      only by component-rendered tests, with the global vitest environment
+      staying `node`. The catalog landing task still owns the tier.
+      CLOSED (P03-T09) by `scripts/check-component-a11y.mjs` and
+      `components/ui/a11y-tier.test.tsx`. The rule engine runs against
+      every implemented primitive, in every state CF-173 enforces, in both
+      locales, on the component root in the per-file DOM. Floor: 11
+      primitives. The exclusion list is `color-contrast` only. Cause: a
+      simulated DOM computes no rendered colour; jsdom's
+      `HTMLCanvasElement.getContext` returns null, and axe-core throws
+      inside `_isIconLigature` while reading `canvas`, then returns
+      incomplete. CF-177 owns rendered contrast. The list is asserted: an
+      unlisted incomplete id fails, and a listed id that the runs stop
+      returning fails. Plants, in memory: adding `button-name` to the
+      observed set fails as unlisted, and an empty observed set fails
+      because `color-contrast` went silent. Owner: none outstanding.
+      NOTE (P03-T11-FIX) — the exclusion mechanism described above, an
+      incomplete-result union whose only id is color-contrast, is no longer
+      how the tier works. Measured here, target-size returns a confident
+      pass on geometry jsdom does not compute, so an incomplete result is
+      not the signal. The tier disables color-contrast and target-size.
+      The row stays closed.
+- [x] CF-177 — BROWSER-RENDERED. WCAG 2.2 AA contrast for every platform
+      primitive in light and dark. A real browser and one new CI job,
+      needing a headless-browser runner, which is an ADR and an owner
+      decision under `AGENTS.md` §2. No Docker (OD-H14). This task does
+      not add the runner. A contrast check without computed styles passes
+      on nothing (PR-21). Owner: **the task that lands the design-surface
+      catalog**.
+      CLOSED (P03-T13) by ADR-015 and the browser tier, in Chromium.
+      Grey on the same grey is not a pass. A pair below 4.5:1 is a
+      violation. Owner: none outstanding.
+- [x] CF-178 — BROWSER-RENDERED. Every primitive and the wizard's first
+      step usable at 360 CSS pixels and at desktop width, with no
+      horizontal page scroll. A real browser and one new CI job, needing
+      a headless-browser runner. No Docker (OD-H14). A layout check
+      without layout passes on nothing (PR-21). Owner: **the task that
+      lands the design-surface catalog**.
+      CLOSED (P03-T13). At 360 CSS pixels and at the xl breakpoint,
+      1280, the gallery does not scroll horizontally, and target-size
+      fails a 4px button that touches a second target. A lone 4px button
+      is exempt by the spacing exception. Owner: none outstanding.
+- [x] CF-179 — BROWSER-RENDERED. Every primitive rendered in `ar` with
+      correct mirroring, and with the never-mirror exceptions
+      `UX_PRINCIPLES.md` §3 names left unmirrored. A real browser and one
+      new CI job, needing a headless-browser runner. No Docker (OD-H14).
+      A mirroring check without a rendered direction observes nothing
+      (PR-21). Owner: **the task that lands the design-surface catalog**.
+      CLOSED (P03-T13). Arabic rendering flips a mirroring glyph and
+      leaves a never-mirror glyph unflipped, measured by transform and
+      by position. Owner: none outstanding.
+- [x] CF-180 — ACCEPTANCE. The onboarding wizard's first step is composed
+      from catalog primitives alone, with no page-level styling, in both
+      locales and both themes. A catalog that cannot compose the first
+      real screen it exists for is incomplete, whatever its inventory
+      says. A gate which cannot observe what it checks is not a gate
+      (PR-21). Owner: **the task that lands the design-surface catalog**.
+      AMENDED (P03-T14). Criteria one to five are satisfiable by a gallery
+      specimen now. Criterion six, save and finish later preserves both
+      partial values, needs the tenant business-data columns CF-213 names.
+      Owner: **the task that lands the tenant business-data amendment**.
+      CLOSED (P03-T16) by the Brand step gallery specimen. DESIGN_SURFACE.md
+      §11's six criteria pass in both locales, both themes, at 360 and at
+      1280. Persistence is not claimed here; it stays with CF-214.
+      Owner: none outstanding.
+- [ ] CF-181 — Before the first production dump, the client binaries'
+      provenance is verified: by a valid signature where the binary
+      carries one, otherwise by the publisher's published checksum for
+      the archive the binaries came from. A binary whose provenance
+      cannot be verified by either route does not handle a production
+      password. The ADR-013 amendment of 2026-09-22 states that rule.
+      The installed `pg_dump.exe` was measured NotSigned at P03-T05, so
+      the signature route cannot pass for it, and the checksum route is
+      not done. The wording closed in this task; the verified binaries
+      did not. Found by the reviewer at `f53884e`. Owner: **the owner**.
+- [x] CF-182 — The reviewer authored a formatting rule into a draft of
+      `UX_PRINCIPLES.md` §3 — Western digits in both locales for money,
+      quantities, dates, codes and identifiers — without reading the
+      higher-precedence documents that already owned the subject.
+      `CALC_SPEC.md` R1-25, slot 4, signed 2026-08-01, rendered Arabic
+      money with Arabic-Indic digits, and `DOMAIN_MODEL.md` D8 makes the
+      digit system a Locale concern. The owner then signed the
+      recommendation without that row in front of them. P03-T06's builder
+      found the contradiction and halted before the first edit. The
+      defect was one rule with two declaration sites, which
+      `UX_PRINCIPLES.md` §4 forbids for strings. Resolution is PR-43.
+      CLOSED (P03-T06) by PR-43. Owner: none outstanding.
+- [x] CF-183 — Never re-link the local Supabase CLI to production to take
+      a read. P03-T05 re-pointed the local link file at production for a
+      count, then restored it; the call failed before reaching Postgres
+      and the counts came from the Management API, so nothing happened.
+      A local CLI linked to production is how a later `db push` lands on
+      the wrong database. ADR-013 points local development at staging,
+      and the Management API is already the read path every task uses.
+      CLOSED (P03-T06) by the quirk in `PRECEDENTS.md` §2. Owner: none
+      outstanding.
+- [x] CF-184 — `UX_PRINCIPLES.md` §11 says the component-rendered tier
+      needs "one dev dependency: an accessibility-rule engine". P03-T06's
+      inventory shows that is not true: `vitest.config.mts` sets
+      environment `node` and the existing component test asserts
+      `renderToStaticMarkup` output, which is a string, not a document. An
+      accessibility-rule engine needs a DOM to walk, so the tier needs a
+      DOM implementation as well as the engine. The reviewer wrote "one";
+      the inventory contradicts it.
+      CLOSED (P03-T07) by the amendment beside `UX_PRINCIPLES.md` §11 and
+      by ADR-014, which names both. Owner: none outstanding.
+- [ ] CF-185 — `.cursor/rules/b2s-print.mdc` applies to globs
+      `src/print/**` and `src/modules/**/print/**`. There is no `src/`
+      directory; `MODULE_SPEC.md` §1 places the print engine at
+      `lib/print/`, so with `alwaysApply` false these rules will not load
+      for any file P06 writes. `check_rules_file_guards()` asserts
+      `AGENTS.md` and `b2s-devos.mdc` only, so the drift is invisible to
+      every check. Owner: **the P06 entry checklist, or the next task
+      touching `.cursor/rules/`**.
+- [x] CF-186 — `DESIGN_SURFACE.md` carried four defects, all the reviewer's,
+      all found by P03-T07's independent verification: (1) `text-xs`,
+      `text-sm`, `text-xl` and `weight-500` are referenced by component
+      blocks and were defined nowhere; the reviewer's self-check passed
+      only because its script added those names to the defined set by
+      hand; (2) §2.2 claimed seventy pairs where the document enumerates
+      56; (3) the lowest-pair row published 3.93 for dark border-control
+      on sunken, where the achromatic value is 4.06 and the true dark
+      minimum is 3.33 on raised; (4) `UX_PRINCIPLES.md` and
+      `CLAUDE_PROJECT_INSTRUCTIONS.md` still said `DESIGN_SURFACE.md` was
+      not yet authored.
+      CLOSED (P03-T08) by the in-place corrections and the Corrections
+      section, and by the annotations beside the two stale sentences.
+      Owner: none outstanding.
+- [x] CF-187 — The P03-T07 probe returned `landmark-one-main` and
+      `page-has-heading-one` as incomplete although the view contains a
+      `main` and an `h1`. They are structural rules, not layout-dependent
+      ones, so the component tier's exclusion list must not adopt them
+      without a stated cause. Only rules that need rendered layout or
+      colour belong on that list. Owner: **the task that builds CF-176**.
+      CLOSED (P03-T09). Cause, measured by running axe-core 4.13.0 inside
+      jsdom on a document that contained a `main` and an `h1`: both rules
+      return incomplete with `document.elementFromPoint is not a function`,
+      thrown from `isModalOpen` before the rule looks at the landmarks.
+      The cause is not that a primitive is not a page. The same two rules
+      do not return incomplete when axe runs on a component root rather
+      than the document, so listing them would fail the "listed rule that
+      stopped returning incomplete" assertion. They are not on the
+      exclusion list. No open browser-tier row checks page landmarks:
+      CF-177 is contrast, CF-178 is scroll, CF-179 is mirroring. Owner:
+      none outstanding.
+- [x] CF-188 — Local Node was 22.12 against `.nvmrc`'s 24 at P03-T07, and
+      jsdom 30.1.1 warns below 22.22. CI runs 24 and passed. A local test
+      run on a runtime the project does not pin produces results nobody
+      should trust.
+      CLOSED (P03-T08) by the quirk in `PRECEDENTS.md` §2: local Node
+      matches `.nvmrc` before any test run. Owner: none outstanding.
+- [x] CF-189 — `scripts/check-logical-properties.mjs`, as closed at CF-168,
+      matched a hand-picked set of property names by line regex. A
+      declaration that was not the first token on its line passed, and so
+      did every physical property the list omitted. Measured on the old
+      check, from an in-memory snapshot, before this rewrite: a line-leading
+      `right: 0` failed (`physical left/right property`), and the same
+      declaration written after another declaration on the same line passed,
+      still reporting 250 declarations against a floor of 250. `border-top-left-radius: 4px`
+      passed and the count moved to 251, because the name was not in the
+      set and `border-left` is not a substring of it. No plant log was
+      committed; the old check is the record. The floor counted line-colons,
+      so an emptied mapped set would still have passed (PR-27). Found by
+      plant, not by reading.
+      CLOSED (P03-T08-FIX) by parsing stylesheets and inline styles into
+      declarations and checking every physical property that CSS Logical
+      Properties and Values Level 1 (W3C Working Draft, 4 December 2025)
+      maps to a logical equivalent: 46 longhands, 8 shorthands, 6
+      value-keyword properties, 60 in total. Floor: 1 stylesheet, 239
+      declarations, 60 mapped properties. Changed condition on the existing
+      premise `app/globals.css`. `PROVEN_PAIRS` does not move. Owner: none
+      outstanding.
+- [x] CF-190 — `scripts/check-token-values.mjs`, as closed at CF-172,
+      required equal channels only for a closed list of fourteen existing
+      chrome-neutral tokens, and fully parsed only hex and `rgb()`. A
+      `--b2s-color-*` token added after that list was invisible. Measured
+      on the old check: `--b2s-color-tinted-panel: #f0f0f5` passed, and the
+      OK line reported 208 tokens against a floor of 204. The floor counted
+      token definitions, so an emptied achromatic set would still have
+      passed (PR-27). Found by plant, not by reading.
+      CLOSED (P03-T08-FIX) by inverting the rule. Every `--b2s-color-*`
+      token, and every colour in any `--b2s-` definition, is achromatic
+      unless the token is on the closed chromatic list, and that list is
+      asserted both ways against `DESIGN_SURFACE.md` §2.2 and §2.11. The
+      list is the ten status colours and their backgrounds, and the danger
+      action and its hover. Floor: 204 token definitions, 56 achromatic
+      colour tokens, 10 chromatic tokens, 9 font-family declarations.
+      Changed condition on the existing premise `app/globals.css`.
+      `PROVEN_PAIRS` does not move. Owner: none outstanding.
+- [ ] CF-191 — The Supabase GitHub integration is installed and posts a
+      skipped "Supabase Preview" check. On `ac72957` that check completed
+      `skipped`. The integration can create preview-branch databases and
+      apply migrations, an environment ADR-013 does not name and an applier
+      ADR-006 does not allow, and nothing records that it is off by
+      decision. This task did not uninstall it. Owner: **the owner**.
+- [ ] CF-192 — The local Node runtime is v24.21.0, extracted into nvm's
+      version directory and hardlinked to nvm's executable without
+      elevation at P03-T08-FIX. The standalone v22.12.0 install remains
+      later on PATH, and the next `nvm use` replaces that link. This
+      runtime runs `npx supabase` with `SUPABASE_ACCESS_TOKEN`, which
+      reaches production, so ADR-013's provenance rule applies to it:
+      verify the downloaded archive against nodejs.org's published
+      SHASUMS256.txt, and replace the hardlink with an elevated nvm
+      install and removal of the standalone copy. Owner: **the owner**.
+- [x] CF-193 — P03-T08 recorded that local tests ran on Node v24.11.1.
+      P03-T08-FIX found no such runtime on PATH or under nvm — only the
+      editor's bundled v24.18.1, off PATH. The claim is not reproducible.
+      CI ran Node 24 and was green on ac72957, so the repository evidence
+      stands; the local claim does not.
+      CLOSED (P03-T09) by this row, so the record matches the machine.
+      Owner: none outstanding.
+- [x] CF-194 — The danger Button's text was `action-text`. In dark that is
+      `#1a1a1a` on `#c62f26`, 3.18:1, below the 4.5:1 text floor, and no
+      gate computed it. The specification wrote the text as `#ffffff` in
+      the Use column and never named a token.
+      CLOSED (P03-T09-FIX) by `--b2s-color-danger-action-text` (`#ffffff`
+      in both themes) and the pressed fills, with the ratios recorded in
+      `DESIGN_SURFACE.md` §2.2. Owner: none outstanding.
+- [x] CF-195 — `scripts/check-token-values.mjs` read only `app/globals.css`,
+      so a raw colour, length, radius or z-index in a component stylesheet
+      passed, and a module could define its own `--b2s-` token.
+      CLOSED (P03-T09-FIX) by scanning every stylesheet under `app/`,
+      `components/` and `features/`, and every inline style. A `--b2s-`
+      custom property is defined only in `app/globals.css`. Floor: 12
+      stylesheets, 690 declarations, 234 tokens, 68 achromatic colour
+      tokens, 11 chromatic tokens, 11 font-family declarations, 52 source
+      files. `PROVEN_PAIRS` gains `components/` and `features/`. Owner:
+      none outstanding.
+- [x] CF-196 — No check asserts page landmarks or a single `h1`. The
+      component tier's exclusion list does not cover them, and CF-187
+      records why those axe rules return incomplete in jsdom. Owner:
+      **the task that builds CF-180**.
+      CLOSED (P03-T13). The gallery has one main, one h1 and heading
+      order, and the page rules pass in Chromium. meta-viewport is
+      disabled in the component tier and owned here. Owner: none
+      outstanding.
+- [x] CF-197 — A pull request against `main` opened itself within about a
+      minute of the push that landed P03-T09, as the repository account,
+      with no workflow in the repo creating it. The owner closed it. The
+      source is outside the repository and is not yet identified. Owner:
+      **the owner**.
+      AMENDED (P03-T10). #4, #5 and #6 are closed. Each was opened by the
+      repository account, title "Phase/03 brand and onboarding", empty
+      body, head `phase/03-brand-and-onboarding`, base `main`. #4 at
+      2026-09-17T08:50:57Z, #5 at 2026-09-24T07:19:07Z, #6 at
+      2026-09-25T23:05:25Z, about a minute after `5e67441`. No workflow in
+      the repository creates a pull request, and the local hooks are
+      samples. This task did not turn the behaviour off. It fires under a
+      condition outside the repository. The push of `697bbe6` did not open
+      one. Owner: **the owner**.
+      AMENDED (P03-T11). A fourth pull request, #7, opened itself at
+      2026-09-26T14:57:59Z. Same shape as #4, #5 and #6: author the
+      repository account, title "Phase/03 brand and onboarding", empty
+      body, head `phase/03-brand-and-onboarding`, base `main`.
+      `performed_via_github_app` is null, so a GitHub App did not create
+      it; the owner's credentials did. It has not fired on every push.
+      This task closed #7 and did not turn the behaviour off. Owner:
+      **the owner**.
+      CLOSED (P03-T13) by the amendment to BRANCHING.md §3. A phase may
+      hold one draft pull request against main. #8 is that draft.
+      Owner: none outstanding.
+- [x] CF-198 — Declared text and background colours were not checked for
+      contrast. CF-177 remains the rendered check.
+      CLOSED (P03-T09-FIX) by `scripts/check-contrast.mjs`. It resolves
+      pairs declared together, directly or through a state selector of the
+      same component, in both themes. Text needs 4.5:1. A boundary token
+      against the surface declared with it needs 3:1. A colour inherited
+      from an ancestor is outside it, so it is a recurrence guard and not
+      a substitute for CF-177. Floor: 12 stylesheets, 34 text pairs, 8
+      boundary pairs, 2 themes. The danger-text plant, reverted to
+      `action-text`, fails in dark at 3.18:1. Owner: none outstanding.
+- [x] CF-199 — P03-T09 HALT 4 said an unstated value is reported and the
+      part that depends on it stops. The builder filled about ten unstated
+      values and described them as reported and not invented. The danger
+      Button text was one of them.
+      CLOSED (P03-T09-FIX) by PR-44. Owner: none outstanding.
+- [x] CF-200 — `scripts/check_done_steps_shape.py` exempted the last
+      done-steps row's commit cell from its shape rule and accepted
+      anything there. With that cell set to "garbage not a sha", the check
+      reported "commit column well-formed". The exemption existed so the
+      placeholder could stand before the PR-17 follow-up fills it, but it
+      should admit only the declared placeholder or a well-formed
+      backticked short sha. P03-T09-FIX's follow-up wrote a bare sha that
+      passed as the last row and would have failed the moment another row
+      landed; commit `697bbe6` exists only to repair that. Owner: **the
+      next task that touches `check_done_steps_shape.py`**.
+      CLOSED (P03-T10). The last row's commit cell admits only the declared
+      placeholder or a well-formed backticked short sha. A plant of that
+      cell set to "garbage not a sha" fails. Owner: none outstanding.
+- [x] CF-201 — `scripts/check-contrast.mjs` treated every border as a
+      control boundary and measured it against the fill declared in the
+      same rule. A planted `--b2s-color-border` on a raised fill failed at
+      1.11:1 in dark. Both halves contradict `DESIGN_SURFACE.md`: §2.2
+      makes `--b2s-color-border` decorative and exempt, with only
+      `border-control` owing 3:1; and a boundary is measured against the
+      surface around a component, not its own fill. The gate forced Dialog
+      to omit the §2.6 dark-elevation border. The reviewer's P03-T09-FIX
+      wording asked for both "the surface it sits on" and "pairs declared
+      together", which contradict. Owner: **P03-T11**.
+      CLOSED (P03-T11). Only `--b2s-color-border-control` is a boundary,
+      measured at the token level against canvas, surface, sunken and
+      raised, in both themes. Rule-level boundary pairing is removed.
+      Text pairs stay rule-level at 4.5:1. `--b2s-color-border` is
+      exempt. Dialog's dark-elevation border is restored. Brand pairs are
+      not evaluated. Floor: 20 stylesheets, 49 text pairs, 8 boundary
+      pairs, 4 surfaces, 2 themes. A decorative border on a raised fill
+      passes. `border-control` darkened to the decorative dark value fails
+      in dark at 1.32:1 against canvas. Owner: none outstanding.
+- [x] CF-202 — `components/ui/a11y-tier.test.tsx` installed an
+      `elementsFromPoint` stand-in on `document` for every primitive's
+      run, returning every open dialog for any point when jsdom's own
+      throws. For Dialog that simulates a modal; for every other primitive
+      it returns nothing anywhere, so any rule that consults hit-testing
+      is evaluated against invented geometry. Owner: **P03-T11**.
+      CLOSED (P03-T11). The stand-in is installed only while a dialog
+      test is open, and removed after it. Measured with the stand-in on
+      and off, the rules whose outcome changes are only Dialog's:
+      aria-allowed-attr, aria-conditional-attr, aria-deprecated-role,
+      aria-dialog-name, aria-hidden-focus, aria-prohibited-attr,
+      aria-required-attr, aria-required-children, aria-required-parent,
+      aria-roles, aria-valid-attr, aria-valid-attr-value,
+      autocomplete-valid, button-name, empty-heading, heading-order,
+      nested-interactive, scrollable-region-focusable, tabindex and
+      valid-lang. Each is incomplete without the stand-in. No other
+      primitive's rule outcome changes. `target-size` is not a rule in
+      axe-core 4.13.0, so the component tier does not claim it. Rendered
+      geometry belongs to the browser tier. Owner: none outstanding.
+      NOTE (P03-T11-FIX) — the sentence above, that target-size is not a
+      rule in axe-core 4.13.0, is false. Measured in this task: axe-core
+      4.13.0 lists the rule, tagged wcag22aa, shipped disabled, and
+      enabling it passes a button styled 4px by 4px. The row stays closed.
+      The finding is CF-203.
+- [x] CF-203 — The component accessibility tier recorded a pass for
+      axe-core's target-size rule on geometry jsdom does not compute.
+      Measured at 2799528 and again in this task: target-size exists in
+      axe-core 4.13.0, tagged wcag22aa, shipped disabled. A default run
+      does not include it. Enabling it, in the component tier's simulated
+      DOM, reports a pass for a button styled 4px by 4px, which fails
+      WCAG 2.2's 24 by 24 minimum. jsdom's getBoundingClientRect on that
+      button is 0 by 0, and the offset check reports a 24px diameter.
+      Substituting element geometry at 400px and at 4px, which the engine
+      did read, does not change that pass. Substituting computed colour
+      at maximum and at minimum contrast leaves color-contrast incomplete;
+      foreground color was read 0 times. The exclusion list's old
+      assumption, that an unobservable rule returns incomplete, does not
+      catch a confident pass. Owner: **P03-T11-FIX**.
+      CLOSED (P03-T11-FIX). color-contrast and target-size are disabled
+      in the component tier's engine configuration. The disabled set
+      equals the exclusion list both ways. color-contrast names CF-177.
+      target-size names CF-178. Each has a known-bad fixture the simulated
+      DOM does not fail: the 4px button passes target-size, and gray text
+      on the same gray does not produce a color-contrast violation. Three
+      plants — re-enabling target-size, adding a disabled rule with no
+      cause, and removing the target-size fixture — each failed the check
+      and each file was restored byte-identical. The false comment in
+      the tier test is replaced with this measurement. Owner: none
+      outstanding.
+- [ ] CF-204 — The isolation suite's duration has grown from about nine
+      minutes at P03-T01-RESUME to 15m20s on run 36250292644, with run
+      36199604440 cancelled at 20m15s, while the suite has held 94
+      assertions since P03-T04. Suspected cause: staging authentication
+      rate limits under back-to-back runs, since every run signs up
+      synthetic users. The job already carried timeout-minutes 20, which
+      sits inside the observed range. P03-T11-FIX raises it to 30 so a
+      run at the observed duration is not cancelled and a hang still
+      cannot burn hours of runner time. This task does not investigate
+      the slowdown. This task's isolation run 36313765551, on head
+      00b15f8, concluded success in 16m46s (job started
+      2026-09-27T10:49:30Z, completed 2026-09-27T11:06:16Z).
+      Owner: **P03-T13**, before a second slow job is added beside this
+      one.
+      AMENDED (P03-T12). The sentence above, that run 36199604440 was
+      cancelled at 20m15s, stands. Measured correction: the isolation
+      job's timeout-minutes was 20 from P03-T01-RESUME, and that timeout
+      stopped the run at 20m15s. It was not a person cancelling it. The
+      suite failed to finish within its bound at least once. The bound
+      is now 30 minutes, which prevents that kill and also lets a
+      slowing suite hide for longer. The cause matters more than the
+      ceiling.
+      AMENDED (P03-T13). Measured on a local run of the unchanged
+      assertions, 664.55s, 94 PASS, 0 FAIL, 0 LOST, D last. 2138 requests,
+      zero retries, zero 429s, zero 5xx. Auth was 106 requests and 22s.
+      SQL was 687 requests and 418s. PostgREST was 1345 requests and 177s.
+      Seed and teardown were about 16s. The time is staging round-trip
+      latency inside the proofs, not harness setup. The harness is
+      unchanged. Owner: **the owner**.
+      AMENDED (P03-T14). The measured cause is 687 Management-API SQL calls
+      inside the proofs, 418s of 664.55s, about 0.6s each; no retries, no
+      429s, no 5xx. The remedy is batching the catalog SQL the proofs
+      repeat, which is a harness change. The draft pull request's isolation
+      run took 18m51s against the 30-minute bound.
+      Owner: **a harness task before the P03 exit gate**.
+      AMENDED (P03-T17). The re-reads are one query per identity, or one
+      per proof, and the PostgREST probes are unchanged. A local staging
+      run of the same 94 assertions took 416.22s: 94 PASS, 0 FAIL, 0 LOST,
+      D last. Management-API SQL fell from 687 calls and 431951ms (57.8%
+      of 747238ms) to 315 calls and 195552ms (47.0% of 416221ms). The
+      longest assertion was 26 at 26455ms. 4d is 4 SQL calls and 148
+      PostgREST probes, 21872ms, where it had been 148 SQL calls and
+      110924ms. 4b is 7 SQL calls and 76 PostgREST probes, 12973ms. 33d
+      is 3 SQL calls and 72 PostgREST probes, 13003ms. The probes that
+      remain are the 1345 PostgREST calls, 195958ms. They stay one per
+      identity per target. The 10-minute budget is the CI runner's, and
+      this local run is not that measurement.
+      Owner: **the P03 exit gate**.
+      CLOSED (P03-T17). Push run 37112365784 on 4707fc1, against staging,
+      concluded success. The suite read 94 expected, 94 PASS, 0 FAIL, 0 LOST,
+      D last, in 525.04s. The longest assertion was 4d at 23063ms. No
+      assertion exceeded 60 seconds, and the suite finished under 10 minutes
+      on the CI runner. Owner: none outstanding.
+      AMENDED (P03-T17). The close above does not stand. The same assertions
+      on the same runner missed the 10-minute budget twice. Pull-request run
+      37112367963 on 4707fc1 took 763.98s, 94 PASS, 0 FAIL, 0 LOST, longest
+      4d at 34488ms, SQL 315 calls and 459043ms. Pull-request run 37113074857
+      on b1a088a took 745.37s, 94 PASS, 0 FAIL, 0 LOST, longest 4d at 32968ms,
+      SQL 315 calls and 454616ms. The push run 37112365784 stayed at 525.04s.
+      Call counts did not move. Staging round-trip time did. No assertion
+      exceeded 60 seconds. The probes that remain are the PostgREST calls,
+      one per identity per target, and the Management-API calls whose latency
+      moved between runs.
+      Owner: **the P03 exit gate**.
+- [x] CF-205 — The reviewer's P03-T11 verdict of FAIL rested on two
+      mismeasurements. The reviewer ran axe-core's target-size rule with
+      runOnly, which enables a rule the engine ships disabled, and
+      generalised to the tier's default run — where target-size never
+      executed. The reviewer also stated the isolation job had no
+      timeout; it had timeout-minutes 20 from P03-T01-RESUME, which means
+      run 36199604440 was stopped by that timeout at 20m15s rather than
+      cancelled. On the measured facts P03-T11 was PASS with a DOC
+      CORRECTION: a committed comment stated target-size does not exist.
+      P03-T11's done-steps verdict cell stays as written.
+      CLOSED (P03-T12) by PR-45. Owner: none outstanding.
+- [x] CF-206 — The known-bad-fixture criterion was applied to the two
+      rules the reviewer named. Whether any other rule the component
+      tier runs, whose WCAG criterion concerns visual presentation,
+      would pass a known-bad fixture in the simulated DOM is unmeasured.
+      Every such rule is either proven observable in the component tier
+      by a known-bad fixture it correctly fails, or disabled there and
+      owned by a browser-tier gate. Owner: **P03-T13**.
+      CLOSED (P03-T13). link-in-text-block, avoid-inline-spacing and
+      meta-viewport are disabled in the component tier, where each
+      known-bad fixture does not violate, and owned in the browser tier,
+      where each violates. color-contrast and target-size stay with
+      CF-177 and CF-178. color-contrast-enhanced is not in the AA run.
+      meta-viewport-large has no WCAG tag and stays enabled, unclaimed.
+      Owner: none outstanding.
+- [ ] CF-207 — DESIGN_SURFACE.md calls a DataTable page size and an
+      explicit theme choice member preferences, and nothing persists
+      either — no column, no table, no decision on where a member
+      preference lives. Both are held for the session until that is
+      decided. Owner: **the owner**.
+- [x] CF-208 — DateField's day cells took only the weekday name as their
+      accessible name (date-field.tsx:311 at 31d34f0,
+      aria-label set to the full weekday and nothing else). The aria-label
+      replaces the visible day number for assistive technology, so each
+      cell was announced as the weekday alone, with no day, month or year,
+      and every Saturday was indistinguishable — a WCAG 2.2 4.1.2 failure
+      the component tier cannot detect, because it checks that a name
+      exists rather than what it says. Cause: the reviewer's P03-T12
+      prompt specified "full names for each day cell's accessible name",
+      meaning the full weekday name as part of a full date; the builder
+      implemented the sentence as written.
+      CLOSED (P03-T12-FIX). A day cell's accessible name is the full date,
+      catalog pattern `{weekday} {day} {month} {year}` in both locales.
+      Owner: none outstanding.
+- [x] CF-209 — Three P03-T12 derivations contradicted the specification
+      or a convention: FileDrop's browse Button took the default primary
+      variant, making two primaries in any form region with its own
+      primary action; formatByteSize showed a negative value as its
+      magnitude, hiding an upstream defect; and Page Up and Page Down
+      moved focus to day 1 rather than the same day number, clamped, as
+      the date-picker pattern does. None was stated; each was a fill
+      reported as a derivation.
+      CLOSED (P03-T12-FIX). browse_button is a secondary Button. A count
+      or a byte size below zero, or a progress value outside 0 to 1, is
+      refused with a named RangeError. Page Up and Page Down keep the day
+      number, clamped; Shift with either key moves by a year.
+      Owner: none outstanding.
+- [x] CF-210 — Commit 68969b9 fails check_module_spec_tree.py: it adds
+      date-field/ and file-drop/ without naming them in MODULE_SPEC.md §1,
+      and 31d34f0 names them after CI caught it. That breaks PR-42 for the
+      second time, after abd3efd. The Python docs-integrity checks were
+      not run locally before the push.
+      CLOSED (P03-T12-FIX) by PR-46. Owner: none outstanding.
+- [x] CF-211 — The component tier's target-size and colour-contrast known-bad
+      fixtures are not known-bad. A lone 4px button passes target-size in a
+      real browser under WCAG 2.2 2.5.8's spacing exception, and text on the
+      identical grey is incomplete in axe by design, as P03-T13 measured in
+      Chromium. Both fixtures were prescribed by the reviewer at P03-T11 and
+      P03-T11-FIX. A fixture that every tier gives the same answer on cannot
+      show that one tier is blind, so two of the five fixtures the check
+      reports as proven prove nothing. The exclusions are still correct.
+      Owner: **the next task that corrects the component-tier known-bad fixtures**.
+      CLOSED (P03-T15). The fixtures are now a 4px button adjacent to a
+      second target, and text at 3.54:1, below 4.5 and above 1, measured
+      with lib/colour. The browser tier asserts every fixture in
+      scripts/known-bad-fixtures.mjs fails there. The exclusions stay.
+      Plant: the lone 4px button, which a real browser passes; the
+      cross-tier assertion failed; the fixture was restored byte-identical.
+      Owner: none outstanding.
+- [ ] CF-212 — .env.local points local development at b2s-production, while
+      ARCHITECTURE.md:104 and ADR-013 point it at staging. The CI browser job
+      is pinned to staging with a hostname check, but the app and the browser
+      tier run locally call production's authentication on every request —
+      reads with no session so far.
+      Owner: **the owner**, to repoint .env.local at staging.
+- [x] CF-213 — The reviewer never authored the tenant business-data columns
+      the owner signed under B4. DATA_MODEL.md §3.1 gives tenant only name,
+      slug, base_currency, default_locale and status. BRAND_CONFIG.md §10
+      routes legal name, trading name, tax registration, addresses and
+      contact details to tenant, and nothing receives them. The wizard's
+      first step cannot persist until the amendment exists. The Welcome step
+      asks for default_locale and base_currency before Brand, and the tenant
+      must be provisioned before any brand-scoped write; that amendment
+      specifies how.
+      CLOSED (P03-T18) by OD-A9 and DATA_MODEL.md §3.22 to §3.24. Business
+      details land on legal_entity. The onboarding draft holds the resume
+      step and colours before all seven exist.
+      Owner: none outstanding.
+- [ ] CF-214 — CF-180's sixth criterion, save and finish later preserves both
+      partial values, needs the schema CF-213 names. Criteria one to five
+      are satisfiable by a gallery specimen now.
+      Owner: **the task that lands the tenant business-data amendment**.
+      Owner: **the task that builds the wizard routes**.
+- [x] CF-215 — STATIC. The platform colour-token set is closed against
+      DESIGN_SURFACE.md §2.2 and §2.11 in both directions. proof and
+      proof-edge are achromatic. The warmth ceiling and the Clay-danger
+      CIE76 floor hold, computed from app/globals.css. Font families stay
+      OD-G23's. The closed chromatic list CF-172 enforced no longer means
+      anything under OD-G24 and OD-G25, and it is removed. CF-172 stays
+      closed; this row records the changed condition.
+      CLOSED (P03-T14) by scripts/check-token-values.mjs. Floors: 267 tokens,
+      1247 declarations, 34 colour tokens, 4 proof channel checks, 20 chroma
+      checks, 6 delta checks, 13 font-family declarations. Plants, each
+      confirmed applied and restored byte-identical: a tinted proof; canvas
+      above chroma 4; danger moved to Clay; a colour token the stylesheet
+      defines and §2.2 does not; a §2.2 token removed from the stylesheet.
+      Owner: none outstanding.
+- [x] CF-216 — STATIC. check-contrast asserts §2.2's 92 enumerated pairs at
+      token level from app/globals.css, so the published table and the
+      stylesheet cannot drift apart.
+      CLOSED (P03-T14) by scripts/check-contrast.mjs. Floor: 92 enumerated
+      pairs, 81 declared text pairs. Plant: text-subtle lightened to 1.01:1
+      on canvas, restored byte-identical.
+      Owner: none outstanding.
+- [x] CF-217 — STATIC. Among platform tokens, BrandFrame's stylesheet uses
+      only proof, proof-edge, border-width, radius-xl and spacing. proof
+      and proof-edge are referenced nowhere else. CF-171 stays closed; this
+      row records the changed condition.
+      CLOSED (P03-T14) by scripts/check-brand-tokens.mjs. Floor: 89 files,
+      11 definitions, 4 brand references, 5 platform references. Plants,
+      restored byte-identical: a warm neutral in the surround; proof grey
+      on a Button.
+      Owner: none outstanding.
+- [x] CF-218 — BROWSER. A BrandFrame specimen's content has identical
+      rendered geometry and computed direction under the English and the
+      Arabic interface. A frame whose content inherits the interface
+      direction fails that criterion.
+      CLOSED (P03-T14) by the browser tier. The pinned specimen stays ltr
+      with the same mark geometry in both locales, both themes and both
+      widths. The inheriting fixture's geometry differs, and the test
+      requires that difference.
+      Owner: none outstanding.
+- [x] CF-219 — STATIC. The gallery completeness guard asserts the browser
+      tier iterates GALLERY_LOCALES, GALLERY_THEMES and GALLERY_WIDTHS
+      unfiltered, so every primitive and enforced state is rendered in all
+      four combinations of English and Arabic with light and dark, at both
+      widths.
+      CLOSED (P03-T14) by scripts/check-gallery-coverage.mjs. Plant: the
+      theme loop narrowed to light only, restored byte-identical.
+      Owner: none outstanding.
+- [x] CF-220 — COMPONENT. Danger is never colour alone. Notice's and
+      StatusBadge's danger variants render an icon and non-empty text in
+      both locales.
+      CLOSED (P03-T14) by the component tests. StatusBadge supplies the
+      danger glyph when the caller omits an icon. Plants: the Notice icon
+      removed, and the StatusBadge glyph removed; each test failed and each
+      file was restored byte-identical.
+      Owner: none outstanding.
+- [x] CF-221 — The earlier P03-T14 prompt, compositions, is withdrawn.
+      Compositions become P03-T15 and are re-issued against DESIGN_SURFACE
+      Revision 2. This task built none.
+      Owner: **P03-T15**.
+      CLOSED (P03-T15) by the eight compositions in components/shared/,
+      named in MODULE_SPEC.md §1 in the same commit. The gallery and the
+      browser tier render them in all four combinations at both widths.
+      Owner: none outstanding.
+- [x] CF-222 — The proof had no text colour. BrandFrame's named error and
+      its gap markers sit on the achromatic proof, and P03-T14 did not
+      invent a colour. `--b2s-color-proof-text` is `#2e2e2e` in light and
+      `#e6e6e6` in dark, red green and blue equal. It meets 10.68 and 9.11
+      on proof, and 8.46 and 5.97 on proof-edge. The enumerated contrast
+      set is 94 pairs, 47 per theme.
+      CLOSED (P03-T15) by DESIGN_SURFACE.md, app/globals.css and BrandFrame.
+      Plants: proof-text tinted, and proof-text used outside BrandFrame;
+      each restored byte-identical.
+      Owner: none outstanding.
+- [x] CF-223 — The acceptance specimen is step 1, Brand, with its live
+      preview inside BrandFrame. CF-180's criteria one to five travel with
+      it. Its full specification arrives with P03-T16. This task did not
+      build the specimen, the preview, or a wizard route.
+      Owner: **P03-T16**.
+      CLOSED (P03-T16) by the Brand step specimen and the §11 rewrite.
+      Owner: none outstanding.
+- [x] CF-224 — The owner's wizard mockup offered Pouch and Box previews.
+      SCOPE.md module 07 places labels and stickers in Release 1 and boxes
+      in Release 2. The real preview offers Label and Sticker only.
+      Owner: **P03-T16**.
+      CLOSED (P03-T16). The specimen offers Label and Sticker only.
+      Owner: none outstanding.
+- [x] CF-225 — Accepted logo formats and size limits are stated nowhere,
+      and which LogoVariant an upload creates is unspecified. The Brand
+      step's file control names no format and no byte limit, and a chosen
+      file replaces the sample's existing dark-ground mark in the gallery
+      preview only. That is not a variant-assignment rule.
+      Owner: **the task that builds the wizard's logo step with persistence**.
+      CLOSED (P03-T19). BRAND_CONFIG.md §9, amended 2026-10-03, states SVG
+      and PNG, at most 5 MB, identified by bytes, the PNG minimum of 1000
+      pixels on the shorter side, and the SVG cleaner. The wizard asks for
+      up to two files, each a LogoVariant of kind full for its ground.
+      The gallery control names SVG or PNG, at most 5 MB. Storage, the
+      policies and the upload path are CF-234.
+      Owner: none outstanding.
+- [x] CF-226 — P03-T15 rendered the theme choice as two secondary buttons,
+      because Button has no pressed state and Clay belongs only to a
+      region's primary action.
+      CLOSED (P03-T16). DESIGN_SURFACE.md §7 specifies a RadioGroup in the
+      account menu — System, Light, Dark — and PageHeader implements it.
+      System follows prefers-color-scheme.
+      Owner: none outstanding.
+- [x] CF-227 — P03-T15 specified a navigation drawer and stated neither a
+      width nor a layer, so below lg the navigation was an in-flow
+      disclosure.
+      CLOSED (P03-T16). §7 specifies the native dialog element opened
+      modally as a side sheet from inline-start, at drawer-width, with no
+      z-index. AppShell implements it.
+      Owner: none outstanding.
+- [x] CF-228 — At lg and above, P03-T15 rendered the side navigation as a
+      sticky grid column. That reading is better than a fixed panel, and
+      it had no stated width.
+      CLOSED (P03-T16). §2.11 states `--b2s-nav-width` at 17rem, and
+      AppShell's column uses it.
+      Owner: none outstanding.
+- [x] CF-229 — EmptyState and ErrorState are not cards. P03-T15 rendered
+      them as in-flow content, and the specification had called them cards.
+      CLOSED (P03-T16). §7 records both as in-flow content that take no
+      elevation.
+      Owner: none outstanding.
+- [x] CF-230 — OD-A8's unauthenticated visitor cannot be a ROLE_JOURNEY.md
+      row. The check admits the role enum plus the named non-enum actors
+      Operator and Buyer, and no other actor. Adding a role was forbidden.
+      The capability is an annotation in ROLE_JOURNEY.md, not a table row.
+      CLOSED (P03-T18). ROLE_JOURNEY.md has a Visitor row. The check admits
+      Visitor beside Operator and Buyer. Visitor is not a tenant role.
+      Owner: none outstanding.
+- [x] CF-231 — The suite's ledger recorded PASS for a test vitest had
+      failed by timeout (run 37108339308, assertion 4d).
+      CLOSED (P03-T17). A record() that arrives after its test has
+      finished is stored as FAIL, and the summary is counted from the
+      ledger after it has been reconciled to vitest's own task.result.
+      A PASS written before a timeout or a throw does not survive that
+      reconciliation. Two plants, each restored by deleting the plant
+      file: a test that records PASS and then exceeds a 200ms timeout,
+      and a test that records PASS and then throws. The summary read
+      0 PASS and 3 FAIL, and the late record named the finished test.
+      Owner: none outstanding.
+- [x] CF-232 — The business-data amendment must cover SCOPE.md:18,
+      OD-G18's named gap, SECURITY_MODEL.md:398 and :427,
+      BRAND_CONFIG.md:201 and :219, check_security_model_bypass.py's
+      count of historical definitions, and restate isolation assertions
+      25a, 25b, 25c, 25d and 25f under a signed decision.
+      CLOSED (P03-T18) by OD-G26 and OD-A9, the amendments beside each named
+      statement, and isolation assertions 25a, 25b, 25c, 25d and 25f restated
+      under OD-G26. Claim strings unchanged. The bypass check counts identities
+      alive after every drop. A plant without the drop reads 11 and fails.
+      Owner: none outstanding.
+- [x] CF-233 — The reviewer's earlier BRANCHING.md amendment claimed the
+      draft's value is per-push isolation coverage. A draft re-ran the full
+      isolation suite on every push, including docs-only ones.
+      CLOSED (P03-T18) by the 2026-10-03 amendment beside BRANCHING.md §3
+      and by .github/workflows/isolation.yml. The pull-request trigger runs
+      only when the pull request is not a draft, on opened, synchronize,
+      reopened and ready_for_review. The push trigger is unchanged.
+      Owner: none outstanding.
+- [x] CF-234 — Logo storage. A private, tenant-isolated bucket, storage
+      policies, the upload path through the cleaner, and the five OD-G20
+      proofs: guessed key, listed prefix, swapped signed URL, expired URL,
+      cross-tenant prefix.
+      CLOSED (P03-T20) by the private `tenant-media` bucket, its select and
+      insert policies, the checks on provider, bucket, object-key prefix and
+      checksum, `lib/logo/store-logo.ts`, and isolation proofs 35a to 35h.
+      Owner: none outstanding.
+- [ ] CF-235 — The six onboarding screens as routes, saving and resuming.
+      Carries CF-214.
+      Owner: **P03-T21**.
+- [ ] CF-236 — Archived media rows whose objects were not fully written are
+      the cleanup record. A job that removes those objects is owed.
+      Owner: **the operator surface at P07**.
+

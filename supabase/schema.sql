@@ -1,21 +1,19 @@
 -- B2S — authoritative schema. ADR-006.
 --
--- Source of truth: docs/product/DATA_MODEL.md, Platform tier revision.
+-- Source of truth: docs/product/DATA_MODEL.md.
 -- This file is the single authoritative SQL source. The files in
 -- supabase/migrations/ are split from it verbatim, in source order, at the
 -- "===== migration:" markers below. Nothing is reinterpreted between the two.
 --
--- Scope of this revision: the Platform tier only. DATA_MODEL.md §3 specifies
--- SEVEN tables (§3.1 tenant, §3.2 member, §3.3 membership, §3.4 operator,
--- §3.5 consent_grant, §3.6 activity_event, §3.8 invitation) and ONE enum that
--- is deliberately not a table (§3.7 role). §3's lead sentence counts eight
--- Release 1 Platform entities, of which role is stored as an enum; §3.7
--- records that divergence as deliberate and asks that the two counts never be
--- reconciled by mistake.
+-- Scope of this revision: Platform, Brand, Asset, and TranslationKey /
+-- TranslationEntry. DATA_MODEL.md §3 specifies NINETEEN tables and TEN
+-- enums. §3.7 role and §3.14 color_role are enums, deliberately not tables.
+-- The entity and table counts diverge as they already do.
 --
 -- Statement order below is driven by foreign-key dependency, not by DATA_MODEL's
 -- presentation order: member precedes tenant because tenant.created_by
--- references member(id), and both provenance chains terminate at member.
+-- references member(id); translation and asset precede brand because brand
+-- rows reference translation_key and media_asset.
 
 
 -- ===== migration: 20260802120001_extensions_and_enums =====
@@ -1709,3 +1707,1061 @@ grant  execute on function public.accept_invitation(uuid) to authenticated;
 
 revoke all on table public.operator from service_role;
 grant select on table public.operator to service_role;
+
+
+-- ===== migration: 20260919120001_updated_at_maintenance =====
+
+-- DATA_MODEL.md §1 rule 4. `updated_at` is specified `not null default now()`
+-- and without a maintenance trigger it never changes after insert, and a
+-- caller who holds UPDATE on the column can write any timestamp into it.
+-- This function and the five triggers close both.
+--
+-- Not `security definer`: it touches no table, only the candidate row, and
+-- a definer here would be privilege nobody needs. `search_path` is pinned
+-- to '' like every other function in `public`. The assignment is
+-- unconditional: a no-op UPDATE is still a write against the row.
+--
+-- Trigger name is the rule, not ad hoc: `{table}_set_updated_at`. One
+-- trigger per table that declares the column. `operator` and
+-- `activity_event` declare none (departures table, rule 4) and carry none.
+--
+-- Independently revertible: drop the five triggers, then drop the function.
+
+create or replace function public.set_updated_at()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+create trigger member_set_updated_at
+before update on public.member
+for each row
+execute function public.set_updated_at();
+
+create trigger tenant_set_updated_at
+before update on public.tenant
+for each row
+execute function public.set_updated_at();
+
+create trigger membership_set_updated_at
+before update on public.membership
+for each row
+execute function public.set_updated_at();
+
+create trigger consent_grant_set_updated_at
+before update on public.consent_grant
+for each row
+execute function public.set_updated_at();
+
+create trigger invitation_set_updated_at
+before update on public.invitation
+for each row
+execute function public.set_updated_at();
+
+-- CF-105's standing obligation: a new public function is revoked from
+-- public, anon and service_role. This one is also revoked from
+-- authenticated: it is a trigger function, granted to nobody, the same
+-- shape as materialise_member. EXECUTE is checked when the trigger is
+-- created, never when it fires.
+
+revoke execute on function public.set_updated_at() from public;
+revoke execute on function public.set_updated_at() from anon;
+revoke execute on function public.set_updated_at() from authenticated;
+revoke execute on function public.set_updated_at() from service_role;
+
+-- ===== migration: 20260922120001_brand_asset_enums =====
+
+-- DATA_MODEL.md §3. Brand, Asset and TranslationKey enumerations.
+-- Every value is a lowercase ASCII key (§1 rule 7, OD-D7). Display text is
+-- never the stored value.
+--
+-- Independently revertible: drop the six types, in reverse dependency
+-- order none, because no table in this migration references them.
+
+-- §3.14 color_role — not a table. Seven values fixed by BRAND_CONFIG.md §4.
+-- Closes the storage half of CF-49: a semantic set cannot be redefined by
+-- whichever writer got there first.
+create type public.color_role as enum (
+  'primary',
+  'secondary',
+  'accent',
+  'background',
+  'foreground',
+  'muted',
+  'critical'
+);
+
+-- §3.15 typeface.role
+create type public.typeface_role as enum (
+  'heading',
+  'body'
+);
+
+-- §3.15 typeface.script
+create type public.script_kind as enum (
+  'latin',
+  'arabic'
+);
+
+-- §3.16 logo_variant.kind
+create type public.logo_kind as enum (
+  'full',
+  'mark',
+  'wordmark'
+);
+
+-- §3.16 logo_variant.ground
+create type public.logo_ground as enum (
+  'light',
+  'dark'
+);
+
+-- §3.19 asset_rendition.tier
+create type public.rendition_tier as enum (
+  'display',
+  'print'
+);
+
+-- ===== migration: 20260922120002_translation_tables =====
+
+-- DATA_MODEL.md §3.20 and §3.21. The identity of one translatable string,
+-- and one string in one locale. Landed before Brand because brand,
+-- brand_line, brand_theme and brand_guideline reference translation_key.
+--
+-- unique (id, tenant_id) exists so child foreign keys can be composite:
+-- a translation_entry in tenant A cannot reference a translation_key in
+-- tenant B, by construction (DOMAIN_MODEL §6), not by a check.
+--
+-- Independently revertible: drop the two triggers, then the two tables.
+
+create table public.translation_key (
+  id          uuid primary key default gen_random_uuid(),
+  tenant_id   uuid not null references public.tenant (id),
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now(),
+  created_by  uuid references public.member (id),
+  archived_at timestamptz,
+  unique (id, tenant_id)
+);
+
+create trigger translation_key_set_updated_at
+before update on public.translation_key
+for each row
+execute function public.set_updated_at();
+
+create table public.translation_entry (
+  id          uuid primary key default gen_random_uuid(),
+  tenant_id   uuid not null references public.tenant (id),
+  key_id      uuid not null,
+  locale      text not null,
+  value       text not null,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now(),
+  created_by  uuid references public.member (id),
+  archived_at timestamptz,
+  unique (id, tenant_id),
+  unique (key_id, locale),
+  constraint translation_entry_locale_permitted check (locale in ('en', 'ar')),
+  foreign key (key_id, tenant_id)
+    references public.translation_key (id, tenant_id)
+);
+
+create trigger translation_entry_set_updated_at
+before update on public.translation_entry
+for each row
+execute function public.set_updated_at();
+
+-- ===== migration: 20260922120003_asset_tables =====
+
+-- DATA_MODEL.md §3.18 and §3.19. The logical uploaded file and each
+-- derivative. Landed before Brand because typeface.font_asset_id and
+-- logo_variant.media_asset_id reference media_asset. Suggested prompt
+-- order was Brand then Asset; that order cannot create those foreign
+-- keys. Independently revertible: drop the two triggers, then the two
+-- tables.
+--
+-- GLOSSARY §5: media_asset is the qualified form of asset; there is no
+-- bare asset identifier. provider / bucket / object_key carry no vendor
+-- name (OD-G20 rider 1). Rows hold references, never content (OD-G11).
+
+create table public.media_asset (
+  id                 uuid primary key default gen_random_uuid(),
+  tenant_id          uuid not null references public.tenant (id),
+  provider           text not null,
+  bucket             text not null,
+  object_key         text not null,
+  content_type       text not null,
+  byte_size          bigint not null,
+  checksum           text not null,
+  original_filename  text,
+  created_at         timestamptz not null default now(),
+  updated_at         timestamptz not null default now(),
+  created_by         uuid references public.member (id),
+  archived_at        timestamptz,
+  unique (id, tenant_id),
+  unique (provider, bucket, object_key),
+  constraint media_asset_byte_size_positive check (byte_size > 0)
+);
+
+create trigger media_asset_set_updated_at
+before update on public.media_asset
+for each row
+execute function public.set_updated_at();
+
+create table public.asset_rendition (
+  id              uuid primary key default gen_random_uuid(),
+  tenant_id       uuid not null references public.tenant (id),
+  media_asset_id  uuid not null,
+  tier            public.rendition_tier not null,
+  provider        text not null,
+  bucket          text not null,
+  object_key      text not null,
+  width_px        integer,
+  height_px       integer,
+  content_type    text not null,
+  byte_size       bigint not null,
+  created_at      timestamptz not null default now(),
+  updated_at      timestamptz not null default now(),
+  created_by      uuid references public.member (id),
+  archived_at     timestamptz,
+  unique (id, tenant_id),
+  unique (media_asset_id, tier),
+  constraint asset_rendition_byte_size_positive check (byte_size > 0),
+  foreign key (media_asset_id, tenant_id)
+    references public.media_asset (id, tenant_id)
+);
+
+create trigger asset_rendition_set_updated_at
+before update on public.asset_rendition
+for each row
+execute function public.set_updated_at();
+
+-- ===== migration: 20260922120004_brand_tables =====
+
+-- DATA_MODEL.md §3.9 through §3.17. The Brand tier.
+--
+-- brand.current_profile_id is nullable and the foreign key is added after
+-- brand_profile exists, which is how the brand ↔ brand_profile cycle
+-- resolves. There is no deferred constraint and no third table.
+--
+-- brand_profile declares no updated_at and carries no trigger — the
+-- departure tabulated in §1. unique (id, tenant_id) on every table so
+-- child foreign keys are composite: a brand_line in tenant A cannot
+-- reference a brand_profile in tenant B, by construction (DOMAIN_MODEL §6).
+--
+-- GLOSSARY §5: brand_line is the qualified form of line.
+--
+-- Independently revertible: drop the seven triggers, drop the current-
+-- profile foreign key, then drop the eight tables in reverse dependency
+-- order (color_value, typeface, logo_variant, brand_guideline,
+-- brand_theme, brand_line, brand_profile, brand).
+
+create table public.brand (
+  id                  uuid primary key default gen_random_uuid(),
+  tenant_id           uuid not null references public.tenant (id),
+  name_key_id         uuid not null,
+  current_profile_id  uuid,
+  created_at          timestamptz not null default now(),
+  updated_at          timestamptz not null default now(),
+  created_by          uuid references public.member (id),
+  archived_at         timestamptz,
+  unique (id, tenant_id),
+  unique (tenant_id),
+  foreign key (name_key_id, tenant_id)
+    references public.translation_key (id, tenant_id)
+);
+
+create trigger brand_set_updated_at
+before update on public.brand
+for each row
+execute function public.set_updated_at();
+
+create table public.brand_profile (
+  id             uuid primary key default gen_random_uuid(),
+  tenant_id      uuid not null references public.tenant (id),
+  brand_id       uuid not null,
+  version        integer not null,
+  supersedes_id  uuid,
+  created_at     timestamptz not null default now(),
+  created_by     uuid references public.member (id),
+  unique (id, tenant_id),
+  unique (brand_id, version),
+  foreign key (brand_id, tenant_id)
+    references public.brand (id, tenant_id),
+  foreign key (supersedes_id, tenant_id)
+    references public.brand_profile (id, tenant_id)
+);
+
+-- The cycle closer. Nullable so the first profile can be inserted before
+-- it is made current, and so a brand with no current profile is representable
+-- (BRAND_CONFIG.md §11).
+alter table public.brand
+  add constraint brand_current_profile_fk
+  foreign key (current_profile_id, tenant_id)
+  references public.brand_profile (id, tenant_id);
+
+create table public.brand_line (
+  id           uuid primary key default gen_random_uuid(),
+  tenant_id    uuid not null references public.tenant (id),
+  brand_id     uuid not null,
+  name_key_id  uuid not null,
+  profile_id   uuid,
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now(),
+  created_by   uuid references public.member (id),
+  archived_at  timestamptz,
+  unique (id, tenant_id),
+  foreign key (brand_id, tenant_id)
+    references public.brand (id, tenant_id),
+  foreign key (name_key_id, tenant_id)
+    references public.translation_key (id, tenant_id),
+  foreign key (profile_id, tenant_id)
+    references public.brand_profile (id, tenant_id)
+);
+
+create trigger brand_line_set_updated_at
+before update on public.brand_line
+for each row
+execute function public.set_updated_at();
+
+create index brand_line_brand_id_idx
+  on public.brand_line (brand_id);
+
+create table public.brand_theme (
+  id           uuid primary key default gen_random_uuid(),
+  tenant_id    uuid not null references public.tenant (id),
+  profile_id   uuid not null,
+  name_key_id  uuid not null,
+  is_default   boolean not null default false,
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now(),
+  created_by   uuid references public.member (id),
+  archived_at  timestamptz,
+  unique (id, tenant_id),
+  foreign key (profile_id, tenant_id)
+    references public.brand_profile (id, tenant_id),
+  foreign key (name_key_id, tenant_id)
+    references public.translation_key (id, tenant_id)
+);
+
+create unique index brand_theme_one_default_per_profile
+  on public.brand_theme (profile_id)
+  where is_default;
+
+create trigger brand_theme_set_updated_at
+before update on public.brand_theme
+for each row
+execute function public.set_updated_at();
+
+create table public.color_value (
+  id          uuid primary key default gen_random_uuid(),
+  tenant_id   uuid not null references public.tenant (id),
+  theme_id    uuid not null,
+  role        public.color_role not null,
+  srgb        text not null,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now(),
+  created_by  uuid references public.member (id),
+  unique (id, tenant_id),
+  unique (theme_id, role),
+  constraint color_value_srgb_lowercase_hex check (srgb ~ '^#[0-9a-f]{6}$'),
+  foreign key (theme_id, tenant_id)
+    references public.brand_theme (id, tenant_id)
+);
+
+create trigger color_value_set_updated_at
+before update on public.color_value
+for each row
+execute function public.set_updated_at();
+
+create table public.typeface (
+  id             uuid primary key default gen_random_uuid(),
+  tenant_id      uuid not null references public.tenant (id),
+  profile_id     uuid not null,
+  role           public.typeface_role not null,
+  script         public.script_kind not null,
+  family         text not null,
+  weight         integer not null,
+  is_italic      boolean not null default false,
+  font_asset_id  uuid,
+  created_at     timestamptz not null default now(),
+  updated_at     timestamptz not null default now(),
+  created_by     uuid references public.member (id),
+  archived_at    timestamptz,
+  unique (id, tenant_id),
+  unique (profile_id, role, script),
+  constraint typeface_weight_range check (weight >= 100 and weight <= 900),
+  foreign key (profile_id, tenant_id)
+    references public.brand_profile (id, tenant_id),
+  foreign key (font_asset_id, tenant_id)
+    references public.media_asset (id, tenant_id)
+);
+
+create trigger typeface_set_updated_at
+before update on public.typeface
+for each row
+execute function public.set_updated_at();
+
+create table public.logo_variant (
+  id              uuid primary key default gen_random_uuid(),
+  tenant_id       uuid not null references public.tenant (id),
+  profile_id      uuid not null,
+  kind            public.logo_kind not null,
+  ground          public.logo_ground not null,
+  media_asset_id  uuid not null,
+  created_at      timestamptz not null default now(),
+  updated_at      timestamptz not null default now(),
+  created_by      uuid references public.member (id),
+  archived_at     timestamptz,
+  unique (id, tenant_id),
+  unique (profile_id, kind, ground),
+  foreign key (profile_id, tenant_id)
+    references public.brand_profile (id, tenant_id),
+  foreign key (media_asset_id, tenant_id)
+    references public.media_asset (id, tenant_id)
+);
+
+create trigger logo_variant_set_updated_at
+before update on public.logo_variant
+for each row
+execute function public.set_updated_at();
+
+create table public.brand_guideline (
+  id            uuid primary key default gen_random_uuid(),
+  tenant_id     uuid not null references public.tenant (id),
+  profile_id    uuid not null,
+  title_key_id  uuid not null,
+  body_key_id   uuid not null,
+  ordinal       integer not null,
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now(),
+  created_by    uuid references public.member (id),
+  archived_at   timestamptz,
+  unique (id, tenant_id),
+  unique (profile_id, ordinal),
+  foreign key (profile_id, tenant_id)
+    references public.brand_profile (id, tenant_id),
+  foreign key (title_key_id, tenant_id)
+    references public.translation_key (id, tenant_id),
+  foreign key (body_key_id, tenant_id)
+    references public.translation_key (id, tenant_id)
+);
+
+create trigger brand_guideline_set_updated_at
+before update on public.brand_guideline
+for each row
+execute function public.set_updated_at();
+
+-- ===== migration: 20260922120005_brand_asset_policies_and_grants =====
+
+-- DATA_MODEL.md §2. Every new table has RLS enabled and at least one
+-- policy. WITH CHECK on every policy with a write side. The standard
+-- tenant policy: tenant_id = current_tenant_id(). No operator policy —
+-- every table in this tier is tenant business data under §2's operator
+-- rule.
+--
+-- brand_profile carries no UPDATE policy and no UPDATE grant. Its
+-- immutability is the absence (§1 rule 5), the same mechanism
+-- activity_event uses.
+--
+-- No DELETE policy and no DELETE grant on any of these tables: rows are
+-- archived, never deleted (§1.3). brand_profile is never archived either.
+--
+-- The blanket revoke is load-bearing. A newly created table arrives with
+-- table-wide UPDATE already granted to authenticated by default privilege
+-- (PRECEDENTS §2). Column-scoped or verb-scoped grants are decoration
+-- unless the revoke runs first.
+--
+-- Independently revertible: drop the policies, then revoke the grants.
+
+-- translation_key
+alter table public.translation_key enable row level security;
+revoke all on table public.translation_key from anon;
+revoke all on table public.translation_key from authenticated;
+grant select, insert, update on table public.translation_key to authenticated;
+
+create policy translation_key_select_tenant on public.translation_key
+  for select to authenticated
+  using (tenant_id = public.current_tenant_id());
+
+create policy translation_key_insert_tenant on public.translation_key
+  for insert to authenticated
+  with check (tenant_id = public.current_tenant_id());
+
+create policy translation_key_update_tenant on public.translation_key
+  for update to authenticated
+  using (tenant_id = public.current_tenant_id())
+  with check (tenant_id = public.current_tenant_id());
+
+-- translation_entry
+alter table public.translation_entry enable row level security;
+revoke all on table public.translation_entry from anon;
+revoke all on table public.translation_entry from authenticated;
+grant select, insert, update on table public.translation_entry to authenticated;
+
+create policy translation_entry_select_tenant on public.translation_entry
+  for select to authenticated
+  using (tenant_id = public.current_tenant_id());
+
+create policy translation_entry_insert_tenant on public.translation_entry
+  for insert to authenticated
+  with check (tenant_id = public.current_tenant_id());
+
+create policy translation_entry_update_tenant on public.translation_entry
+  for update to authenticated
+  using (tenant_id = public.current_tenant_id())
+  with check (tenant_id = public.current_tenant_id());
+
+-- media_asset
+alter table public.media_asset enable row level security;
+revoke all on table public.media_asset from anon;
+revoke all on table public.media_asset from authenticated;
+grant select, insert, update on table public.media_asset to authenticated;
+
+create policy media_asset_select_tenant on public.media_asset
+  for select to authenticated
+  using (tenant_id = public.current_tenant_id());
+
+create policy media_asset_insert_tenant on public.media_asset
+  for insert to authenticated
+  with check (tenant_id = public.current_tenant_id());
+
+create policy media_asset_update_tenant on public.media_asset
+  for update to authenticated
+  using (tenant_id = public.current_tenant_id())
+  with check (tenant_id = public.current_tenant_id());
+
+-- asset_rendition
+alter table public.asset_rendition enable row level security;
+revoke all on table public.asset_rendition from anon;
+revoke all on table public.asset_rendition from authenticated;
+grant select, insert, update on table public.asset_rendition to authenticated;
+
+create policy asset_rendition_select_tenant on public.asset_rendition
+  for select to authenticated
+  using (tenant_id = public.current_tenant_id());
+
+create policy asset_rendition_insert_tenant on public.asset_rendition
+  for insert to authenticated
+  with check (tenant_id = public.current_tenant_id());
+
+create policy asset_rendition_update_tenant on public.asset_rendition
+  for update to authenticated
+  using (tenant_id = public.current_tenant_id())
+  with check (tenant_id = public.current_tenant_id());
+
+-- brand
+alter table public.brand enable row level security;
+revoke all on table public.brand from anon;
+revoke all on table public.brand from authenticated;
+grant select, insert, update on table public.brand to authenticated;
+
+create policy brand_select_tenant on public.brand
+  for select to authenticated
+  using (tenant_id = public.current_tenant_id());
+
+create policy brand_insert_tenant on public.brand
+  for insert to authenticated
+  with check (tenant_id = public.current_tenant_id());
+
+create policy brand_update_tenant on public.brand
+  for update to authenticated
+  using (tenant_id = public.current_tenant_id())
+  with check (tenant_id = public.current_tenant_id());
+
+-- brand_profile — SELECT and INSERT only. No UPDATE policy. No UPDATE grant.
+alter table public.brand_profile enable row level security;
+revoke all on table public.brand_profile from anon;
+revoke all on table public.brand_profile from authenticated;
+grant select, insert on table public.brand_profile to authenticated;
+
+create policy brand_profile_select_tenant on public.brand_profile
+  for select to authenticated
+  using (tenant_id = public.current_tenant_id());
+
+create policy brand_profile_insert_tenant on public.brand_profile
+  for insert to authenticated
+  with check (tenant_id = public.current_tenant_id());
+
+-- brand_line
+alter table public.brand_line enable row level security;
+revoke all on table public.brand_line from anon;
+revoke all on table public.brand_line from authenticated;
+grant select, insert, update on table public.brand_line to authenticated;
+
+create policy brand_line_select_tenant on public.brand_line
+  for select to authenticated
+  using (tenant_id = public.current_tenant_id());
+
+create policy brand_line_insert_tenant on public.brand_line
+  for insert to authenticated
+  with check (tenant_id = public.current_tenant_id());
+
+create policy brand_line_update_tenant on public.brand_line
+  for update to authenticated
+  using (tenant_id = public.current_tenant_id())
+  with check (tenant_id = public.current_tenant_id());
+
+-- brand_theme
+alter table public.brand_theme enable row level security;
+revoke all on table public.brand_theme from anon;
+revoke all on table public.brand_theme from authenticated;
+grant select, insert, update on table public.brand_theme to authenticated;
+
+create policy brand_theme_select_tenant on public.brand_theme
+  for select to authenticated
+  using (tenant_id = public.current_tenant_id());
+
+create policy brand_theme_insert_tenant on public.brand_theme
+  for insert to authenticated
+  with check (tenant_id = public.current_tenant_id());
+
+create policy brand_theme_update_tenant on public.brand_theme
+  for update to authenticated
+  using (tenant_id = public.current_tenant_id())
+  with check (tenant_id = public.current_tenant_id());
+
+-- color_value
+alter table public.color_value enable row level security;
+revoke all on table public.color_value from anon;
+revoke all on table public.color_value from authenticated;
+grant select, insert, update on table public.color_value to authenticated;
+
+create policy color_value_select_tenant on public.color_value
+  for select to authenticated
+  using (tenant_id = public.current_tenant_id());
+
+create policy color_value_insert_tenant on public.color_value
+  for insert to authenticated
+  with check (tenant_id = public.current_tenant_id());
+
+create policy color_value_update_tenant on public.color_value
+  for update to authenticated
+  using (tenant_id = public.current_tenant_id())
+  with check (tenant_id = public.current_tenant_id());
+
+-- typeface
+alter table public.typeface enable row level security;
+revoke all on table public.typeface from anon;
+revoke all on table public.typeface from authenticated;
+grant select, insert, update on table public.typeface to authenticated;
+
+create policy typeface_select_tenant on public.typeface
+  for select to authenticated
+  using (tenant_id = public.current_tenant_id());
+
+create policy typeface_insert_tenant on public.typeface
+  for insert to authenticated
+  with check (tenant_id = public.current_tenant_id());
+
+create policy typeface_update_tenant on public.typeface
+  for update to authenticated
+  using (tenant_id = public.current_tenant_id())
+  with check (tenant_id = public.current_tenant_id());
+
+-- logo_variant
+alter table public.logo_variant enable row level security;
+revoke all on table public.logo_variant from anon;
+revoke all on table public.logo_variant from authenticated;
+grant select, insert, update on table public.logo_variant to authenticated;
+
+create policy logo_variant_select_tenant on public.logo_variant
+  for select to authenticated
+  using (tenant_id = public.current_tenant_id());
+
+create policy logo_variant_insert_tenant on public.logo_variant
+  for insert to authenticated
+  with check (tenant_id = public.current_tenant_id());
+
+create policy logo_variant_update_tenant on public.logo_variant
+  for update to authenticated
+  using (tenant_id = public.current_tenant_id())
+  with check (tenant_id = public.current_tenant_id());
+
+-- brand_guideline
+alter table public.brand_guideline enable row level security;
+revoke all on table public.brand_guideline from anon;
+revoke all on table public.brand_guideline from authenticated;
+grant select, insert, update on table public.brand_guideline to authenticated;
+
+create policy brand_guideline_select_tenant on public.brand_guideline
+  for select to authenticated
+  using (tenant_id = public.current_tenant_id());
+
+create policy brand_guideline_insert_tenant on public.brand_guideline
+  for insert to authenticated
+  with check (tenant_id = public.current_tenant_id());
+
+create policy brand_guideline_update_tenant on public.brand_guideline
+  for update to authenticated
+  using (tenant_id = public.current_tenant_id())
+  with check (tenant_id = public.current_tenant_id());
+
+-- ===== migration: 20261003120001_tenant_business_data =====
+
+-- OD-G26 and OD-A9, signed 2026-10-03. Three tables, and provision_tenant
+-- replaced: the four-argument form is dropped in this same migration and the
+-- three-argument form generates the slug. No caller supplies, chooses or
+-- changes one.
+--
+-- legal_entity is the registered company behind a tenant, 1:1 with tenant.
+-- It is not columns on tenant, because tenant's row holds status, which a
+-- business must never be able to edit. onboarding_draft is onboarding's one
+-- store: the step to resume at. onboarding_draft_color holds a colour set
+-- before all seven roles exist; a theme cannot be saved with fewer (§4).
+--
+-- No operator policy on any of the three. No DELETE policy. Bilingual text
+-- is a translation_key, never a text column.
+--
+-- Independently revertible: drop the three triggers, the policies, the
+-- grants, the three tables, then restore the four-argument function from
+-- the previous migration.
+
+-- §3.22 legal_entity
+create table public.legal_entity (
+  id                        uuid primary key default gen_random_uuid(),
+  tenant_id                 uuid not null references public.tenant (id),
+  legal_name_key_id         uuid,
+  trading_name_key_id       uuid,
+  tax_registration_number   text,
+  registered_address_key_id uuid,
+  contact_email             text,
+  contact_phone             text,
+  created_at                timestamptz not null default now(),
+  updated_at                timestamptz not null default now(),
+  created_by                uuid references public.member (id),
+  archived_at               timestamptz,
+  unique (tenant_id),
+  unique (id, tenant_id),
+  constraint legal_entity_tax_registration_number_shape check (
+    tax_registration_number ~ '^[0-9A-Za-z]{1,32}$'
+  ),
+  constraint legal_entity_contact_email_shape check (
+    char_length(contact_email) <= 254
+    and contact_email ~ '^[^[:space:]@]+@[^[:space:]@]+$'
+  ),
+  constraint legal_entity_contact_phone_e164 check (
+    contact_phone ~ '^\+[1-9][0-9]{6,14}$'
+  ),
+  foreign key (legal_name_key_id, tenant_id)
+    references public.translation_key (id, tenant_id),
+  foreign key (trading_name_key_id, tenant_id)
+    references public.translation_key (id, tenant_id),
+  foreign key (registered_address_key_id, tenant_id)
+    references public.translation_key (id, tenant_id)
+);
+
+create trigger legal_entity_set_updated_at
+before update on public.legal_entity
+for each row
+execute function public.set_updated_at();
+
+alter table public.legal_entity enable row level security;
+revoke all on table public.legal_entity from anon;
+revoke all on table public.legal_entity from authenticated;
+grant select, insert, update on table public.legal_entity to authenticated;
+
+create policy legal_entity_select_tenant on public.legal_entity
+  for select to authenticated
+  using (tenant_id = public.current_tenant_id());
+
+create policy legal_entity_insert_owner on public.legal_entity
+  for insert to authenticated
+  with check (
+    tenant_id = public.current_tenant_id()
+    and public.is_current_tenant_owner()
+  );
+
+create policy legal_entity_update_owner on public.legal_entity
+  for update to authenticated
+  using (
+    tenant_id = public.current_tenant_id()
+    and public.is_current_tenant_owner()
+  )
+  with check (
+    tenant_id = public.current_tenant_id()
+    and public.is_current_tenant_owner()
+  );
+
+-- §3.23 onboarding_draft — one per tenant. Archived when onboarding completes.
+create table public.onboarding_draft (
+  id          uuid primary key default gen_random_uuid(),
+  tenant_id   uuid not null references public.tenant (id),
+  resume_step text not null,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now(),
+  created_by  uuid references public.member (id),
+  archived_at timestamptz,
+  unique (tenant_id),
+  unique (id, tenant_id),
+  constraint onboarding_draft_resume_step_permitted check (
+    resume_step in ('brand', 'typography', 'company', 'guidelines', 'review')
+  )
+);
+
+create trigger onboarding_draft_set_updated_at
+before update on public.onboarding_draft
+for each row
+execute function public.set_updated_at();
+
+alter table public.onboarding_draft enable row level security;
+revoke all on table public.onboarding_draft from anon;
+revoke all on table public.onboarding_draft from authenticated;
+grant select, insert, update on table public.onboarding_draft to authenticated;
+
+create policy onboarding_draft_select_owner on public.onboarding_draft
+  for select to authenticated
+  using (
+    tenant_id = public.current_tenant_id()
+    and public.is_current_tenant_owner()
+  );
+
+create policy onboarding_draft_insert_owner on public.onboarding_draft
+  for insert to authenticated
+  with check (
+    tenant_id = public.current_tenant_id()
+    and public.is_current_tenant_owner()
+  );
+
+create policy onboarding_draft_update_owner on public.onboarding_draft
+  for update to authenticated
+  using (
+    tenant_id = public.current_tenant_id()
+    and public.is_current_tenant_owner()
+  )
+  with check (
+    tenant_id = public.current_tenant_id()
+    and public.is_current_tenant_owner()
+  );
+
+-- §3.24 onboarding_draft_color — a colour before all seven roles hold a value.
+create table public.onboarding_draft_color (
+  id          uuid primary key default gen_random_uuid(),
+  tenant_id   uuid not null references public.tenant (id),
+  draft_id    uuid not null,
+  role        public.color_role not null,
+  srgb        text not null,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now(),
+  created_by  uuid references public.member (id),
+  archived_at timestamptz,
+  unique (draft_id, role),
+  unique (id, tenant_id),
+  constraint onboarding_draft_color_srgb_shape check (
+    srgb ~ '^#[0-9a-f]{6}$'
+  ),
+  foreign key (draft_id, tenant_id)
+    references public.onboarding_draft (id, tenant_id)
+);
+
+create trigger onboarding_draft_color_set_updated_at
+before update on public.onboarding_draft_color
+for each row
+execute function public.set_updated_at();
+
+alter table public.onboarding_draft_color enable row level security;
+revoke all on table public.onboarding_draft_color from anon;
+revoke all on table public.onboarding_draft_color from authenticated;
+grant select, insert, update on table public.onboarding_draft_color to authenticated;
+
+create policy onboarding_draft_color_select_owner on public.onboarding_draft_color
+  for select to authenticated
+  using (
+    tenant_id = public.current_tenant_id()
+    and public.is_current_tenant_owner()
+  );
+
+create policy onboarding_draft_color_insert_owner on public.onboarding_draft_color
+  for insert to authenticated
+  with check (
+    tenant_id = public.current_tenant_id()
+    and public.is_current_tenant_owner()
+  );
+
+create policy onboarding_draft_color_update_owner on public.onboarding_draft_color
+  for update to authenticated
+  using (
+    tenant_id = public.current_tenant_id()
+    and public.is_current_tenant_owner()
+  )
+  with check (
+    tenant_id = public.current_tenant_id()
+    and public.is_current_tenant_owner()
+  );
+
+-- OD-G26. Drop the four-argument identity, then create the three-argument
+-- one. CREATE OR REPLACE with a different argument list would add an
+-- overload and leave the old identity callable. The slug is twelve
+-- lowercase hexadecimal characters from gen_random_uuid(), retried on a
+-- unique violation up to five times.
+drop function public.provision_tenant(text, text, text, text);
+
+create function public.provision_tenant(
+  p_name           text,
+  p_base_currency  text,
+  p_default_locale text
+)
+returns uuid
+language plpgsql
+volatile
+security definer
+set search_path = ''
+as $$
+declare
+  v_caller uuid := auth.uid();
+  v_tenant uuid;
+  v_owned  integer;
+  v_recent integer;
+  v_slug   text;
+  v_try    integer := 0;
+begin
+  if v_caller is null then
+    raise exception
+      'tenant provisioning refused: the caller is not an authenticated identity'
+      using errcode = 'insufficient_privilege';
+  end if;
+
+  if not exists (
+    select 1
+      from public.member m
+     where m.id = v_caller
+       and m.archived_at is null
+  ) then
+    raise exception
+      'tenant provisioning refused: the caller holds no live member record'
+      using errcode = 'insufficient_privilege',
+            hint = 'OD-G13 makes provisioning a second act. Authentication materialises the Member first.';
+  end if;
+
+  perform pg_advisory_xact_lock(1818, hashtext(v_caller::text));
+
+  select count(*)::integer
+    into v_owned
+    from public.membership m
+   where m.member_id = v_caller
+     and m.role = 'owner'
+     and m.status = 'active'
+     and m.archived_at is null;
+
+  if v_owned >= 3 then
+    raise exception
+      'tenant provisioning refused: a member may own at most three active tenants'
+      using errcode = 'check_violation';
+  end if;
+
+  select count(*)::integer
+    into v_recent
+    from public.activity_event e
+   where e.actor_member_id = v_caller
+     and e.action = 'tenant.provisioned'
+     and e.occurred_at > now() - interval '24 hours';
+
+  if v_recent >= 3 then
+    raise exception
+      'tenant provisioning refused: at most three provisioning acts are permitted per 24 hours'
+      using errcode = 'check_violation';
+  end if;
+
+  if p_name is null or btrim(p_name) = '' then
+    raise exception
+      'tenant provisioning refused: a tenant must carry a name'
+      using errcode = 'check_violation';
+  end if;
+
+  <<generate_slug>>
+  loop
+    v_try := v_try + 1;
+    if v_try > 5 then
+      raise exception
+        'tenant provisioning refused: a unique slug could not be generated'
+        using errcode = 'unique_violation';
+    end if;
+    v_slug := substr(replace(pg_catalog.gen_random_uuid()::text, '-', ''), 1, 12);
+    begin
+      insert into public.tenant
+        (name, slug, base_currency, default_locale, status, created_by)
+      values
+        (btrim(p_name), v_slug, p_base_currency, p_default_locale, 'active', v_caller)
+      returning id into v_tenant;
+      exit generate_slug;
+    exception
+      when unique_violation then
+        null;
+    end;
+  end loop generate_slug;
+
+  insert into public.membership
+    (tenant_id, member_id, role, status, accepted_at, created_by)
+  values
+    (v_tenant, v_caller, 'owner', 'active', now(), v_caller);
+
+  insert into public.activity_event
+    (tenant_id, actor_member_id, action, entity_type, entity_id)
+  values
+    (v_tenant, v_caller, 'tenant.provisioned', 'Tenant', v_tenant);
+
+  return v_tenant;
+end
+$$;
+
+revoke execute on function public.provision_tenant(text, text, text) from public;
+revoke execute on function public.provision_tenant(text, text, text) from anon;
+revoke execute on function public.provision_tenant(text, text, text) from service_role;
+grant  execute on function public.provision_tenant(text, text, text) to authenticated;
+
+-- ===== migration: 20261004120001_tenant_media_bucket =====
+
+-- P03-T20. One private bucket and the checks that keep a row from pointing
+-- at another tenant's object. OD-G20 rider 1: no column, type or function
+-- name contains a vendor. The stored provider value does, because a row
+-- has to say where the object lives. A second provider is a CHECK
+-- amendment, not a schema change.
+--
+-- Independently revertible: drop the two policies, delete the bucket
+-- (it refuses while an object remains), then drop the seven constraints.
+-- No UPDATE policy and no DELETE policy: an object is immutable, and a
+-- row is archived rather than deleted.
+
+alter table public.media_asset
+  add constraint media_asset_provider_permitted
+    check (provider = 'supabase-storage'),
+  add constraint media_asset_bucket_permitted
+    check (bucket = 'tenant-media'),
+  add constraint media_asset_object_key_tenant_prefix
+    check (split_part(object_key, '/', 1) = tenant_id::text),
+  add constraint media_asset_checksum_sha256
+    check (checksum ~ '^[0-9a-f]{64}$');
+
+alter table public.asset_rendition
+  add constraint asset_rendition_provider_permitted
+    check (provider = 'supabase-storage'),
+  add constraint asset_rendition_bucket_permitted
+    check (bucket = 'tenant-media'),
+  add constraint asset_rendition_object_key_tenant_prefix
+    check (split_part(object_key, '/', 1) = tenant_id::text);
+
+insert into storage.buckets (id, name, public)
+values ('tenant-media', 'tenant-media', false);
+
+create policy tenant_media_select_member
+  on storage.objects
+  for select
+  to authenticated
+  using (
+    bucket_id = 'tenant-media'
+    and split_part(name, '/', 1) = public.current_tenant_id()::text
+  );
+
+create policy tenant_media_insert_member
+  on storage.objects
+  for insert
+  to authenticated
+  with check (
+    bucket_id = 'tenant-media'
+    and split_part(name, '/', 1) = public.current_tenant_id()::text
+  );

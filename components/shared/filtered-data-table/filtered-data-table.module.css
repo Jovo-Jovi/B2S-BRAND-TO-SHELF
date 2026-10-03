@@ -1,0 +1,18 @@
+.bar {
+  display: flex;
+  flex-direction: column;
+  row-gap: var(--b2s-space-3);
+}
+
+.filters,
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: var(--b2s-space-2);
+  row-gap: var(--b2s-space-2);
+}
+
+.status {
+  color: var(--b2s-color-text);
+  background-color: var(--b2s-color-canvas);
+}

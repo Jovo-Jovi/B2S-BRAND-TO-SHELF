@@ -84,6 +84,29 @@ failure is not recoverable by a later fix: data disclosed is disclosed.
    not the directory. Display text lives in the message catalogs; this section
    owns the indistinguishability contract.
 
+**Object storage (OD-G20, DATA_MODEL.md Asset tier).** One private bucket,
+`tenant-media`. No public bucket exists, and none may be created. Storage
+policies on `storage.objects` admit a member to that bucket's objects only
+where the first path segment equals `current_tenant_id()`: SELECT and
+INSERT for authenticated members of that tenant, matching the brand tier's
+tenant-scoped rule. No UPDATE policy: an object is immutable, and a changed
+logo is a new object. No DELETE policy: rows are archived, never deleted
+(DATA_MODEL.md §1 rule 3). No anonymous access. No operator policy.
+
+Objects are written as the signed-in member, through those policies, never
+with a privileged credential. The server checks every upload with the
+ADR-016 module before anything is written; a refused file writes nothing.
+A stored file is one `media_asset` and two `asset_rendition` rows,
+`display` and `print`, whose objects are verified copies of the original
+(BRAND_CONFIG.md §9's amendment). If an object write fails after the rows
+exist, the rows are archived and keep their keys: the archived row is the
+record a cleanup job uses, and the object is not deleted. No table is
+added for this.
+
+Files are read only through signed URLs minted server-side as the member,
+valid for 300 seconds. No public URL is ever produced. An SVG is served
+with its stored content type and rendered only as an image.
+
 **§11 is the exceptions list.** Every mechanism that can bypass the data layer's
 rules is enumerated there with its reachability, and the enumeration is
 re-derived from the live catalog at every phase exit gate.
@@ -141,6 +164,14 @@ never proven. It closes here, with this definition.
 **Re-run conditions.** Every one of these re-runs the full gate, not a subset:
 a new entity type · a change to any access rule · a change to any grant · a new
 privileged path · a role definition change · any change to the `Operator` surface.
+
+The isolation suite that proves P1–P5 between gates runs against staging
+(ADR-013) and is required on any pull request touching schema. A phase exit
+gate still re-derives the live catalog of production — the environment that
+holds, or will hold, a buyer's data. Staging is named here so the suite is
+not pointed back at production by a reading of "the live environment" alone.
+Production is named here so an exit gate is not taken as proven by the CI
+job.
 
 **No evidence means FAIL.** A gate closed on partial evidence has not been closed.
 
@@ -387,7 +418,7 @@ the function read theirs instead.
 | `has_live_consent_grant(uuid)` | `''` | Evaluates the grant that gates operator reach, on a table the operator has no policy to read |
 | `operator_read_activity_event(uuid)` | `''` | The one declared operator read path. Refuses without a live grant, writes the log before returning, and omits `payload` from its return type |
 | `materialise_member()` | `''` | Writes the `member` row for a new identity, from a trigger on `auth.users`. `member` carries no INSERT policy at all and GoTrue's `supabase_auth_admin` holds no INSERT privilege on it, so there is no non-definer path by which authentication could create one. It holds no grant, so it is not an endpoint — see below |
-| `provision_tenant(text, text, text, text)` | `''` | Writes a `tenant`, its first active owner `membership` and the `activity_event` in one transaction. `tenant` carries no INSERT policy and `authenticated` holds no INSERT privilege on it; and the caller cannot yet be an owner of a tenant that does not exist, so `membership_insert_owner` would refuse the second row even where the privilege exists. Granted to every `authenticated` caller — the containment is below |
+| `provision_tenant(text, text, text)` | `''` | Writes a `tenant`, its first active owner `membership` and the `activity_event` in one transaction. `tenant` carries no INSERT policy and `authenticated` holds no INSERT privilege on it; and the caller cannot yet be an owner of a tenant that does not exist, so `membership_insert_owner` would refuse the second row even where the privilege exists. Granted to every `authenticated` caller — the containment is below |
 | `caller_email_is_verified()` | `''` | Reads `auth.users.email_confirmed_at`. No `authenticated` caller can select that column, and OD-G13's acceptance invariant is satisfied today by a verified email and nothing else, so a policy on `membership` and a function that spends an `invitation` both need a definer to ask. Returns false for a null `auth.uid()` rather than raising, so an unauthenticated evaluation is a denial, not an error. Granted to `authenticated` because `membership_accept_invitation` names it |
 | `accept_invitation(uuid)` | `''` | OD-G16's single act: read an invitation the invitee cannot see (they hold no membership in the inviting tenant, so RLS would hide the row), confirm the caller's verified email matches, insert the caller's own `active` `membership`, and spend the invitation, in one transaction. There is no member parameter — the member is `auth.uid()` — so an Owner cannot produce an active Membership for anyone but themselves through this path either. Granted to every `authenticated` caller; the containment is the same shape as `provision_tenant`'s: the only identity the caller can name is their own |
 
@@ -399,7 +430,7 @@ tables` does not cover functions. All ten are therefore revoked from `public`,
 - **Eight are granted to `authenticated`**, and to nothing else:
   `current_tenant_id()`, `is_operator()`, `is_current_tenant_owner()`,
   `has_live_consent_grant(uuid)`, `operator_read_activity_event(uuid)`,
-  `provision_tenant(text, text, text, text)`, `caller_email_is_verified()` and
+  `provision_tenant(text, text, text)`, `caller_email_is_verified()` and
   `accept_invitation(uuid)`.
 - **Two are granted to nobody at all.** `enforce_tenant_active_owner()` and
   `materialise_member()` are trigger functions, and a trigger function's
@@ -418,6 +449,8 @@ perform up to three provisioning acts per rolling 24 hours (OD-G18, proven by
 28a–28e, including two concurrent calls of which exactly one succeeds); take
 any unused `slug`, which is globally unique, and so deny that name to everyone
 else — the cap bounds tenants, not slugs, and OD-G18 names that as unsolved.
+
+**AMENDED 2026-10-03 — the slug is generated (OD-G26).** The sentence above stands and is not edited (PR-07). `provision_tenant` takes `(name, base_currency, default_locale)` and generates the slug. No caller can take any slug. The catalog entry states `provision_tenant(text, text, text)`; the count of security-definer functions in `public` stays ten, one identity replacing another.
 
 A hostile authenticated caller **cannot**: name anybody else as the owner —
 there is no member parameter, the owner is `auth.uid()`, and naming a stranger
@@ -663,6 +696,12 @@ Six, all owned by `supabase_admin`, all enabled on origin. Their functions live
 in `extensions`, are all owned by `supabase_admin`, are **none of them
 `security definer`**, and all carry an unpinned `search_path`.
 
+**Corrected 2026-09-17, P03-T01-RESUME, CF-155.** Live catalog at P02-GATE,
+and re-read against both projects at this task: all six have
+`proconfig=['search_path=""']` (pinned). The sentence above is the
+original. Owner, schema, reachability and membership are unchanged, so this
+is not a §11 hard failure.
+
 | Trigger | Fires on | Function |
 |---|---|---|
 | `issue_graphql_placeholder` | `sql_drop` | `extensions.set_graphql_placeholder` |
@@ -686,6 +725,10 @@ code with an unpinned `search_path`. Nothing there is reachable from a tenant
 session and nothing there is ours to change — which is exactly the tier b shape:
 enumerated, measured, and watched for change.
 
+**Corrected 2026-09-17, P03-T01-RESUME, CF-155**, of "unpinned" in the
+sentence above: the six functions' `search_path` is pinned live. The
+characterisation as a `supabase_admin` code-execution surface stands.
+
 ---
 
 ### 11.5 The standing rule
@@ -693,6 +736,12 @@ enumerated, measured, and watched for change.
 **This inventory is re-derived at every phase exit gate. A mechanism that
 appears in the derivation and is not in this document is a hard failure of that
 gate.**
+
+The gate queries the live catalog of production. Staging is the rehearsal
+and the isolation-suite venue (ADR-013); it is not a second production, and
+a re-derivation against staging alone does not close a phase exit gate.
+Staging is named here so the standing rule is not read as permission to
+treat the CI job as the gate.
 
 That is what turns a one-time audit into a standing check. The gate does not
 read this list and confirm it; it queries the live catalog and compares.

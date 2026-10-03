@@ -1,0 +1,118 @@
+.frame {
+  display: flex;
+  flex-direction: column;
+  row-gap: var(--b2s-space-5);
+}
+
+.frameHeader,
+.formColumn {
+  display: flex;
+  flex-direction: column;
+  row-gap: var(--b2s-space-3);
+}
+
+.frameHeader {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--b2s-space-3);
+}
+
+.mark {
+  margin-block: 0;
+  font-weight: var(--b2s-weight-semibold);
+  color: var(--b2s-color-text);
+}
+
+.formColumn {
+  max-inline-size: var(--b2s-measure-form);
+  row-gap: var(--b2s-space-5);
+}
+
+.layout {
+  display: flex;
+  flex-direction: column;
+  row-gap: var(--b2s-space-5);
+}
+
+.preview {
+  min-inline-size: 0;
+  max-block-size: var(--b2s-proof-height-narrow);
+  order: -1;
+  padding-block: var(--b2s-space-4);
+  padding-inline: var(--b2s-space-4);
+  background-color: var(--b2s-color-canvas);
+  color: var(--b2s-color-text);
+}
+
+.specimenLabel {
+  max-inline-size: calc(var(--b2s-preview-label-max) + var(--b2s-space-5) + var(--b2s-space-5));
+}
+
+.specimenSticker {
+  max-inline-size: calc(var(--b2s-preview-sticker-max) + var(--b2s-space-5) + var(--b2s-space-5));
+}
+
+.title {
+  margin-block: 0;
+  font-size: var(--b2s-text-3xl);
+  line-height: var(--b2s-leading-3xl);
+  font-weight: var(--b2s-weight-semibold);
+  color: var(--b2s-color-text);
+}
+
+.purpose {
+  margin-block: 0;
+  color: var(--b2s-color-text-muted);
+}
+
+.stepper {
+  list-style: none;
+  margin-block: 0;
+  padding-inline-start: var(--b2s-space-0);
+}
+
+.stepper,
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--b2s-space-3);
+  row-gap: var(--b2s-space-2);
+}
+
+.footer {
+  justify-content: space-between;
+}
+
+.end {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: var(--b2s-space-3);
+  margin-inline-start: auto;
+}
+
+.summary {
+  color: var(--b2s-color-text);
+  background-color: var(--b2s-color-canvas);
+}
+
+.summary a {
+  color: var(--b2s-color-accent-text);
+}
+
+@media (width >= 1024px) {
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, var(--b2s-measure-form)) minmax(0, 1fr);
+    align-items: start;
+    column-gap: var(--b2s-space-5);
+  }
+
+  .preview {
+    order: 0;
+    max-block-size: none;
+    background-color: var(--b2s-color-sunken);
+    border-inline-start: var(--b2s-border-width) solid var(--b2s-color-border);
+  }
+}

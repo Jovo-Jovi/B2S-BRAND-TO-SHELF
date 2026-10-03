@@ -1,0 +1,38 @@
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--b2s-space-4);
+  row-gap: var(--b2s-space-2);
+  flex: 1 1 auto;
+  background-color: var(--b2s-color-canvas);
+  color: var(--b2s-color-text);
+}
+
+.logo {
+  block-size: var(--b2s-logo-height);
+  inline-size: auto;
+}
+
+.name {
+  font-weight: var(--b2s-weight-semibold);
+  color: var(--b2s-color-text);
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  row-gap: var(--b2s-space-2);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  padding-block: var(--b2s-space-2);
+  padding-inline: var(--b2s-space-2);
+  background-color: var(--b2s-color-raised);
+  color: var(--b2s-color-text);
+  border: var(--b2s-border-width) solid var(--b2s-color-border);
+  border-radius: var(--b2s-radius-md);
+  box-shadow: var(--b2s-elevation-1);
+}

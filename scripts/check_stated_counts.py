@@ -44,6 +44,8 @@ WORD_NUMBERS = {
     "zero": 0, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
     "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10,
     "eleven": 11, "twelve": 12,
+    "thirteen": 13, "fourteen": 14, "fifteen": 15, "sixteen": 16,
+    "seventeen": 17, "eighteen": 18, "nineteen": 19,
 }
 
 
@@ -476,7 +478,7 @@ def check_data_model():
     asserted()
 
     m = re.search(
-        r"\n## 3\. The Platform tier\s*\n+(\w+) tables? and (\w+) enums?\b",
+        r"\n## 3\. The tables\s*\n+(\w+) tables? and (\w+) enums?\b",
         text,
     )
     if not m:
@@ -526,7 +528,7 @@ RULES_FILES = (
 # every `scripts/` path they name must exist and be invoked by a workflow. A
 # renamed guard in a hand-edited rules file is how CF-75's drift recurs.
 MINIMUM_RULES_FILES = 2
-MINIMUM_GUARD_PATHS = 7
+MINIMUM_GUARD_PATHS = 8
 
 SCRIPT_PATH_RE = re.compile(r"`(scripts/[^`\s]+)`")
 WORKFLOW_RUN_RE = re.compile(

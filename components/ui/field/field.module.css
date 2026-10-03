@@ -1,0 +1,46 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  row-gap: var(--b2s-space-2);
+  margin-block-end: var(--b2s-field-gap);
+}
+
+.caption {
+  color: var(--b2s-color-text);
+  font-size: var(--b2s-text-sm);
+}
+
+.optional {
+  color: var(--b2s-color-text-subtle);
+  margin-inline-start: var(--b2s-space-2);
+}
+
+.help,
+.counter,
+.error {
+  margin-block: 0;
+  margin-inline: 0;
+  color: var(--b2s-color-text-muted);
+  font-size: var(--b2s-text-sm);
+}
+
+.help {
+  margin-block-start: var(--b2s-space-3);
+}
+
+.error {
+  display: flex;
+  align-items: center;
+  column-gap: var(--b2s-space-2);
+  color: var(--b2s-color-danger);
+}
+
+.icon {
+  inline-size: var(--b2s-icon-size);
+  block-size: var(--b2s-icon-size);
+}
+
+.root[data-state="disabled"] .caption,
+.root[data-state="disabled"] .help {
+  color: var(--b2s-color-text-subtle);
+}

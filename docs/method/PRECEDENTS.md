@@ -408,6 +408,116 @@ found `ci` / `types-drift` red with `ci` / `build` skipped, and because no
 P02 report carried a run conclusion there was no way to say from the record
 when it went red.
 
+**PR-40 — The named production project is not renamed or demoted when
+staging is created.** Even if `b2s-production` has never served a tenant,
+a new project is created as `b2s-staging` and production keeps its name
+and its ref. Vercel environment variables, the production repository
+secrets, `.env.local`, and every proof in the record point at that ref.
+None of them would break under a rename, but all of them would start
+referring to a project that had since been renamed, and PR-07's rule is
+that the record stands as written. Origin: owner instruction 2026-09-17,
+on the P03-T01 halt's "named production but not yet" question.
+
+**PR-41 — A production migration with data and no verified dump halts
+before push.**
+Every production-migration task measures `public.tenant` and `auth.users`
+in production by a path the isolation suite does not use. While both read
+zero, the schema half of the ADR-013 amendment of 2026-09-22 is the
+complete recovery point. The moment either reads non-zero, the task HALTS
+before `supabase db push` unless it carries a verified dump as that
+amendment specifies: `pg_dump -Fc` through the session pooler, outside the
+repository, checked with `pg_restore --list`, with timestamp, byte size,
+SHA-256 and table-of-contents count recorded, and the file itself never
+committed. The rule fires on a measurement every such task already makes,
+so no reviewer has to remember to ask for it. A static check cannot assert
+this instead. A check runs after the commit is pushed; the halt has to
+happen before `db push`; and the dump file is forbidden from the
+repository, so a check can audit a later claim and cannot see the archive.
+No such check is built here. Origin: P03-T05, OD-H14, the ADR-013
+amendment of 2026-09-22.
+
+**PR-42 — Artifacts a check asserts against each other in both directions
+land in the same commit.**
+When a check asserts two artifacts against each other in both directions,
+those artifacts land in the same commit. Spec-first is expressed by the
+order of work inside a task, not by a separate commit. Origin: P03-T04,
+where the reviewer's prompt required DATA_MODEL.md to land "in its own
+commit, before any migration"; check_data_model_schema.py asserts §3
+against supabase/schema.sql both ways, so commit abd3efd — declaring
+nineteen tables against a schema holding seven — fails that check by
+construction. Three commits were pushed together and CI ran only on the
+head, so the red commit was never reported, and a bisect or revert landing
+on it gets a failing tree. The defect was the reviewer's instruction, not
+the builder's execution. History is not rewritten: a force-push on a shared
+branch would be the larger harm, and PR-07 applies to this project's own
+record.
+
+**PR-43 — A rule already owned by a higher document is referenced, never
+restated.**
+Before a rule is authored into a frozen document, every document of higher
+precedence is searched for the same subject, and a rule already owned
+elsewhere is referenced, never restated. Origin: P03-T06, where the
+reviewer wrote "Numerals are Western (0–9) in both locales for money…"
+into `UX_PRINCIPLES.md` §3 without reading `CALC_SPEC.md` R1-25, which
+already owned Arabic money rendering and had rendered it as Arabic-Indic
+digits since 2026-08-01. The owner signed the recommendation without that
+row in front of them; the builder found the contradiction and halted
+before the first edit. The defect was not the digit choice — it was one
+rule with two declaration sites, which `UX_PRINCIPLES.md` §4 forbids for
+strings and which is exactly how two documents drift.
+ANNOTATED 2026-10-03 (P03-T17, PR-07). The sentences above stand.
+Extended by PR-47: the search covers the assertions and checks that
+state the rule, not only the documents.
+
+**PR-44 — A value a specification does not state is reported, and the part
+that depends on it stops.**
+Filling the value and reporting the fill is a different act. A report that
+lists filled values as "reported and not invented" describes them
+inaccurately. Origin: P03-T09, HALT 4. About ten unstated values were
+filled. Most were harmless. The danger Button's text was not: it produced
+3.18:1 in dark, and no gate then in the set could see it. The specification
+gap was the reviewer's. The halt existed so a gap would reach the reviewer
+rather than being closed plausibly.
+
+**PR-45 — A claim about how the system behaves is measured under the
+configuration the system actually runs.**
+A measurement taken under a forced condition — a rule enabled by `runOnly`,
+an environment substituted for the run — is evidence about that condition,
+not about the system. Where a check must decide whether a tool can observe
+something, the test is a known-bad fixture: a case that fails the criterion
+by construction. A rule that passes it, or cannot evaluate it, cannot
+observe that criterion. Origin: P03-T11's verdict, where the reviewer
+forced a disabled rule on and reported the result as the tier's default
+behaviour; and P03-T11-FIX, where a geometry-perturbation method the
+reviewer specified found nothing and the builder substituted the known-bad
+test.
+A known-bad fixture is validated in a tier that can observe the
+criterion: it must fail there before its passing, or its being
+unevaluable, in another tier means that tier is blind to it. Origin:
+P03-T13, which measured in Chromium that the reviewer's two prescribed
+fixtures — a lone 4px button and text on the identical grey — are passed
+and left incomplete by a real browser, so they proved nothing.
+
+**PR-46 — Before a push, every check in the static conformance set runs
+locally against the commit being pushed.**
+Before a push, every check in the static conformance set runs locally
+against the commit being pushed — the Python docs-integrity checks as
+well as the guards — and the push waits until all of them pass. A commit
+that fails a check its author could have run locally is the defect PR-42
+names, and continuous integration catching it after the push is the
+failure of this rule, not its enforcement. Origin: 68969b9, which added
+two component directories without naming them in MODULE_SPEC.md §1 and
+was repaired by 31d34f0 after docs-integrity failed on CI; the second
+breach of PR-42, after abd3efd.
+
+**PR-47 — The search covers the assertions and checks that state the rule,
+not only the documents.**
+The search covers the assertions and checks that state the rule, not only
+the documents. Origin: P03-T17's halt, where the reviewer's amendment
+changed the slug rule without reading the five isolation proofs that
+assert it, and without the scope, decision, security and brand statements
+and the static check that state it too.
+
 ---
 
 ## 2. Environment quirks — never re-discover
@@ -767,3 +877,124 @@ when it went red.
   correct loud failure for that; it is not evidence that the live schema
   moved. Regenerating with the same pinned CLI and committing the result
   is the ADR-002 path. Do not investigate migrations on a helper-only diff.
+- Learned at P03-STAGING-CREATE: a Supabase personal access token is
+  account-scoped, not project-scoped. The existing `SUPABASE_ACCESS_TOKEN`
+  returned HTTP 200 for `GET /v1/projects/{ref}` on both `b2s-production`
+  and `b2s-staging`. It is not what keeps the isolation suite off
+  production; the project ref and the URL are. Do not invent a second
+  access-token secret for that purpose.
+- Learned at P03-STAGING-CREATE: the Management API org name now reads
+  `B2S` (plan `pro`). P03-T01 recorded the same org as `jiovanny`. The
+  slug and plan did not move. Do not rewrite the P03-T01 row (PR-07).
+- Learned at P03-STAGING-CREATE: a newly created project in `eu-central-2`
+  came up `ACTIVE_HEALTHY` immediately. Postgres 17 on both; staging's
+  patch is `17.6.1.166` against production's `17.6.1.155`. Catalog
+  comparison at the P03-T01 resume must not treat that patch delta as a
+  migration-chain defect.
+- Learned at P03-T04: `supabase db dump --linked` on this machine fails
+  with `LegacyDockerRunError` ("Docker Desktop is a prerequisite") and
+  writes an empty `-f` target. That is not the same as the P01-T02
+  `db push` cache warning, which is local-cache-only and still applies
+  the migrations. Dump needs Docker; push does not. ADR-013's backup
+  snapshot was taken as a Management API catalog JSON (tables, columns,
+  enums, policies, triggers, functions, migrations, row counts) instead
+  of `pg_dump`. Do not treat an empty dump file as a snapshot.
+  ANNOTATED 2026-09-22 (P03-T05, PR-07). The sentences above stand. Docker
+  is rejected by OD-H14. The data recovery point is native `pg_dump`
+  through the session pooler, triggered by the first non-synthetic row,
+  per the ADR-013 amendment of 2026-09-22. A catalog JSON is not that
+  recovery point.
+- Learned at P03-T05: `pg_dump` against Supabase uses the session pooler
+  on port 5432, which works over IPv4. The direct connection is IPv6-only
+  on paid plans without the IPv4 add-on. The transaction pooler on port
+  6543 breaks `pg_dump`'s COPY protocol. Client tools at major version 15
+  or lower fail GSSAPI negotiation against the pooler. Observed this
+  task, and not used as a count: `supabase db query --linked` after the
+  local link file was pointed at production returned
+  `LegacyDbConfigIpv6Error` ("IPv6 is not supported on your current
+  network") and did not reach Postgres. The link file was restored to
+  staging. The production counts for this task are the Management API
+  results, not that error.
+- Learned at P03-T05: PostgreSQL 17.11 client tools are installed on the
+  owner's machine at a user-local path, obtained after the official
+  installer returned HTTP 403. The reviewer's wording was "signature not
+  yet verified". Measured this task: `pg_dump --version` reports
+  `pg_dump (PostgreSQL) 17.11`, and the Authenticode status of
+  `pg_dump.exe` is NotSigned, so the file carries no signature to verify.
+  This task did not run `pg_dump` against a database.
+- Learned at P03-T04: injecting `STAGING_*` keys onto `process.env` before
+  vitest collects `__tests__/isolation/` lets Vite inline those values
+  at transform time and then fail collection with `failed to find the
+  current suite` at a file-level `beforeAll`. Load them from `.env.local`
+  after transform, via the harness `loadEnvLocal()`, and run
+  `npm run test:isolation` with no extra env overlay.
+- Learned at P03-T05: never re-link the local Supabase CLI to production to
+  take a read. P03-T05 re-pointed the local link file at production for a
+  count, then restored it; the call failed before reaching Postgres and the
+  counts came from the Management API, so nothing happened. A local CLI
+  linked to production is how a later `db push` lands on the wrong
+  database, ADR-013 points local development at staging, and the Management
+  API is already the read path every task uses.
+- Learned at P03-T07, closed by CF-188: local Node was 22.12 against
+  `.nvmrc`'s 24, and jsdom 30.1.1 warns below 22.22. CI runs 24 and passed,
+  so nothing failed — but a local test run on a runtime the project does
+  not pin produces results nobody should trust, and this one was only
+  noticed because a dependency complained. Local Node matches `.nvmrc`
+  before any test run.
+- Learned at P03-T08-FIX: two Node managers are installed, and the
+  standalone one shadows nvm-windows. `node -v` reported v22.12.0 from the
+  Program Files install while nvm-windows held only v22.5.0. nvm-windows
+  selects a version by pointing a symlink, and a standalone install earlier
+  on PATH keeps `node -v` on the old binary after `nvm use`. The journal
+  line for P03-T08 records Node v24.11.1. This session found no Node 24 on
+  PATH and none under nvm-windows. The only Node 24 already on the machine
+  was the editor helper at v24.18.1, and it is not on PATH. This session
+  put Node v24.21.0 on PATH by installing it under the nvm version
+  directory and hardlinking the nvm-root `node` executable, which is
+  earlier on PATH than Program Files. The standalone v22.12.0 install is
+  still present. `where node` lists the nvm-root shims first and the
+  Program Files binary after them. A real `nvm use` still needs the
+  Program Files directory to be the symlink, which the standalone install
+  occupies, and that replacement needs an elevated terminal. Do not run
+  both managers. The ledger row for this reproducibility gap is the next
+  prompt's, not this task's.
+- Learned at P03-T09: axe-core inside jsdom does not measure a page the way
+  a browser does. `color-contrast` returns incomplete because
+  `HTMLCanvasElement.getContext` is null (`Not implemented` without the
+  `canvas` package). `landmark-one-main` and `page-has-heading-one` return
+  incomplete on a document because `document.elementFromPoint` is not a
+  function, thrown from axe's `isModalOpen`, even when the document
+  contains a `main` and an `h1`. They do not return incomplete when the
+  run context is a component root. The component tier excludes only
+  `color-contrast`, and it does not install `canvas`: a stub that made
+  `getContext` succeed would change the incomplete result the exclusion
+  list asserts.   P03-T08's journal line that local tests ran on Node
+  v24.11.1 is not reproducible on this machine; CF-193 records that, and
+  CF-192 records that the v24.21.0 hardlink still needs an elevated nvm
+  install and a SHASUMS256 check.
+- Learned at P03-T13, in Chromium with axe-core 4.13.0. A lone 4px button
+  passes `target-size`: the spacing exception gives it a 24px circle that
+  meets no neighbour. The fixture that fails is a 4px button touching a
+  second target. Grey text on the same grey is incomplete, with a 1:1
+  ratio, and is not a pass; a pair axe can resolve below 4.5:1 is a
+  violation. `link-in-text-block` ships `allowSameColor` and passes a link
+  whose text and background both match the paragraph. It violates when the
+  text colour matches and the background does not, and no other style
+  distinguishes the link. `color-contrast` and `target-size` ship disabled
+  and must be enabled to be observed.
+- Learned at P03-T18: `scripts/check_two_way_empty_target.py` classifies a
+  Node stack — a line beginning `at `, or `node:internal` — as a crash, and
+  a crash is not a proof that the check noticed its premise was gone. An
+  uncaught `readFileSync` of a removed file is that crash. The check has to
+  `fail()` and exit 1, which is what an emptied file already produced.
+  `scripts/check-token-values.mjs` now does that for `app/globals.css`. The
+  pair was already landed; none was added.
+- Learned at P03-T20: `storage.protect_delete` is a statement-level BEFORE
+  DELETE trigger. It raises 42501 on every `delete from storage.objects`,
+  including one that matches zero rows, unless
+  `storage.allow_delete_query` is `true` in that same statement.
+  `set_config('storage.allow_delete_query', 'true', true)` immediately
+  before the delete is the privileged path the isolation teardown uses.
+  A member DELETE through the Storage API can answer 200 and leave the
+  object in place when no DELETE policy matches. The object still being
+  readable is the refusal. A status below 400 is not.

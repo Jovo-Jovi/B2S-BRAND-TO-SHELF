@@ -30,8 +30,27 @@ a branch that has already landed.
 One PR per phase into `main`. The owner merges it. No reviewer, no approval gate,
 no required status check blocking the merge — CI reports, the owner decides.
 
+A phase may hold one pull request against main, opened as a draft at any
+point in the phase and marked ready for review only after the phase's exit
+gate passes. A draft cannot be merged, so this keeps §3's purpose — one pull
+request per phase, merged only after the gate — while giving every push to
+the phase branch a pull-request isolation run against staging. It is the
+only pull request the phase may hold. Origin: pull requests #4 to #8, each
+opened with the owner's credentials during the phase, each running the full
+isolation suite on every push.
+
+**AMENDED 2026-10-03 — what the draft is for.** The paragraph above stands and is not edited (PR-07). The draft's value is one pull request per phase that cannot be merged before the gate. It is not per-push isolation coverage, as the reviewer's earlier amendment claimed: pushes that touch schema, migrations, types or the suite already run isolation on the push trigger, and a pull request's path filter matches its whole diff against main, so a draft re-ran the full suite on every push, including docs-only ones — four serialised runs in P03-T17. The pull-request trigger now runs only when the pull request is marked ready, which is the gate moment, and tests the merged result.
+
 A signed mid-phase amendment gets its own branch and its own consolidated PR,
 on the same terms.
+
+The design-surface catalog lands on the open phase branch as a contiguous
+run of tasks, reviewed as one unit inside the phase pull request — not on a
+branch of its own. It depends on decisions and documents that exist only on
+the phase branch while the phase is open, so a separate branch from main
+would either lack its own specification or carry copies of it. The phrase
+"its own consolidated pull request" meant reviewable as one unit; a
+contiguous task run inside the phase pull request keeps that.
 
 ## 3.1 Foundation exception
 

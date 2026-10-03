@@ -1,0 +1,46 @@
+.arc {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--b2s-icon-size);
+  block-size: var(--b2s-icon-size);
+  color: var(--b2s-color-text);
+}
+
+.arc svg {
+  inline-size: 100%;
+  block-size: 100%;
+  opacity: 0;
+  animation-name: spin, reveal;
+  animation-duration: var(--b2s-duration-base), var(--b2s-duration-base);
+  animation-timing-function: linear, linear;
+  animation-iteration-count: infinite, 1;
+  animation-delay: var(--b2s-delay-loader), var(--b2s-delay-loader);
+  animation-fill-mode: backwards, both;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0turn);
+  }
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arc svg {
+    animation-name: none;
+    opacity: 1;
+    transform: none;
+  }
+}

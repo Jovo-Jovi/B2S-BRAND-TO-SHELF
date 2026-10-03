@@ -17,6 +17,10 @@ export default defineConfig({
       "__tests__/**/*.test.tsx",
       "features/**/__tests__/**/*.test.ts",
       "features/**/__tests__/**/*.test.tsx",
+      "components/**/*.test.ts",
+      "components/**/*.test.tsx",
+      "lib/**/*.test.ts",
+      "lib/**/*.test.tsx",
     ],
     // __tests__/isolation/ needs live Supabase credentials and seeds real rows
     // into the one project ADR-012 allows. It runs on its own config, through

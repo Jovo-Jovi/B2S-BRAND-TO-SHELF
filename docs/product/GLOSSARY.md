@@ -93,6 +93,7 @@ the owner expects to read. It is **not** an identifier and never becomes one.
 | `ActivityEvent` | — | One audit-trail entry: who, what, when, which tenant | log, history, audit |
 | `Subscription` | — | A tenant's plan and entitlements. Free at launch | plan, billing |
 | `FeatureFlag` | — | An entitlement gate, tenant- or plan-scoped | toggle |
+| `LegalEntity` | `الكيان القانوني` | The registered company behind a `Tenant`: legal and trading names, tax registration, registered address, contacts | company, business |
 
 ### 4.2 Brand tier
 
@@ -226,6 +227,7 @@ the owner expects to read. It is **not** an identifier and never becomes one.
 | `Currency` | `عملة` | A tenant-selectable currency | money |
 | `ExchangeRate` | — | A rate between two `Currency` records | rate, fx |
 | `Locale` | `لغة` | A language and region pairing, with direction | language, lang |
+| `TranslationKey` | — | The identity of one translatable string. It carries no text; owning rows reference it and `TranslationEntry` rows hang off it | key, i18n key |
 | `TranslationEntry` | — | One string in one `Locale`. What makes "no literals" achievable | string, i18n, label |
 | `RegulatoryProfile` | — | A tenant's selected regime and its declaration rules | compliance, regulation |
 | `ImportTemplate` | — | A CSV column contract for one entity | template, csv |
@@ -234,6 +236,8 @@ the owner expects to read. It is **not** an identifier and never becomes one.
 | `BackupSnapshot` | — | A point-in-time tenant export | backup, export |
 | `Notification` | `تنبيه` | A message to a `Member` | alert, message |
 | `DesignSuggestion` | — | Output of the Design Assistant (R3) | suggestion, AI |
+| `OnboardingDraft` | `مسودة الإعداد` | The unfinished parts of a tenant's onboarding with no other home | wizard state, session |
+| `OnboardingDraftColor` | — | A colour in that draft | — |
 
 ---
 

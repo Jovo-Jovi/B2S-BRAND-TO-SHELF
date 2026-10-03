@@ -1,0 +1,116 @@
+# Browser-rendered tier (ADR-015).
+#
+# Chromium is installed natively on the runner. This workflow does not use
+# Docker (OD-H14). The job runs when a push touches the surfaces the tier
+# renders, the dictionaries, or this file. app/** covers app/globals.css and
+# the dictionaries; they are listed as well so the filter states the decision.
+
+name: browser
+
+on:
+  push:
+    branches:
+      - "**"
+    paths:
+      - "components/**"
+      - "app/**"
+      - "app/globals.css"
+      - "app/[locale]/dictionaries/**"
+      - "lib/locale/**"
+      - "__tests__/browser/**"
+      - "playwright.config.ts"
+      - ".github/workflows/browser.yml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "components/**"
+      - "app/**"
+      - "app/globals.css"
+      - "app/[locale]/dictionaries/**"
+      - "lib/locale/**"
+      - "__tests__/browser/**"
+      - "playwright.config.ts"
+      - ".github/workflows/browser.yml"
+
+env:
+  NODE_VERSION: "24"
+
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      # The session proxy throws when the public config is absent, and the
+      # gallery never becomes ready. These are the staging secrets the
+      # isolation job already requires. The production repository secrets are
+      # not read here (ADR-013).
+      - name: Require staging public config and prove it is not production
+        env:
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+          SUPABASE_STAGING_PROJECT_ID: ${{ secrets.SUPABASE_STAGING_PROJECT_ID }}
+          SUPABASE_STAGING_URL: ${{ secrets.SUPABASE_STAGING_URL }}
+          SUPABASE_STAGING_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_STAGING_PUBLISHABLE_KEY }}
+        run: |
+          missing=""
+          for name in SUPABASE_PROJECT_ID SUPABASE_STAGING_PROJECT_ID SUPABASE_STAGING_URL SUPABASE_STAGING_PUBLISHABLE_KEY; do
+            eval "val=\$$name"
+            if [ -z "$val" ]; then
+              missing="$missing $name"
+            fi
+          done
+          if [ -n "$missing" ]; then
+            echo "FAIL: the browser tier cannot run. Absent repository secret(s):$missing"
+            echo "This job never skips. An absent secret is a failure, not a reason to pass."
+            exit 1
+          fi
+          if [ "$SUPABASE_STAGING_PROJECT_ID" = "$SUPABASE_PROJECT_ID" ]; then
+            echo "FAIL: SUPABASE_STAGING_PROJECT_ID equals SUPABASE_PROJECT_ID"
+            exit 1
+          fi
+          host="$(node -e "process.stdout.write(new URL(process.env.SUPABASE_STAGING_URL).hostname.split('.')[0])")"
+          if [ "$host" != "$SUPABASE_STAGING_PROJECT_ID" ]; then
+            echo "FAIL: SUPABASE_STAGING_URL hostname label is not SUPABASE_STAGING_PROJECT_ID"
+            exit 1
+          fi
+          if [ "$host" = "$SUPABASE_PROJECT_ID" ]; then
+            echo "FAIL: SUPABASE_STAGING_URL hostname label equals SUPABASE_PROJECT_ID"
+            exit 1
+          fi
+          echo "OK: staging public config present and resolves to a different ref than production"
+
+      - name: Run the browser tier
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_STAGING_URL }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_STAGING_PUBLISHABLE_KEY }}
+        run: |
+          start=$(date +%s)
+          set +e
+          npx playwright test
+          code=$?
+          set -e
+          end=$(date +%s)
+          echo "browser-tier duration_seconds=$((end - start))"
+          exit "$code"
+
+      - name: Upload visual QA
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-qa
+          path: test-results/visual/
+          if-no-files-found: error
