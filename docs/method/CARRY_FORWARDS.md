@@ -3864,7 +3864,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       and each file was restored byte-identical. The false comment in
       the tier test is replaced with this measurement. Owner: none
       outstanding.
-- [x] CF-204 — The isolation suite's duration has grown from about nine
+- [ ] CF-204 — The isolation suite's duration has grown from about nine
       minutes at P03-T01-RESUME to 15m20s on run 36250292644, with run
       36199604440 cancelled at 20m15s, while the suite has held 94
       assertions since P03-T04. Suspected cause: staging authentication
@@ -3917,6 +3917,17 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       D last, in 525.04s. The longest assertion was 4d at 23063ms. No
       assertion exceeded 60 seconds, and the suite finished under 10 minutes
       on the CI runner. Owner: none outstanding.
+      AMENDED (P03-T17). The close above does not stand. The same assertions
+      on the same runner missed the 10-minute budget twice. Pull-request run
+      37112367963 on 4707fc1 took 763.98s, 94 PASS, 0 FAIL, 0 LOST, longest
+      4d at 34488ms, SQL 315 calls and 459043ms. Pull-request run 37113074857
+      on b1a088a took 745.37s, 94 PASS, 0 FAIL, 0 LOST, longest 4d at 32968ms,
+      SQL 315 calls and 454616ms. The push run 37112365784 stayed at 525.04s.
+      Call counts did not move. Staging round-trip time did. No assertion
+      exceeded 60 seconds. The probes that remain are the PostgREST calls,
+      one per identity per target, and the Management-API calls whose latency
+      moved between runs.
+      Owner: **the P03 exit gate**.
 - [x] CF-205 — The reviewer's P03-T11 verdict of FAIL rested on two
       mismeasurements. The reviewer ran axe-core's target-size rule with
       runOnly, which enables a rule the engine ships disabled, and
