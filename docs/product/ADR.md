@@ -438,3 +438,38 @@ from the client bundle.
 **Forecloses.** Docker in any form; a browser-tier claim not backed by a
 known-bad fixture; a rendered check run only locally.
 
+## ADR-016 — Logo file check
+
+**Decision.** One dependency, `@xmldom/xmldom` 0.9.12. `lib/logo/` parses an
+SVG with it, refuses a file that contains active content, and otherwise
+returns the file with comments and `metadata` removed. A PNG is not parsed
+by this library: its signature and IHDR width and height are read from the
+bytes. The module writes to nothing. P03-T20 wires it to storage.
+
+**Context.** BRAND_CONFIG.md §9, amended 2026-10-03, requires every uploaded
+logo to be identified by its bytes, and every SVG to be refused when it
+contains active content rather than stored with that content removed. Two
+libraries that run on the server's Node runtime were given the same corpus.
+
+`svgo` 4.1.0, MIT, current release: its default pass left a `script` element
+and an `onload` attribute in place, deleted a `javascript:` href and kept
+the rest of the file, left `foreignObject` and `iframe` in place, and
+expanded a DOCTYPE entity reference (`&c;` became the entity's text). A
+pass that strips one vector and keeps another is the wrong policy, and
+expanding entities is the billion-laughs vector.
+
+`@xmldom/xmldom` 0.9.12, MIT, as its package declares. It exposes the
+document, so the module can refuse every active-content case itself. On the
+same entity fixture it did not expand the reference: it reported the entity
+as not found. The module still refuses a DOCTYPE or an entity declaration
+before parse, so a larger expansion never reaches the parser. Comments and
+`metadata` are removed only after the walk finds no active content.
+
+**Consequences.** The known-bad corpus is refused. A known-good logo is
+returned cleaned, and the browser tier compares the original with that
+output. The package's licence is MIT.
+
+**Forecloses.** A cleaner that strips active content and stores the rest;
+parsing a DOCTYPE; trusting a file name or a client-claimed type; a second
+SVG package.
+
