@@ -83,6 +83,7 @@ PROVEN_PAIRS = [
     ("scripts/check_ledger.py", "SESSION_CONTEXT.md"),
     ("scripts/check_ledger.py", "docs/method/CARRY_FORWARDS.md"),
     ("scripts/check_migration_split.py", "supabase/schema.sql"),
+    ("scripts/check_storage_tenant_media.py", "supabase/schema.sql"),
     ("scripts/check_migration_split.py", "supabase/migrations/ (directory)"),
     ("scripts/check_module_spec_tree.py", "docs/product/MODULE_SPEC.md"),
     ("scripts/check_roadmap.py", "docs/method/BUILD_PHASES.md"),
@@ -462,6 +463,8 @@ def main():
             ["python", "scripts/check_ledger.py"], FileProbe("docs/method/CARRY_FORWARDS.md"))
     do_pair(results, "scripts/check_migration_split.py",
             ["python", "scripts/check_migration_split.py"], FileProbe("supabase/schema.sql"))
+    do_pair(results, "scripts/check_storage_tenant_media.py",
+            ["python", "scripts/check_storage_tenant_media.py"], FileProbe("supabase/schema.sql"))
     do_pair(results, "scripts/check_migration_split.py",
             ["python", "scripts/check_migration_split.py"], DirProbe("supabase/migrations"))
     do_pair(results, "scripts/check_module_spec_tree.py",

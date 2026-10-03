@@ -84,6 +84,29 @@ failure is not recoverable by a later fix: data disclosed is disclosed.
    not the directory. Display text lives in the message catalogs; this section
    owns the indistinguishability contract.
 
+**Object storage (OD-G20, DATA_MODEL.md Asset tier).** One private bucket,
+`tenant-media`. No public bucket exists, and none may be created. Storage
+policies on `storage.objects` admit a member to that bucket's objects only
+where the first path segment equals `current_tenant_id()`: SELECT and
+INSERT for authenticated members of that tenant, matching the brand tier's
+tenant-scoped rule. No UPDATE policy: an object is immutable, and a changed
+logo is a new object. No DELETE policy: rows are archived, never deleted
+(DATA_MODEL.md §1 rule 3). No anonymous access. No operator policy.
+
+Objects are written as the signed-in member, through those policies, never
+with a privileged credential. The server checks every upload with the
+ADR-016 module before anything is written; a refused file writes nothing.
+A stored file is one `media_asset` and two `asset_rendition` rows,
+`display` and `print`, whose objects are verified copies of the original
+(BRAND_CONFIG.md §9's amendment). If an object write fails after the rows
+exist, the rows are archived and keep their keys: the archived row is the
+record a cleanup job uses, and the object is not deleted. No table is
+added for this.
+
+Files are read only through signed URLs minted server-side as the member,
+valid for 300 seconds. No public URL is ever produced. An SVG is served
+with its stored content type and rendered only as an image.
+
 **§11 is the exceptions list.** Every mechanism that can bypass the data layer's
 rules is enumerated there with its reachability, and the enumeration is
 re-derived from the live catalog at every phase exit gate.

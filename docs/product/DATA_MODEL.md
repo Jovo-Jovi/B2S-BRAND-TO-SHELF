@@ -788,12 +788,12 @@ The logical file a tenant uploaded.
 |---|---|---|
 | `id` | uuid pk | |
 | `tenant_id` | uuid not null → tenant | |
-| `provider` | text not null | OD-G20 rider 1: provider-neutral. No column, type or function name contains a vendor name. UNIQUE on `(provider, bucket, object_key)` |
-| `bucket` | text not null | |
-| `object_key` | text not null | |
-| `content_type` | text not null | |
+| `provider` | text not null | OD-G20 rider 1: provider-neutral. No column, type or function name contains a vendor name. The stored value is `supabase-storage`, CHECK equal to it. A second provider is a CHECK amendment, never a schema change. UNIQUE on `(provider, bucket, object_key)` |
+| `bucket` | text not null | The value is `tenant-media`, CHECK equal to it |
+| `object_key` | text not null | `<tenant_id>/<media_asset_id>/<name>.<ext>`, where `<name>` is `original`, `display` or `print`. CHECK that the first segment equals this row's `tenant_id` |
+| `content_type` | text not null | `image/png` with `.png`, or `image/svg+xml` with `.svg` (BRAND_CONFIG.md §9's amendment) |
 | `byte_size` | bigint not null | CHECK > 0 |
-| `checksum` | text not null | |
+| `checksum` | text not null | SHA-256 over the stored bytes — for an SVG, the cleaned file — as 64 lowercase hexadecimal characters. CHECK `^[0-9a-f]{64}$` |
 | `original_filename` | text null | The tenant's name for it. Never an identifier |
 | provenance + `archived_at` | | per §1 |
 
@@ -812,17 +812,43 @@ Each derivative, one per tier.
 | `tenant_id` | uuid not null → tenant | |
 | `media_asset_id` | uuid not null → media_asset | UNIQUE with `tier` |
 | `tier` | rendition_tier not null | `display`, `print` |
-| `provider` | text not null | As `media_asset` |
-| `bucket` | text not null | |
-| `object_key` | text not null | |
+| `provider` | text not null | As `media_asset`: the stored value is `supabase-storage`, CHECK equal to it |
+| `bucket` | text not null | As `media_asset`: the value is `tenant-media`, CHECK equal to it |
+| `object_key` | text not null | As `media_asset`: `<tenant_id>/<media_asset_id>/<name>.<ext>`, `<name>` `display` or `print`. CHECK that the first segment equals this row's `tenant_id` |
 | `width_px` | integer null | Null for non-raster |
 | `height_px` | integer null | Null for non-raster |
-| `content_type` | text not null | |
+| `content_type` | text not null | As `media_asset`: `image/png` with `.png`, or `image/svg+xml` with `.svg` |
 | `byte_size` | bigint not null | |
 | provenance + `archived_at` | | per §1 |
 
 **RLS.** SELECT, INSERT and UPDATE where `tenant_id = current_tenant_id()`.
 No DELETE policy. **No operator policy.**
+
+A rendition carries no checksum column. It is verified when its bytes hash
+to its asset's checksum at write time.
+
+**Object storage.** One private bucket, `tenant-media`. No public bucket
+exists, and none may be created. Storage policies on `storage.objects`
+admit a member to that bucket's objects only where the first path segment
+equals `current_tenant_id()`: SELECT and INSERT for authenticated members
+of that tenant, the same tenant-scoped rule as this tier's tables. No
+UPDATE policy: an object is immutable, and a changed logo is a new object.
+No DELETE policy: rows are archived, never deleted (§1 rule 3). No
+anonymous access. No operator policy.
+
+Objects are written as the signed-in member, through those policies, never
+with a privileged credential. The server checks every upload with the
+ADR-016 module before anything is written; a refused file writes nothing.
+A stored file is one `media_asset` and two `asset_rendition` rows,
+`display` and `print`, whose objects are verified copies of the original
+(BRAND_CONFIG.md §9's amendment). If an object write fails after the rows
+exist, the rows are archived and keep their keys: the archived row is the
+record a cleanup job uses, and the object is not deleted. No table is
+added for this.
+
+Files are read only through signed URLs minted server-side as the member,
+valid for 300 seconds. No public URL is ever produced. An SVG is served
+with its stored content type and rendered only as an image.
 
 ### 3.20 `translation_key`
 The identity of one translatable string.

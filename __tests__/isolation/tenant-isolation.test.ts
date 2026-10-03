@@ -498,12 +498,12 @@ describe("proof 4 — cross-tenant reach on every table, both directions", () =>
         {
           id: randomUUID(),
           tenant_id: tenantId,
-          provider: "object",
-          bucket: "media",
-          object_key: `zz-test/probe/${suffix}/source`,
+          provider: "supabase-storage",
+          bucket: "tenant-media",
+          object_key: `${tenantId}/probe/${suffix}/original.png`,
           content_type: "image/png",
           byte_size: 1,
-          checksum: "00",
+          checksum: "0000000000000000000000000000000000000000000000000000000000000000",
         },
       ],
       [
@@ -513,9 +513,9 @@ describe("proof 4 — cross-tenant reach on every table, both directions", () =>
           tenant_id: tenantId,
           media_asset_id: home.mediaAssetId,
           tier: "print",
-          provider: "object",
-          bucket: "media",
-          object_key: `zz-test/probe/${suffix}/print`,
+          provider: "supabase-storage",
+          bucket: "tenant-media",
+          object_key: `${tenantId}/probe/${suffix}/print.png`,
           content_type: "image/png",
           byte_size: 1,
         },
@@ -1008,21 +1008,21 @@ describe("proof 6 — no row may carry another tenant's tenant_id", () => {
       media_asset: {
         id: randomUUID(),
         tenant_id: fixture.b.id,
-        provider: "object",
-        bucket: "media",
-        object_key: `zz-test/cross/${randomUUID().slice(0, 8)}/source`,
+        provider: "supabase-storage",
+        bucket: "tenant-media",
+        object_key: `${fixture.b.id}/cross/${randomUUID().slice(0, 8)}/original.png`,
         content_type: "image/png",
         byte_size: 1,
-        checksum: "00",
+        checksum: "0000000000000000000000000000000000000000000000000000000000000000",
       },
       asset_rendition: {
         id: randomUUID(),
         tenant_id: fixture.b.id,
         media_asset_id: fixture.b.mediaAssetId,
         tier: "print",
-        provider: "object",
-        bucket: "media",
-        object_key: `zz-test/cross/${randomUUID().slice(0, 8)}/print`,
+        provider: "supabase-storage",
+        bucket: "tenant-media",
+        object_key: `${fixture.b.id}/cross/${randomUUID().slice(0, 8)}/print.png`,
         content_type: "image/png",
         byte_size: 1,
       },
@@ -6219,20 +6219,20 @@ describe("proof 33 — Brand, Asset and TranslationKey isolation", () => {
       },
       media_asset: {
         tenant_id: t.id,
-        provider: "object",
-        bucket: "media",
-        object_key: `zz-test/33/${suffix}/source`,
+        provider: "supabase-storage",
+        bucket: "tenant-media",
+        object_key: `${t.id}/33/${suffix}/original.png`,
         content_type: "image/png",
         byte_size: 1,
-        checksum: "00",
+        checksum: "0000000000000000000000000000000000000000000000000000000000000000",
       },
       asset_rendition: {
         tenant_id: t.id,
         media_asset_id: t.mediaAssetId,
         tier: "print",
-        provider: "object",
-        bucket: "media",
-        object_key: `zz-test/33/${suffix}/print`,
+        provider: "supabase-storage",
+        bucket: "tenant-media",
+        object_key: `${t.id}/33/${suffix}/print.png`,
         content_type: "image/png",
         byte_size: 1,
       },
@@ -6990,6 +6990,316 @@ describe("proof 34 — legal entity and onboarding draft (OD-G26, OD-A9)", () =>
       "Two provisions receive distinct generated slugs",
       failures,
       `slugs ${row.one} and ${row.two}`,
+    );
+    expect(failures).toEqual([]);
+  });
+});
+
+describe("proof 35 — the private tenant-media bucket", () => {
+  const CHECKSUM = "0000000000000000000000000000000000000000000000000000000000000000";
+  const bytes = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x01, 0x02, 0x03]);
+
+  const member = (identity: Identity, tenantId: string) => selecting(identity, tenantId);
+
+  function absoluteSignedUrl(raw: string): string {
+    if (raw.startsWith("http")) return raw;
+    if (raw.startsWith("/storage/v1")) return `${config.url}${raw}`;
+    if (raw.startsWith("/object/")) return `${config.url}/storage/v1${raw}`;
+    return `${config.url}/storage/v1/${raw.replace(/^\//, "")}`;
+  }
+
+  async function upload(caller: Caller, key: string): Promise<{ status: number; body: string }> {
+    return probe.storage(
+      caller,
+      "POST",
+      `object/tenant-media/${key}`,
+      bytes,
+      "image/png",
+    );
+  }
+
+  async function signedUrl(caller: Caller, key: string, expiresIn: number): Promise<string | null> {
+    const result = await probe.storage(
+      caller,
+      "POST",
+      `object/sign/tenant-media/${key}`,
+      JSON.stringify({ expiresIn }),
+    );
+    if (result.status >= 400) return null;
+    try {
+      const parsed = JSON.parse(result.body) as { signedURL?: string; signedUrl?: string };
+      const raw = parsed.signedURL ?? parsed.signedUrl;
+      return raw ? absoluteSignedUrl(raw) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  it("35a tenant A cannot read tenant B's object by its exact key", async () => {
+    const failures: string[] = [];
+    const { a, b } = fixture;
+    const key = `${b.id}/${randomUUID()}/original.png`;
+    const own = `${a.id}/${randomUUID()}/original.png`;
+    const writer = member(b.owner, b.id);
+    const reader = member(a.owner, a.id);
+    const wrote = await upload(writer, key);
+    const wroteOwn = await upload(member(a.owner, a.id), own);
+    if (wrote.status >= 400) failures.push(`B could not store its own object: ${wrote.status} ${wrote.body.slice(0, 180)}`);
+    if (wroteOwn.status >= 400) failures.push(`A could not store its own object: ${wroteOwn.status} ${wroteOwn.body.slice(0, 180)}`);
+    const guessed = await probe.storage(reader, "GET", `object/tenant-media/${key}`);
+    const positive = await probe.storage(reader, "GET", `object/tenant-media/${own}`);
+    if (guessed.status < 400) failures.push(`A read B's object: ${guessed.status}`);
+    if (positive.status >= 400) failures.push(`A could not read its own object: ${positive.status} ${positive.body.slice(0, 180)}`);
+    record(
+      "35a",
+      "Tenant A cannot read tenant B's object by its exact key",
+      failures,
+      `guessed=${guessed.status}, own=${positive.status}`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("35b listing another tenant's prefix returns nothing", async () => {
+    const failures: string[] = [];
+    const { a, b } = fixture;
+    const key = `${b.id}/${randomUUID()}/original.png`;
+    const wrote = await upload(member(b.owner, b.id), key);
+    if (wrote.status >= 400) failures.push(`B could not store its object: ${wrote.status}`);
+    const listed = await probe.storage(
+      member(a.owner, a.id),
+      "POST",
+      "object/list/tenant-media",
+      JSON.stringify({ prefix: `${b.id}/`, limit: 100, offset: 0 }),
+    );
+    let names: string[] = [];
+    if (listed.status < 400) {
+      try {
+        const parsed: unknown = JSON.parse(listed.body);
+        if (Array.isArray(parsed)) {
+          names = parsed
+            .map((row) => (row && typeof row === "object" && "name" in row ? String(row.name) : ""))
+            .filter((name) => name !== "");
+        }
+      } catch {
+        failures.push("A's list response was not a list");
+      }
+    }
+    if (names.length > 0) failures.push(`A listed ${names.length} name(s) under B's prefix`);
+    const ownListed = await probe.storage(
+      member(a.owner, a.id),
+      "POST",
+      "object/list/tenant-media",
+      JSON.stringify({ prefix: `${a.id}/`, limit: 100, offset: 0 }),
+    );
+    if (ownListed.status >= 400) failures.push(`A could not list its own prefix: ${ownListed.status}`);
+    record(
+      "35b",
+      "Listing another tenant's prefix returns nothing",
+      failures,
+      `foreign=${listed.status} names=${names.length}, own=${ownListed.status}`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("35c a signed URL cannot be obtained for another tenant or altered onto its object", async () => {
+    const failures: string[] = [];
+    const { a, b } = fixture;
+    const foreign = `${b.id}/${randomUUID()}/original.png`;
+    const own = `${a.id}/${randomUUID()}/original.png`;
+    const wroteForeign = await upload(member(b.owner, b.id), foreign);
+    const wroteOwn = await upload(member(a.owner, a.id), own);
+    if (wroteForeign.status >= 400 || wroteOwn.status >= 400) {
+      failures.push(`setup uploads ${wroteForeign.status} and ${wroteOwn.status}`);
+    }
+    const stolen = await signedUrl(member(a.owner, a.id), foreign, 300);
+    if (stolen !== null) failures.push("A obtained a signed URL for B's object");
+    const minted = await signedUrl(member(a.owner, a.id), own, 300);
+    if (minted === null) failures.push("A could not obtain a signed URL for its own object");
+    if (minted !== null) {
+      const altered = minted.replace(own, foreign);
+      const fetched = await fetch(altered);
+      if (fetched.status < 400) failures.push(`an altered signed URL reached B's object: ${fetched.status}`);
+    }
+    record(
+      "35c",
+      "A signed URL cannot be obtained for another tenant's object or altered to reach it",
+      failures,
+      `stolen=${stolen === null ? "refused" : "minted"}, own=${minted === null ? "refused" : "minted"}`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("35d a signed URL minted for one second is refused once expired", async () => {
+    const failures: string[] = [];
+    const { a } = fixture;
+    const key = `${a.id}/${randomUUID()}/original.png`;
+    const wrote = await upload(member(a.owner, a.id), key);
+    if (wrote.status >= 400) failures.push(`A could not store its object: ${wrote.status}`);
+    const minted = await signedUrl(member(a.owner, a.id), key, 1);
+    if (minted === null) failures.push("A could not mint a one-second URL for its own object");
+    await new Promise((done) => setTimeout(done, 2500));
+    if (minted !== null) {
+      const fetched = await fetch(minted);
+      if (fetched.status < 400) failures.push(`expired URL was accepted: ${fetched.status}`);
+    }
+    record(
+      "35d",
+      "A signed URL minted for one second is refused once expired",
+      failures,
+      `minted=${minted === null ? "no" : "yes"}`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("35e a member cannot write another tenant's prefix or a key outside its own", async () => {
+    const failures: string[] = [];
+    const { a, b } = fixture;
+    const intoB = `${b.id}/${randomUUID()}/original.png`;
+    const outside = `not-a-tenant/${randomUUID()}/original.png`;
+    const foreign = await upload(member(a.owner, a.id), intoB);
+    const unbound = await upload(member(a.owner, a.id), outside);
+    if (foreign.status < 400) failures.push(`A wrote into B's prefix: ${foreign.status}`);
+    if (unbound.status < 400) failures.push(`A wrote a key whose first segment is not its tenant: ${unbound.status}`);
+    const [left] = await sql<{ n: number }>(
+      `select count(*)::int as n from storage.objects
+        where bucket_id = 'tenant-media' and name in ('${intoB}', '${outside}')`,
+    );
+    if (left.n !== 0) failures.push(`${left.n} object(s) persisted from the refused writes`);
+    record(
+      "35e",
+      "A member cannot write another tenant's prefix or a key outside its own",
+      failures,
+      `foreign=${foreign.status}, unbound=${unbound.status}, persisted=${left.n}`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("35f an anonymous caller cannot read or list the bucket, and the bucket is not public", async () => {
+    const failures: string[] = [];
+    const { a } = fixture;
+    const key = `${a.id}/${randomUUID()}/original.png`;
+    const wrote = await upload(member(a.owner, a.id), key);
+    if (wrote.status >= 400) failures.push(`A could not store its object: ${wrote.status}`);
+    const anon = anonCaller(config);
+    const read = await probe.storage(anon, "GET", `object/tenant-media/${key}`);
+    const listed = await probe.storage(
+      anon,
+      "POST",
+      "object/list/tenant-media",
+      JSON.stringify({ prefix: "", limit: 100, offset: 0 }),
+    );
+    if (read.status < 400 && read.body.length > 0) failures.push(`anon read an object: ${read.status}`);
+    let names: string[] = [];
+    if (listed.status < 400) {
+      try {
+        const parsed: unknown = JSON.parse(listed.body);
+        if (Array.isArray(parsed)) names = parsed.map(() => "row");
+      } catch {
+        names = ["unparsed"];
+      }
+    }
+    if (names.length > 0) failures.push(`anon listed ${names.length} object(s)`);
+    const buckets = await sql<{ id: string; is_public: boolean }>(
+      `select id, public as is_public from storage.buckets order by id`,
+    );
+    const row = buckets.find((bucket) => bucket.id === "tenant-media");
+    if (!row) failures.push("tenant-media is absent from storage.buckets");
+    if (row && row.is_public !== false) failures.push(`tenant-media public=${row.is_public}`);
+    if (buckets.some((bucket) => bucket.is_public === true)) {
+      failures.push(`a public bucket exists: ${buckets.filter((bucket) => bucket.is_public).map((bucket) => bucket.id).join(", ")}`);
+    }
+    record(
+      "35f",
+      "An anonymous caller cannot read or list the bucket, and the bucket is not public",
+      failures,
+      `read=${read.status}, list=${listed.status}, buckets=${buckets.map((bucket) => `${bucket.id}:${bucket.is_public}`).join(",")}`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("35g no member can update or delete an object", async () => {
+    const failures: string[] = [];
+    const { a } = fixture;
+    const key = `${a.id}/${randomUUID()}/original.png`;
+    const caller = member(a.owner, a.id);
+    const wrote = await upload(caller, key);
+    if (wrote.status >= 400) failures.push(`A could not store its object: ${wrote.status}`);
+    const updated = await probe.storage(caller, "PUT", `object/tenant-media/${key}`, bytes, "image/png");
+    const removed = await probe.storage(
+      caller,
+      "DELETE",
+      "object/tenant-media",
+      JSON.stringify({ prefixes: [key] }),
+    );
+    if (updated.status < 400) failures.push(`A updated an object: ${updated.status}`);
+    const still = await probe.storage(caller, "GET", `object/tenant-media/${key}`);
+    // The storage API answers 200 with an empty removal list when no DELETE
+    // policy matches. That is a refusal: the object is still readable.
+    if (still.status >= 400) failures.push(`A deleted an object: delete=${removed.status}, still=${still.status}`);
+    const policies = await sql<{ n: number }>(`
+      select count(*)::int as n
+        from pg_policy p
+       where p.polrelid = 'storage.objects'::regclass
+         and p.polcmd in ('w', 'd', '*')
+    `);
+    if (policies[0].n !== 0) failures.push(`${policies[0].n} UPDATE or DELETE polic(ies) on storage.objects`);
+    record(
+      "35g",
+      "No member can update or delete an object",
+      failures,
+      `update=${updated.status}, delete=${removed.status}, still=${still.status}, write_policies=${policies[0].n}`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("35h the new checks refuse another provider, bucket, key prefix or checksum", async () => {
+    const failures: string[] = [];
+    const { a, b } = fixture;
+    const stateOf = (body: string): string => {
+      const code = body.match(/\b(23\d{3})\b/);
+      return code ? code[1] : "";
+    };
+    const asset = async (patch: string) =>
+      sql.try(`
+        insert into public.media_asset
+          (id, tenant_id, provider, bucket, object_key, content_type, byte_size, checksum)
+        values ('${randomUUID()}', '${a.id}', ${patch})
+      `);
+    const provider = await asset(
+      `'other', 'tenant-media', '${a.id}/${randomUUID()}/original.png', 'image/png', 1, '${CHECKSUM}'`,
+    );
+    const bucket = await asset(
+      `'supabase-storage', 'other-bucket', '${a.id}/${randomUUID()}/original.png', 'image/png', 1, '${CHECKSUM}'`,
+    );
+    const key = await asset(
+      `'supabase-storage', 'tenant-media', '${b.id}/${randomUUID()}/original.png', 'image/png', 1, '${CHECKSUM}'`,
+    );
+    const checksum = await asset(
+      `'supabase-storage', 'tenant-media', '${a.id}/${randomUUID()}/original.png', 'image/png', 1, '00'`,
+    );
+    const rendition = await sql.try(`
+      insert into public.asset_rendition
+        (id, tenant_id, media_asset_id, tier, provider, bucket, object_key, content_type, byte_size)
+      values ('${randomUUID()}', '${a.id}', '${a.mediaAssetId}', 'print',
+              'other', 'tenant-media', '${a.id}/${a.mediaAssetId}/print.png', 'image/png', 1)
+    `);
+    const cases: [string, { body: string }][] = [
+      ["provider", provider],
+      ["bucket", bucket],
+      ["key", key],
+      ["checksum", checksum],
+      ["rendition provider", rendition],
+    ];
+    for (const [name, result] of cases) {
+      if (stateOf(result.body) !== "23514") {
+        failures.push(`${name} answered ${stateOf(result.body) || result.body.slice(0, 160)}`);
+      }
+    }
+    record(
+      "35h",
+      "The new checks refuse another provider, another bucket, a foreign key prefix and a malformed checksum",
+      failures,
+      cases.map(([name, result]) => `${name}=${stateOf(result.body)}`).join(", "),
     );
     expect(failures).toEqual([]);
   });

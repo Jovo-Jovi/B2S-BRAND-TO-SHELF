@@ -141,6 +141,7 @@ lib/
   colour/                         the WCAG contrast function, OD-H9 — P03
   typeface/                       the platform typeface library — P03
   logo/                           the logo file check, ADR-016 — P03
+    store-logo.ts                 the upload path, wired to no route — P03-T20
   money/                          exact decimal, ADR-011 — deferred, P05
   print/                          the print engine, ADR-009 — deferred, P06
 

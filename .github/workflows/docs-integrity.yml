@@ -38,6 +38,9 @@ jobs:
       - name: Migration split fidelity (ADR-006, CF-110)
         run: python3 scripts/check_migration_split.py
 
+      - name: Private tenant-media bucket, policies and checks (P03-T20)
+        run: python3 scripts/check_storage_tenant_media.py
+
       # OD-H9 — a reviewer-authored specification lands with the check that
       # asserts it against reality. These three are the static half; the
       # assertions that need the live database belong to the readiness task

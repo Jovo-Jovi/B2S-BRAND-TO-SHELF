@@ -989,3 +989,12 @@ and the static check that state it too.
   `fail()` and exit 1, which is what an emptied file already produced.
   `scripts/check-token-values.mjs` now does that for `app/globals.css`. The
   pair was already landed; none was added.
+- Learned at P03-T20: `storage.protect_delete` is a statement-level BEFORE
+  DELETE trigger. It raises 42501 on every `delete from storage.objects`,
+  including one that matches zero rows, unless
+  `storage.allow_delete_query` is `true` in that same statement.
+  `set_config('storage.allow_delete_query', 'true', true)` immediately
+  before the delete is the privileged path the isolation teardown uses.
+  A member DELETE through the Storage API can answer 200 and leave the
+  object in place when no DELETE policy matches. The object still being
+  readable is the refusal. A status below 400 is not.

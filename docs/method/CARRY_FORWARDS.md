@@ -4191,12 +4191,18 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       only when the pull request is not a draft, on opened, synchronize,
       reopened and ready_for_review. The push trigger is unchanged.
       Owner: none outstanding.
-- [ ] CF-234 — Logo storage. A private, tenant-isolated bucket, storage
+- [x] CF-234 — Logo storage. A private, tenant-isolated bucket, storage
       policies, the upload path through the cleaner, and the five OD-G20
       proofs: guessed key, listed prefix, swapped signed URL, expired URL,
       cross-tenant prefix.
-      Owner: **P03-T20**.
+      CLOSED (P03-T20) by the private `tenant-media` bucket, its select and
+      insert policies, the checks on provider, bucket, object-key prefix and
+      checksum, `lib/logo/store-logo.ts`, and isolation proofs 35a to 35h.
+      Owner: none outstanding.
 - [ ] CF-235 — The six onboarding screens as routes, saving and resuming.
       Carries CF-214.
       Owner: **P03-T21**.
+- [ ] CF-236 — Archived media rows whose objects were not fully written are
+      the cleanup record. A job that removes those objects is owed.
+      Owner: **the operator surface at P07**.
 

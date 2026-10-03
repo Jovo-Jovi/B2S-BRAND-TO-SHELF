@@ -676,6 +676,14 @@ export function makeProbes(config: Config) {
     remove: (caller: Caller, table: TableName, id: string) =>
       postgrest(config, caller, "DELETE", `${table}?id=eq.${encodeURIComponent(id)}`),
 
+    storage: (
+      caller: Caller,
+      method: "GET" | "POST" | "PUT" | "DELETE",
+      path: string,
+      body?: string | Uint8Array,
+      contentType = "application/json",
+    ) => storageRequest(config, caller, method, path, body, contentType),
+
     /** A read filtered to one id — the shape an existence oracle would take. */
     selectById: (caller: Caller, table: TableName, id: string) =>
       postgrest(config, caller, "GET", `${table}?select=id&id=eq.${encodeURIComponent(id)}`),
@@ -720,6 +728,40 @@ export function makeProbes(config: Config) {
 }
 
 export type Probes = ReturnType<typeof makeProbes>;
+
+function copyBytes(bytes: Uint8Array): ArrayBuffer {
+  const copy = new ArrayBuffer(bytes.byteLength);
+  new Uint8Array(copy).set(bytes);
+  return copy;
+}
+
+export async function storageRequest(
+  config: Config,
+  caller: Caller,
+  method: "GET" | "POST" | "PUT" | "DELETE",
+  path: string,
+  body?: string | Uint8Array,
+  contentType = "application/json",
+): Promise<{ status: number; body: string }> {
+  const headers: Record<string, string> = {
+    apikey: caller.apiKey,
+    Accept: "*/*",
+  };
+  if (caller.token !== "") headers.Authorization = `Bearer ${caller.token}`;
+  if (body !== undefined) headers["Content-Type"] = contentType;
+  const payload: BodyInit | undefined =
+    typeof body === "string" || body === undefined ? body : copyBytes(body);
+  return fetchResilient(
+    `${config.url}/storage/v1/${path}`,
+    {
+      method,
+      headers: buildHeaders(headers, caller),
+      body: payload,
+    },
+    `${caller.label} ${method} storage/${path}`,
+    "postgrest",
+  );
+}
 
 export function anonCaller(config: Config): Caller {
   return { label: "anon", apiKey: config.publishableKey, token: "" };
@@ -956,14 +998,16 @@ export async function seed(config: Config, sql: SqlRunner): Promise<Fixture> {
     insert into public.media_asset
       (id, tenant_id, provider, bucket, object_key, content_type, byte_size, checksum)
     values
-      (${lit(ids.mediaAssetId)}, ${lit(tenantId)}, 'object', 'media',
-       ${lit(`zz-test/${runId}/${objectKey}/source`)}, 'image/png', 1, '00');
+      (${lit(ids.mediaAssetId)}, ${lit(tenantId)}, 'supabase-storage', 'tenant-media',
+       ${lit(`${tenantId}/${ids.mediaAssetId}/original.png`)}, 'image/png', 1,
+       '0000000000000000000000000000000000000000000000000000000000000000');
 
     insert into public.asset_rendition
       (id, tenant_id, media_asset_id, tier, provider, bucket, object_key, content_type, byte_size)
     values
       (${lit(ids.assetRenditionId)}, ${lit(tenantId)}, ${lit(ids.mediaAssetId)}, 'display',
-       'object', 'media', ${lit(`zz-test/${runId}/${objectKey}/display`)}, 'image/png', 1);
+       'supabase-storage', 'tenant-media',
+       ${lit(`${tenantId}/${ids.mediaAssetId}/display.png`)}, 'image/png', 1);
 
     insert into public.brand (id, tenant_id, name_key_id) values
       (${lit(ids.brandId)}, ${lit(tenantId)}, ${lit(ids.translationKeyId)});
@@ -1148,6 +1192,18 @@ export async function teardown(config: Config, sql: SqlRunner): Promise<void> {
   await sql(`
     drop schema if exists ${FAULT_SCHEMA} cascade;
 
+    select set_config('storage.allow_delete_query', 'true', true);
+
+    delete from storage.objects
+     where bucket_id = 'tenant-media'
+       and (
+         split_part(name, '/', 1) in (
+           select id::text from public.tenant
+            where slug like ${prefix} or name like ${prefix}
+         )
+         or split_part(name, '/', 1) !~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+       );
+
     alter table public.membership disable trigger membership_active_owner_required;
 
     update public.brand
@@ -1258,6 +1314,22 @@ export async function teardownCounts(sql: SqlRunner): Promise<TeardownCounts> {
         where tenant_id in (select id from public.tenant where (slug like ${prefix} or name like ${prefix})))::int
                                                                                     as translation_key_synthetic,
       (select count(*) from auth.users where email like ${prefix})::int             as auth_users_synthetic,
+      (select count(*)::int from storage.objects o
+        where o.bucket_id = 'tenant-media'
+          and (
+            split_part(o.name, '/', 1) in (
+              select id::text from public.tenant
+               where slug like ${prefix} or name like ${prefix}
+            )
+            or (
+              split_part(o.name, '/', 1) ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+              and not exists (
+                select 1 from public.tenant t
+                 where t.id::text = split_part(o.name, '/', 1)
+              )
+            )
+            or split_part(o.name, '/', 1) !~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+          ))                                                                       as storage_object_synthetic,
       -- Proof 25b creates a schema, a function and a trigger to force a failure
       -- mid-provisioning. All three are counted here, because a fault injection
       -- that outlives its proof is a live defect wearing a test's name — and the
@@ -1363,6 +1435,8 @@ export const EXPECTED_ASSERTIONS = [
   // P03-T18 — legal_entity, onboarding_draft, onboarding_draft_color.
   // D stays last.
   "34a", "34b", "34c", "34d", "34e", "34f", "34g", "34h",
+  // P03-T20 — the private bucket. D stays last.
+  "35a", "35b", "35c", "35d", "35e", "35f", "35g", "35h",
   "D",
 ];
 
