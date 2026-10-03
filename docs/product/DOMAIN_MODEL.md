@@ -26,7 +26,7 @@ Counted even though they look derivative: `StockLevel` (a derived projection wit
 its own identity per variant-location pair, materialised for query) and
 `ArtworkVersion` (immutable, independently referenced by `PrintJob`).
 
-**Total: 89 entities across 9 tiers.** Where a later document disagrees with this
+**Total: 92 entities across 9 tiers.** Where a later document disagrees with this
 count, this document wins and the other is amended.
 
 `TranslationKey` is counted even though it carries no text of its own: it has
@@ -39,9 +39,9 @@ counted.
 
 ## 2. The entity set
 
-### 2.1 Platform tier — 10
+### 2.1 Platform tier — 11
 `Tenant` · `Member` · `Membership` · `Role` · `Operator` · `ConsentGrant` ·
-`ActivityEvent` · `Invitation` · `Subscription` · `FeatureFlag`
+`ActivityEvent` · `Invitation` · `Subscription` · `FeatureFlag` · `LegalEntity`
 
 ### 2.2 Brand tier — 9
 `Brand` · `BrandLine` · `BrandProfile` · `BrandTheme` · `LogoVariant` ·
@@ -74,11 +74,12 @@ counted.
 `PrintArtifact` · `Imposition` · `CalibrationRecord` · `DocumentTemplate` ·
 `DocumentArtifact`
 
-### 2.9 System tier — 16
+### 2.9 System tier — 18
 `CostRecord` · `OperatingCost` · `CostAllocation` · `TaxRule` · `Currency` ·
 `ExchangeRate` · `Locale` · `TranslationKey` · `TranslationEntry` ·
 `RegulatoryProfile` · `ImportTemplate` · `ImportRun` · `ImportRowError` ·
-`BackupSnapshot` · `Notification` · `DesignSuggestion`
+`BackupSnapshot` · `Notification` · `DesignSuggestion` · `OnboardingDraft` ·
+`OnboardingDraftColor`
 
 ---
 

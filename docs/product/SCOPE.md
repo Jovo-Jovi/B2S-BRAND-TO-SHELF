@@ -39,6 +39,8 @@ release assignment.
 | 23 | **Public site** | R1 | A bilingual landing page at the root of each locale; entry to sign in and to sign up, sign-up leading into the wizard's Welcome step; a privacy policy and terms of service whose text the owner supplies | Owns no data, reads no tenant data, sets no tracking cookie and loads no analytics. Nothing else in R1. Built in P08 | A8 |
 | — | **Operator Console** | R1 | Tenants, usage, billing, `FeatureFlag`, `ConsentGrant` | **Never tenant business data** — separate surface, not a tenant module | G10 |
 
+**AMENDED 2026-10-03 — onboarding owns one store (OD-A9).** Module 02's boundary above, "owns no storage of its own", stands and is not edited (PR-07). Onboarding owns exactly one store, the onboarding draft. Every other answer is written where it belongs as soon as it is valid on its own.
+
 **CF-29 closed.** The original map had 9 modules; 13 were missing and 3 more were
 required by decisions already signed. All 22 are now traced.
 

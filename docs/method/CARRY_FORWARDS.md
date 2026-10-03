@@ -4013,7 +4013,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       tier run locally call production's authentication on every request —
       reads with no session so far.
       Owner: **the owner**, to repoint .env.local at staging.
-- [ ] CF-213 — The reviewer never authored the tenant business-data columns
+- [x] CF-213 — The reviewer never authored the tenant business-data columns
       the owner signed under B4. DATA_MODEL.md §3.1 gives tenant only name,
       slug, base_currency, default_locale and status. BRAND_CONFIG.md §10
       routes legal name, trading name, tax registration, addresses and
@@ -4022,11 +4022,15 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       asks for default_locale and base_currency before Brand, and the tenant
       must be provisioned before any brand-scoped write; that amendment
       specifies how.
-      Owner: **the reviewer**.
+      CLOSED (P03-T18) by OD-A9 and DATA_MODEL.md §3.22 to §3.24. Business
+      details land on legal_entity. The onboarding draft holds the resume
+      step and colours before all seven exist.
+      Owner: none outstanding.
 - [ ] CF-214 — CF-180's sixth criterion, save and finish later preserves both
       partial values, needs the schema CF-213 names. Criteria one to five
       are satisfiable by a gallery specimen now.
       Owner: **the task that lands the tenant business-data amendment**.
+      Owner: **the task that builds the wizard routes**.
 - [x] CF-215 — STATIC. The platform colour-token set is closed against
       DESIGN_SURFACE.md §2.2 and §2.11 in both directions. proof and
       proof-edge are achromatic. The warmth ceiling and the Clay-danger
@@ -4144,11 +4148,13 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       CLOSED (P03-T16). §7 records both as in-flow content that take no
       elevation.
       Owner: none outstanding.
-- [ ] CF-230 — OD-A8's unauthenticated visitor cannot be a ROLE_JOURNEY.md
+- [x] CF-230 — OD-A8's unauthenticated visitor cannot be a ROLE_JOURNEY.md
       row. The check admits the role enum plus the named non-enum actors
       Operator and Buyer, and no other actor. Adding a role was forbidden.
       The capability is an annotation in ROLE_JOURNEY.md, not a table row.
-      Owner: **the reviewer**.
+      CLOSED (P03-T18). ROLE_JOURNEY.md has a Visitor row. The check admits
+      Visitor beside Operator and Buyer. Visitor is not a tenant role.
+      Owner: none outstanding.
 - [x] CF-231 — The suite's ledger recorded PASS for a test vitest had
       failed by timeout (run 37108339308, assertion 4d).
       CLOSED (P03-T17). A record() that arrives after its test has
@@ -4160,11 +4166,23 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       and a test that records PASS and then throws. The summary read
       0 PASS and 3 FAIL, and the late record named the finished test.
       Owner: none outstanding.
-- [ ] CF-232 — The business-data amendment must cover SCOPE.md:18,
+- [x] CF-232 — The business-data amendment must cover SCOPE.md:18,
       OD-G18's named gap, SECURITY_MODEL.md:398 and :427,
       BRAND_CONFIG.md:201 and :219, check_security_model_bypass.py's
       count of historical definitions, and restate isolation assertions
       25a, 25b, 25c, 25d and 25f under a signed decision.
-      Owner: **P03-T18**.
+      CLOSED (P03-T18) by OD-G26 and OD-A9, the amendments beside each named
+      statement, and isolation assertions 25a, 25b, 25c, 25d and 25f restated
+      under OD-G26. Claim strings unchanged. The bypass check counts identities
+      alive after every drop. A plant without the drop reads 11 and fails.
+      Owner: none outstanding.
+- [x] CF-233 — The reviewer's earlier BRANCHING.md amendment claimed the
+      draft's value is per-push isolation coverage. A draft re-ran the full
+      isolation suite on every push, including docs-only ones.
+      CLOSED (P03-T18) by the 2026-10-03 amendment beside BRANCHING.md §3
+      and by .github/workflows/isolation.yml. The pull-request trigger runs
+      only when the pull request is not a draft, on opened, synchronize,
+      reopened and ready_for_review. The push trigger is unchanged.
+      Owner: none outstanding.
 
 

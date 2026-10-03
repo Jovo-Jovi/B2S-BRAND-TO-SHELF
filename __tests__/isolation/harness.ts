@@ -67,6 +67,9 @@ export const TABLES = [
   "typeface",
   "logo_variant",
   "brand_guideline",
+  "legal_entity",
+  "onboarding_draft",
+  "onboarding_draft_color",
 ] as const;
 
 export type TableName = (typeof TABLES)[number];
@@ -109,6 +112,9 @@ export const TENANT_SCOPED_TABLES: TableName[] = [
   "typeface",
   "logo_variant",
   "brand_guideline",
+  "legal_entity",
+  "onboarding_draft",
+  "onboarding_draft_color",
 ];
 
 // ---------------------------------------------------------------------------
@@ -831,6 +837,9 @@ export type TenantFixture = {
   typefaceId: string;
   logoVariantId: string;
   brandGuidelineId: string;
+  legalEntityId: string;
+  onboardingDraftId: string;
+  onboardingDraftColorId: string;
 };
 
 export type Fixture = {
@@ -910,6 +919,9 @@ export async function seed(config: Config, sql: SqlRunner): Promise<Fixture> {
     typefaceId: randomUUID(),
     logoVariantId: randomUUID(),
     brandGuidelineId: randomUUID(),
+    legalEntityId: randomUUID(),
+    onboardingDraftId: randomUUID(),
+    onboardingDraftColorId: randomUUID(),
   };
   const graphB = {
     translationKeyId: randomUUID(),
@@ -924,6 +936,9 @@ export async function seed(config: Config, sql: SqlRunner): Promise<Fixture> {
     typefaceId: randomUUID(),
     logoVariantId: randomUUID(),
     brandGuidelineId: randomUUID(),
+    legalEntityId: randomUUID(),
+    onboardingDraftId: randomUUID(),
+    onboardingDraftColorId: randomUUID(),
   };
 
   const brandGraphSql = (
@@ -987,6 +1002,16 @@ export async function seed(config: Config, sql: SqlRunner): Promise<Fixture> {
     values
       (${lit(ids.brandGuidelineId)}, ${lit(tenantId)}, ${lit(ids.brandProfileId)},
        ${lit(ids.translationKeyId)}, ${lit(ids.translationKeyId)}, 1);
+
+    insert into public.legal_entity (id, tenant_id) values
+      (${lit(ids.legalEntityId)}, ${lit(tenantId)});
+
+    insert into public.onboarding_draft (id, tenant_id, resume_step) values
+      (${lit(ids.onboardingDraftId)}, ${lit(tenantId)}, 'brand');
+
+    insert into public.onboarding_draft_color (id, tenant_id, draft_id, role, srgb) values
+      (${lit(ids.onboardingDraftColorId)}, ${lit(tenantId)}, ${lit(ids.onboardingDraftId)},
+       'primary', '#000000');
   `;
 
   // Seeded through the privileged SQL path rather than through PostgREST,
@@ -1127,47 +1152,54 @@ export async function teardown(config: Config, sql: SqlRunner): Promise<void> {
 
     update public.brand
        set current_profile_id = null
-     where tenant_id in (select id from public.tenant where slug like ${prefix});
+     where tenant_id in (select id from public.tenant where (slug like ${prefix} or name like ${prefix}));
 
     delete from public.color_value
-     where tenant_id in (select id from public.tenant where slug like ${prefix});
+     where tenant_id in (select id from public.tenant where (slug like ${prefix} or name like ${prefix}));
     delete from public.typeface
-     where tenant_id in (select id from public.tenant where slug like ${prefix});
+     where tenant_id in (select id from public.tenant where (slug like ${prefix} or name like ${prefix}));
     delete from public.logo_variant
-     where tenant_id in (select id from public.tenant where slug like ${prefix});
+     where tenant_id in (select id from public.tenant where (slug like ${prefix} or name like ${prefix}));
     delete from public.brand_guideline
-     where tenant_id in (select id from public.tenant where slug like ${prefix});
+     where tenant_id in (select id from public.tenant where (slug like ${prefix} or name like ${prefix}));
     delete from public.brand_theme
-     where tenant_id in (select id from public.tenant where slug like ${prefix});
+     where tenant_id in (select id from public.tenant where (slug like ${prefix} or name like ${prefix}));
     delete from public.brand_line
-     where tenant_id in (select id from public.tenant where slug like ${prefix});
+     where tenant_id in (select id from public.tenant where (slug like ${prefix} or name like ${prefix}));
     delete from public.brand_profile
-     where tenant_id in (select id from public.tenant where slug like ${prefix});
+     where tenant_id in (select id from public.tenant where (slug like ${prefix} or name like ${prefix}));
     delete from public.brand
-     where tenant_id in (select id from public.tenant where slug like ${prefix});
+     where tenant_id in (select id from public.tenant where (slug like ${prefix} or name like ${prefix}));
     delete from public.asset_rendition
-     where tenant_id in (select id from public.tenant where slug like ${prefix});
+     where tenant_id in (select id from public.tenant where (slug like ${prefix} or name like ${prefix}));
     delete from public.media_asset
-     where tenant_id in (select id from public.tenant where slug like ${prefix});
+     where tenant_id in (select id from public.tenant where (slug like ${prefix} or name like ${prefix}));
+    delete from public.onboarding_draft_color
+     where tenant_id in (select id from public.tenant where (slug like ${prefix} or name like ${prefix}));
+    delete from public.onboarding_draft
+     where tenant_id in (select id from public.tenant where (slug like ${prefix} or name like ${prefix}));
+    delete from public.legal_entity
+     where tenant_id in (select id from public.tenant where (slug like ${prefix} or name like ${prefix}));
+
     delete from public.translation_entry
-     where tenant_id in (select id from public.tenant where slug like ${prefix});
+     where tenant_id in (select id from public.tenant where (slug like ${prefix} or name like ${prefix}));
     delete from public.translation_key
-     where tenant_id in (select id from public.tenant where slug like ${prefix});
+     where tenant_id in (select id from public.tenant where (slug like ${prefix} or name like ${prefix}));
 
     delete from public.invitation
-     where tenant_id in (select id from public.tenant where slug like ${prefix})
+     where tenant_id in (select id from public.tenant where (slug like ${prefix} or name like ${prefix}))
         or email::text like ${prefix};
 
     delete from public.activity_event
-     where tenant_id in (select id from public.tenant where slug like ${prefix});
+     where tenant_id in (select id from public.tenant where (slug like ${prefix} or name like ${prefix}));
 
     delete from public.consent_grant
-     where tenant_id in (select id from public.tenant where slug like ${prefix});
+     where tenant_id in (select id from public.tenant where (slug like ${prefix} or name like ${prefix}));
 
     delete from public.membership
-     where tenant_id in (select id from public.tenant where slug like ${prefix});
+     where tenant_id in (select id from public.tenant where (slug like ${prefix} or name like ${prefix}));
 
-    delete from public.tenant where slug like ${prefix};
+    delete from public.tenant where (slug like ${prefix} or name like ${prefix});
 
     delete from public.operator
      where id in (select id from auth.users where email like ${prefix});
@@ -1205,22 +1237,25 @@ export async function teardownCounts(sql: SqlRunner): Promise<TeardownCounts> {
       (select count(*) from public.typeface)::int                                   as typeface_total,
       (select count(*) from public.logo_variant)::int                               as logo_variant_total,
       (select count(*) from public.brand_guideline)::int                            as brand_guideline_total,
+      (select count(*) from public.legal_entity)::int                              as legal_entity_total,
+      (select count(*) from public.onboarding_draft)::int                          as onboarding_draft_total,
+      (select count(*) from public.onboarding_draft_color)::int                    as onboarding_draft_color_total,
       (select count(*) from auth.users)::int                                        as auth_users_total,
       (select count(*) from public.tenant
-        where slug like ${prefix} or name like ${prefix})::int                      as tenant_synthetic,
+        where (slug like ${prefix} or name like ${prefix}))::int                      as tenant_synthetic,
       (select count(*) from public.member
         where email::text like ${prefix} or display_name like ${prefix})::int       as member_synthetic,
       (select count(*) from public.activity_event
         where action like ${prefix})::int                                           as activity_event_synthetic,
       (select count(*) from public.invitation i
         where i.email::text like ${prefix}
-           or i.tenant_id in (select id from public.tenant where slug like ${prefix}))::int
+           or i.tenant_id in (select id from public.tenant where (slug like ${prefix} or name like ${prefix})))::int
                                                                                     as invitation_synthetic,
       (select count(*) from public.brand
-        where tenant_id in (select id from public.tenant where slug like ${prefix}))::int
+        where tenant_id in (select id from public.tenant where (slug like ${prefix} or name like ${prefix})))::int
                                                                                     as brand_synthetic,
       (select count(*) from public.translation_key
-        where tenant_id in (select id from public.tenant where slug like ${prefix}))::int
+        where tenant_id in (select id from public.tenant where (slug like ${prefix} or name like ${prefix})))::int
                                                                                     as translation_key_synthetic,
       (select count(*) from auth.users where email like ${prefix})::int             as auth_users_synthetic,
       -- Proof 25b creates a schema, a function and a trigger to force a failure
@@ -1325,6 +1360,9 @@ export const EXPECTED_ASSERTIONS = [
   // P03-T04 — Brand, Asset and TranslationKey. Twelve tables, not the
   // prompt's eleven: 7 → 19 is +12 (PR-33). D stays last.
   "33a", "33b", "33c", "33d", "33e", "33f", "33g", "33h", "33i", "33j",
+  // P03-T18 — legal_entity, onboarding_draft, onboarding_draft_color.
+  // D stays last.
+  "34a", "34b", "34c", "34d", "34e", "34f", "34g", "34h",
   "D",
 ];
 

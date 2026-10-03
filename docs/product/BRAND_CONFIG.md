@@ -201,6 +201,8 @@ combination rather than substituting one that exists.
 The wizard owns no storage (SCOPE module 02). Every field writes through Brand
 or through tenant.
 
+**AMENDED 2026-10-03 — the wizard's one store (OD-A9).** The sentence above stands and is not edited (PR-07). The wizard's one store is the onboarding draft, and business details land on `legal_entity`.
+
 | Wizard step | Writes to |
 |---|---|
 | Company identity — legal name, trading name | `tenant`, via `TranslationKey` for displayed names |
@@ -216,10 +218,14 @@ or through tenant.
 
 **AMENDED 2026-09-30 — the colour step.** A BrandTheme needs all seven roles to be saved (§4), so step 1 asks for all seven, in two groups. Primary, secondary and accent — the brand's own colours — start empty and are chosen by the business. Background, foreground, muted and critical — roles a business rarely thinks to choose, on which legibility depends — start at values the business can change: background #ffffff; foreground #1f1f1f, 16.48:1 against that background, meeting §11's 4.5:1; muted #6b6b6b, 5.33:1; critical #b42318, 6.57:1. Each is shown as a starting value and never presented as the business's own choice. The theme is saved only when all seven hold a value; how partial step data persists before that is specified with the tenant business-data amendment (CF-213).
 
+**AMENDED 2026-10-03 — Welcome, and where unfinished answers live.** The amendments above stand and are not edited (PR-07). Welcome asks three things: the business's name in its default language, the default language, and the base currency. Continuing provisions the tenant (DATA_MODEL.md §3.1) and opens an onboarding_draft at `brand`. The brand name in the default locale starts as the Welcome name and is editable. From then on every answer valid on its own is saved where it belongs as soon as the owner continues or chooses Save and finish later: the brand name's entries, the logo, typefaces, the legal entity, guidelines. Colours are the one exception — a theme cannot be saved until all seven roles hold a value (§4) — so until then they live in onboarding_draft_color. Returning resumes at the draft's step with every saved answer in place. Review makes the profile current when §11 holds and the legal entity holds its legal name and registered address in every permitted locale; then the draft is archived.
+
 Business data lands on `tenant` rather than in a new Settings-tier entity.
 `base_currency` and `default_locale` are already there; splitting the rest
 into a second table would mean two reads for one screen and two places for one
 fact.
+
+**AMENDED 2026-10-03 — business details land on `legal_entity` (OD-A9).** The paragraph above stands and is not edited (PR-07). Business details land on `legal_entity`, beside tenant, because tenant's row holds its status.
 
 The wizard may be abandoned and resumed. A partial brand is a `BrandProfile`
 that has not yet been made current — not a half-written current profile. The

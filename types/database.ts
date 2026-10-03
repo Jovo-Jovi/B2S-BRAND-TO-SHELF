@@ -683,6 +683,87 @@ export type Database = {
           },
         ]
       }
+      legal_entity: {
+        Row: {
+          archived_at: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          legal_name_key_id: string | null
+          registered_address_key_id: string | null
+          tax_registration_number: string | null
+          tenant_id: string
+          trading_name_key_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          legal_name_key_id?: string | null
+          registered_address_key_id?: string | null
+          tax_registration_number?: string | null
+          tenant_id: string
+          trading_name_key_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          legal_name_key_id?: string | null
+          registered_address_key_id?: string | null
+          tax_registration_number?: string | null
+          tenant_id?: string
+          trading_name_key_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "legal_entity_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "member"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "legal_entity_legal_name_key_id_tenant_id_fkey"
+            columns: ["legal_name_key_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "translation_key"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "legal_entity_registered_address_key_id_tenant_id_fkey"
+            columns: ["registered_address_key_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "translation_key"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "legal_entity_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
+            referencedRelation: "tenant"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "legal_entity_trading_name_key_id_tenant_id_fkey"
+            columns: ["trading_name_key_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "translation_key"
+            referencedColumns: ["id", "tenant_id"]
+          },
+        ]
+      }
       logo_variant: {
         Row: {
           archived_at: string | null
@@ -919,6 +1000,109 @@ export type Database = {
           },
           {
             foreignKeyName: "membership_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      onboarding_draft: {
+        Row: {
+          archived_at: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          resume_step: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          resume_step: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          resume_step?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_draft_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "member"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_draft_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
+            referencedRelation: "tenant"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      onboarding_draft_color: {
+        Row: {
+          archived_at: string | null
+          created_at: string
+          created_by: string | null
+          draft_id: string
+          id: string
+          role: Database["public"]["Enums"]["color_role"]
+          srgb: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          draft_id: string
+          id?: string
+          role: Database["public"]["Enums"]["color_role"]
+          srgb: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          draft_id?: string
+          id?: string
+          role?: Database["public"]["Enums"]["color_role"]
+          srgb?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_draft_color_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "member"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_draft_color_draft_id_tenant_id_fkey"
+            columns: ["draft_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_draft"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "onboarding_draft_color_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenant"
@@ -1211,7 +1395,6 @@ export type Database = {
           p_base_currency: string
           p_default_locale: string
           p_name: string
-          p_slug: string
         }
         Returns: string
       }

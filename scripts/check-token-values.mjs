@@ -929,7 +929,14 @@ function main() {
     fail(`${DOCUMENT}: ${err.message}`);
     process.exit(1);
   }
-  const identity = identityViolations(documentText, readFileSync(GLOBALS, "utf8"));
+  let globalsText;
+  try {
+    globalsText = readFileSync(GLOBALS, "utf8");
+  } catch (err) {
+    fail(`${GLOBALS}: ${err.message}`);
+    process.exit(1);
+  }
+  const identity = identityViolations(documentText, globalsText);
   for (const message of identity.messages) {
     fail(message);
   }

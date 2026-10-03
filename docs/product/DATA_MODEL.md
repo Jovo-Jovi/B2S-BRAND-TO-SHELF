@@ -224,10 +224,12 @@ explicitly not member-writable.
 
 ## 3. The tables
 
-Nineteen tables and ten enums. Entities: Platform 10, Brand 9, Asset 2,
+22 tables and ten enums. Entities: Platform 10, Brand 9, Asset 2,
 System 1 of 16 arriving now. The entity and table counts diverge as they
 already do — `ColorRole` is an entity and a Postgres enum, not a table,
 exactly as `role` is (§3.7).
+
+**AMENDED 2026-10-03 — three tables (OD-A9).** The sentences below stand and are not edited (PR-07). They record the count as it was when the platform tables were seven. `legal_entity` is the eighth Platform table. `onboarding_draft` and `onboarding_draft_color` are System tables. The opening line's table count is 22; the entity counts are DOMAIN_MODEL.md's, Platform 11 and System 18.
 
 The Platform tier is seven of the nineteen: §3.1 through §3.8, of which
 §3.7 `role` is an enum, deliberately not a table, and the only Platform enum
@@ -285,6 +287,8 @@ which `membership_active_owner_required` would not catch, because it fires at
 the commit of a transaction that had already succeeded. The privileged client
 remains right for provisioning work that is not one statement's worth of
 writes.
+
+**AMENDED 2026-10-03 — the slug is generated, and Welcome supplies the name (OD-G26).** The write path above stands and is not edited (PR-07). `provision_tenant(name, base_currency, default_locale)` replaces the four-argument form, which is dropped. It generates the slug as twelve lowercase hexadecimal characters derived from `gen_random_uuid()`, retrying on a unique violation up to five times before raising. No caller can supply or change a slug. `name` is the business's name as the owner types it at the wizard's Welcome step, in the business's default language: the workspace's label until the brand's bilingual name exists, never printed on tenant output, and never a substitute for the legal or trading name. Everything else here stands.
 
 Three properties are structural rather than checked, and each is asserted:
 
@@ -866,6 +870,55 @@ a defect you ship.
 No DELETE policy. **No operator policy.** A `translation_entry` cannot
 reference a `translation_key` across tenants: the foreign key is
 composite on `(key_id, tenant_id)`.
+
+### 3.22 `legal_entity`
+The registered company behind a tenant, 1:1 with tenant (OD-A9).
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid pk | |
+| `tenant_id` | uuid not null → tenant | UNIQUE |
+| `legal_name_key_id` | uuid null → translation_key | Bilingual. Required in every permitted locale before onboarding completes |
+| `trading_name_key_id` | uuid null → translation_key | Optional |
+| `tax_registration_number` | text null | An identifier stored as issued. CHECK `^[0-9A-Za-z]{1,32}$` after trimming, never re-digited. Country-specific validation arrives with Settings |
+| `registered_address_key_id` | uuid null → translation_key | One bilingual, multiline block. Required in every permitted locale before onboarding completes. Structured addresses are a later decision, tied to any e-invoicing integration |
+| `contact_email` | text null | CHECK at most 254 characters and of the shape local@domain with no whitespace. Validated fully at the boundary |
+| `contact_phone` | text null | E.164. CHECK `^\+[1-9][0-9]{6,14}$`. The form accepts an Egyptian national number and normalises it with +20 |
+| provenance + `archived_at` | | per §1 |
+
+Every `*_key_id` is a composite foreign key on `(key_id, tenant_id)` → `translation_key(id, tenant_id)`.
+
+**RLS.** SELECT where `tenant_id = current_tenant_id()`. INSERT and UPDATE where `tenant_id = current_tenant_id()` and `is_current_tenant_owner()` — a Manager cannot change billing (TENANCY_MODEL.md §3), and the legal entity is the identity every invoice names. No DELETE policy. **No operator policy.**
+
+### 3.23 `onboarding_draft`
+The parts of an unfinished onboarding with no other home, one per tenant (OD-A9).
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid pk | |
+| `tenant_id` | uuid not null → tenant | UNIQUE |
+| `resume_step` | text not null | CHECK one of `brand`, `typography`, `company`, `guidelines`, `review` |
+| provenance + `archived_at` | | per §1. Archived when onboarding completes |
+
+`unique (id, tenant_id)`.
+
+**RLS.** SELECT, INSERT and UPDATE where `tenant_id = current_tenant_id()` and `is_current_tenant_owner()`. No DELETE policy. **No operator policy.**
+
+### 3.24 `onboarding_draft_color`
+A colour set before all seven roles hold a value.
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid pk | |
+| `tenant_id` | uuid not null → tenant | |
+| `draft_id` | uuid not null → onboarding_draft | Composite on `(draft_id, tenant_id)` |
+| `role` | color_role not null | |
+| `srgb` | text not null | CHECK `^#[0-9a-f]{6}$` |
+| provenance + `archived_at` | | per §1 |
+
+UNIQUE `(draft_id, role)`. A colour set before all seven roles hold a value. When all seven do, the theme and its seven `color_value` rows are written in one transaction and these rows are archived. Starting values are written here too, so the step reloads as the owner left it.
+
+**RLS.** As `onboarding_draft`. No DELETE policy. **No operator policy.**
 
 ---
 

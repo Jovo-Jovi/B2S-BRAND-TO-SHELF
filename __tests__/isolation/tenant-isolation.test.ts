@@ -342,6 +342,9 @@ describe("proof 4 — cross-tenant reach on every table, both directions", () =>
       [a.owner, "consent_grant", [a.consentGrantId]],
       [a.owner, "activity_event", [a.activityEventId]],
       [a.owner, "invitation", [a.invitationId]],
+      [a.owner, "legal_entity", [a.legalEntityId]],
+      [a.owner, "onboarding_draft", [a.onboardingDraftId]],
+      [a.owner, "onboarding_draft_color", [a.onboardingDraftColorId]],
 
       // Tenant A's viewer. consent_grant is owner-only by policy, so the empty
       // read there is the specified behaviour rather than a fail-closed symptom.
@@ -352,6 +355,9 @@ describe("proof 4 — cross-tenant reach on every table, both directions", () =>
       [a.viewer, "consent_grant", []],
       [a.viewer, "activity_event", [a.activityEventId]],
       [a.viewer, "invitation", [a.invitationId]],
+      [a.viewer, "legal_entity", [a.legalEntityId]],
+      [a.viewer, "onboarding_draft", []],
+      [a.viewer, "onboarding_draft_color", []],
 
       // Tenant B's owner — the mirror image.
       [b.owner, "tenant", [b.id]],
@@ -361,6 +367,9 @@ describe("proof 4 — cross-tenant reach on every table, both directions", () =>
       [b.owner, "consent_grant", [b.consentGrantId]],
       [b.owner, "activity_event", [b.activityEventId]],
       [b.owner, "invitation", [b.invitationId]],
+      [b.owner, "legal_entity", [b.legalEntityId]],
+      [b.owner, "onboarding_draft", [b.onboardingDraftId]],
+      [b.owner, "onboarding_draft_color", [b.onboardingDraftColorId]],
 
       // The unaffiliated member: their own member row, and nothing anywhere else.
       [unaffiliated, "tenant", []],
@@ -370,6 +379,9 @@ describe("proof 4 — cross-tenant reach on every table, both directions", () =>
       [unaffiliated, "consent_grant", []],
       [unaffiliated, "activity_event", []],
       [unaffiliated, "invitation", []],
+      [unaffiliated, "legal_entity", []],
+      [unaffiliated, "onboarding_draft", []],
+      [unaffiliated, "onboarding_draft_color", []],
     ];
 
     const idsOf = (t: typeof a) => [
@@ -381,6 +393,9 @@ describe("proof 4 — cross-tenant reach on every table, both directions", () =>
       t.invitationId,
       t.owner.authId,
       t.viewer.authId,
+      t.legalEntityId,
+      t.onboardingDraftId,
+      t.onboardingDraftColorId,
     ];
     const foreignTo = (identity: Identity): string[] => {
       if (identity === a.owner || identity === a.viewer) return idsOf(b);
@@ -586,6 +601,18 @@ describe("proof 4 — cross-tenant reach on every table, both directions", () =>
           ordinal: 2,
         },
       ],
+      ["legal_entity", { id: randomUUID(), tenant_id: tenantId }],
+      ["onboarding_draft", { id: randomUUID(), tenant_id: tenantId, resume_step: "brand" }],
+      [
+        "onboarding_draft_color",
+        {
+          id: randomUUID(),
+          tenant_id: tenantId,
+          draft_id: home.onboardingDraftId,
+          role: "accent",
+          srgb: "#222222",
+        },
+      ],
     ];
     };
 
@@ -596,9 +623,9 @@ describe("proof 4 — cross-tenant reach on every table, both directions", () =>
     // fixture, so a second insert is a uniqueness refusal not a permission one.
     const brandWritable: TableName[] = BRAND_ASSET_TABLES.filter((table) => table !== "brand");
     const allowed: Record<string, TableName[]> = {
-      [a.owner.label]: ["membership", "consent_grant", "activity_event", "invitation", ...brandWritable],
+      [a.owner.label]: ["membership", "consent_grant", "activity_event", "invitation", ...brandWritable, "onboarding_draft_color"],
       [a.viewer.label]: ["activity_event", ...brandWritable],
-      [b.owner.label]: ["membership", "consent_grant", "activity_event", "invitation", ...brandWritable],
+      [b.owner.label]: ["membership", "consent_grant", "activity_event", "invitation", ...brandWritable, "onboarding_draft_color"],
       [unaffiliated.label]: [],
     };
 
@@ -764,6 +791,48 @@ describe("proof 4 — cross-tenant reach on every table, both directions", () =>
       failures.push("A-owner UPDATE tenant B consent_grant: tenant B's row changed");
     }
 
+    const legalPhone = await probe.update(a.owner, "legal_entity", a.legalEntityId, {
+      contact_phone: "+201001234567",
+    });
+    if (!legalPhone.ok || legalPhone.count !== 1) {
+      failures.push(`A-owner UPDATE own legal_entity: POSITIVE PATH REFUSED (${legalPhone.code}) ${legalPhone.message}`);
+    }
+    await sql(`update public.legal_entity set contact_phone = null where id = '${a.legalEntityId}'`);
+
+    const viewerLegal = await probe.update(a.viewer, "legal_entity", a.legalEntityId, {
+      contact_phone: "+201009999999",
+    });
+    if (viewerLegal.count > 0) failures.push("A-viewer UPDATE legal_entity: ACCEPTED, and only an owner may");
+    if ((await columnValue("legal_entity", a.legalEntityId, "contact_phone")) !== null) {
+      failures.push("A-viewer UPDATE legal_entity: the value changed");
+    }
+
+    const foreignLegal = await probe.update(a.owner, "legal_entity", b.legalEntityId, {
+      contact_phone: "+201009999999",
+    });
+    if (foreignLegal.count > 0) failures.push("A-owner UPDATE tenant B legal_entity: ACCEPTED");
+
+    const draftStep = await probe.update(a.owner, "onboarding_draft", a.onboardingDraftId, {
+      resume_step: "company",
+    });
+    if (!draftStep.ok || draftStep.count !== 1) {
+      failures.push(`A-owner UPDATE own onboarding_draft: POSITIVE PATH REFUSED (${draftStep.code}) ${draftStep.message}`);
+    }
+    await sql(`update public.onboarding_draft set resume_step = 'brand' where id = '${a.onboardingDraftId}'`);
+
+    const viewerDraft = await probe.update(a.viewer, "onboarding_draft", a.onboardingDraftId, {
+      resume_step: "review",
+    });
+    if (viewerDraft.count > 0) failures.push("A-viewer UPDATE onboarding_draft: ACCEPTED, and only an owner may");
+
+    const color = await probe.update(a.owner, "onboarding_draft_color", a.onboardingDraftColorId, {
+      srgb: "#111111",
+    });
+    if (!color.ok || color.count !== 1) {
+      failures.push(`A-owner UPDATE own onboarding_draft_color: POSITIVE PATH REFUSED (${color.code}) ${color.message}`);
+    }
+    await sql(`update public.onboarding_draft_color set srgb = '#000000' where id = '${a.onboardingDraftColorId}'`);
+
     record(
       "4c",
       "UPDATE: granted own writes land, foreign writes reach nothing",
@@ -815,6 +884,12 @@ describe("proof 4 — cross-tenant reach on every table, both directions", () =>
       ["logo_variant", b.logoVariantId],
       ["brand_guideline", a.brandGuidelineId],
       ["brand_guideline", b.brandGuidelineId],
+      ["legal_entity", a.legalEntityId],
+      ["legal_entity", b.legalEntityId],
+      ["onboarding_draft", a.onboardingDraftId],
+      ["onboarding_draft", b.onboardingDraftId],
+      ["onboarding_draft_color", a.onboardingDraftColorId],
+      ["onboarding_draft_color", b.onboardingDraftColorId],
     ];
 
     const failures: string[] = [];
@@ -1007,6 +1082,22 @@ describe("proof 6 — no row may carry another tenant's tenant_id", () => {
         title_key_id: fixture.b.translationKeyId,
         body_key_id: fixture.b.translationKeyId,
         ordinal: 2,
+      },
+      legal_entity: {
+        id: randomUUID(),
+        tenant_id: fixture.b.id,
+      },
+      onboarding_draft: {
+        id: randomUUID(),
+        tenant_id: fixture.b.id,
+        resume_step: "brand",
+      },
+      onboarding_draft_color: {
+        id: randomUUID(),
+        tenant_id: fixture.b.id,
+        draft_id: fixture.b.onboardingDraftId,
+        role: "accent",
+        srgb: "#222222",
       },
     };
 
@@ -3563,13 +3654,11 @@ type ProvisionedRows = {
 async function provision(
   who: Caller,
   label: string,
-  slug: string,
   currency = "SAR",
   locale = "en",
 ): Promise<Provisioning> {
   const answer = await probe.rpc(who, "provision_tenant", {
     p_name: `${SYNTHETIC_PREFIX}${label}`,
-    p_slug: slug,
     p_base_currency: currency,
     p_default_locale: locale,
   });
@@ -3630,8 +3719,8 @@ describe("proof 25 — tenant provisioning (OD-G13 act two, DATA_MODEL §3.1/§3
     const slugs = [`${SYNTHETIC_PREFIX}pair-one-${runId}`, `${SYNTHETIC_PREFIX}pair-two-${runId}`];
 
     const answers = await Promise.all([
-      provision(first, `pair-one-${runId}`, slugs[0]),
-      provision(second, `pair-two-${runId}`, slugs[1]),
+      provision(first, `pair-one-${runId}`),
+      provision(second, `pair-two-${runId}`),
     ]);
 
     pair = [
@@ -3653,7 +3742,7 @@ describe("proof 25 — tenant provisioning (OD-G13 act two, DATA_MODEL §3.1/§3
       if (count !== 0) failures.push(`precondition: authentication alone left ${count} ${what}, expected 0`);
     }
 
-    const answer = await provision(solo, `solo-${runId}`, slug);
+    const answer = await provision(solo, `solo-${runId}`);
     if (answer.status !== 200) {
       failures.push(`provisioning answered ${answer.status} ${answer.body.slice(0, 240)}, expected 200`);
     }
@@ -3702,7 +3791,13 @@ describe("proof 25 — tenant provisioning (OD-G13 act two, DATA_MODEL §3.1/§3
       if (row === undefined) {
         failures.push(`provisioning returned ${answer.tenantId} and no tenant carries that id`);
       } else {
-        if (row.slug !== slug) failures.push(`tenant.slug is ${row.slug}, expected ${slug}`);
+        if (!/^[0-9a-f]{12}$/.test(row.slug)) {
+          failures.push(`tenant.slug is ${row.slug}, expected twelve lowercase hexadecimal characters`);
+        }
+        const sent = [`${SYNTHETIC_PREFIX}solo-${runId}`, "SAR", "en", slug];
+        if (sent.includes(row.slug)) {
+          failures.push(`tenant.slug equals a value the caller sent (${row.slug})`);
+        }
         if (row.status !== "active") failures.push(`tenant.status is ${row.status}, expected active`);
         if (row.created_by !== solo.authId) {
           failures.push(`tenant.created_by is ${row.created_by}, expected the caller`);
@@ -3748,7 +3843,12 @@ describe("proof 25 — tenant provisioning (OD-G13 act two, DATA_MODEL §3.1/§3
     // the three inserts, so this is the atomicity case at step one, and the
     // counts afterwards must still read one apiece rather than one plus a
     // stray membership.
-    const twice = await provision(solo, `solo-${runId}`, slug);
+    const twice = await probe.rpc(solo, "provision_tenant", {
+      p_name: `${SYNTHETIC_PREFIX}solo-${runId}`,
+      p_base_currency: "SAR",
+      p_default_locale: "en",
+      p_slug: slug,
+    });
     if (twice.status < 400) failures.push(`a duplicate slug was accepted, answering ${twice.status}`);
     const afterTwice = await provisionedRows(solo.authId);
     for (const [what, want] of Object.entries(expected)) {
@@ -3764,7 +3864,7 @@ describe("proof 25 — tenant provisioning (OD-G13 act two, DATA_MODEL §3.1/§3
         `owner/active/accepted membership pointing at that tenant, and one tenant.provisioned activity_event ` +
         `on Tenant with entity_id = tenant_id, null payload and no operator actor. The caller then resolved ` +
         `${resolved.body} and read exactly ${TABLES.map((t) => `${t}=${seen[t].length}`).join(", ")}. A repeat ` +
-        `of the same slug answered ${twice.status} and left all five counts at 1`,
+        `that also supplied a slug answered ${twice.status} and left all five counts at 1`,
     );
     expect(failures).toEqual([]);
   });
@@ -3813,8 +3913,6 @@ describe("proof 25 — tenant provisioning (OD-G13 act two, DATA_MODEL §3.1/§3
       `);
 
       for (const [where, table, when] of faultPoints) {
-        const slug = `${SYNTHETIC_PREFIX}fault-${randomUUID().slice(0, 8)}`;
-
         await sql(`
           create trigger ${FAULT_SCHEMA}_provision_break
           before insert on ${table}
@@ -3822,7 +3920,7 @@ describe("proof 25 — tenant provisioning (OD-G13 act two, DATA_MODEL §3.1/§3
           execute function ${FAULT_SCHEMA}.break();
         `);
 
-        const answer = await provision(faulty, `fault-${runId}`, slug);
+        const answer = await provision(faulty, `fault-${runId}`);
 
         await sql(`drop trigger ${FAULT_SCHEMA}_provision_break on ${table};`);
 
@@ -3847,7 +3945,9 @@ describe("proof 25 — tenant provisioning (OD-G13 act two, DATA_MODEL §3.1/§3
         }>(`
           select
             (select count(*) from public.tenant where created_by = '${faulty.authId}')::int      as tenants,
-            (select count(*) from public.tenant where slug = '${slug}')::int                     as by_slug,
+            (select count(*) from public.tenant
+              where name = '${SYNTHETIC_PREFIX}fault-${runId}'
+                and created_by = '${faulty.authId}')::int                                       as by_name,
             (select count(*) from public.membership where member_id = '${faulty.authId}')::int   as memberships,
             (select count(*) from public.activity_event
               where actor_member_id = '${faulty.authId}')::int                                  as events
@@ -3868,8 +3968,7 @@ describe("proof 25 — tenant provisioning (OD-G13 act two, DATA_MODEL §3.1/§3
     // THE CONTROL. Without it, every zero above is satisfied by a function that
     // is simply broken for this caller, and the assertion would pass while
     // proving nothing about rollback.
-    const cleanSlug = `${SYNTHETIC_PREFIX}fault-clean-${runId}`;
-    const clean = await provision(faulty, `fault-clean-${runId}`, cleanSlug);
+    const clean = await provision(faulty, `fault-clean-${runId}`);
     if (clean.status !== 200 || clean.tenantId === null) {
       failures.push(
         `control: with no fault armed the same caller answered ${clean.status} ${clean.body.slice(0, 200)}, ` +
@@ -3900,7 +3999,7 @@ describe("proof 25 — tenant provisioning (OD-G13 act two, DATA_MODEL §3.1/§3
       failures,
       `2 fault points injected in turn, one after the tenant insert and one after the tenant and membership ` +
         `inserts, each a trigger gated on this caller alone: ${observed.join(", ")}, both refused naming the ` +
-        `injected fault. After each, 0 tenants by creator, 0 by slug, 0 memberships and 0 events. The control ` +
+        `injected fault. After each, 0 tenants by creator, 0 by name and creator, 0 memberships and 0 events. The control ` +
         `— the same caller with nothing armed — answered ${clean.status} and wrote 1 tenant, 1 active owner ` +
         `membership and 1 event, so the zeroes are the rollback's and not a broken function's. No fault schema ` +
         `or trigger survives`,
@@ -3930,13 +4029,16 @@ describe("proof 25 — tenant provisioning (OD-G13 act two, DATA_MODEL §3.1/§3
     // so this one comparison says four arguments, all text, named these and
     // nothing else. The arity is asserted separately because a signature that
     // grew a fifth argument is the specific failure this proof exists to catch.
-    const expectedSignature = "p_name text, p_slug text, p_base_currency text, p_default_locale text";
+    const expectedSignature = "p_name text, p_base_currency text, p_default_locale text";
     if (signature.args !== expectedSignature) {
       failures.push(`provision_tenant takes (${signature.args}), expected exactly (${expectedSignature})`);
     }
-    if (signature.arity !== 4) failures.push(`provision_tenant takes ${signature.arity} arguments, expected 4`);
-    if (signature.argnames !== "p_name,p_slug,p_base_currency,p_default_locale") {
-      failures.push(`its parameters are ${signature.argnames}, expected p_name,p_slug,p_base_currency,p_default_locale`);
+    if (signature.arity !== 3) failures.push(`provision_tenant takes ${signature.arity} arguments, expected 3`);
+    if (signature.argnames !== "p_name,p_base_currency,p_default_locale") {
+      failures.push(`its parameters are ${signature.argnames}, expected p_name,p_base_currency,p_default_locale`);
+    }
+    if (signature.argnames.split(",").includes("p_slug")) {
+      failures.push("provision_tenant still takes a slug parameter");
     }
     if (/member|owner|actor|creat|uid|user/i.test(signature.argnames)) {
       failures.push(`a parameter name suggests an identity can be named: ${signature.argnames}`);
@@ -3947,7 +4049,6 @@ describe("proof 25 — tenant provisioning (OD-G13 act two, DATA_MODEL §3.1/§3
     for (const name of ["p_member_id", "member_id", "p_owner_id", "p_owner", "p_created_by", "p_actor_member_id"]) {
       const attempt = await probe.rpc(namer, "provision_tenant", {
         p_name: `${SYNTHETIC_PREFIX}namer`,
-        p_slug: `${SYNTHETIC_PREFIX}namer-${randomUUID().slice(0, 8)}`,
         p_base_currency: "SAR",
         p_default_locale: "en",
         [name]: victim.authId,
@@ -3961,8 +4062,7 @@ describe("proof 25 — tenant provisioning (OD-G13 act two, DATA_MODEL §3.1/§3
     // The positive case, and the one that matters: a legitimate call while
     // SELECTING a tenant the caller does not hold. If the selector could
     // redirect ownership, this is where it would.
-    const slug = `${SYNTHETIC_PREFIX}namer-${runId}`;
-    const answer = await provision(selecting(namer, fixture.b.id), `namer-${runId}`, slug);
+    const answer = await provision(selecting(namer, fixture.b.id), `namer-${runId}`);
     if (answer.status !== 200 || answer.tenantId === null) {
       failures.push(`provisioning answered ${answer.status} ${answer.body.slice(0, 200)}, expected a tenant`);
     }
@@ -4050,10 +4150,12 @@ describe("proof 25 — tenant provisioning (OD-G13 act two, DATA_MODEL §3.1/§3
     const [both] = await sql<{ tenants: number; owners: number }>(`
       select
         (select count(*) from public.tenant
-          where slug in ('${one.slug}', '${two.slug}'))::int                    as tenants,
+          where id in ('${one.answer.tenantId ?? "00000000-0000-0000-0000-000000000000"}',
+                       '${two.answer.tenantId ?? "00000000-0000-0000-0000-000000000000"}'))::int as tenants,
         (select count(*) from public.membership m
           join public.tenant t on t.id = m.tenant_id
-         where t.slug in ('${one.slug}', '${two.slug}'))::int                   as owners
+         where t.id in ('${one.answer.tenantId ?? "00000000-0000-0000-0000-000000000000"}',
+                        '${two.answer.tenantId ?? "00000000-0000-0000-0000-000000000000"}'))::int as owners
     `);
     if (both.tenants !== 2) failures.push(`${both.tenants} tenants carry the two slugs, expected 2`);
     if (both.owners !== 2) failures.push(`${both.owners} memberships exist across the two tenants, expected 2`);
@@ -4064,7 +4166,7 @@ describe("proof 25 — tenant provisioning (OD-G13 act two, DATA_MODEL §3.1/§3
       failures,
       `both calls issued together answered 200 with distinct tenant ids; each caller holds exactly 1 tenant, ` +
         `1 owner/active membership and 1 event, and resolves to its own: ${resolutions.join(", ")}. Across the ` +
-        `two slugs: ${both.tenants} tenants and ${both.owners} memberships in total`,
+        `two returned ids: ${both.tenants} tenants and ${both.owners} memberships in total`,
     );
     expect(failures).toEqual([]);
   });
@@ -4175,7 +4277,7 @@ describe("proof 25 — tenant provisioning (OD-G13 act two, DATA_MODEL §3.1/§3
       select
         (select count(*) from pg_trigger t
           where not t.tgisinternal
-            and t.tgfoid = 'public.provision_tenant(text,text,text,text)'::regprocedure)::int as triggers,
+            and t.tgfoid = 'public.provision_tenant(text,text,text)'::regprocedure)::int as triggers,
         (select count(*) from pg_attrdef d
           where pg_get_expr(d.adbin, d.adrelid) like '%provision_tenant%')::int               as defaults,
         (select count(*) from pg_policy p
@@ -4205,13 +4307,14 @@ describe("proof 25 — tenant provisioning (OD-G13 act two, DATA_MODEL §3.1/§3
     ];
 
     for (const [what, caller, expectedMessage] of refusals) {
-      const slug = `${SYNTHETIC_PREFIX}refused-${randomUUID().slice(0, 8)}`;
-      const attempt = await provision(caller, `refused-${runId}`, slug);
+      const attempt = await provision(caller, `refused-${runId}`);
       if (attempt.status < 400) failures.push(`${what} provisioned a tenant, answering ${attempt.status}`);
       if (expectedMessage !== null && !expectedMessage.test(attempt.body)) {
         failures.push(`${what} was refused ${attempt.status} for the wrong reason — ${attempt.body.slice(0, 200)}`);
       }
-      const [left] = await sql<{ n: number }>(`select count(*)::int as n from public.tenant where slug = '${slug}'`);
+      const [left] = await sql<{ n: number }>(
+        `select count(*)::int as n from public.tenant where name = '${SYNTHETIC_PREFIX}refused-${runId}'`,
+      );
       if (left.n !== 0) failures.push(`${what}: a refused call left ${left.n} tenant(s) behind`);
       observed.push(`${what}=${attempt.status}`);
     }
@@ -4220,9 +4323,9 @@ describe("proof 25 — tenant provisioning (OD-G13 act two, DATA_MODEL §3.1/§3
     // as well as the body refusing.
     const [grants] = await sql<{ anon: boolean; service: boolean; authenticated: boolean }>(`
       select
-        has_function_privilege('anon', 'public.provision_tenant(text,text,text,text)', 'EXECUTE')          as anon,
-        has_function_privilege('service_role', 'public.provision_tenant(text,text,text,text)', 'EXECUTE')  as service,
-        has_function_privilege('authenticated', 'public.provision_tenant(text,text,text,text)', 'EXECUTE') as authenticated
+        has_function_privilege('anon', 'public.provision_tenant(text,text,text)', 'EXECUTE')          as anon,
+        has_function_privilege('service_role', 'public.provision_tenant(text,text,text)', 'EXECUTE')  as service,
+        has_function_privilege('authenticated', 'public.provision_tenant(text,text,text)', 'EXECUTE') as authenticated
     `);
     if (grants.anon) failures.push("anon holds EXECUTE on provision_tenant");
     if (grants.service) failures.push("service_role holds EXECUTE on provision_tenant");
@@ -4403,8 +4506,7 @@ describe("proof 27 — OD-G17 locale and currency, both directions", () => {
 
       const outside = ["fr", "EN", "en-GB", "", "zh"];
       for (const [index, locale] of outside.entries()) {
-        const slug = `${SYNTHETIC_PREFIX}g17-bad-loc-${runId}-${index}`;
-        const answer = await provision(who, `g17-bad-loc-${runId}-${index}`, slug, "SAR", locale);
+        const answer = await provision(who, `g17-bad-loc-${runId}-${index}`, "SAR", locale);
         const rows = await provisionedRows(who.authId);
         if (answer.status < 400) {
           failures.push(`locale ${JSON.stringify(locale)}: ACCEPTED ${answer.status} ${answer.body.slice(0, 120)}`);
@@ -4416,9 +4518,8 @@ describe("proof 27 — OD-G17 locale and currency, both directions", () => {
       }
 
       for (const locale of ["en", "ar"]) {
-        const slug = `${SYNTHETIC_PREFIX}g17-ok-loc-${locale}-${runId}`;
         const before = await provisionedRows(who.authId);
-        const answer = await provision(who, `g17-ok-loc-${locale}-${runId}`, slug, "SAR", locale);
+        const answer = await provision(who, `g17-ok-loc-${locale}-${runId}`, "SAR", locale);
         const after = await provisionedRows(who.authId);
         if (answer.status !== 200 || answer.tenantId === null) {
           failures.push(`locale ${locale}: POSITIVE PATH REFUSED ${answer.status} ${answer.body.slice(0, 200)}`);
@@ -4460,8 +4561,7 @@ describe("proof 27 — OD-G17 locale and currency, both directions", () => {
 
       const outside = ["GBP", "egp", "usd", "XXX"];
       for (const [index, currency] of outside.entries()) {
-        const slug = `${SYNTHETIC_PREFIX}g17-bad-ccy-${runId}-${index}`;
-        const answer = await provision(first, `g17-bad-ccy-${runId}-${index}`, slug, currency, "en");
+        const answer = await provision(first, `g17-bad-ccy-${runId}-${index}`, currency, "en");
         const rows = await provisionedRows(first.authId);
         if (answer.status < 400) {
           failures.push(`currency ${JSON.stringify(currency)}: ACCEPTED ${answer.status} ${answer.body.slice(0, 120)}`);
@@ -4480,9 +4580,8 @@ describe("proof 27 — OD-G17 locale and currency, both directions", () => {
       ];
       for (const [who, currencies] of batches) {
         for (const currency of currencies) {
-          const slug = `${SYNTHETIC_PREFIX}g17-ok-ccy-${currency.toLowerCase()}-${runId}`;
           const before = await provisionedRows(who.authId);
-          const answer = await provision(who, `g17-ok-ccy-${currency}-${runId}`, slug, currency, "en");
+          const answer = await provision(who, `g17-ok-ccy-${currency}-${runId}`, currency, "en");
           const after = await provisionedRows(who.authId);
           if (answer.status !== 200 || answer.tenantId === null) {
             failures.push(`currency ${currency}: POSITIVE PATH REFUSED ${answer.status} ${answer.body.slice(0, 200)}`);
@@ -4524,8 +4623,7 @@ describe("proof 28 — OD-G18 bounds, including the race", () => {
       const landed: string[] = [];
 
       for (let n = 1; n <= 3; n += 1) {
-        const slug = `${SYNTHETIC_PREFIX}g18-owned-${runId}-${n}`;
-        const answer = await provision(who, `g18-owned-${runId}-${n}`, slug);
+        const answer = await provision(who, `g18-owned-${runId}-${n}`);
         if (answer.status !== 200 || answer.tenantId === null) {
           failures.push(`provision ${n}: REFUSED ${answer.status} ${answer.body.slice(0, 200)}`);
         } else {
@@ -4534,7 +4632,7 @@ describe("proof 28 — OD-G18 bounds, including the race", () => {
       }
 
       const before = await provisionedRows(who.authId);
-      const fourth = await provision(who, `g18-owned-${runId}-4`, `${SYNTHETIC_PREFIX}g18-owned-${runId}-4`);
+      const fourth = await provision(who, `g18-owned-${runId}-4`);
       const after = await provisionedRows(who.authId);
 
       if (fourth.status < 400) {
@@ -4579,7 +4677,7 @@ describe("proof 28 — OD-G18 bounds, including the race", () => {
         failures.push(`precondition: caller already owns ${before.active_owner} tenant(s)`);
       }
 
-      const answer = await provision(who, `g18-rate-${runId}`, `${SYNTHETIC_PREFIX}g18-rate-${runId}`);
+      const answer = await provision(who, `g18-rate-${runId}`);
       const after = await provisionedRows(who.authId);
 
       if (answer.status < 400) {
@@ -4617,7 +4715,7 @@ describe("proof 28 — OD-G18 bounds, including the race", () => {
       `);
 
       const before = await provisionedRows(who.authId);
-      const answer = await provision(who, `g18-window-${runId}`, `${SYNTHETIC_PREFIX}g18-window-${runId}`);
+      const answer = await provision(who, `g18-window-${runId}`);
       const after = await provisionedRows(who.authId);
 
       if (answer.status !== 200 || answer.tenantId === null) {
@@ -4647,7 +4745,7 @@ describe("proof 28 — OD-G18 bounds, including the race", () => {
       const who = await makeIdentity(config, "g18-race", runId);
 
       for (const n of [1, 2]) {
-        const answer = await provision(who, `g18-race-pre-${runId}-${n}`, `${SYNTHETIC_PREFIX}g18-race-pre-${runId}-${n}`);
+        const answer = await provision(who, `g18-race-pre-${runId}-${n}`);
         if (answer.status !== 200 || answer.tenantId === null) {
           failures.push(`setup provision ${n}: REFUSED ${answer.status} ${answer.body.slice(0, 200)}`);
         }
@@ -4660,8 +4758,8 @@ describe("proof 28 — OD-G18 bounds, including the race", () => {
 
       const startedAt = Date.now();
       const [left, right] = await Promise.all([
-        provision(who, `g18-race-l-${runId}`, `${SYNTHETIC_PREFIX}g18-race-l-${runId}`),
-        provision(who, `g18-race-r-${runId}`, `${SYNTHETIC_PREFIX}g18-race-r-${runId}`),
+        provision(who, `g18-race-l-${runId}`),
+        provision(who, `g18-race-r-${runId}`),
       ]);
       const elapsedMs = Date.now() - startedAt;
       const after = await provisionedRows(who.authId);
@@ -4704,7 +4802,7 @@ describe("proof 28 — OD-G18 bounds, including the race", () => {
       const who = await makeIdentity(config, "g18-refuse", runId);
 
       for (let n = 1; n <= 3; n += 1) {
-        const answer = await provision(who, `g18-ref-pre-${runId}-${n}`, `${SYNTHETIC_PREFIX}g18-ref-pre-${runId}-${n}`);
+        const answer = await provision(who, `g18-ref-pre-${runId}-${n}`);
         if (answer.status !== 200) {
           failures.push(`setup ${n}: ${answer.status} ${answer.body.slice(0, 160)}`);
         }
@@ -4718,7 +4816,7 @@ describe("proof 28 — OD-G18 bounds, including the race", () => {
           (select count(*) from public.activity_event)::int as events
       `);
 
-      const refused = await provision(who, `g18-ref-${runId}`, `${SYNTHETIC_PREFIX}g18-ref-${runId}`);
+      const refused = await provision(who, `g18-ref-${runId}`);
       const after = await provisionedRows(who.authId);
       const [totalsAfter] = await sql<{ tenants: number; memberships: number; events: number }>(`
         select
@@ -4775,7 +4873,7 @@ describe("proof 28 — OD-G18 bounds, including the race", () => {
       const startedAt = Date.now();
       const answers = await Promise.all(
         [0, 1, 2, 3].map((n) =>
-          provision(who, `g18-from0-${runId}-${n}`, `${SYNTHETIC_PREFIX}g18-from0-${runId}-${n}`),
+          provision(who, `g18-from0-${runId}-${n}`),
         ),
       );
       const elapsedMs = Date.now() - startedAt;
@@ -6184,6 +6282,14 @@ describe("proof 33 — Brand, Asset and TranslationKey isolation", () => {
         body_key_id: t.translationKeyId,
         ordinal: 3,
       },
+      legal_entity: { tenant_id: t.id },
+      onboarding_draft: { tenant_id: t.id, resume_step: "typography" },
+      onboarding_draft_color: {
+        tenant_id: t.id,
+        draft_id: t.onboardingDraftId,
+        role: "accent",
+        srgb: "#333333",
+      },
     };
     return { id: randomUUID(), ...base[table], ...extra };
   };
@@ -6638,6 +6744,252 @@ describe("proof 33 — Brand, Asset and TranslationKey isolation", () => {
       "translation_entry.locale refuses a value outside the permitted set",
       failures,
       evidence.join("; "),
+    );
+    expect(failures).toEqual([]);
+  });
+});
+
+describe("proof 34 — legal entity and onboarding draft (OD-G26, OD-A9)", () => {
+  const stateOf = (body: string): string => {
+    const code = body.match(/\b(23\d{3}|42501)\b/);
+    return code ? code[1] : "";
+  };
+
+  it("34a tenant A cannot read tenant B's legal entity, draft or draft colour", async () => {
+    const { a, b } = fixture;
+    const failures: string[] = [];
+    const tables = ["legal_entity", "onboarding_draft", "onboarding_draft_color"] as const;
+    const foreign = {
+      legal_entity: b.legalEntityId,
+      onboarding_draft: b.onboardingDraftId,
+      onboarding_draft_color: b.onboardingDraftColorId,
+    };
+    for (const who of [a.owner, a.viewer]) {
+      for (const table of tables) {
+        const attempt = await probe.select(who, table);
+        if (!attempt.ok) {
+          failures.push(`${who.label} SELECT ${table}: ${attempt.status} ${attempt.message}`);
+          continue;
+        }
+        if (attempt.ids.includes(foreign[table])) {
+          failures.push(`${who.label} SELECT ${table}: read tenant B's row`);
+        }
+      }
+    }
+    const ownerDraft = await probe.select(a.owner, "onboarding_draft");
+    if (!ownerDraft.ids.includes(a.onboardingDraftId)) {
+      failures.push("A-owner SELECT onboarding_draft: own row missing");
+    }
+    const viewerDraft = await probe.select(a.viewer, "onboarding_draft");
+    if (viewerDraft.ids.length !== 0) {
+      failures.push(`A-viewer SELECT onboarding_draft: read ${viewerDraft.ids.length} row(s)`);
+    }
+    record(
+      "34a",
+      "Tenant A cannot read tenant B's legal entity, draft or draft colour",
+      failures,
+      `owner and viewer of A read none of B's three rows; A's owner reads A's draft and A's viewer reads none`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("34b tenant A cannot insert tenant B's legal entity, draft or draft colour", async () => {
+    const { a, b } = fixture;
+    const failures: string[] = [];
+    const attempts: [string, Awaited<ReturnType<typeof probe.insert>>][] = [
+      ["legal_entity", await probe.insert(a.owner, "legal_entity", { id: randomUUID(), tenant_id: b.id })],
+      ["onboarding_draft", await probe.insert(a.owner, "onboarding_draft", {
+        id: randomUUID(), tenant_id: b.id, resume_step: "brand",
+      })],
+      ["onboarding_draft_color", await probe.insert(a.owner, "onboarding_draft_color", {
+        id: randomUUID(), tenant_id: b.id, draft_id: b.onboardingDraftId, role: "accent", srgb: "#222222",
+      })],
+    ];
+    for (const [table, attempt] of attempts) {
+      if (attempt.ok) failures.push(`A-owner INSERT ${table} into tenant B: ACCEPTED`);
+    }
+    record(
+      "34b",
+      "Tenant A cannot insert into tenant B's legal entity, draft or draft colour",
+      failures,
+      attempts.map(([table, attempt]) => `${table}=${attempt.status}`).join(", "),
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("34c tenant A cannot update tenant B's legal entity, draft or draft colour", async () => {
+    const { a, b } = fixture;
+    const failures: string[] = [];
+    const phone = await probe.update(a.owner, "legal_entity", b.legalEntityId, { contact_phone: "+201001111111" });
+    const step = await probe.update(a.owner, "onboarding_draft", b.onboardingDraftId, { resume_step: "review" });
+    const color = await probe.update(a.owner, "onboarding_draft_color", b.onboardingDraftColorId, { srgb: "#abcdef" });
+    if (phone.count > 0 || step.count > 0 || color.count > 0) {
+      failures.push("A-owner UPDATE of tenant B's row was accepted");
+    }
+    if ((await columnValue("legal_entity", b.legalEntityId, "contact_phone")) !== null) {
+      failures.push("tenant B legal_entity.contact_phone changed");
+    }
+    if ((await columnValue("onboarding_draft", b.onboardingDraftId, "resume_step")) !== "brand") {
+      failures.push("tenant B onboarding_draft.resume_step changed");
+    }
+    if ((await columnValue("onboarding_draft_color", b.onboardingDraftColorId, "srgb")) !== "#000000") {
+      failures.push("tenant B onboarding_draft_color.srgb changed");
+    }
+    record(
+      "34c",
+      "Tenant A cannot update tenant B's legal entity, draft or draft colour",
+      failures,
+      `legal_entity=${phone.status}/${phone.count}, draft=${step.status}/${step.count}, color=${color.status}/${color.count}`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("34d a Manager of tenant A cannot insert or update A's legal entity or draft", async () => {
+    const failures: string[] = [];
+    const runId = randomUUID().slice(0, 8);
+    const owner = await makeIdentity(config, "g26-owner", runId);
+    const manager = await makeIdentity(config, "g26-manager", runId);
+    const created = await provision(owner, `g26-mgr-${runId}`);
+    if (created.tenantId === null) {
+      failures.push(`precondition: provisioning answered ${created.status}`);
+    }
+    const tenantId = created.tenantId ?? randomUUID();
+    await sql(`
+      insert into public.membership (id, tenant_id, member_id, role, status, accepted_at)
+      values ('${randomUUID()}', '${tenantId}', '${manager.authId}', 'manager', 'active', now())
+    `);
+
+    const legal = await probe.insert(manager, "legal_entity", { id: randomUUID(), tenant_id: tenantId });
+    const draft = await probe.insert(manager, "onboarding_draft", {
+      id: randomUUID(), tenant_id: tenantId, resume_step: "brand",
+    });
+    if (legal.ok) failures.push("manager INSERT legal_entity: ACCEPTED");
+    if (draft.ok) failures.push("manager INSERT onboarding_draft: ACCEPTED");
+    if (stateOf(legal.message) === "23505" || stateOf(draft.message) === "23505") {
+      failures.push("manager insert was a unique violation, which does not prove the policy");
+    }
+
+    const legalId = randomUUID();
+    const draftId = randomUUID();
+    await sql(`
+      insert into public.legal_entity (id, tenant_id) values ('${legalId}', '${tenantId}');
+      insert into public.onboarding_draft (id, tenant_id, resume_step)
+      values ('${draftId}', '${tenantId}', 'brand');
+    `);
+    const phone = await probe.update(manager, "legal_entity", legalId, { contact_phone: "+201002222222" });
+    const step = await probe.update(manager, "onboarding_draft", draftId, { resume_step: "review" });
+    if (phone.count > 0) failures.push("manager UPDATE legal_entity: ACCEPTED");
+    if (step.count > 0) failures.push("manager UPDATE onboarding_draft: ACCEPTED");
+    if ((await columnValue("legal_entity", legalId, "contact_phone")) !== null) {
+      failures.push("manager UPDATE legal_entity changed the phone");
+    }
+    if ((await columnValue("onboarding_draft", draftId, "resume_step")) !== "brand") {
+      failures.push("manager UPDATE onboarding_draft changed the step");
+    }
+
+    record(
+      "34d",
+      "A Manager of tenant A cannot insert or update A's legal entity or draft",
+      failures,
+      `insert legal_entity=${legal.status} draft=${draft.status}; update legal_entity=${phone.count} draft=${step.count}`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("34e a cross-tenant translation key or draft reference is refused by construction", async () => {
+    const { a, b } = fixture;
+    const failures: string[] = [];
+    const key = await sql.try(`
+      update public.legal_entity
+         set legal_name_key_id = '${b.translationKeyId}'
+       where id = '${a.legalEntityId}'
+    `);
+    const colorId = randomUUID();
+    const draft = await sql.try(`
+      insert into public.onboarding_draft_color (id, tenant_id, draft_id, role, srgb)
+      values ('${colorId}', '${a.id}', '${b.onboardingDraftId}', 'secondary', '#444444')
+    `);
+    if (stateOf(key.body) !== "23503") failures.push(`cross-tenant key answered ${stateOf(key.body) || key.body.slice(0, 160)}`);
+    if (stateOf(draft.body) !== "23503") failures.push(`cross-tenant draft answered ${stateOf(draft.body) || draft.body.slice(0, 160)}`);
+    record(
+      "34e",
+      "A cross-tenant translation key or draft reference is refused by construction",
+      failures,
+      `key=${stateOf(key.body)}, draft=${stateOf(draft.body)}`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("34f unique refuses a second legal entity or draft for the same tenant", async () => {
+    const { a } = fixture;
+    const failures: string[] = [];
+    const legal = await sql.try(`
+      insert into public.legal_entity (id, tenant_id) values ('${randomUUID()}', '${a.id}')
+    `);
+    const draft = await sql.try(`
+      insert into public.onboarding_draft (id, tenant_id, resume_step)
+      values ('${randomUUID()}', '${a.id}', 'company')
+    `);
+    if (stateOf(legal.body) !== "23505") failures.push(`second legal_entity answered ${stateOf(legal.body)}`);
+    if (stateOf(draft.body) !== "23505") failures.push(`second onboarding_draft answered ${stateOf(draft.body)}`);
+    record(
+      "34f",
+      "Unique refuses a second legal entity or a second draft for one tenant",
+      failures,
+      `legal_entity=${stateOf(legal.body)}, onboarding_draft=${stateOf(draft.body)}`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("34g check refuses a bad tax number, a non-E.164 phone and a malformed srgb", async () => {
+    const { a } = fixture;
+    const failures: string[] = [];
+    const tax = await sql.try(`
+      update public.legal_entity set tax_registration_number = 'bad tax'
+       where id = '${a.legalEntityId}'
+    `);
+    const phone = await sql.try(`
+      update public.legal_entity set contact_phone = '01001234567'
+       where id = '${a.legalEntityId}'
+    `);
+    const color = await sql.try(`
+      update public.onboarding_draft_color set srgb = '#GGGGGG'
+       where id = '${a.onboardingDraftColorId}'
+    `);
+    if (stateOf(tax.body) !== "23514") failures.push(`tax answered ${stateOf(tax.body)}`);
+    if (stateOf(phone.body) !== "23514") failures.push(`phone answered ${stateOf(phone.body)}`);
+    if (stateOf(color.body) !== "23514") failures.push(`srgb answered ${stateOf(color.body)}`);
+    record(
+      "34g",
+      "Check refuses a bad tax registration number, a non-E.164 phone and a malformed srgb",
+      failures,
+      `tax=${stateOf(tax.body)}, phone=${stateOf(phone.body)}, srgb=${stateOf(color.body)}`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("34h two provisions receive distinct generated slugs", async () => {
+    const failures: string[] = [];
+    const runId = randomUUID().slice(0, 8);
+    const who = await makeIdentity(config, "g26-slugs", runId);
+    const first = await provision(who, `g26-slug-a-${runId}`);
+    const second = await provision(who, `g26-slug-b-${runId}`);
+    if (first.tenantId === null || second.tenantId === null) {
+      failures.push(`provisioning answered ${first.status} and ${second.status}`);
+    }
+    const [row] = await sql<{ one: string | null; two: string | null }>(`
+      select
+        (select slug from public.tenant where id = '${first.tenantId ?? randomUUID()}') as one,
+        (select slug from public.tenant where id = '${second.tenantId ?? randomUUID()}') as two
+    `);
+    if (row.one === null || !/^[0-9a-f]{12}$/.test(row.one)) failures.push(`first slug is ${row.one}`);
+    if (row.two === null || !/^[0-9a-f]{12}$/.test(row.two)) failures.push(`second slug is ${row.two}`);
+    if (row.one !== null && row.one === row.two) failures.push(`both provisions stored ${row.one}`);
+    record(
+      "34h",
+      "Two provisions receive distinct generated slugs",
+      failures,
+      `slugs ${row.one} and ${row.two}`,
     );
     expect(failures).toEqual([]);
   });

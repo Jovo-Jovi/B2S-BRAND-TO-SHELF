@@ -10,9 +10,9 @@ enum.
 > This is a specification, not prose. One table. Every capability traces to a
 > `Can` cell in `TENANCY_MODEL.md` §3 or §5, and every owning phase is a real
 > heading in `BUILD_PHASES.md`. `scripts/check_roadmap.py` asserts both facts
-> on every push (OD-H9): no actor here that is not the enum plus the two named
-> exceptions, no phase here that `BUILD_PHASES.md` does not carry, and every
-> enum role holds at least one row.
+> on every push (OD-H9): no actor here that is not the enum plus the named
+> non-enum actors Operator, Buyer and Visitor, no phase here that
+> `BUILD_PHASES.md` does not carry, and every enum role holds at least one row.
 
 ---
 
@@ -36,6 +36,8 @@ non-enum actors, Operator and Buyer. Measured: those seven are the whole
 accepted set, and an unauthenticated visitor is none of them. No table row
 was added, and no role was added. The capability is carried as a
 carry-forward whose owner is the reviewer.
+
+**AMENDED 2026-10-03 — Visitor is a row (OD-A8, OD-A9).** The annotation above stands and is not edited (PR-07). It records why P03-T16 added no row. `scripts/check_roadmap.py` now admits Visitor beside Operator and Buyer. The capability is a table row. Visitor is not a tenant role.
 
 ---
 
@@ -62,6 +64,9 @@ carry-forward whose owner is the reviewer.
 | Operator | Reach restricted to metadata only, by construction | P02 | OD-G10. "`Operator` reach limited to metadata per OD-G10" is a named P02 deliverable. **Not:** an `Operator` never reaches tenant business data — no `Buyer`, `Invoice`, `Payment`, `CreditNote`, cost or margin figure, `Product` name, `MediaAsset`, `Artwork` or `BrandProfile` value — under any circumstance, without a live `ConsentGrant`; and there is no API path to become an Operator — no self-registration, invitation or public endpoint, and no API role holds INSERT, UPDATE or DELETE on `public.operator` (OD-G19) |
 | Operator | Break-glass access to a stated module, only under a live, time-boxed `ConsentGrant`, with every access logged as an `ActivityEvent` | P02 | `TENANCY_MODEL.md` §5's break-glass path; `ConsentGrant` and `ActivityEvent` are named P02 deliverables |
 | Buyer | None — a data record referenced by `SalesOrder` and `Invoice`, not a role with a capability | P05 | `TENANCY_MODEL.md` §3 does not name `Buyer` among the five roles at all; `SCOPE.md` module 13 creates the `Buyer` entity at P05. **Not:** a `Buyer` never signs in, holds no `Membership`, no `Role` and no session — misreading it as an actor is the failure this row exists to foreclose |
+| Owner | Complete the onboarding wizard: provision at Welcome, save and resume unfinished answers, make the brand profile current | P03 | OD-A9. Welcome provisions the tenant. Answers that are valid on their own are written where they belong. Colours wait in the onboarding draft until all seven roles hold a value. Review makes the profile current and archives the draft |
+| Owner | Record and edit the legal entity | P03 | OD-A9. Owner-only write. A Manager cannot change billing, and the legal entity is the identity every invoice names |
+| Visitor | View the public site and enter sign-up or sign-in | P08 | OD-A8. Not a tenant role. The public site owns no data |
 
 ---
 

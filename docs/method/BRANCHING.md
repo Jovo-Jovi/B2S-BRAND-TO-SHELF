@@ -39,6 +39,8 @@ only pull request the phase may hold. Origin: pull requests #4 to #8, each
 opened with the owner's credentials during the phase, each running the full
 isolation suite on every push.
 
+**AMENDED 2026-10-03 — what the draft is for.** The paragraph above stands and is not edited (PR-07). The draft's value is one pull request per phase that cannot be merged before the gate. It is not per-push isolation coverage, as the reviewer's earlier amendment claimed: pushes that touch schema, migrations, types or the suite already run isolation on the push trigger, and a pull request's path filter matches its whole diff against main, so a draft re-ran the full suite on every push, including docs-only ones — four serialised runs in P03-T17. The pull-request trigger now runs only when the pull request is marked ready, which is the gate moment, and tests the merged result.
+
 A signed mid-phase amendment gets its own branch and its own consolidated PR,
 on the same terms.
 

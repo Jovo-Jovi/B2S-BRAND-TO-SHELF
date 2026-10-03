@@ -34,8 +34,8 @@ MARKER = re.compile(r"^-- ===== migration: (.+?) =====\s*$", re.M)
 # are the true counts at the commit that landed them. Changed condition,
 # not a new premise: PROVEN_PAIRS does not move (schema.sql and
 # supabase/migrations/ are already this check's pair).
-MINIMUM_MIGRATIONS = 24
-MINIMUM_NON_BLANK_LINES = 2108
+MINIMUM_MIGRATIONS = 25
+MINIMUM_NON_BLANK_LINES = 2386
 
 
 def fail(message):

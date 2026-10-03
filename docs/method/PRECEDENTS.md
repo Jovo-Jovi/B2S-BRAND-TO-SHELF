@@ -982,3 +982,10 @@ and the static check that state it too.
   text colour matches and the background does not, and no other style
   distinguishes the link. `color-contrast` and `target-size` ship disabled
   and must be enabled to be observed.
+- Learned at P03-T18: `scripts/check_two_way_empty_target.py` classifies a
+  Node stack — a line beginning `at `, or `node:internal` — as a crash, and
+  a crash is not a proof that the check noticed its premise was gone. An
+  uncaught `readFileSync` of a removed file is that crash. The check has to
+  `fail()` and exit 1, which is what an emptied file already produced.
+  `scripts/check-token-values.mjs` now does that for `app/globals.css`. The
+  pair was already landed; none was added.

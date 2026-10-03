@@ -27,14 +27,23 @@
 # Restricting the trigger to main was belt-and-braces that removed the
 # belt. CF-109 stays closed on its own terms; the gap is CF-164.
 #
-# A phase-exit push and its pull request both fire. Two serialised
-# nine-minute runs once per phase is the correct price; do not
-# "optimise" the duplicate away.
+# The pull-request trigger runs only when the pull request is not a draft,
+# on opened, synchronize, reopened and ready_for_review. A draft is not
+# per-push isolation coverage: the push trigger already runs the suite
+# when the diff touches schema, migrations, types or the suite. Marking
+# the pull request ready is the gate moment, and that run tests the
+# merged result. The push trigger, its path filter and the concurrency
+# group are unchanged.
 
 name: isolation
 
 on:
   pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
     branches:
       - main
     paths:
@@ -64,6 +73,7 @@ env:
 
 jobs:
   isolation:
+    if: github.event_name == 'push' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     # The suite ran about nine minutes at P03-T01-RESUME and has reached 15 to
     # 20 minutes since, with no change to its 94 assertions. This job was

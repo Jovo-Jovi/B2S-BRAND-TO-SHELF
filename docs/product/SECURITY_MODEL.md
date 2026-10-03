@@ -395,7 +395,7 @@ the function read theirs instead.
 | `has_live_consent_grant(uuid)` | `''` | Evaluates the grant that gates operator reach, on a table the operator has no policy to read |
 | `operator_read_activity_event(uuid)` | `''` | The one declared operator read path. Refuses without a live grant, writes the log before returning, and omits `payload` from its return type |
 | `materialise_member()` | `''` | Writes the `member` row for a new identity, from a trigger on `auth.users`. `member` carries no INSERT policy at all and GoTrue's `supabase_auth_admin` holds no INSERT privilege on it, so there is no non-definer path by which authentication could create one. It holds no grant, so it is not an endpoint — see below |
-| `provision_tenant(text, text, text, text)` | `''` | Writes a `tenant`, its first active owner `membership` and the `activity_event` in one transaction. `tenant` carries no INSERT policy and `authenticated` holds no INSERT privilege on it; and the caller cannot yet be an owner of a tenant that does not exist, so `membership_insert_owner` would refuse the second row even where the privilege exists. Granted to every `authenticated` caller — the containment is below |
+| `provision_tenant(text, text, text)` | `''` | Writes a `tenant`, its first active owner `membership` and the `activity_event` in one transaction. `tenant` carries no INSERT policy and `authenticated` holds no INSERT privilege on it; and the caller cannot yet be an owner of a tenant that does not exist, so `membership_insert_owner` would refuse the second row even where the privilege exists. Granted to every `authenticated` caller — the containment is below |
 | `caller_email_is_verified()` | `''` | Reads `auth.users.email_confirmed_at`. No `authenticated` caller can select that column, and OD-G13's acceptance invariant is satisfied today by a verified email and nothing else, so a policy on `membership` and a function that spends an `invitation` both need a definer to ask. Returns false for a null `auth.uid()` rather than raising, so an unauthenticated evaluation is a denial, not an error. Granted to `authenticated` because `membership_accept_invitation` names it |
 | `accept_invitation(uuid)` | `''` | OD-G16's single act: read an invitation the invitee cannot see (they hold no membership in the inviting tenant, so RLS would hide the row), confirm the caller's verified email matches, insert the caller's own `active` `membership`, and spend the invitation, in one transaction. There is no member parameter — the member is `auth.uid()` — so an Owner cannot produce an active Membership for anyone but themselves through this path either. Granted to every `authenticated` caller; the containment is the same shape as `provision_tenant`'s: the only identity the caller can name is their own |
 
@@ -407,7 +407,7 @@ tables` does not cover functions. All ten are therefore revoked from `public`,
 - **Eight are granted to `authenticated`**, and to nothing else:
   `current_tenant_id()`, `is_operator()`, `is_current_tenant_owner()`,
   `has_live_consent_grant(uuid)`, `operator_read_activity_event(uuid)`,
-  `provision_tenant(text, text, text, text)`, `caller_email_is_verified()` and
+  `provision_tenant(text, text, text)`, `caller_email_is_verified()` and
   `accept_invitation(uuid)`.
 - **Two are granted to nobody at all.** `enforce_tenant_active_owner()` and
   `materialise_member()` are trigger functions, and a trigger function's
@@ -426,6 +426,8 @@ perform up to three provisioning acts per rolling 24 hours (OD-G18, proven by
 28a–28e, including two concurrent calls of which exactly one succeeds); take
 any unused `slug`, which is globally unique, and so deny that name to everyone
 else — the cap bounds tenants, not slugs, and OD-G18 names that as unsolved.
+
+**AMENDED 2026-10-03 — the slug is generated (OD-G26).** The sentence above stands and is not edited (PR-07). `provision_tenant` takes `(name, base_currency, default_locale)` and generates the slug. No caller can take any slug. The catalog entry states `provision_tenant(text, text, text)`; the count of security-definer functions in `public` stays ten, one identity replacing another.
 
 A hostile authenticated caller **cannot**: name anybody else as the owner —
 there is no member parameter, the owner is `auth.uid()`, and naming a stranger

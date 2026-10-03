@@ -13,8 +13,8 @@ holds it equivalent to the applied migrations, so a function that exists in the
 database exists here.
 
   count      §11a.1's stated `public` total equals the number of rows in its own
-             table, and equals the number of `security definer` functions the
-             schema declares in `public`
+             table, and equals the number of `security definer` functions
+             alive in `public` after every `drop function` in source order
   forward    every `security definer` function in `public` has a row
   backward   every row names a `security definer` function in `public`
   totals     §11a.1's stated catalog total equals its stated `public` total plus
@@ -42,8 +42,11 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DOC_REL = "docs/product/SECURITY_MODEL.md"
 SCHEMA_REL = "supabase/schema.sql"
 
-MINIMUM_TABLE_ROWS = 2
-MINIMUM_SCHEMA_DEFINERS = 2
+# Live identities after every drop, not each historical create. A schema
+# that still holds the dropped four-argument provision_tenant beside the
+# three-argument one reads 11 and fails. Floor is the live count (PR-27).
+MINIMUM_TABLE_ROWS = 10
+MINIMUM_SCHEMA_DEFINERS = 10
 
 WORD_NUMBERS = {
     "zero": 0, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
@@ -135,13 +138,29 @@ def documented(section):
     return rows
 
 
+def _argument_list(code, open_paren_end):
+    """The text inside the parentheses that open at `open_paren_end`."""
+    depth, i = 1, open_paren_end
+    while depth and i < len(code):
+        if code[i] == "(":
+            depth += 1
+        elif code[i] == ")":
+            depth -= 1
+        i += 1
+    return code[open_paren_end:i - 1], i
+
+
 def schema_definers(schema):
-    """Every `security definer` function `create`d in schema `public`.
+    """Every `security definer` function alive in schema `public`.
 
     Line comments are blanked first, so `security definer` in prose above a
-    function is never read as an option of it. A `create or replace` of a
-    function already created — migration 13 does this to `current_tenant_id()` —
-    is the same identity and is counted once.
+    function is never read as an option of it. Creates and drops are applied
+    in source order. A `create or replace` of a function already created —
+    migration 13 does this to `current_tenant_id()` — is the same identity
+    and is counted once. A `drop function` removes that identity, so a
+    replaced signature does not leave the dropped one in the count. The
+    plant is the new create without the drop: both identities remain and
+    the count reads 11.
     """
     code = "\n".join(
         line[:line.find("--")] if line.find("--") >= 0 else line
@@ -151,31 +170,38 @@ def schema_definers(schema):
         )
     )
 
-    found = {}
+    events = []
     for match in re.finditer(
             r"create\s+(?:or\s+replace\s+)?function\s+public\.(\w+)\s*\(",
             code, re.I):
         name = match.group(1)
-        depth, i = 1, match.end()
-        while depth and i < len(code):
-            if code[i] == "(":
-                depth += 1
-            elif code[i] == ")":
-                depth -= 1
-            i += 1
-        signature = code[match.end():i - 1]
-        body = re.compile(r"\bas\s+(\$\w*\$)", re.I).search(code, i)
+        signature, after = _argument_list(code, match.end())
+        body = re.compile(r"\bas\s+(\$\w*\$)", re.I).search(code, after)
         if not body:
             die(f"{SCHEMA_REL}: `create function public.{name}` has no "
                 f"dollar-quoted body, so its options cannot be read and its "
                 f"`security definer` status is unknown")
-        options = code[i:body.start()]
+        options = code[after:body.start()]
         identity = f"{name}({normalise_args(signature)})"
         definer = bool(re.search(r"security\s+definer", options, re.I))
-        # A later `create or replace` is what the database ends up holding.
-        found[identity] = definer
+        events.append((match.start(), "create", identity, definer))
 
-    return sorted(k for k, v in found.items() if v)
+    for match in re.finditer(
+            r"drop\s+function\s+(?:if\s+exists\s+)?public\.(\w+)\s*\(",
+            code, re.I):
+        name = match.group(1)
+        signature, _after = _argument_list(code, match.end())
+        identity = f"{name}({normalise_args(signature)})"
+        events.append((match.start(), "drop", identity, False))
+
+    alive = {}
+    for _pos, kind, identity, definer in sorted(events, key=lambda event: event[0]):
+        if kind == "create":
+            alive[identity] = definer
+        else:
+            alive.pop(identity, None)
+
+    return sorted(name for name, definer in alive.items() if definer)
 
 
 def main():

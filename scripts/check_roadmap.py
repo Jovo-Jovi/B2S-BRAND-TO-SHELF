@@ -23,8 +23,8 @@ and fails when it examined less, rather than reporting a clean zero:
                                     regenerate — both sides empty of Release
                                     2/3 content alike — and the byte-comparison
                                     below would pass over the loss (P02-T09).
-  MINIMUM_ROLE_JOURNEY_ROWS    19 — docs/product/ROLE_JOURNEY.md's table
-                                    (P02-T09, OD-H9)
+  MINIMUM_ROLE_JOURNEY_ROWS    22 — docs/product/ROLE_JOURNEY.md's table
+                                    (P02-T09, OD-H9; raised 19 → 22 at P03-T18)
 
 Each of the two removed-target and emptied-target failure modes is proven by
 this repository's own plant-and-revert probe set (PR-26): removing or
@@ -39,7 +39,7 @@ reality, or it does not land. Three assertions, each naming the short side:
 
   actors    every Role cell in the table is one of the five values
             `supabase/schema.sql`'s `public.role` enum declares, or one of the
-            two named non-enum actors, Operator and Buyer — an actor spelled
+            named non-enum actors, Operator, Buyer and Visitor — an actor spelled
             any other way is unrecognised by construction
   coverage  every one of the five enum values has at least one table row —
             an enum value the table never mentions is a role this
@@ -71,7 +71,7 @@ more assertions, each naming the short side:
               role is caught here even if the enum and ROLE_JOURNEY.md never
               change
   non-enum    the set of ROLE_JOURNEY.md actors outside the enum is exactly
-              {Operator, Buyer} — not a superset (an unrecognised actor is
+              {Operator, Buyer, Visitor} — not a superset (an unrecognised actor is
               already caught above) and not a subset either: a ROLE_JOURNEY.md
               that dropped every Buyer row would still pass the "actors" and
               "coverage" assertions above, because neither one requires a
@@ -136,10 +136,10 @@ MINIMUM_PHASES = 9
 MINIMUM_DONE_STEPS_ROWS = 1
 MINIMUM_OPEN_CARRY_FORWARDS = 1
 MINIMUM_RELEASE_BLOCKS = 3
-MINIMUM_ROLE_JOURNEY_ROWS = 19
+MINIMUM_ROLE_JOURNEY_ROWS = 22
 MINIMUM_TENANCY_SECTION3_ROLES = 5
 
-NAMED_NON_ENUM_ACTORS = {"Operator", "Buyer"}
+NAMED_NON_ENUM_ACTORS = {"Operator", "Buyer", "Visitor"}
 
 # P02-T11 — the fold cannot silently flatten. Every phase card and every
 # progress-log entry in docs/roadmap.html is a native <details>; ROLE_JOURNEY
@@ -234,7 +234,7 @@ def check_role_journey_conformance(role_journey_rows, phase_ids, enum_roles,
         fail(
             f"{ROLE_JOURNEY_REL}: {len(unrecognised)} actor(s) named that are "
             f"neither a `public.role` enum value ({', '.join(enum_roles)}) "
-            f"nor one of the two named non-enum actors "
+            f"nor one of the named non-enum actors "
             f"({', '.join(sorted(NAMED_NON_ENUM_ACTORS))}): "
             f"{', '.join(unrecognised)}"
         )
@@ -288,12 +288,12 @@ def check_role_journey_conformance(role_journey_rows, phase_ids, enum_roles,
     if extra_non_enum:
         fail(
             f"{ROLE_JOURNEY_REL}: {len(extra_non_enum)} non-enum actor(s) "
-            f"beyond the two named ones ({', '.join(sorted(NAMED_NON_ENUM_ACTORS))}): "
+            f"beyond the named ones ({', '.join(sorted(NAMED_NON_ENUM_ACTORS))}): "
             f"{', '.join(extra_non_enum)}"
         )
     if missing_non_enum:
         fail(
-            f"{ROLE_JOURNEY_REL}: {len(missing_non_enum)} of the two named "
+            f"{ROLE_JOURNEY_REL}: {len(missing_non_enum)} of the named "
             f"non-enum actor(s) has no row at all in the table: "
             f"{', '.join(missing_non_enum)}"
         )
