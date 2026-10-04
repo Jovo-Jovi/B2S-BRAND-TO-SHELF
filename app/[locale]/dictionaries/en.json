@@ -284,5 +284,12 @@
     "logoTypeError": "That logo file type is not accepted.",
     "logoSizeError": "That logo file is too large.",
     "logoFailure": "The logo file could not be read."
+  },
+  "error": {
+    "title": "Something went wrong",
+    "message": "This page could not be shown.",
+    "next": "Try again. If it still fails, send the identifier below with your report.",
+    "retry": "Try again",
+    "copyIdentifier": "Copy identifier"
   }
 }

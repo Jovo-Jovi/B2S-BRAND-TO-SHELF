@@ -58,6 +58,10 @@ brand, not a demo. That is why staging and error visibility move to P03's
 entry and a rehearsed backup restore moves to P05's exit — a pilot puts real
 content and real money records into the system before P09's launch audit runs.
 
+**AMENDED 2026-10-04 (OD-H15).** The paragraph above stands. Production
+accepts no new account until launch. Staging is where that content is
+entered before launch.
+
 Onboarding wizard · Brand identity, master with one line · Assets, two tiers ·
 Templates for labels and stickers · Print export PDF + PNG with bleed/trim
 profiles · Catalog with master+variant, GTIN entry, QR generation · Inventory

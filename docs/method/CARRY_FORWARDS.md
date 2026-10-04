@@ -3310,13 +3310,20 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       and is not a halt. No chain-derived difference in B2S-owned
       `public` objects. Row stays OPEN. Owner: **the owner, for the
       production upgrade**.
-- [ ] CF-162 — OD-H13 defines error visibility and does not implement it.
+- [x] CF-162 — OD-H13 defines error visibility and does not implement it.
       Nothing in the repository or in `.env.local` satisfies it today:
       there is no error-tracking DSN, no log drain, no request identifier
       in an unhandled-error surface, and no `error.tsx` that shows one.
       Vercel runtime logs exist as a platform default; they do not by
       themselves put a request identifier in what the person saw.
       Owner: **P03, before the wizard accepts real content**.
+      CLOSED (P03-T21). The locale error boundary and the root error
+      boundary show the framework digest. One redacted structured line per
+      unhandled server error is written to the platform runtime logs.
+      OD-H15 carries the production condition: sign-up stays closed until
+      a plan keeps those logs for a working session, and until the privacy
+      policy is published.
+      Owner: none outstanding.
 - [ ] CF-163 — `ARCHITECTURE.md` §6's guard table names
       `check-print-containment` as the guard for "Page geometry is emitted
       by the print engine only". No such script exists and no workflow
@@ -4202,7 +4209,21 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
 - [ ] CF-235 — The six onboarding screens as routes, saving and resuming.
       Carries CF-214.
       Owner: **P03-T21**.
+      AMENDED (P03-T21) — this task is error visibility. The screens are
+      the next task.
+      Owner: **P03-T22**.
 - [ ] CF-236 — Archived media rows whose objects were not fully written are
       the cleanup record. A job that removes those objects is owed.
       Owner: **the operator surface at P07**.
+- [ ] CF-237 — Production runs on a Vercel plan whose runtime-log retention
+      meets OD-H13 — Pro's one day, or longer — and new sign-ups are opened
+      only as OD-H15 states: that plan, and the published privacy policy
+      (OD-A8), both in place.
+      Owner: **the owner, before launch**.
+- [ ] CF-238 — Production authentication has new sign-ups enabled.
+      Read-only, Management API, project akpvvydmltmfmkmwivgn, HTTP 200 at
+      2026-10-04T11:18:05.699Z: `disable_signup` is false. Disable new
+      sign-ups in production's authentication settings. This task did not
+      change the setting.
+      Owner: **the owner, before P03 merges**.
 

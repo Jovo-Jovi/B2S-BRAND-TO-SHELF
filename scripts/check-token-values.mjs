@@ -54,9 +54,10 @@ const MINIMUM_DELTA = 6;
 // P03-T12 — measured after DateField, FileDrop and DataTable.
 // P03-T13 — quiet fill is transparent, and the gallery is scanned: 1205 declarations, 89 sources.
 // P03-T19 — the typeface library stylesheet is scanned: 31 stylesheets, 1597 declarations, 38 font families, 109 sources.
+// P03-T21 measured 113 sources after the error boundaries and the probe.
 const MINIMUM_STYLESHEETS = 31;
 const MINIMUM_DECLARATIONS = 1597;
-const MINIMUM_SOURCES = 109;
+const MINIMUM_SOURCES = 113;
 
 const FAMILIES = new Set(["IBM Plex Sans", "IBM Plex Sans Arabic"]);
 const GENERICS = new Set(["system-ui", "sans-serif"]);

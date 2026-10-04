@@ -123,6 +123,7 @@ never delete (OD-D5).
 - **P03-T19** — The rest of the wizard, specified; the font library; the SVG cleaner. On phase/03-brand-and-onboarding from 2823a7e. Pull request #8 stays the one draft against main, not marked ready. Node v24.21.0 matches .nvmrc 24. Prompt named Opus; this session ran as Grok 4.7. No database and no object store. ADR-016 chooses @xmldom/xmldom 0.9.12, MIT as the package declares it. Almarai was not shipped: the publisher's OFL.txt names Boutros International and the font's name table reserves all rights. Eleven families shipped, each SIL Open Font License 1.1 from the publisher's file. Conversion, where used, is fontTools 4.58.2. Static set stays 29. PROVEN_PAIRS 64 to 67. fail() stays 138. 42 open at 2823a7e plus CF-234 and CF-235 landed open minus CF-225 closed equals 43. Ledger 218 to 220. Plants: a component stylesheet naming Cairo fails; a registry family with no @font-face fails; removing the script check fails the corpus; accepting a 999-pixel PNG fails its test. Each restored byte-identical. Known-good logos match after cleaning in the browser tier. Gallery matrix 8 passed. REVIEWER_CHAT unstaged.
 - **P03-T20** — HALT 4, before any bucket, migration or upload module. On phase/03-brand-and-onboarding at 2612884. Pull request #8 stays the one draft against main, not marked ready. Node v24.21.0 matches .nvmrc 24. Prompt named Opus; this session ran as Grok 4.7. Production counts by Management API, User-Agent B2S-P03-T20-independent/1.0, project akpvvydmltmfmkmwivgn: public.tenant [{"n":0}] and auth.users [{"n":0}] at 2026-10-03T21:45:54Z and 21:45:56Z. Service-role construction remains only lib/supabase/server-only/service.ts. PART 1 found no higher-precedence contradiction. media_asset.provider and media_asset.checksum are not null, and no document states the stored provider string or the checksum algorithm and encoding. The suite's fixture literals are not that statement. 43 open at 2612884 plus 0 minus 0 equals 43. CF-234 stays open. Isolation suite not run. REVIEWER_CHAT unstaged.
 - **P03-T20** — Private tenant-media bucket, storage policies, Asset-tier checks, and the upload path. On phase/03-brand-and-onboarding from 7d08c8d. Pull request #8 stays the one draft against main, not marked ready. Node v24.21.0 matches .nvmrc 24. Prompt named Opus; this session ran as Grok 4.7. The halted P03-T20 is PASS; the halt was correct. Production tenant and auth.users both 0 before the push. Schema half recorded at 2026-10-03T22:32:12Z, relation fingerprint d15e13d419ed388303241fef96a8f796, 25 migrations, no bucket. After the push: 26 migrations, one private bucket tenant-media, select and insert policies only, seven new checks, public buckets 0, tenant and auth.users still 0. Types regenerated from staging, byte-identical. Isolation 110 expected, 110 PASS, 0 FAIL, 0 LOST, D at zero including storage objects, suite wall 407468ms. Slowest assertion 19 at 20861ms. Existing claims identical, 102. Static set 30. PROVEN_PAIRS 68 of 68, KNOWN_GAPS 1. fail() 148. 43 open plus 1 landed open minus 1 closed equals 43. Closed CF-234. Open CF-236, owner the operator surface at P07. CF-162, CF-235 and CF-214 stay open. REVIEWER_CHAT unstaged.
+- **P03-T21** — Error visibility (OD-H13) and production closed to new accounts until launch (OD-H15). On phase/03-brand-and-onboarding from d6ab5b7. Pull request #8 stays the one draft against main, not marked ready. Node v24.21.0 matches .nvmrc 24. Prompt named Opus; this session ran as Grok 4.7. Production auth read-only, User-Agent B2S-P03-T21-independent/1.0, project akpvvydmltmfmkmwivgn, HTTP 200 at 2026-10-04T11:18:05.699Z: disable_signup false, so new sign-ups are enabled. Not changed. Register 103 to 104. OD-H15. Both error boundaries show the digest. One redacted JSON line per unhandled server error. Probe refused when VERCEL_ENV is production. Plants: email redaction removed, its unit test failed; the boundary passed an empty identifier, the browser test failed; both restored. Browser tier: four locale and theme combinations, plus the email fixture. Static set stays 30. PROVEN_PAIRS stays 68. No new pair. File-count floors rose to the measured counts. 43 open at d6ab5b7 plus CF-237 and CF-238 landed open minus CF-162 closed equals 44. Ledger 221 to 223. CF-235 owner is P03-T22. Isolation suite not run. REVIEWER_CHAT unstaged.
 
 **Queued:**
 
@@ -234,6 +235,12 @@ thousand-tenant target · incident response and rollback · whether this
 repository stays public at commercial launch · Terms of Service, Privacy Policy
 and a data processing agreement, drafted by counsel, not by a builder.
 
+**Entry, additionally (OD-H15).** Production accepts no new accounts until
+launch. Opening sign-up requires both: production on a Vercel plan whose
+runtime-log retention meets OD-H13 — Pro's one day, or longer — and the
+published privacy policy (OD-A8). Staging and preview deployments stay open
+for testing.
+
 **The method document is authored last, at this phase's handoff.** `DEV_OS.md`
 and `DEV_OS_REFERENCE.md` are retained as history; B2S authors its own method
 from the loop it actually ran (OD-H12).
@@ -253,6 +260,7 @@ from the loop it actually ran (OD-H12).
 - incident response and rollback
 - whether this repository stays public at commercial launch
 - Terms of Service, Privacy Policy and a data processing agreement, drafted by counsel, not by a builder.
+- **Entry, additionally (OD-H15).** Production accepts no new accounts until launch. Opening sign-up requires both: production on a Vercel plan whose runtime-log retention meets OD-H13 — Pro's one day, or longer — and the published privacy policy (OD-A8). Staging and preview deployments stay open for testing.
 - **The method document is authored last, at this phase's handoff.** `DEV_OS.md` and `DEV_OS_REFERENCE.md` are retained as history; B2S authors its own method from the loop it actually ran (OD-H12).
 
 ---
@@ -342,18 +350,19 @@ Every row of `SESSION_CONTEXT.md`'s done-steps table — task id, description, c
 - **P03-T19** — The rest of the wizard, specified; the font library; the SVG cleaner. On phase/03-brand-and-onboarding from 2823a7e. Pull request #8 stays the one draft against main, not marked ready. Node v24.21.0 matches .nvmrc 24. Prompt named Opus; this session ran as Grok 4.7. No database and no object store. ADR-016 chooses @xmldom/xmldom 0.9.12, MIT as the package declares it. Almarai was not shipped: the publisher's OFL.txt names Boutros International and the font's name table reserves all rights. Eleven families shipped, each SIL Open Font License 1.1 from the publisher's file. Conversion, where used, is fontTools 4.58.2. Static set stays 29. PROVEN_PAIRS 64 to 67. fail() stays 138. 42 open at 2823a7e plus CF-234 and CF-235 landed open minus CF-225 closed equals 43. Ledger 218 to 220. Plants: a component stylesheet naming Cairo fails; a registry family with no @font-face fails; removing the script check fails the corpus; accepting a 999-pixel PNG fails its test. Each restored byte-identical. Known-good logos match after cleaning in the browser tier. Gallery matrix 8 passed. REVIEWER_CHAT unstaged. — commit: `844c6df`, `868d143`, `f17bad2`
 - **P03-T20** — HALT 4, before any bucket, migration or upload module. On phase/03-brand-and-onboarding at 2612884. Pull request #8 stays the one draft against main, not marked ready. Node v24.21.0 matches .nvmrc 24. Prompt named Opus; this session ran as Grok 4.7. Production counts by Management API, User-Agent B2S-P03-T20-independent/1.0, project akpvvydmltmfmkmwivgn: public.tenant [{"n":0}] and auth.users [{"n":0}] at 2026-10-03T21:45:54Z and 21:45:56Z. Service-role construction remains only lib/supabase/server-only/service.ts. PART 1 found no higher-precedence contradiction. media_asset.provider and media_asset.checksum are not null, and no document states the stored provider string or the checksum algorithm and encoding. The suite's fixture literals are not that statement. 43 open at 2612884 plus 0 minus 0 equals 43. CF-234 stays open. Isolation suite not run. REVIEWER_CHAT unstaged. — commit: `bde8899`
 - **P03-T20** — Private tenant-media bucket, storage policies, Asset-tier checks, and the upload path. On phase/03-brand-and-onboarding from 7d08c8d. Pull request #8 stays the one draft against main, not marked ready. Node v24.21.0 matches .nvmrc 24. Prompt named Opus; this session ran as Grok 4.7. The halted P03-T20 is PASS; the halt was correct. Production tenant and auth.users both 0 before the push. Schema half recorded at 2026-10-03T22:32:12Z, relation fingerprint d15e13d419ed388303241fef96a8f796, 25 migrations, no bucket. After the push: 26 migrations, one private bucket tenant-media, select and insert policies only, seven new checks, public buckets 0, tenant and auth.users still 0. Types regenerated from staging, byte-identical. Isolation 110 expected, 110 PASS, 0 FAIL, 0 LOST, D at zero including storage objects, suite wall 407468ms. Slowest assertion 19 at 20861ms. Existing claims identical, 102. Static set 30. PROVEN_PAIRS 68 of 68, KNOWN_GAPS 1. fail() 148. 43 open plus 1 landed open minus 1 closed equals 43. Closed CF-234. Open CF-236, owner the operator surface at P07. CF-162, CF-235 and CF-214 stay open. REVIEWER_CHAT unstaged. — commit: `29d9014`
+- **P03-T21** — Error visibility (OD-H13) and production closed to new accounts until launch (OD-H15). On phase/03-brand-and-onboarding from d6ab5b7. Pull request #8 stays the one draft against main, not marked ready. Node v24.21.0 matches .nvmrc 24. Prompt named Opus; this session ran as Grok 4.7. Production auth read-only, User-Agent B2S-P03-T21-independent/1.0, project akpvvydmltmfmkmwivgn, HTTP 200 at 2026-10-04T11:18:05.699Z: disable_signup false, so new sign-ups are enabled. Not changed. Register 103 to 104. OD-H15. Both error boundaries show the digest. One redacted JSON line per unhandled server error. Probe refused when VERCEL_ENV is production. Plants: email redaction removed, its unit test failed; the boundary passed an empty identifier, the browser test failed; both restored. Browser tier: four locale and theme combinations, plus the email fixture. Static set stays 30. PROVEN_PAIRS stays 68. No new pair. File-count floors rose to the measured counts. 43 open at d6ab5b7 plus CF-237 and CF-238 landed open minus CF-162 closed equals 44. Ledger 221 to 223. CF-235 owner is P03-T22. Isolation suite not run. REVIEWER_CHAT unstaged. — commit: —
 
 ---
 
 ## Decisions
 
-`docs/product/DECISIONS.md` §2's register: **103** signed decisions.
+`docs/product/DECISIONS.md` §2's register: **104** signed decisions.
 
 ---
 
 ## Open carry-forwards
 
-`docs/method/CARRY_FORWARDS.md` holds **221** row(s) in total, of which **43** are open. Each open row below carries its own derived status — see the generator's docstring.
+`docs/method/CARRY_FORWARDS.md` holds **223** row(s) in total, of which **44** are open. Each open row below carries its own derived status — see the generator's docstring.
 
 - CF-02 — **PENDING A DECISION**
 - CF-03 — **PENDING A DECISION**
@@ -385,7 +394,6 @@ Every row of `SESSION_CONTEXT.md`'s done-steps table — task id, description, c
 - CF-150 — **NOT IN THE PLAN**
 - CF-157 — **PENDING A DECISION**
 - CF-161 — **NOT IN THE PLAN**
-- CF-162 — **PENDING A DECISION**
 - CF-163 — **PENDING A DECISION**
 - CF-165 — **NOT IN THE PLAN**
 - CF-181 — **NOT IN THE PLAN**
@@ -398,6 +406,8 @@ Every row of `SESSION_CONTEXT.md`'s done-steps table — task id, description, c
 - CF-214 — **NOT IN THE PLAN**
 - CF-235 — **PENDING A DECISION**
 - CF-236 — **PENDING A DECISION**
+- CF-237 — **NOT IN THE PLAN**
+- CF-238 — **PENDING A DECISION**
 
 ---
 

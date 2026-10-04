@@ -20,7 +20,7 @@ never edited in place.
 
 ## 2. Decision register
 
-103 decisions, all signed. None open.
+104 decisions, all signed. None open.
 
 ### Group A — Product identity
 
@@ -164,6 +164,7 @@ never edited in place.
 | **H12** | **Nine build phases. P09 — launch and operations — is added. Staging and error visibility move into P03's entry; backup with a rehearsed restore moves into P05's exit. Release 1 is a pilot with a real brand, not a demo.** | SIGNED 2026-08-05 |
 | **H13** | **`BUILD_PHASES.md` §P03's entry condition "error visibility" means: an unhandled server error in production produces a record a builder can retrieve within one working session, keyed to a request identifier that also appears in what the person saw. The definition names no vendor. This OD defines the condition; it does not implement it.** | SIGNED 2026-09-17 |
 | **H14** | **No B2S procedure, local or in CI, requires Docker. `supabase db dump`, `supabase start` and any other Docker-backed command are not used. A control whose execution requires Docker is not a control this project has.** | SIGNED 2026-09-22 |
+| **H15** | **Production accepts no new accounts until launch. Production's authentication refuses new sign-ups until launch at P09. Opening it requires both: production on a Vercel plan whose runtime-log retention meets OD-H13 — Pro's one day, or longer — and the published privacy policy (OD-A8). Staging and preview deployments stay open for testing.** | SIGNED 2026-10-04 |
 
 ## 3. Decisions authored after the promotion
 
@@ -469,6 +470,10 @@ Staging and error visibility land at **P03's entry** — the first phase where a
 person puts real content in. Backup with a **rehearsed** restore lands at
 **P05's exit** — the first phase holding money records.
 
+**AMENDED 2026-10-04 (OD-H15).** The sentences above stand. Production's
+authentication accepts no new account until launch at P09. Staging stays
+open, and it is where content is entered before that launch.
+
 **The method document is authored last.** `DEV_OS.md` and `DEV_OS_REFERENCE.md`
 are retained as history. At P09's handoff, B2S authors its own method from the
 loop it actually ran — nine phases, the entry-readiness-gate lifecycle, the
@@ -703,4 +708,32 @@ Filed in Group A. The register's groups are the titles in §2. This decision ame
 **Reasoning.** A theme cannot be saved with fewer than seven colours (BRAND_CONFIG.md §4), and the owner decided unfinished answers are kept rather than lost. The draft is the smallest store that keeps them without bending that rule.
 
 **Forecloses.** Storing an answer in the draft that has a real home; a draft that outlives completion; business details written to tenant.
+
+### OD-H15 — Production accepts no new accounts until launch
+**Signed 2026-10-04.**
+
+Filed in Group H. The register's groups are the titles in §2. Group H is
+Quality & acceptance: OD-H12 owns the phase that launches, and OD-H13 owns
+the checkable meaning of error visibility. This decision is the acceptance
+condition for opening production to a new account. It does not change how
+a person authenticates. That mechanism stays OD-G13, which is Group G,
+Platform & access.
+
+**Decision.** Production's authentication refuses new sign-ups until launch
+at P09. Opening it requires both: production on a Vercel plan whose
+runtime-log retention meets OD-H13 — Pro's one day, or longer — and the
+published privacy policy (OD-A8). Staging and preview deployments stay
+open for testing.
+
+**Reasoning.** OD-H13 requires a production error record a builder can
+retrieve within one working session; the Hobby plan keeps runtime logs for
+one hour and is restricted to non-commercial use. No privacy policy exists
+until P08. Merging P03 deploys the wizard to production, so without this
+any person could sign in, provision a business and enter real data before
+either condition holds. Refusing new accounts at the authentication layer
+refuses them before any application code runs, so no route, RPC or direct
+API call can open a business.
+
+**Forecloses.** A real business in production before launch; opening
+sign-up without OD-H13's retention and a published privacy policy.
 

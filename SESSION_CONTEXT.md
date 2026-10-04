@@ -1,8 +1,8 @@
 # SESSION CONTEXT
 Updated: 2026-10-04 · By: Grok 4.7 (heavyweight; prompt named Opus) · Phase: P03
-Last task: P03-T20 · Verdict: —. Last-row verdict is the declared
+Last task: P03-T21 · Verdict: —. Last-row verdict is the declared
 placeholder; the follow-up commit fills the sha only. The previous
-P03-T20 cell is PASS. Ledger 221 rows, **43** open. Full detail in the done-steps row below.
+P03-T20 cell is PASS. Ledger 223 rows, **44** open. Full detail in the done-steps row below.
 
 ## Read these too
 - `docs/method/PRECEDENTS.md` — binding rulings and environment quirks.
@@ -100,7 +100,8 @@ Keep it short: if a paragraph is growing here, it belongs elsewhere.
 | P03-T18 | The tenant business data, re-issued. On phase/03-brand-and-onboarding from 9195344. Pull request #8 stays the one draft against main, not marked ready. Node v24.21.0 matches .nvmrc 24. Prompt named Opus; this session ran as Grok 4.7. No new package. Production counts by Management API, User-Agent B2S-P03-T18-independent/1.0, project akpvvydmltmfmkmwivgn: public.tenant 0 and auth.users 0 before the push and after it. Before: 24 migrations ending 20260922120005, 19 tables, provision_tenant(text, text, text, text). After: 25 migrations ending 20261003120001, 22 tables, provision_tenant(text, text, text), 10 security-definer functions. OD-G26 generates the slug. OD-A9 gives onboarding one store, the draft, and lands business details on legal_entity. Register 101 to 103, verified against the register. Entities 89 to 92. Isolation against staging: 102 expected, 102 PASS, 0 FAIL, 0 LOST, D at zero, suite 367.85s. Slowest 4d at 20957ms. The bypass plant without the drop reads 11 and fails; restored, the live count is 10. Types regenerated with supabase@2.111.0. 45 open at 9195344 plus 0 landed open minus CF-213, CF-230 and CF-232 closed equals 42. CF-233 opened and closed. CF-214 stays open. CF-225 stays open. REVIEWER_CHAT unstaged. | PASS | `3aa44cf` |
 | P03-T19 | The rest of the wizard, specified; the font library; the SVG cleaner. On phase/03-brand-and-onboarding from 2823a7e. Pull request #8 stays the one draft against main, not marked ready. Node v24.21.0 matches .nvmrc 24. Prompt named Opus; this session ran as Grok 4.7. No database and no object store. ADR-016 chooses @xmldom/xmldom 0.9.12, MIT as the package declares it. Almarai was not shipped: the publisher's OFL.txt names Boutros International and the font's name table reserves all rights. Eleven families shipped, each SIL Open Font License 1.1 from the publisher's file. Conversion, where used, is fontTools 4.58.2. Static set stays 29. PROVEN_PAIRS 64 to 67. fail() stays 138. 42 open at 2823a7e plus CF-234 and CF-235 landed open minus CF-225 closed equals 43. Ledger 218 to 220. Plants: a component stylesheet naming Cairo fails; a registry family with no @font-face fails; removing the script check fails the corpus; accepting a 999-pixel PNG fails its test. Each restored byte-identical. Known-good logos match after cleaning in the browser tier. Gallery matrix 8 passed. REVIEWER_CHAT unstaged. | PASS | `844c6df`, `868d143`, `f17bad2` |
 | P03-T20 | HALT 4, before any bucket, migration or upload module. On phase/03-brand-and-onboarding at 2612884. Pull request #8 stays the one draft against main, not marked ready. Node v24.21.0 matches .nvmrc 24. Prompt named Opus; this session ran as Grok 4.7. Production counts by Management API, User-Agent B2S-P03-T20-independent/1.0, project akpvvydmltmfmkmwivgn: public.tenant [{"n":0}] and auth.users [{"n":0}] at 2026-10-03T21:45:54Z and 21:45:56Z. Service-role construction remains only lib/supabase/server-only/service.ts. PART 1 found no higher-precedence contradiction. media_asset.provider and media_asset.checksum are not null, and no document states the stored provider string or the checksum algorithm and encoding. The suite's fixture literals are not that statement. 43 open at 2612884 plus 0 minus 0 equals 43. CF-234 stays open. Isolation suite not run. REVIEWER_CHAT unstaged. | PASS | `bde8899` |
-| P03-T20 | Private tenant-media bucket, storage policies, Asset-tier checks, and the upload path. On phase/03-brand-and-onboarding from 7d08c8d. Pull request #8 stays the one draft against main, not marked ready. Node v24.21.0 matches .nvmrc 24. Prompt named Opus; this session ran as Grok 4.7. The halted P03-T20 is PASS; the halt was correct. Production tenant and auth.users both 0 before the push. Schema half recorded at 2026-10-03T22:32:12Z, relation fingerprint d15e13d419ed388303241fef96a8f796, 25 migrations, no bucket. After the push: 26 migrations, one private bucket tenant-media, select and insert policies only, seven new checks, public buckets 0, tenant and auth.users still 0. Types regenerated from staging, byte-identical. Isolation 110 expected, 110 PASS, 0 FAIL, 0 LOST, D at zero including storage objects, suite wall 407468ms. Slowest assertion 19 at 20861ms. Existing claims identical, 102. Static set 30. PROVEN_PAIRS 68 of 68, KNOWN_GAPS 1. fail() 148. 43 open plus 1 landed open minus 1 closed equals 43. Closed CF-234. Open CF-236, owner the operator surface at P07. CF-162, CF-235 and CF-214 stay open. REVIEWER_CHAT unstaged. | — | `29d9014` |
+| P03-T20 | Private tenant-media bucket, storage policies, Asset-tier checks, and the upload path. On phase/03-brand-and-onboarding from 7d08c8d. Pull request #8 stays the one draft against main, not marked ready. Node v24.21.0 matches .nvmrc 24. Prompt named Opus; this session ran as Grok 4.7. The halted P03-T20 is PASS; the halt was correct. Production tenant and auth.users both 0 before the push. Schema half recorded at 2026-10-03T22:32:12Z, relation fingerprint d15e13d419ed388303241fef96a8f796, 25 migrations, no bucket. After the push: 26 migrations, one private bucket tenant-media, select and insert policies only, seven new checks, public buckets 0, tenant and auth.users still 0. Types regenerated from staging, byte-identical. Isolation 110 expected, 110 PASS, 0 FAIL, 0 LOST, D at zero including storage objects, suite wall 407468ms. Slowest assertion 19 at 20861ms. Existing claims identical, 102. Static set 30. PROVEN_PAIRS 68 of 68, KNOWN_GAPS 1. fail() 148. 43 open plus 1 landed open minus 1 closed equals 43. Closed CF-234. Open CF-236, owner the operator surface at P07. CF-162, CF-235 and CF-214 stay open. REVIEWER_CHAT unstaged. | PASS | `29d9014` |
+| P03-T21 | Error visibility (OD-H13) and production closed to new accounts until launch (OD-H15). On phase/03-brand-and-onboarding from d6ab5b7. Pull request #8 stays the one draft against main, not marked ready. Node v24.21.0 matches .nvmrc 24. Prompt named Opus; this session ran as Grok 4.7. Production auth read-only, User-Agent B2S-P03-T21-independent/1.0, project akpvvydmltmfmkmwivgn, HTTP 200 at 2026-10-04T11:18:05.699Z: disable_signup false, so new sign-ups are enabled. Not changed. Register 103 to 104. OD-H15. Both error boundaries show the digest. One redacted JSON line per unhandled server error. Probe refused when VERCEL_ENV is production. Plants: email redaction removed, its unit test failed; the boundary passed an empty identifier, the browser test failed; both restored. Browser tier: four locale and theme combinations, plus the email fixture. Static set stays 30. PROVEN_PAIRS stays 68. No new pair. File-count floors rose to the measured counts. 43 open at d6ab5b7 plus CF-237 and CF-238 landed open minus CF-162 closed equals 44. Ledger 221 to 223. CF-235 owner is P03-T22. Isolation suite not run. REVIEWER_CHAT unstaged. | — | — |
 
 > Commit column: one or more comma-separated backticked shas, or `—` where no
 > single commit tracks the step (P-00 through P-01c predate the one-task-one-commit
@@ -146,7 +147,6 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
 - CF-150 — owner: the task that adds a second consent_scope value, which must make scope a predicate in the same migration
 - CF-157 — owner: the next ROLE_JOURNEY.md amendment
 - CF-161 — owner: the owner, for the production upgrade
-- CF-162 — owner: P03, before the wizard accepts real content
 - CF-163 — owner: the next amendment of scripts/check_stated_counts.py that can take ARCHITECTURE.md §6 as a subject, or a dedicated assertion; not silently both
 - CF-165 — owner: the owner
 - CF-181 — owner: the owner, for the PostgreSQL client binaries' provenance
@@ -157,8 +157,10 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
 - CF-207 — owner: the owner
 - CF-212 — owner: the owner, to repoint .env.local at staging
 - CF-214 — owner: the task that builds the wizard routes
-- CF-235 — owner: P03-T21
+- CF-235 — owner: P03-T22
 - CF-236 — owner: the operator surface at P07
+- CF-237 — owner: the owner, before launch
+- CF-238 — owner: the owner, before P03 merges
 
 ## Frozen decisions in force
 - Freeze point 2026-07-29 (`legacy/FREEZE.md`) — tools RETIRING, not port
@@ -181,13 +183,14 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
   `TENANCY_MODEL`, `SECURITY_MODEL`, `CALC_SPEC`); the other thirteen frozen
   documents are just-in-time, each carrying its Gate 3 item to its own module
   gate. `CALC_SPEC.md`'s Gate 3 item covers its 25 Release 1 rows only.
-  `DECISIONS.md` now carries **103** signed ODs, verified by count — 80 promoted
+  `DECISIONS.md` now carries **104** signed ODs, verified by count — 80 promoted
   plus OD-H7, OD-H8 to OD-H11 signed 2026-08-04 at M-01, OD-G13 to OD-G16
   signed 2026-08-04 at P02-T01, OD-G17, OD-G18, OD-H12 signed 2026-08-05
   at P02-T07, OD-G19 signed 2026-08-31 at P02-T13, and OD-G20, OD-H13
   signed 2026-09-17 at P03-T01-RESUME, and OD-H14, OD-G21 signed 2026-09-22
   at P03-T05, and OD-G22, OD-G23 signed 2026-09-23 at P03-T07, and OD-G24,
-  OD-G25 signed 2026-10-01 at P03-T14, and OD-A8 signed 2026-09-30 at P03-T16.
+  OD-G25 signed 2026-10-01 at P03-T14, and OD-A8 signed 2026-09-30 at P03-T16,
+  and OD-H15 signed 2026-10-04 at P03-T21.
 - PR-16 through PR-19 landed 2026-08-01. PR-18 and PR-19 exist because the
   reviewer's own state assertion went stale between verdict and execution.
 - PR-20 landed 2026-08-01. Document hygiene batches into the next task touching
@@ -389,7 +392,10 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
     `supabase/schema.sql`, was proved by removing the file and by emptying
     it; both produced a one-line `FAIL:` at non-zero exit, and each was
     restored byte-identical. The whole enumeration was reproved in the same
-    run, 68 of 68, KNOWN_GAPS 1. It stood at 67, last proved at P03-T19.
+    run, 68 of 68, KNOWN_GAPS 1. P03-T21 added no check and no pair.
+    PROVEN_PAIRS stays 68. The file-count floors on the existing scan
+    guards rose to the measured counts. Those are changed conditions, not
+    new premises. It stood at 67, last proved at P03-T19.
     Three new pairs, `check-token-values.mjs` against
     `lib/typeface/library.module.css`, `lib/typeface/registry.ts` and
     `public/fonts/library`, were proved by removing each and by emptying
@@ -465,7 +471,7 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
   (PR-29).
 
 ## Next action
-**P03-T21** builds the six onboarding screens as routes, saving and resuming (CF-235, carrying CF-214). CF-236 stays open: archived media rows whose objects were not fully written are the cleanup record, and a job that removes those objects is owed by the operator surface at P07. CF-214 stays open. CF-204 stays open for the P03 exit gate: one CI run finished in 525.04s, and two finished in 763.98s and 745.37s. OD-A8 places the public site in P08. The Brand and Typography specimens are gallery screens; they are not routes and they persist nothing. Save and finish later stays with CF-214. A page size and an explicit theme choice are member preferences
+**P03-T22** builds the six onboarding screens as routes, saving and resuming (CF-235, carrying CF-214). Before that task runs, repoint `.env.local` at staging (CF-212). It is the first task that saves real data, and a local run currently saves it to production. Production sign-ups are enabled today (`disable_signup` false, read 2026-10-04). The owner disables them before P03 merges (CF-238). Production moves to a Vercel plan whose runtime logs meet OD-H13, and sign-ups open only as OD-H15 states, before launch (CF-237). CF-236 stays open: archived media rows whose objects were not fully written are the cleanup record, and a job that removes those objects is owed by the operator surface at P07. CF-214 stays open. CF-204 stays open for the P03 exit gate: one CI run finished in 525.04s, and two finished in 763.98s and 745.37s. OD-A8 places the public site in P08. The Brand and Typography specimens are gallery screens; they are not routes and they persist nothing. Save and finish later stays with CF-214. A page size and an explicit theme choice are member preferences
 held for the session (CF-207) until the owner decides where a member
 preference lives. Do not persist a page size or a theme choice. Pull request #8 is the phase's one draft
 against main. Do not mark it ready and do not open a second one. Money and
@@ -474,8 +480,7 @@ domain quantities, which CALC_SPEC.md governs, complete at P05 through
 against nodejs.org's SHASUMS256.txt and replace the hardlink with an
 elevated nvm install. The Supabase GitHub integration (CF-191) posts a
 skipped Supabase Preview check and was not uninstalled; it is the owner's.
-The print-rules glob (CF-185) is fixed before P06 opens. Error visibility
-(CF-162) is live before the wizard accepts real content. Production's
+The print-rules glob (CF-185) is fixed before P06 opens. Production's
 Postgres patch upgrade is the owner's (CF-161). Staging MCP write posture
 is the owner's (CF-165). Do not run the isolation suite against production.
 

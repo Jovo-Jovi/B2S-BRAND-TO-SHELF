@@ -220,6 +220,36 @@ its own buyers).
 | Member PII survives tenant deletion | `Member` — a person is not a tenant's property |
 | **No real buyer data ever enters the repository, including test fixtures. Fixtures are synthetic** | Absolute, per OD-G7 |
 
+**AMENDED 2026-10-04 — P03-T21.** The row "PII never enters a log, an error
+message, or an `ActivityEvent` payload" stands. An unhandled server error is
+the path below. The person is shown the digest, not the error message. The
+one log line carries a scrubbed message and nothing else from the request.
+
+### Unhandled server errors
+
+An unhandled server error produces exactly one structured log line in the
+platform's runtime logs, and the person sees an error screen showing that
+error's identifier. The identifier is the error digest the framework already
+assigns, which reaches both the browser and the server. The log line carries:
+an event name `server_error`, the digest, the hosting platform's request
+identifier, the route, the router kind, the method, the error's name and,
+where present, its database error code and constraint name, its message
+truncated to 200 characters with every email address and phone number
+replaced by the fixed token `<REDACTED>`, the first ten stack frames as
+function and file:line only, the resolved tenant id where one exists, and a
+timestamp. It never carries a request body, a cookie, a header other than
+the platform's request identifier, a member's id or email, a database
+error's detail, or any value a person typed. A builder retrieves the record
+by searching the runtime logs for the identifier the person reported.
+Retention is the hosting plan's; OD-H13 is met in production only on a plan
+that keeps logs for a working session, which OD-H15 ties to opening sign-up.
+
+The hosting platform's request identifier, on the host OD-G9 names, is the
+`x-vercel-id` request header. No other header is read into the line. A frame's
+file is the path within the application tree, or the file name alone when the
+frame lies outside that tree, so an absolute path is not written. The line is
+one JSON object. Absent database code, constraint and tenant id are null.
+
 ---
 
 ## 7. Audit trail

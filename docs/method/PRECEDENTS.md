@@ -998,3 +998,10 @@ and the static check that state it too.
   A member DELETE through the Storage API can answer 200 and leave the
   object in place when no DELETE policy matches. The object still being
   readable is the refusal. A status below 400 is not.
+- Learned at P03-T21: Next.js writes the raw `Error` to the server console,
+  message and stack included, and then calls `onRequestError`. That first
+  dump can contain an email address that was in the message, and an absolute
+  path. It is not the OD-H13 record. The record is the one JSON line whose
+  `event` is `server_error`. A proof that the email is absent searches that
+  line. The digest is stable for a given error shape, so a log that already
+  holds earlier requests with the same digest is not a count of this request.

@@ -144,6 +144,12 @@ thousand-tenant target · incident response and rollback · whether this
 repository stays public at commercial launch · Terms of Service, Privacy Policy
 and a data processing agreement, drafted by counsel, not by a builder.
 
+**Entry, additionally (OD-H15).** Production accepts no new accounts until
+launch. Opening sign-up requires both: production on a Vercel plan whose
+runtime-log retention meets OD-H13 — Pro's one day, or longer — and the
+published privacy policy (OD-A8). Staging and preview deployments stay open
+for testing.
+
 **The method document is authored last, at this phase's handoff.** `DEV_OS.md`
 and `DEV_OS_REFERENCE.md` are retained as history; B2S authors its own method
 from the loop it actually ran (OD-H12).

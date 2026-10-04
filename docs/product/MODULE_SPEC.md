@@ -59,6 +59,7 @@ app/                              route surface only, thin
       callback/                   Google OAuth return
       invitation/                 accept — deferred, P02
       gallery/                    catalog gallery — refused when the deployment is production
+      error-probe/                throws on request so the error record can be proved — refused when the deployment is production
       privacy/                    privacy policy — deferred, P08 (OD-A8)
       terms/                      terms of service — deferred, P08 (OD-A8)
     (app)/                        authenticated tenant surface — deferred, P02
@@ -142,6 +143,8 @@ lib/
   typeface/                       the platform typeface library — P03
   logo/                           the logo file check, ADR-016 — P03
     store-logo.ts                 the upload path, wired to no route — P03-T20
+  observability/                  the unhandled-error record, OD-H13 — P03
+    server-error-line.ts          one redacted line; the only writer of that record
   money/                          exact decimal, ADR-011 — deferred, P05
   print/                          the print engine, ADR-009 — deferred, P06
 

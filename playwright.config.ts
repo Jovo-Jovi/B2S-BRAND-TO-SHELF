@@ -6,11 +6,11 @@ export default defineConfig({
   testDir: "__tests__/browser",
   timeout: 120_000,
   expect: { timeout: 15_000 },
-  use: { baseURL: "http://127.0.0.1:3000" },
+  use: { baseURL: "http://127.0.0.1:3010" },
   webServer: {
-    command: "npx next dev --hostname 127.0.0.1 --port 3000",
-    url: "http://127.0.0.1:3000/en/gallery",
-    reuseExistingServer: !process.env.CI,
+    command: "node scripts/dev-server-capture.mjs",
+    url: "http://127.0.0.1:3010/en/gallery",
+    reuseExistingServer: false,
     timeout: 180_000,
   },
 });
