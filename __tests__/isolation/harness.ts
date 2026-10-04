@@ -1439,6 +1439,8 @@ export const EXPECTED_ASSERTIONS = [
   "35a", "35b", "35c", "35d", "35e", "35f", "35g", "35h",
   // P03-T22 — the wizard's five invoker write paths. D stays last.
   "36a", "36b", "36c", "36d", "36e", "36f", "36g",
+  // P03-T25 — guideline order is unique among live rows. D stays last.
+  "37a", "37b", "37c",
   "D",
 ];
 

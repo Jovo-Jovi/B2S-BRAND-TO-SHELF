@@ -1018,3 +1018,18 @@ and the static check that state it too.
   `HTMLElement.click()` dispatched on the button does. The overlay is the
   shared ColorField warning that an empty colour input becomes controlled
   once a value is set. The shared field stays as specified.
+- Learned at P03-T25: an `<input type="color">` whose value is the empty
+  string logs a Chromium console warning that the value does not conform
+  to a CSS colour, and the DOM value becomes `#000000`. The hex field is
+  the one that holds the saved value and starts controlled at `""`. The
+  platform picker mounts only once a stored colour exists, already
+  controlled. A fallback colour in the picker would show a colour the
+  brand does not have.
+- Learned at P03-T25: `proxy.ts` redirects every path that has no locale
+  prefix. `public/fonts/` and `public/gallery/sample-mark-*.svg` are
+  requested at those root paths. Without an exclusion, the redirect lands
+  on `/en/fonts/...` and `/en/gallery/sample-mark-...`, which 404, and the
+  browser logs a console error. The matcher excludes `fonts/` and
+  `gallery/sample-mark-` the same way it already excludes `_next` and
+  `favicon.ico`. A new file under `public/` needs the same exclusion or
+  the same console error returns.

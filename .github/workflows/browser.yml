@@ -4,6 +4,10 @@
 # Docker (OD-H14). The job runs when a push touches the surfaces the tier
 # renders, the dictionaries, or this file. app/** covers app/globals.css and
 # the dictionaries; they are listed as well so the filter states the decision.
+#
+# The pull-request trigger runs only when the pull request is not a draft,
+# on opened, synchronize, reopened and ready_for_review. The push trigger
+# is unchanged.
 
 name: browser
 
@@ -21,6 +25,11 @@ on:
       - "playwright.config.ts"
       - ".github/workflows/browser.yml"
   pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
     branches:
       - main
     paths:
@@ -38,6 +47,7 @@ env:
 
 jobs:
   browser:
+    if: github.event_name == 'push' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:

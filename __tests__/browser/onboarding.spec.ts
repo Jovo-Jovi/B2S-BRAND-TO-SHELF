@@ -1,6 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
 import axe from "axe-core";
 
+import { installConsoleGuard } from "./console-guard";
+
+installConsoleGuard();
+
 import ar from "../../app/[locale]/dictionaries/ar.json";
 import en from "../../app/[locale]/dictionaries/en.json";
 import { rulesFromCompleteError } from "../../features/onboarding/completeness";

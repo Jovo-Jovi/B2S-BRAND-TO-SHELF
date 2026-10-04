@@ -28,14 +28,15 @@ MIGRATIONS = os.path.join(REPO, "supabase", "migrations", "*.sql")
 MARKER = re.compile(r"^-- ===== migration: (.+?) =====\s*$", re.M)
 
 # P02-T15 / CF-152; raised 18/1514 → 19/1569 at P03-T03; 19/1569 → 24/2108
-# at P03-T04 (five Brand/Asset/translation migrations). A run over zero
+# at P03-T04 (five Brand/Asset/translation migrations); 27/3190 → 28/3201
+# at P03-T25 (live guideline ordinal). A run over zero
 # migrations reconciling to an emptied schema.sql would report success: the
 # identity comparison is vacuously true of two empty strings. Both floors
 # are the true counts at the commit that landed them. Changed condition,
 # not a new premise: PROVEN_PAIRS does not move (schema.sql and
 # supabase/migrations/ are already this check's pair).
-MINIMUM_MIGRATIONS = 27
-MINIMUM_NON_BLANK_LINES = 3190
+MINIMUM_MIGRATIONS = 28
+MINIMUM_NON_BLANK_LINES = 3201
 
 
 def fail(message):

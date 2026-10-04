@@ -52,6 +52,7 @@ carry-forward whose owner is the reviewer.
 | Owner | Every Manager-level business operation, in addition to the Owner rows above | P04 | `TENANCY_MODEL.md` §3 Can column ("everything within the tenant"); P04 is the earliest phase that gives an Owner catalog and sales data to act on |
 | Manager | Catalog and inventory operations | P04 | `TENANCY_MODEL.md` §3 Can column |
 | Manager | Sales, invoicing, payments, returns | P05 | `TENANCY_MODEL.md` §3 Can column |
+| Manager | Purchasing: suppliers, purchase orders and goods receipts | Release 2 | `SCOPE.md` module 12, Release 2, outside the nine-phase plan. `TENANCY_MODEL.md` §3 Can column names purchasing among the Manager's business operations |
 | Manager | CSV import of products and buyers | P07 | `TENANCY_MODEL.md` §3 Can column; `IMPORT_SPEC.md` is authored just-in-time at P07. CF-32 still names the pre-renumbering phase id `P-10` for this same work and has not been corrected |
 | Designer | Brand identity and asset management | P03 | `TENANCY_MODEL.md` §3 Can column |
 | Designer | Packaging templates and artwork authoring | P06 | `TENANCY_MODEL.md` §3 Can column |

@@ -243,11 +243,9 @@ export async function submitGuidelines(input: unknown): Promise<ActionResult> {
 
   if (removeId) {
     if (!profileId) return { gaps: ["profile"], notice: null };
-    const ordinals = await supabase.from("brand_guideline").select("ordinal").eq("profile_id", profileId);
-    const highest = (ordinals.data ?? []).reduce((max, row) => Math.max(max, row.ordinal), 0);
     const archived = await supabase
       .from("brand_guideline")
-      .update({ archived_at: new Date().toISOString(), ordinal: highest + 1 })
+      .update({ archived_at: new Date().toISOString() })
       .eq("id", removeId)
       .select("id");
     if (archived.error || !archived.data?.length) return { gaps: ["remove"], notice: null };

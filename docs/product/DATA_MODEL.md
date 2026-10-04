@@ -775,6 +775,13 @@ Advisory to humans, inert to the renderer.
 | `ordinal` | integer not null | Display order. UNIQUE with `profile_id` |
 | provenance + `archived_at` | | per §1 |
 
+AMENDED 2026-10-05 — order is unique among live guidelines only. The
+constraint unique (profile_id, ordinal) counted archived rows, so archiving
+a guideline blocked its position, and P03-T24 had to rewrite the archived
+row's ordinal to free it. Rewriting an archived row's data defeats archiving.
+Uniqueness of (profile_id, ordinal) now holds where archived_at is null; an
+archived guideline keeps its ordinal unchanged.
+
 Nothing reads a guideline and changes output. A constraint that needs
 enforcing is a `TEMPLATE_MODEL.md` rule, not a longer guideline.
 

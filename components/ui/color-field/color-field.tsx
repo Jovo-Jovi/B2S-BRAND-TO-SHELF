@@ -109,13 +109,13 @@ export function ColorField({
         aria-labelledby={ariaLabelledBy}
         onChange={(event) => commit(event.target.value)}
       />
-      {pickerName ? (
+      {pickerName && stored ? (
         <input
           className={styles.picker}
           type="color"
           aria-label={pickerName}
           disabled={disabled}
-          value={stored ?? undefined}
+          value={stored}
           onChange={(event) => commit(event.target.value)}
         />
       ) : null}

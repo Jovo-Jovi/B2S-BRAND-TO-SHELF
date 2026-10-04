@@ -706,13 +706,18 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       at P08**, batched with CF-56 per PR-20. P08 is where that record is next
       needed, because `FEATURE_INVENTORY.md` is authored there and
       `AUDIT_STICKER.md` is its only source for the sticker tool.
-- [ ] CF-51 — Prompt-template defect: "one commit" combined with "do not amend
+- [x] CF-51 — Prompt-template defect: "one commit" combined with "do not amend
       or rewrite history" forbids any post-push correction, forcing a choice
       between two explicit instructions. P-04 hit this and correctly landed a
       second commit. Corrected standing rule: one commit for the deliverable; a
       corrective follow-up commit is permitted, must be declared, and must carry
       a subject line stating what it corrects. Third template defect after CF-40
       and CF-43. Owner: reviewer, standing; applied from P-04b onward.
+      CLOSED (P03-T25) — PR-06 already states it: "One commit for the
+      deliverable. If a defect is found after pushing, land a corrective
+      second commit whose subject states what it corrects, and declare it
+      in the report." Origin: CF-51, P-04. No new precedent was landed.
+      Owner: none outstanding.
 - [x] CF-52 — The owner's OS account name appears in mutable public files beyond
       AUDIT_STICKER.md:651. Locations: REPORT.md:218 (two occurrences on one
       line — a SHARED_DATA_PATH value and a file:/// cross-link),
@@ -727,7 +732,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       `docs/archive/2026-07/inventory.json` the name segment is the literal
       placeholder `<REDACTED>`. The remaining occurrence is inside `legacy/`,
       which is frozen and covered by CF-14.
-- [ ] CF-53 — docs/method/PROJECT_RECONFIG.md was byte-identical to
+- [x] CF-53 — docs/method/PROJECT_RECONFIG.md was byte-identical to
       docs/method/CLAUDE_PROJECT_INSTRUCTIONS.md (same blob SHA). SESSION_CONTEXT
       recorded P-01c as landing the reconfiguration record there; it landed a
       copy of the instructions instead, so the record was never committed and its
@@ -763,6 +768,9 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       stub where a lost record should be, and the reviewer decides whether it is
       re-authored or the stub stands. The duplication half of this row is closed;
       the lost-record half is what keeps it open.
+      CLOSED (P03-T25) — the reviewer decides that the stub stands: the lost
+      record is unrecoverable, and re-authoring it would invent content.
+      Owner: none outstanding.
 - [ ] CF-54 — Stub count stated three ways: 22 in P-01's done-when, 20 in P-12's
       prompt, 23 actual (21 under docs/product/, 2 under docs/method/). Same
       defect class as CF-38's 56-versus-79. P-12 corrected and P-01 annotated
@@ -819,13 +827,17 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       16-item reconciliation, 40 justified degrees of freedom, an 11-row
       spot-check table. EXTRACT_STOCK_COSTS at 50% is the low outlier,
       consistent with HF-1 and CF-42 both landing in that file. No action.
-- [ ] CF-58 — tools/backup-browser-data.js serves the browser-data backup
+- [x] CF-58 — tools/backup-browser-data.js serves the browser-data backup
       workflow abandoned by owner decision 2026-07-29, with design-tool presets
       accepted as potentially unrecoverable. Orphaned. Archived by P-04c to
       docs/archive/2026-07/ rather than deleted. Owner: reviewer, closes on
       P-04c verdict.
       AMENDED (P-08-PRE-FIX) — owner: owner decision, retire or keep; landing at
       the next repo-maintenance task
+      CLOSED (P03-T25) — the owner's 2026-07-29 decision retired the
+      browser-data backup workflow. The archived copy in
+      `docs/archive/2026-07/` is the record. Retired.
+      Owner: none outstanding.
 - [x] CF-59 — The reviewer surface can read the public repo directly
       (api.github.com, raw.githubusercontent.com) and has begun doing so:
       P-04b's verdict and the CF-49/CF-50/CF-56 resolutions were produced by
@@ -1173,10 +1185,16 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       CF-82 — CLOSED (P-08-PRE-FIX). All 15 reassigned to reachable owners; two
       rows voided; CF-33 and CF-52 closed outright. The Gate 3 item now requires
       a *reachable* owner, so the same drift fails the gate next time.
-- [ ] CF-83 — Reviewer state assertions are not stamped to a commit. Owner:
+- [x] CF-83 — Reviewer state assertions are not stamped to a commit. Owner:
       PRECEDENTS.md, PR-18.
-- [ ] CF-84 — A verdict-logged carry-forward is opened as a stub, then
+      CLOSED (P03-T25) — PR-18 exists in PRECEDENTS.md: "Reviewer state
+      assertions are stamped and re-verified."
+      Owner: none outstanding.
+- [x] CF-84 — A verdict-logged carry-forward is opened as a stub, then
       re-opened as new by the next prompt. Owner: PRECEDENTS.md, PR-19.
+      CLOSED (P03-T25) — PR-19 exists in PRECEDENTS.md: "A carry-forward
+      named in a verdict is already open."
+      Owner: none outstanding.
 - [x] CF-85 — `main` was an unprotected branch on a public repository with no
       credential detection of any kind. Verified by `gh api` at the Gate 3 run:
       secret scanning off, push protection off, and
@@ -1578,7 +1596,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       CF-53 duplication risk again — the risk was never the third copy, it was
       three documents with no stated difference between them. CF-53 amended in
       the same task to record the settlement.
-- [ ] CF-97 — The credential scanner failed on the one construction ADR-005
+- [x] CF-97 — The credential scanner failed on the one construction ADR-005
       requires. `check_credentials.py`'s assignment pattern matched
       `serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY` in
       `lib/supabase/server-only/service.ts`: an environment-variable name is a
@@ -1596,6 +1614,12 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       fixture deleted. The rejected alternative was renaming the variable, which
       leaves the false positive live for the next legitimate reader of that
       environment name. Owner: reviewer, to ratify the narrowing or reject it.
+      CLOSED (P03-T25) — the reviewer ratifies the narrowing. A planted
+      literal assignment of a service-role-shaped token to `serviceRoleKey`
+      failed `check_credentials.py`. The environment read ADR-005 requires,
+      `serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY`, passed.
+      Both plants were restored byte-identical.
+      Owner: none outstanding.
 - [x] CF-98 — Four open Dependabot alerts on the default branch, unrecorded since
       alerts were enabled at G3-CLOSE and surfaced by the P01-T02 push, which
       printed them on the remote's response. All four are transitive runtime
@@ -2775,7 +2799,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       proven by a removed-and-emptied-target pair on the widened
       `[app, proxy.ts, lib, docs]` roots (both a clean one-line `FAIL:`,
       revert confirmed byte-identical).
-- [ ] CF-140 — `docs/method/REVIEWER_CHAT_INSTRUCTIONS.md` carries an
+- [x] CF-140 — `docs/method/REVIEWER_CHAT_INSTRUCTIONS.md` carries an
       uncommitted modification that predates P02-T09-FIX and is not this
       task's to commit, revert or rule on — it is reviewer-owned. Diff, in
       full, as found at the start of this task (verbatim, `git diff --
@@ -2808,6 +2832,11 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       file is the reviewer's uncommitted document and every task has left it
       unstaged. This row now carries a substantive divergence, not only a
       pending edit. The reviewer still owns the file.
+      CLOSED (P03-T25) — slot 12 of the precedence list now matches
+      `CLAUDE_PROJECT_INSTRUCTIONS.md`: `MODULE_SPEC.md` + `UX_PRINCIPLES.md`
+      + `DESIGN_SURFACE.md`. Nothing else in that list changed. The pending
+      bullets recorded above are committed with that alignment.
+      Owner: none outstanding.
 - [x] CF-141 — `scripts/check_two_way_empty_target.py` states when it must be
       run nowhere. P02-T09-FIX landed it permanently under PR-28 and recorded
       why it is not wired into `docs-integrity.yml` — several premises need a
@@ -3157,7 +3186,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       (PR-07). A sentence under it now states that the live total is the
       figure in §2. §2 moved 92 → 94 with OD-G20 and OD-H13 in the same
       write.
-- [ ] CF-157 — `TENANCY_MODEL.md` §3 Manager Can lists purchasing as a
+- [x] CF-157 — `TENANCY_MODEL.md` §3 Manager Can lists purchasing as a
       distinct business operation. `ROLE_JOURNEY.md` has Manager rows for
       catalog and inventory, sales, and CSV import, and none for
       purchasing. Purchasing is SCOPE module 12, Release 2, so no
@@ -3168,6 +3197,10 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       and Manager brand-capability rows and raised `MINIMUM_ROLE_JOURNEY_ROWS`
       17 → 19. It did not add a purchasing row. The gap stands; owner
       remains the next amendment after this one.
+      CLOSED (P03-T25) — `ROLE_JOURNEY.md` carries the Manager purchasing
+      row: `SCOPE.md` module 12, Release 2, outside the nine-phase plan.
+      The role-journey check accepts that phase token.
+      Owner: none outstanding.
 - [x] CF-158 — Object storage for `MediaAsset` and `AssetRendition` is an
       unsigned decide-and-document fork at P03 entry. ADR-008 signs Supabase
       Storage with tenant-isolated paths, governed by storage policies;
@@ -3324,7 +3357,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       a plan keeps those logs for a working session, and until the privacy
       policy is published.
       Owner: none outstanding.
-- [ ] CF-163 — `ARCHITECTURE.md` §6's guard table names
+- [x] CF-163 — `ARCHITECTURE.md` §6's guard table names
       `check-print-containment` as the guard for "Page geometry is emitted
       by the print engine only". No such script exists and no workflow
       invokes one. `AGENTS.md` §3 and `.cursor/rules/b2s-devos.mdc` both
@@ -3347,6 +3380,14 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       Owner: **the next amendment of `scripts/check_stated_counts.py` that
       can take `ARCHITECTURE.md` §6 as a subject**, or a dedicated
       assertion; not silently both.
+      CLOSED (P03-T25) — `ARCHITECTURE.md` §6's print row states that
+      `check-print-containment` does not exist and the rule is NOT YET
+      ENFORCED, owner P06, as `AGENTS.md` §3 states.
+      `check_stated_counts.py` asserts that every guard §6 names either
+      exists under `scripts/`, is a workflow job, or is marked NOT YET
+      ENFORCED. An unmarked missing guard failed the check. The file was
+      restored byte-identical.
+      Owner: none outstanding.
       AMENDED (P03-T04) — that task amended `check_stated_counts.py`
       (`WORD_NUMBERS` through nineteen, and the DATA_MODEL §3 lead regex)
       and did not take `ARCHITECTURE.md` §6 as a subject. The row stays
@@ -3871,7 +3912,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       and each file was restored byte-identical. The false comment in
       the tier test is replaced with this measurement. Owner: none
       outstanding.
-- [ ] CF-204 — The isolation suite's duration has grown from about nine
+- [x] CF-204 — The isolation suite's duration has grown from about nine
       minutes at P03-T01-RESUME to 15m20s on run 36250292644, with run
       36199604440 cancelled at 20m15s, while the suite has held 94
       assertions since P03-T04. Suspected cause: staging authentication
@@ -3935,6 +3976,14 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       one per identity per target, and the Management-API calls whose latency
       moved between runs.
       Owner: **the P03 exit gate**.
+      CLOSED (P03-T25) — the reviewer sets the CI budget at 20 minutes
+      inside the job's 30-minute timeout, with no assertion over 60
+      seconds. PART 2's staging run read 120 expected, 120 PASS, 0 FAIL,
+      0 LOST, D at zero. Suite wall 400364ms. The longest assertion was
+      26 at 17220ms. Both bounds met. The remaining time is transatlantic
+      latency between the runners and staging, which batching cannot
+      remove.
+      Owner: none outstanding.
 - [x] CF-205 — The reviewer's P03-T11 verdict of FAIL rested on two
       mismeasurements. The reviewer ran axe-core's target-size rule with
       runOnly, which enables a rule the engine ships disabled, and
@@ -4285,5 +4334,36 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       finish later, Continue. Review's success arrives at the completion
       screen, which confirms setup is complete and shows the current brand.
       It states nothing about features that do not yet exist.
+      Owner: none outstanding.
+- [x] CF-243 — Guideline order is unique among live rows only. The table
+      constraint unique (profile_id, ordinal) counted archived rows, so
+      archiving a guideline blocked its position.
+      CLOSED (P03-T25) — migration 20261005120001 replaces that constraint
+      with partial unique index brand_guideline_profile_ordinal_live_key
+      on staging and on production. Archiving sets archived_at and changes
+      nothing else. Proof 37: 37a two live guidelines cannot share an
+      ordinal (23505), 37b an archived guideline does not block a live one
+      at its ordinal, 37c archiving leaves the ordinal unchanged. The full
+      suite read 120 expected, 120 PASS, 0 FAIL, 0 LOST, D at zero.
+      Owner: none outstanding.
+- [x] CF-244 — A colour field whose saved value is absent started
+      uncontrolled, and the wizard and gallery suites did not fail on a
+      console error.
+      CLOSED (P03-T25) — the hex field that holds the saved value starts
+      controlled at an empty value. The platform colour picker mounts only
+      once a stored colour exists, already controlled: an empty string on
+      type=color is a Chromium console warning, and a fallback colour
+      would pretend to be the brand's. The wizard and gallery suites fail
+      on any console error or React warning. There is no allow-list.
+      Reintroducing the uncontrolled picker failed a test. The file was
+      restored byte-identical.
+      Owner: none outstanding.
+- [x] CF-245 — The browser workflow's pull-request trigger still ran on a
+      draft.
+      CLOSED (P03-T25) — the pull-request trigger runs only when the pull
+      request is not a draft, on opened, synchronize, reopened and
+      ready_for_review, the same events isolation uses. The push trigger
+      is unchanged. BRANCHING.md §3 records that both suites now wait for
+      ready.
       Owner: none outstanding.
 

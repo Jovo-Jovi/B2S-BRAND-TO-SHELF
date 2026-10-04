@@ -131,7 +131,7 @@ has one.
 | Persistence is reached through one declared boundary | `check-data-boundary` |
 | The privileged client is importable from one directory only | `check-service-import` |
 | No runtime CDN | `check-no-runtime-cdn` |
-| Page geometry is emitted by the print engine only | `check-print-containment` |
+| Page geometry is emitted by the print engine only | NOT YET ENFORCED — owner P06. `check-print-containment` does not exist |
 | Every mutation input is schema-validated | `check-zod-coverage` |
 | No user-derived value reaches an HTML-injection sink | lint rule |
 | Every enumeration stores a language-neutral key | `check-enum-keys` |

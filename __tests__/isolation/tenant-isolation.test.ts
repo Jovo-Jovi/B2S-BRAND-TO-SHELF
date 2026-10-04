@@ -7827,6 +7827,121 @@ describe("proof 36 — the wizard's five invoker write paths", () => {
   });
 });
 
+describe("proof 37 — guideline order is unique among live rows", () => {
+  const sqlState = (body: string): string => {
+    const code = body.match(/\b(23\d{3})\b/);
+    return code ? code[1] : "";
+  };
+
+  async function restoreGuideline(tenantId: string, profileId: string, guidelineId: string, extraId: string | null) {
+    if (extraId) {
+      await sql(`delete from public.brand_guideline where id = '${extraId}'`);
+    }
+    await sql(`
+      update public.brand_guideline
+         set archived_at = null
+       where id = '${guidelineId}'
+         and tenant_id = '${tenantId}'
+         and profile_id = '${profileId}'
+    `);
+  }
+
+  it("37a two live guidelines on one profile cannot share an ordinal", async () => {
+    const { a } = fixture;
+    const failures: string[] = [];
+    const id = randomUUID();
+    const dup = await sql.try(`
+      insert into public.brand_guideline
+        (id, tenant_id, profile_id, title_key_id, body_key_id, ordinal)
+      values ('${id}', '${a.id}', '${a.brandProfileId}', '${a.translationKeyId}',
+              '${a.translationKeyId}', 1)
+    `);
+    if (dup.ok) {
+      failures.push("second live guideline at ordinal 1 ACCEPTED");
+      await sql(`delete from public.brand_guideline where id = '${id}'`);
+    } else if (sqlState(dup.body) !== "23505") {
+      failures.push(
+        `duplicate ordinal refused ${dup.status} SQLSTATE ${sqlState(dup.body) || "none"}, expected 23505: ${dup.body.slice(0, 240)}`,
+      );
+    } else if (!/brand_guideline_profile_ordinal_live_key/i.test(dup.body)) {
+      failures.push(`23505 did not name brand_guideline_profile_ordinal_live_key: ${dup.body.slice(0, 240)}`);
+    }
+    record(
+      "37a",
+      "Two live guidelines on one profile cannot share an ordinal",
+      failures,
+      `dup=${sqlState(dup.body) || (dup.ok ? "ok" : "fail")}`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("37b an archived guideline does not block a live one at its ordinal", async () => {
+    const { a } = fixture;
+    const failures: string[] = [];
+    const id = randomUUID();
+    const archived = await sql.try(`
+      update public.brand_guideline
+         set archived_at = now()
+       where id = '${a.brandGuidelineId}'
+         and tenant_id = '${a.id}'
+    `);
+    if (!archived.ok) failures.push(`archive refused ${archived.status} ${archived.body.slice(0, 200)}`);
+    const live = await sql.try(`
+      insert into public.brand_guideline
+        (id, tenant_id, profile_id, title_key_id, body_key_id, ordinal)
+      values ('${id}', '${a.id}', '${a.brandProfileId}', '${a.translationKeyId}',
+              '${a.translationKeyId}', 1)
+    `);
+    if (!live.ok) {
+      failures.push(
+        `live guideline at an archived ordinal refused ${live.status} SQLSTATE ${sqlState(live.body) || "none"}: ${live.body.slice(0, 240)}`,
+      );
+    }
+    await restoreGuideline(a.id, a.brandProfileId, a.brandGuidelineId, live.ok ? id : null);
+    record(
+      "37b",
+      "An archived guideline does not block a live one at its ordinal",
+      failures,
+      `live=${live.ok ? "landed" : sqlState(live.body) || "fail"}`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("37c archiving leaves the ordinal unchanged", async () => {
+    const { a } = fixture;
+    const failures: string[] = [];
+    const [before] = await sql<{ ordinal: number }>(`
+      select ordinal from public.brand_guideline where id = '${a.brandGuidelineId}'
+    `);
+    const archived = await sql.try(`
+      update public.brand_guideline
+         set archived_at = now()
+       where id = '${a.brandGuidelineId}'
+         and tenant_id = '${a.id}'
+    `);
+    if (!archived.ok) failures.push(`archive refused ${archived.status} ${archived.body.slice(0, 200)}`);
+    const [after] = await sql<{ ordinal: number; archived_at: string | null }>(`
+      select ordinal, archived_at::text as archived_at
+        from public.brand_guideline where id = '${a.brandGuidelineId}'
+    `);
+    if (!before || !after) {
+      failures.push("the guideline row was not readable before and after archiving");
+    } else if (after.ordinal !== before.ordinal) {
+      failures.push(`ordinal moved from ${before.ordinal} to ${after.ordinal}`);
+    } else if (after.archived_at === null) {
+      failures.push("archived_at stayed null");
+    }
+    await restoreGuideline(a.id, a.brandProfileId, a.brandGuidelineId, null);
+    record(
+      "37c",
+      "Archiving leaves the ordinal unchanged",
+      failures,
+      `ordinal=${before?.ordinal ?? "absent"}→${after?.ordinal ?? "absent"}`,
+    );
+    expect(failures).toEqual([]);
+  });
+});
+
 describe("TASK D — teardown, and prove it", () => {
   it("removes every synthetic row and verifies the absence by query", async () => {
     await teardown(config, sql);

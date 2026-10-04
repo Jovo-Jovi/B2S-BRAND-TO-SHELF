@@ -107,6 +107,7 @@ PROVEN_PAIRS = [
     ("scripts/check_stated_counts.py", "docs/product/DATA_MODEL.md"),
     ("scripts/check_stated_counts.py", "supabase/schema.sql"),
     ("scripts/check_stated_counts.py", "scripts/check_two_way_empty_target.py (this file's own PROVEN_PAIRS)"),
+    ("scripts/check_stated_counts.py", "docs/product/ARCHITECTURE.md"),
     ("scripts/check-data-boundary.mjs", "lib/supabase/ (directory)"),
     ("scripts/check-enum-keys.mjs", "supabase/schema.sql"),
     ("scripts/check-no-hardcoded-literals.mjs", "scan roots [app, proxy.ts, lib, features]"),
@@ -515,6 +516,9 @@ def main():
     do_pair(results, "scripts/check_stated_counts.py",
             ["python", "scripts/check_stated_counts.py"],
             FileProbe("scripts/check_two_way_empty_target.py"))
+    do_pair(results, "scripts/check_stated_counts.py",
+            ["python", "scripts/check_stated_counts.py"],
+            FileProbe("docs/product/ARCHITECTURE.md"))
     do_pair(results, "scripts/check-data-boundary.mjs",
             ["node", "scripts/check-data-boundary.mjs"], DirProbe("lib/supabase"))
     do_pair(results, "scripts/check-enum-keys.mjs",

@@ -1,6 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
 import axe from "axe-core";
 
+import { installConsoleGuard } from "./console-guard";
+
+installConsoleGuard();
+
 import {
   GALLERY_COVERAGE,
   GALLERY_LOCALES,
@@ -279,9 +283,6 @@ for (const locale of GALLERY_LOCALES) {
       test(`gallery ${locale} ${theme} ${width}`, async ({ page }) => {
         await page.setViewportSize({ width, height: 800 });
         await page.emulateMedia({ colorScheme: theme === "dark" ? "dark" : "light" });
-        await page.addInitScript((next) => {
-          document.documentElement.dataset.theme = next;
-        }, theme);
         await page.goto(`/${locale}/gallery?theme=${theme}`);
         await page.waitForFunction((next) => {
           const text = getComputedStyle(document.body).color;
@@ -380,9 +381,6 @@ type SpecimenReadings = {
 async function openGallery(page: Page, locale: string, theme: string, width: number) {
   await page.setViewportSize({ width, height: 800 });
   await page.emulateMedia({ colorScheme: theme === "dark" ? "dark" : "light" });
-  await page.addInitScript((next) => {
-    document.documentElement.dataset.theme = next;
-  }, theme);
   await page.goto(`/${locale}/gallery?theme=${theme}`);
   await page.waitForFunction((next) => document.documentElement.dataset.theme === next, theme);
 }

@@ -23,7 +23,7 @@ and fails when it examined less, rather than reporting a clean zero:
                                     regenerate — both sides empty of Release
                                     2/3 content alike — and the byte-comparison
                                     below would pass over the loss (P02-T09).
-  MINIMUM_ROLE_JOURNEY_ROWS    22 — docs/product/ROLE_JOURNEY.md's table
+  MINIMUM_ROLE_JOURNEY_ROWS    23 — docs/product/ROLE_JOURNEY.md's table
                                     (P02-T09, OD-H9; raised 19 → 22 at P03-T18)
 
 Each of the two removed-target and emptied-target failure modes is proven by
@@ -136,7 +136,7 @@ MINIMUM_PHASES = 9
 MINIMUM_DONE_STEPS_ROWS = 1
 MINIMUM_OPEN_CARRY_FORWARDS = 1
 MINIMUM_RELEASE_BLOCKS = 3
-MINIMUM_ROLE_JOURNEY_ROWS = 22
+MINIMUM_ROLE_JOURNEY_ROWS = 23
 MINIMUM_TENANCY_SECTION3_ROLES = 5
 
 NAMED_NON_ENUM_ACTORS = {"Operator", "Buyer", "Visitor"}
@@ -248,7 +248,8 @@ def check_role_journey_conformance(role_journey_rows, phase_ids, enum_roles,
         )
 
     bad_phase_rows = [
-        row for row in role_journey_rows if row["phase"] not in phase_ids
+        row for row in role_journey_rows
+        if row["phase"] not in phase_ids and row["phase"] != "Release 2"
     ]
     phases_ok = not bad_phase_rows
     if bad_phase_rows:

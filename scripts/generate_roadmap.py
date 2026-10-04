@@ -93,7 +93,8 @@ answer, then narrows it further:
                       carry-forward (a `CF-nn` token that is open in
                       docs/method/CARRY_FORWARDS.md) or an unsigned decision
                       (the literal word "unsigned" beside an `OD-` token).
-  QUEUED              none of the above.
+  QUEUED              none of the above, and the owning phase is one of the nine.
+  NOT IN THE PLAN     the owning-phase cell is the token Release 2.
 
 **An open carry-forward's status**, shown beside its id, is derived from its
 own row text in docs/method/CARRY_FORWARDS.md, never from a second ledger kept
@@ -108,9 +109,10 @@ here:
 Five statuses in total across the whole page, and only five: DONE, IN
 PROGRESS, QUEUED, PENDING A DECISION, NOT IN THE PLAN. A phase is never PENDING
 A DECISION or NOT IN THE PLAN; a carry-forward is never DONE, IN PROGRESS or
-QUEUED; a role-journey capability is never NOT IN THE PLAN, because OD-H9's
-conformance check (scripts/check_roadmap.py) refuses to land a row whose
-owning phase does not exist in BUILD_PHASES.md in the first place.
+QUEUED; a role-journey capability is NOT IN THE PLAN only when its
+owning-phase cell is the token Release 2, outside the nine-phase plan.
+scripts/check_roadmap.py accepts that token and still refuses every other
+phase that BUILD_PHASES.md does not contain.
 
 STOP and flag, rather than guess, if a later edit to any input file removes a
 value this script depends on — every parsing step below dies loudly with a
@@ -513,14 +515,19 @@ def parse_role_journey(text):
                 f"columns (Role | Capability | Owning phase | Note): {line!r}")
         role, capability, phase, note = cells
         phase_m = re.match(r"^(P\d{2})\b", phase)
-        if not phase_m:
+        if phase_m:
+            phase_id = phase_m.group(1)
+        elif phase == "Release 2":
+            phase_id = phase
+        else:
             die(f"{ROLE_JOURNEY_REL}: row for {role!r} has an unreadable "
-                f"'Owning phase' cell (expected a leading 'P0N' token): "
+                f"'Owning phase' cell (expected a leading 'P0N' token, or "
+                f"'Release 2' for a capability outside the nine-phase plan): "
                 f"{phase!r}")
         rows.append({
             "role": role,
             "capability": capability,
-            "phase": phase_m.group(1),
+            "phase": phase_id,
             "note": note,
         })
     if not rows:
@@ -529,6 +536,8 @@ def parse_role_journey(text):
 
 
 def role_journey_status(row, phases_by_id, open_cf_ids):
+    if row["phase"] == "Release 2":
+        return "NOT IN THE PLAN"
     phase = phases_by_id.get(row["phase"])
     if phase is None:
         die(f"{ROLE_JOURNEY_REL}: row for {row['role']!r} names owning phase "
@@ -632,8 +641,8 @@ def render_markdown(data):
         "`SESSION_CONTEXT.md`'s done-steps table carries a PASS row for that "
         "phase's exit gate; **IN PROGRESS** means it is the current phase per "
         "that file's header; everything else is **QUEUED**. A role-journey "
-        "capability additionally reads **PENDING A DECISION**, and an open "
-        "carry-forward reads **PENDING A DECISION** or **NOT IN THE PLAN**. "
+        "capability additionally reads **PENDING A DECISION** or **NOT IN THE PLAN**, "
+        "and an open carry-forward reads **PENDING A DECISION** or **NOT IN THE PLAN**. "
         "See `scripts/generate_roadmap.py`'s docstring for the exact rules."
     )
     lines.append("")
@@ -762,6 +771,7 @@ ROLE_STATUS_CLASS = {
     "IN PROGRESS": "status-in-progress",
     "PENDING A DECISION": "status-decide",
     "QUEUED": "status-queued",
+    "NOT IN THE PLAN": "status-gap",
 }
 
 ALL_STATUS_CLASSES = {
