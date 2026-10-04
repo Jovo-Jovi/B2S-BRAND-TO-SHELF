@@ -1005,3 +1005,16 @@ and the static check that state it too.
   `event` is `server_error`. A proof that the email is absent searches that
   line. The digest is stable for a given error shape, so a log that already
   holds earlier requests with the same digest is not a count of this request.
+- Learned at P03-T23: staging storage can answer success on an upload and
+  then `Object not found` on the download that follows at once. The Brand
+  step's read-after-write retries that miss at 0, 250, 500, 1000, 1500 and
+  2000 milliseconds, and it uploads a Blob copied from the inspected bytes.
+  A member session never deletes the object. Replace points the variant at
+  the new asset and archives the old one.
+- Learned at P03-T23: the Next.js dev overlay covers the physical
+  bottom-left of the viewport. In a left-to-right wizard that is Back; in
+  a right-to-left wizard that is Continue. A Playwright click, including
+  one forced, does not fire the React handler while the overlay is there.
+  `HTMLElement.click()` dispatched on the button does. The overlay is the
+  shared ColorField warning that an empty colour input becomes controlled
+  once a value is set. The shared field stays as specified.

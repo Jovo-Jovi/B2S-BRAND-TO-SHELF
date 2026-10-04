@@ -45,7 +45,7 @@ const SCAN_ROOTS = ["app", "components", "features"];
 const MINIMUM_LIBRARY_FAMILIES = 11;
 const MINIMUM_LIBRARY_FILES = 19;
 
-const MINIMUM_TOKENS = 271;
+const MINIMUM_TOKENS = 277;
 const MINIMUM_FONT_FAMILIES = 38;
 const MINIMUM_CLOSED_COLOURS = 35;
 const MINIMUM_PROOF_CHANNELS = 6;
@@ -55,9 +55,10 @@ const MINIMUM_DELTA = 6;
 // P03-T13 — quiet fill is transparent, and the gallery is scanned: 1205 declarations, 89 sources.
 // P03-T19 — the typeface library stylesheet is scanned: 31 stylesheets, 1597 declarations, 38 font families, 109 sources.
 // P03-T21 measured 113 sources after the error boundaries and the probe.
+// P03-T23 measured 1598 declarations, 277 tokens and 140 sources.
 const MINIMUM_STYLESHEETS = 31;
-const MINIMUM_DECLARATIONS = 1597;
-const MINIMUM_SOURCES = 113;
+const MINIMUM_DECLARATIONS = 1598;
+const MINIMUM_SOURCES = 140;
 
 const FAMILIES = new Set(["IBM Plex Sans", "IBM Plex Sans Arabic"]);
 const GENERICS = new Set(["system-ui", "sans-serif"]);

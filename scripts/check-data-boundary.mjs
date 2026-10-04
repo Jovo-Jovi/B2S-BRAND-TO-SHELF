@@ -31,7 +31,8 @@ const SCANNED_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx", ".mts", ".mjs"
 // P03-T12 — measured after the data family: 76. P03-T13 adds the gallery
 // and the browser tier: 82. P03-T21 measured 110 after the error
 // boundaries, the probe and their tests.
-const MINIMUM_FILES_SCANNED = 110;
+// P03-T23 measured 139 after the onboarding routes, actions and browser harness.
+const MINIMUM_FILES_SCANNED = 139;
 const MINIMUM_IMPORT_SITES = 4;
 
 // An import of any Supabase client package, in either module syntax.

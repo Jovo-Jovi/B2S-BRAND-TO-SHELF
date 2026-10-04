@@ -3,8 +3,8 @@ import { createHash, randomUUID } from "node:crypto";
 import { inspectLogo, type LogoFile } from "./logo-file";
 
 // BRAND_CONFIG.md §9's amendment, and DATA_MODEL.md's Asset tier.
-// This module writes nothing until inspectLogo accepts the file. It is
-// wired to no route. P03-T22's Brand step is what calls it.
+// This module writes nothing until inspectLogo accepts the file.
+// The Brand step calls it through the member's session.
 
 export const STORED_PROVIDER = "supabase-storage";
 export const STORED_BUCKET = "tenant-media";
@@ -72,7 +72,7 @@ export type MemberMediaClient = {
     from(bucket: string): {
       upload(
         path: string,
-        body: Uint8Array,
+        body: Blob,
         options: { contentType: string; upsert: boolean },
       ): Promise<{ error: WriteError }>;
       download(path: string): Promise<{ data: Blob | null; error: WriteError }>;
@@ -156,7 +156,7 @@ export async function storeLogo(
     }
     for (const key of [keys.original, keys.display, keys.print]) {
       await session.writeObject(key, stored, format.contentType);
-      const copy = await session.readObject(key);
+      const copy = await readBack(session, key);
       if (sha256Hex(copy) !== checksum) {
         throw new Error("copy-mismatch");
       }
@@ -184,6 +184,26 @@ export async function mintLogoReadUrl(session: LogoStoreSession, objectKey: stri
   return session.signObject(objectKey, SIGNED_URL_SECONDS);
 }
 
+async function readBack(session: LogoStoreSession, key: string): Promise<Uint8Array> {
+  const waits = [0, 250, 500, 1000, 1500, 2000];
+  let last: unknown;
+  for (let attempt = 0; attempt < waits.length; attempt += 1) {
+    if (waits[attempt] > 0) {
+      await new Promise((resolve) => setTimeout(resolve, waits[attempt]));
+    }
+    try {
+      return await session.readObject(key);
+    } catch (error) {
+      last = error;
+      const message = error instanceof Error ? error.message : "";
+      if (!message.includes("Object not found") || attempt === waits.length - 1) {
+        throw error;
+      }
+    }
+  }
+  throw last;
+}
+
 function raise(error: WriteError, what: string): void {
   if (error) {
     throw new Error(`${what}: ${error.message}`);
@@ -200,7 +220,10 @@ export function logoStoreSession(
     tenantId,
     memberId,
     async writeObject(key, bytes, contentType) {
-      const result = await bucket.upload(key, bytes, { contentType, upsert: false });
+      const copy = new ArrayBuffer(bytes.byteLength);
+      new Uint8Array(copy).set(bytes);
+      const body = new Blob([copy], { type: contentType });
+      const result = await bucket.upload(key, body, { contentType, upsert: false });
       raise(result.error, "write");
     },
     async readObject(key) {

@@ -28,7 +28,8 @@ const EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx", ".html", ".css"]);
 // premise: the two-way pair stays the scan roots [app, proxy.ts, lib, docs, features].
 // P03-T12 — measured after the data family: 98. P03-T13 adds the gallery: 102.
 // P03-T21 measured 131 after the error boundaries and the probe.
-const MINIMUM_FILES = 131;
+// P03-T23 measured 158 after the onboarding screens.
+const MINIMUM_FILES = 158;
 const MINIMUM_FONT_SOURCES = 25;
 
 const EXTERNAL_TAG = /<(script|link)\b[^>]*\b(?:src|href)\s*=\s*["'`]((?:https?:)?\/\/[^"'`]+)["'`]/gi;

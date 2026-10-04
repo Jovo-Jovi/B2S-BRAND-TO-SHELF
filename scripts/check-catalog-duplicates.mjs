@@ -11,8 +11,8 @@ const CATALOGS = [
 ];
 
 // Namespaces present as of P03-T08 were 2. P03-T12 adds data: 3.
-// P03-T13 adds gallery: 4.
-const MINIMUM_NAMESPACES = 4;
+// P03-T13 adds gallery: 4. P03-T23 adds onboarding and measures 6.
+const MINIMUM_NAMESPACES = 6;
 
 // access.title is the page name. access.signInSubmit is the submit control.
 // They are the same words in both locales because that is the name of the

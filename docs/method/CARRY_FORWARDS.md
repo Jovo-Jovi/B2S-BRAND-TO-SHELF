@@ -4014,12 +4014,15 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       Plant: the lone 4px button, which a real browser passes; the
       cross-tier assertion failed; the fixture was restored byte-identical.
       Owner: none outstanding.
-- [ ] CF-212 — .env.local points local development at b2s-production, while
+- [x] CF-212 — .env.local points local development at b2s-production, while
       ARCHITECTURE.md:104 and ADR-013 point it at staging. The CI browser job
       is pinned to staging with a hostname check, but the app and the browser
       tier run locally call production's authentication on every request —
       reads with no session so far.
       Owner: **the owner**, to repoint .env.local at staging.
+      CLOSED (P03-T23). PART 0(c) passed. NEXT_PUBLIC_SUPABASE_URL host is
+      staging bnjrgoaoujnrlvuxicca. The owner repointed .env.local.
+      Owner: none outstanding.
 - [x] CF-213 — The reviewer never authored the tenant business-data columns
       the owner signed under B4. DATA_MODEL.md §3.1 gives tenant only name,
       slug, base_currency, default_locale and status. BRAND_CONFIG.md §10
@@ -4038,6 +4041,10 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       are satisfiable by a gallery specimen now.
       Owner: **the task that lands the tenant business-data amendment**.
       Owner: **the task that builds the wizard routes**.
+      AMENDED (P03-T23) — draft colours set on Brand survive a reload. That
+      is the draft half. The remaining half, save and finish later on the
+      screens still unbuilt, travels with CF-241.
+      Owner: **P03-T24**.
 - [x] CF-215 — STATIC. The platform colour-token set is closed against
       DESIGN_SURFACE.md §2.2 and §2.11 in both directions. proof and
       proof-edge are achromatic. The warmth ceiling and the Clay-danger
@@ -4214,6 +4221,10 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       Owner: **P03-T22**.
       AMENDED (P03-T22) — the write paths landed. The screens are the next task.
       Owner: **P03-T23**.
+      AMENDED (P03-T23) — Welcome, Brand and Typography are routes and they
+      save. Company, Guidelines, Review, the completion screen and resume
+      remain, with the interim Company stub still in place.
+      Owner: **P03-T24**.
 - [ ] CF-236 — Archived media rows whose objects were not fully written are
       the cleanup record. A job that removes those objects is owed.
       Owner: **the operator surface at P07**.
@@ -4245,4 +4256,9 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       and 30f do not enumerate the catalog. No other assertion's expectation
       moved.
       Owner: none outstanding.
+- [ ] CF-241 — Company, Guidelines, Review, the completion screen and resume.
+      Carries the remaining half of CF-214. Removes the interim Company stub
+      and the interim completion landing that P03-T23 left so the gate's
+      redirect is observable.
+      Owner: **P03-T24**.
 

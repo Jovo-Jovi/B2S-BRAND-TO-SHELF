@@ -24,9 +24,10 @@ const STYLESHEET = "components/ui/brand-frame/brand-frame.module.css";
 const SOURCE = "components/ui/brand-frame/brand-frame.tsx";
 // P03-T12 — measured after the data family: 85. P03-T13 adds the gallery: 89.
 // P03-T21 measured 113 after the error boundaries and the probe.
-const MINIMUM_FILES = 113;
+// P03-T23 measured 140 files and 18 brand references.
+const MINIMUM_FILES = 140;
 const MINIMUM_DEFINITIONS = 19;
-const MINIMUM_BRAND_REFERENCES = 4;
+const MINIMUM_BRAND_REFERENCES = 18;
 const MINIMUM_PLATFORM_REFERENCES = 6;
 const PLATFORM_TOKEN =
   /^--b2s-(?:color-proof|color-proof-edge|color-proof-text|border-width|radius-xl|space-[a-z0-9-]+)$/;

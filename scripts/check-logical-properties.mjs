@@ -120,8 +120,9 @@ const SHORTHANDS = new Set(PHYSICAL_SHORTHANDS);
 // to the counts measured after DateField, FileDrop and DataTable: 23
 // stylesheets, 1204 declarations. P03-T13 sets the quiet button's fill to
 // transparent, which is the stated text-only variant: 1205.
+// P03-T23 measured 1522 declarations after the wizard preview scrollport.
 const MINIMUM_STYLESHEETS = 30;
-const MINIMUM_DECLARATIONS = 1396;
+const MINIMUM_DECLARATIONS = 1522;
 const MINIMUM_MAPPED = 60;
 
 let violations = 0;

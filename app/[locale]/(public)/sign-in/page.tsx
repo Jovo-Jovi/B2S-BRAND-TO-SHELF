@@ -11,12 +11,19 @@ import { isAccessErrorKey } from "@/features/access/schema";
 
 type SignInPageProps = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ error?: string | string[] }>;
+  searchParams: Promise<{ error?: string | string[]; next?: string | string[] }>;
 };
 
 function errorFromSearch(raw: string | string[] | undefined) {
   const value = Array.isArray(raw) ? raw[0] : raw;
   if (!value || !isAccessErrorKey(value)) return null;
+  return value;
+}
+
+function returnPathFromSearch(raw: string | string[] | undefined): string | undefined {
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  if (!value) return undefined;
+  if (!/^\/(en|ar)\/onboarding(\/[\w-]+)?$/.test(value)) return undefined;
   return value;
 }
 
@@ -35,6 +42,7 @@ export default async function SignInPage({ params, searchParams }: SignInPagePro
       dictionary={dictionary.access}
       errorKey={errorFromSearch(query.error)}
       locale={typedLocale}
+      returnPath={returnPathFromSearch(query.next)}
       signInAction={signInWithPassword}
       signUpAction={signUpWithPassword}
       googleAction={signInWithGoogle}

@@ -1,8 +1,9 @@
 # SESSION CONTEXT
 Updated: 2026-10-04 · By: Grok 4.7 (heavyweight; prompt named Opus) · Phase: P03
 Last task: P03-T23 · Verdict: —. Last-row verdict is the declared
-placeholder; the follow-up commit fills the sha only. P03-T22's verdict
-cell is PASS. Ledger 225 rows, **44** open. Full detail in the done-steps row below.
+placeholder; the follow-up commit fills the sha only. The halted P03-T23
+is PASS. P03-T22's verdict cell is PASS. Ledger 226 rows, **44** open.
+Full detail in the done-steps row below.
 
 ## Read these too
 - `docs/method/PRECEDENTS.md` — binding rulings and environment quirks.
@@ -104,7 +105,8 @@ Keep it short: if a paragraph is growing here, it belongs elsewhere.
 | P03-T21 | Error visibility (OD-H13) and production closed to new accounts until launch (OD-H15). On phase/03-brand-and-onboarding from d6ab5b7. Pull request #8 stays the one draft against main, not marked ready. Node v24.21.0 matches .nvmrc 24. Prompt named Opus; this session ran as Grok 4.7. Production auth read-only, User-Agent B2S-P03-T21-independent/1.0, project akpvvydmltmfmkmwivgn, HTTP 200 at 2026-10-04T11:18:05.699Z: disable_signup false, so new sign-ups are enabled. Not changed. Register 103 to 104. OD-H15. Both error boundaries show the digest. One redacted JSON line per unhandled server error. Probe refused when VERCEL_ENV is production. Plants: email redaction removed, its unit test failed; the boundary passed an empty identifier, the browser test failed; both restored. Browser tier: four locale and theme combinations, plus the email fixture. Static set stays 30. PROVEN_PAIRS stays 68. No new pair. File-count floors rose to the measured counts. 43 open at d6ab5b7 plus CF-237 and CF-238 landed open minus CF-162 closed equals 44. Ledger 221 to 223. CF-235 owner is P03-T22. Isolation suite not run. REVIEWER_CHAT unstaged. | PASS | `a85a169` |
 | P03-T22 | HALT 3, before any function or migration. On phase/03-brand-and-onboarding from 234ee54. Pull request #8 stays the one draft against main, not marked ready. Node v24.21.0 matches .nvmrc 24. Prompt named Opus; this session ran as Grok 4.7. Production counts by Management API, User-Agent B2S-P03-T22-independent/1.0, project akpvvydmltmfmkmwivgn: public.tenant [{"n":0}] and auth.users [{"n":0}] at 2026-10-04T12:22:58Z. .env.local host label is akpvvydmltmfmkmwivgn, production. Auth config HTTP 200 at 2026-10-04T12:22:59Z: disable_signup false. Neither changed. Proof 15 expectedFunctions is an exact set of eleven names, and every public function except set_updated_at must be security definer. Proof 22's grant map is exact and a function it does not name fails the proof. Five SECURITY INVOKER functions in public would change both expectations. No schema, no package, isolation suite not run. 44 open at 234ee54 plus 0 minus 0 equals 44. CF-235 stays with P03-T22. CF-212 and CF-238 stay with the owner. REVIEWER_CHAT unstaged. | PASS | `4e1be62` |
 | P03-T22 | The wizard's five transactional invoker write paths. On phase/03-brand-and-onboarding from 3e00406. Pull request #8 stays the one draft against main, not marked ready. Node v24.21.0 matches .nvmrc 24. Prompt named Opus; this session ran as Grok 4.7. The halted P03-T22 is PASS; the halt was correct. Production tenant and auth.users both 0. .env.local host label akpvvydmltmfmkmwivgn. disable_signup false, read-only, not changed. Before the production push: 26 migrations, 10 definers, 1 invoker, fingerprint faff8d7d082c13e97fa738ce3e395035. After: staging and production both 27 migrations, 10 definers, 6 invokers, fingerprint 17221d2cbd4d79c0c32c73e37856e74c. Types regenerated from staging. Isolation 117 expected, 117 PASS, 0 FAIL, 0 LOST, D at zero, suite wall 423317ms. Slowest 23h at 22262ms. Proofs 15 and 22 restated; claim strings unchanged. Static set 31. PROVEN_PAIRS 70 of 70, KNOWN_GAPS 1. fail() 155. A plant making save_brand_name security definer failed the invoker check and was restored. 44 open at 3e00406 plus 2 landed minus 2 closed equals 44. Closed CF-239 and CF-240. CF-235 retargeted to P03-T23, carrying CF-214. CF-212 and CF-238 stay with the owner. No new package. REVIEWER_CHAT unstaged. | PASS | `0a39bbd` |
-| P03-T23 | HALT 1, before any route or screen. On phase/03-brand-and-onboarding from d0588d9. Pull request #8 stays the one draft against main, not marked ready. Node v24.21.0 matches .nvmrc 24. Prompt named Opus; this session ran as Grok 4.7. PART 0(c) failed: NEXT_PUBLIC_SUPABASE_URL host is production akpvvydmltmfmkmwivgn, not staging bnjrgoaoujnrlvuxicca. No route, screen, harness, migration or package. Production auth config HTTP 200 at 2026-10-04T14:50:23.815Z, User-Agent B2S-P03-T23-independent/1.0: disable_signup false. Not changed. Service-role construction remains only lib/supabase/server-only/service.ts. 44 open at d0588d9 plus 0 minus 0 equals 44. CF-212 stays with the owner. CF-235 stays with P03-T23. CF-238 stays with the owner. Isolation suite not run. REVIEWER_CHAT unstaged. | — | `caa8c85` |
+| P03-T23 | HALT 1, before any route or screen. On phase/03-brand-and-onboarding from d0588d9. Pull request #8 stays the one draft against main, not marked ready. Node v24.21.0 matches .nvmrc 24. Prompt named Opus; this session ran as Grok 4.7. PART 0(c) failed: NEXT_PUBLIC_SUPABASE_URL host is production akpvvydmltmfmkmwivgn, not staging bnjrgoaoujnrlvuxicca. No route, screen, harness, migration or package. Production auth config HTTP 200 at 2026-10-04T14:50:23.815Z, User-Agent B2S-P03-T23-independent/1.0: disable_signup false. Not changed. Service-role construction remains only lib/supabase/server-only/service.ts. 44 open at d0588d9 plus 0 minus 0 equals 44. CF-212 stays with the owner. CF-235 stays with P03-T23. CF-238 stays with the owner. Isolation suite not run. REVIEWER_CHAT unstaged. | PASS | `caa8c85` |
+| P03-T23 | The wizard's front half: the onboarding gate, Welcome, Brand and Typography. On phase/03-brand-and-onboarding from 830e996. Pull request #8 stays the one draft against main, not marked ready. Node v24.21.0 matches .nvmrc 24. Prompt named Opus; this session ran as Grok 4.7. The halted P03-T23 is PASS; the halt was correct. PART 0(c) passed: the local Supabase host is staging bnjrgoaoujnrlvuxicca. Production auth read-only, User-Agent B2S-P03-T23-independent/1.0, HTTP 200 at 2026-10-04T15:09:56.680Z: disable_signup true. Not changed. The gate routes every case. Welcome, Brand and Typography save through the member session. Company is an interim stub inside the wizard frame. Shared WizardStep preview gained overflow auto so the stated narrow height contains the proof. Browser harness: four gate cases and eight wizard cases, English and Arabic, light and dark, at 360 and 1280, each teardown at zero. Static set stays 31. PROVEN_PAIRS stays 70, last proved at P03-T22. No new pair. File-count floors rose to the measured counts. 44 open at d0588d9 plus CF-241 landed open minus CF-212 closed equals 44. Ledger 225 to 226. CF-214 and CF-235 retargeted to P03-T24. CF-238 stays with the owner. Isolation suite not run: the push path filter does not include these files. No new package. REVIEWER_CHAT unstaged. | — | — |
 
 > Commit column: one or more comma-separated backticked shas, or `—` where no
 > single commit tracks the step (P-00 through P-01c predate the one-task-one-commit
@@ -158,12 +160,12 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
 - CF-192 — owner: the owner
 - CF-204 — owner: the P03 exit gate
 - CF-207 — owner: the owner
-- CF-212 — owner: the owner, to repoint .env.local at staging
-- CF-214 — owner: the task that builds the wizard routes
-- CF-235 — owner: P03-T23
+- CF-214 — owner: P03-T24
+- CF-235 — owner: P03-T24
 - CF-236 — owner: the operator surface at P07
 - CF-237 — owner: the owner, before launch
 - CF-238 — owner: the owner, before P03 merges
+- CF-241 — owner: P03-T24
 
 ## Frozen decisions in force
 - Freeze point 2026-07-29 (`legacy/FREEZE.md`) — tools RETIRING, not port
@@ -401,6 +403,9 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
     by removing each and by emptying each; both produced a one-line `FAIL:`
     at non-zero exit, and each was restored byte-identical. The whole
     enumeration was reproved in the same run, 70 of 70, KNOWN_GAPS 1.
+    P03-T23 added no check and no pair. The file-count floors on the existing
+    scan guards rose to the measured counts. Those are changed conditions,
+    not new premises.
     It stood at 68, last proved at P03-T20. One pair,
     `check_storage_tenant_media.py` against `supabase/schema.sql`, was proved
     by removing the file and by emptying it; both produced a one-line `FAIL:`
@@ -484,7 +489,7 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
   (PR-29).
 
 ## Next action
-**P03-T23 HALTED** at PART 0(c), before any route or screen. `.env.local`'s `NEXT_PUBLIC_SUPABASE_URL` host is production `akpvvydmltmfmkmwivgn`, not staging `bnjrgoaoujnrlvuxicca`. A local run of these screens would write to production (CF-212). Preconditions (a) and (b) held: pull request #8 is the one open draft against main, head this branch, and Node v24.21.0 matches `.nvmrc` 24. Production auth config, read-only, User-Agent B2S-P03-T23-independent/1.0, project akpvvydmltmfmkmwivgn, HTTP 200 at 2026-10-04T14:50:23.815Z: `disable_signup` is false. Not changed. 44 open at d0588d9 plus 0 minus 0 equals 44. CF-212, CF-235 and CF-238 stay open. Reissue P03-T23 only after the owner repoints that URL at staging. The owner turns sign-ups off before P03 merges. Production moves to a Vercel plan whose runtime logs meet OD-H13, and sign-ups open only as OD-H15 states, before launch (CF-237). CF-236 stays open: archived media rows whose objects were not fully written are the cleanup record, and a job that removes those objects is owed by the operator surface at P07. CF-214 stays open. CF-204 stays open for the P03 exit gate: one CI run finished in 525.04s, and two finished in 763.98s and 745.37s. OD-A8 places the public site in P08. The Brand and Typography specimens are gallery screens; they are not routes and they persist nothing. Save and finish later stays with CF-214. A page size and an explicit theme choice are member preferences
+**P03-T24** builds Company, Guidelines, Review, the completion screen and resume, and removes the interim Company stub and the interim completion landing (CF-241). CF-235 stays open, owner P03-T24, and it still carries CF-214. Welcome, Brand and Typography save through the member's own session. The onboarding gate routes every case. Production auth config, read-only, User-Agent B2S-P03-T23-independent/1.0, HTTP 200 at 2026-10-04T15:09:56.680Z: `disable_signup` is true. Not changed. CF-238 stays with the owner. Production moves to a Vercel plan whose runtime logs meet OD-H13, and sign-ups open only as OD-H15 states, before launch (CF-237). CF-236 stays open: archived media rows whose objects were not fully written are the cleanup record, and a job that removes those objects is owed by the operator surface at P07. CF-204 stays open for the P03 exit gate: one CI run finished in 525.04s, and two finished in 763.98s and 745.37s. OD-A8 places the public site in P08. The Brand and Typography specimens in the gallery persist nothing. Save and finish later on the screens still unbuilt stays with CF-214. A page size and an explicit theme choice are member preferences
 held for the session (CF-207) until the owner decides where a member
 preference lives. Do not persist a page size or a theme choice. Pull request #8 is the phase's one draft
 against main. Do not mark it ready and do not open a second one. Money and
@@ -500,13 +505,14 @@ is the owner's (CF-165). Do not run the isolation suite against production.
 `phase/02-tenancy-and-access` is contained (empty log, equal trees at
 `0584ffbc`); the owner deletes it.
 
-What remains true and must not be assumed: **no client calls
-`provision_tenant()`, `accept_invitation()`, or sets the `x-b2s-tenant`
-header** — only the isolation harness does — **nothing persists a member's
-last selection**, which OD-G14 forecloses at the storage level, and
-**there is no API path to become an Operator**. Direct GoTrue with the
-publishable key is still the platform sign-in surface; the application maps
-auth failures to `identity_refused` / `sign_in_refused`.
+What remains true and must not be assumed: **Welcome calls
+`provision_tenant()` through the member's own session.** No client calls
+`accept_invitation()` or sets the `x-b2s-tenant` header — only the isolation
+harness does. **Nothing persists a member's last selection**, which OD-G14
+forecloses at the storage level, and **there is no API path to become an
+Operator**. Direct GoTrue with the publishable key is still the platform
+sign-in surface; the application maps auth failures to `identity_refused` /
+`sign_in_refused`.
 
 `check-print-containment` remains target-free. Owner is **P06**, whose
 target is `lib/print/` per `MODULE_SPEC.md` §1.

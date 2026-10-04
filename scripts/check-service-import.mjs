@@ -25,7 +25,8 @@ const SCANNED_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx"]);
 // each root existing. Changed condition, not a new premise.
 // P03-T12 — measured after the data family: 62. P03-T13 adds the gallery: 66.
 // P03-T21 measured 83 after the error boundaries and the probe.
-const MINIMUM_FILES = 83;
+// P03-T23 measured 110 after the onboarding screens.
+const MINIMUM_FILES = 110;
 
 // PR-28 — and the quarantine has to hold something. An existing but EMPTY
 // server-only/ passed this guard at exit 0: the directory test succeeded, the

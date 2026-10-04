@@ -20,8 +20,9 @@ import {
   type AccessErrorKey,
 } from "./schema";
 
-function signInPath(locale: "en" | "ar", errorKey: AccessErrorKey): string {
-  return `/${locale}/sign-in?error=${errorKey}`;
+function signInPath(locale: "en" | "ar", errorKey: AccessErrorKey, next?: string): string {
+  const base = `/${locale}/sign-in?error=${errorKey}`;
+  return next ? `${base}&next=${encodeURIComponent(next)}` : base;
 }
 
 function homePath(locale: "en" | "ar"): string {
@@ -67,10 +68,10 @@ export async function signInWithPassword(input: unknown) {
   });
 
   if (result.error) {
-    redirect(signInPath(parsed.data.locale, signInAuthErrorKey(authMessage(result.error))));
+    redirect(signInPath(parsed.data.locale, signInAuthErrorKey(authMessage(result.error)), parsed.data.next));
   }
 
-  redirect(homePath(parsed.data.locale));
+  redirect(parsed.data.next ?? homePath(parsed.data.locale));
 }
 
 export async function signUpWithPassword(input: unknown) {

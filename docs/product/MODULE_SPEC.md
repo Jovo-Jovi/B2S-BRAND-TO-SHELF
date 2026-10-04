@@ -62,14 +62,19 @@ app/                              route surface only, thin
       error-probe/                throws on request so the error record can be proved — refused when the deployment is production
       privacy/                    privacy policy — deferred, P08 (OD-A8)
       terms/                      terms of service — deferred, P08 (OD-A8)
-    (app)/                        authenticated tenant surface — deferred, P02
-      onboarding/
-      brand/
-      packaging/
-      catalog/
-      inventory/
-      sales/
-      settings/
+    (app)/                        authenticated tenant surface
+      onboarding/                 the wizard
+        welcome/
+        brand/
+        typography/
+        company/                  interim stub until P03-T24
+        complete/                 interim landing until P03-T24
+      brand/                      deferred
+      packaging/                  deferred
+      catalog/                    deferred
+      inventory/                  deferred
+      sales/                      deferred
+      settings/                   deferred
     (operator)/                   the B2S operator surface, OD-G10 — deferred, P08
   api/                            only where a route handler is unavoidable — deferred until one is
 
@@ -79,7 +84,12 @@ features/                         one folder per SCOPE.md module
     schema.ts                     the zod schemas for this module
     components/                   module-private components
     __tests__/
-  onboarding/                     deferred, P03
+  onboarding/                     the wizard, P03
+    actions.ts                    mutations, zod-validated at entry (ADR-010)
+    schema.ts                     the zod schemas for this module
+    queries.ts                    reads, executed as the member
+    components/                   module-private components, composed from ui/
+    __tests__/
   brand/                          deferred
   assets/                         deferred
   packaging/                      deferred

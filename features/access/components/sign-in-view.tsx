@@ -24,6 +24,7 @@ type SignInViewProps = {
   dictionary: AccessCopy;
   errorKey: AccessErrorKey | null;
   locale: Locale;
+  returnPath?: string;
   signInAction: (formData: FormData) => void | Promise<void>;
   signUpAction: (formData: FormData) => void | Promise<void>;
   googleAction: (formData: FormData) => void | Promise<void>;
@@ -33,6 +34,7 @@ export function SignInView({
   dictionary,
   errorKey,
   locale,
+  returnPath,
   signInAction,
   signUpAction,
   googleAction,
@@ -48,6 +50,7 @@ export function SignInView({
         <h2>{dictionary.signInHeading}</h2>
         <form action={signInAction}>
           <input type="hidden" name="locale" value={locale} />
+          {returnPath ? <input type="hidden" name="next" value={returnPath} /> : null}
           <p>
             <label>
               {dictionary.emailLabel}

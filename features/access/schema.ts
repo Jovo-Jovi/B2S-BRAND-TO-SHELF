@@ -2,10 +2,12 @@ import { z } from "zod";
 
 function credentialsFromUnknown(raw: unknown): unknown {
   if (typeof FormData !== "undefined" && raw instanceof FormData) {
+    const next = String(raw.get("next") ?? "");
     return {
       email: String(raw.get("email") ?? ""),
       password: String(raw.get("password") ?? ""),
       locale: String(raw.get("locale") ?? ""),
+      ...(next ? { next } : {}),
     };
   }
   return raw;
@@ -13,10 +15,13 @@ function credentialsFromUnknown(raw: unknown): unknown {
 
 const localeSchema = z.enum(["en", "ar"]);
 
+const onboardingReturn = z.string().regex(/^\/(en|ar)\/onboarding(\/[\w-]+)?$/);
+
 const credentialsObject = z.object({
   email: z.email(),
   password: z.string().min(1),
   locale: localeSchema,
+  next: onboardingReturn.optional(),
 });
 
 export const signInSchema = z.preprocess(credentialsFromUnknown, credentialsObject);
@@ -57,4 +62,9 @@ export const ACCESS_ERROR_KEYS: readonly AccessErrorKey[] = [
 
 export function isAccessErrorKey(value: string): value is AccessErrorKey {
   return (ACCESS_ERROR_KEYS as readonly string[]).includes(value);
+}
+
+export function onboardingReturnPath(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  return onboardingReturn.safeParse(value).success ? value : undefined;
 }

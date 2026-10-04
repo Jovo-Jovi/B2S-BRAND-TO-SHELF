@@ -39,6 +39,7 @@
   min-inline-size: 0;
   max-block-size: var(--b2s-proof-height-narrow);
   order: -1;
+  overflow: auto;
   padding-block: var(--b2s-space-4);
   padding-inline: var(--b2s-space-4);
   background-color: var(--b2s-color-canvas);
