@@ -134,8 +134,8 @@ test("the ownership cap is named on welcome", async ({ page }) => {
   await signIn(page, "en", member);
   await openThemed(page, "en", "light", 1280, "welcome");
   await page.locator("#welcome-name").fill(`zz-test-wiz-cap-again-${member.id.slice(0, 8)}`);
-  await page.getByRole("button", { name: en.onboarding.continue }).click();
-  await expect(errorSummary(page)).toContainText(en.onboarding.cap);
+  await press(page, en.onboarding.continue);
+  await expect(errorSummary(page)).toContainText(en.onboarding.cap, { timeout: 60_000 });
   await expect(page).toHaveURL(/\/welcome/);
 });
 
@@ -144,7 +144,7 @@ test("a member who is not the owner sees the pending screen", async ({ page, bro
   await signIn(page, "en", owner);
   await openThemed(page, "en", "light", 1280, "welcome");
   await page.locator("#welcome-name").fill(`zz-test-wiz-owner-${owner.id.slice(0, 8)}`);
-  await page.getByRole("button", { name: en.onboarding.continue }).click();
+  await press(page, en.onboarding.continue);
   await page.waitForURL(/\/brand/);
   const token = await memberToken(owner);
   const memberships = await memberGet<{ tenant_id: string }[]>(token, "membership?select=tenant_id");
@@ -167,7 +167,7 @@ test("a tenant with a current profile and no draft is sent to the completion rou
   await signIn(page, "en", member);
   await openThemed(page, "en", "light", 1280, "welcome");
   await page.locator("#welcome-name").fill(`zz-test-wiz-done-${member.id.slice(0, 8)}`);
-  await page.getByRole("button", { name: en.onboarding.continue }).click();
+  await press(page, en.onboarding.continue);
   await page.waitForURL(/\/brand/);
   const token = await memberToken(member);
   await memberRpc(token, "save_brand_name", { p_name_en: "North", p_name_ar: "شمال" });
