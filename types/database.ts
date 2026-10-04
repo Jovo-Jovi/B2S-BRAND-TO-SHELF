@@ -1370,6 +1370,10 @@ export type Database = {
     Functions: {
       accept_invitation: { Args: { p_invitation_id: string }; Returns: string }
       caller_email_is_verified: { Args: never; Returns: boolean }
+      complete_onboarding: {
+        Args: { p_profile_id: string }
+        Returns: undefined
+      }
       current_tenant_id: { Args: never; Returns: string }
       has_live_consent_grant: {
         Args: { p_tenant_id: string }
@@ -1397,6 +1401,52 @@ export type Database = {
           p_name: string
         }
         Returns: string
+      }
+      save_brand_name: {
+        Args: { p_name_ar: string; p_name_en: string }
+        Returns: {
+          brand_id: string
+          profile_id: string
+        }[]
+      }
+      save_brand_theme: {
+        Args: {
+          p_accent: string
+          p_background: string
+          p_critical: string
+          p_foreground: string
+          p_muted: string
+          p_primary: string
+          p_profile_id: string
+          p_secondary: string
+        }
+        Returns: undefined
+      }
+      save_guideline: {
+        Args: {
+          p_body_ar: string
+          p_body_en: string
+          p_guideline_id: string
+          p_ordinal: number
+          p_profile_id: string
+          p_title_ar: string
+          p_title_en: string
+        }
+        Returns: undefined
+      }
+      save_legal_entity: {
+        Args: {
+          p_contact_email: string
+          p_contact_phone: string
+          p_legal_name_ar: string
+          p_legal_name_en: string
+          p_registered_address_ar: string
+          p_registered_address_en: string
+          p_tax_registration_number: string
+          p_trading_name_ar: string
+          p_trading_name_en: string
+        }
+        Returns: undefined
       }
     }
     Enums: {

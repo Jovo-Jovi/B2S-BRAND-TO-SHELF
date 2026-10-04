@@ -581,6 +581,26 @@ connection — migration or the Management API — which is OD-G19's "direct
 administrative access" and not an API role. Assertions 30e and 30a–30c hold the
 grid.
 
+#### 11a.4 `security invoker` functions in `public`
+
+These five write tenant data across more than one table, and they do it as the
+caller. Each is `security invoker`, `plpgsql`, owned by `postgres`, with
+`search_path` pinned to `''`. None is `security definer`. §11a.1's ten are
+unchanged by them, and the catalog total of definers is unchanged with it.
+
+| Function | `search_path` | Why it must not read past the caller's policies |
+|---|---|---|
+| `save_brand_name(text, text)` | `''` | Creates or updates the brand, its name key and entries, and the draft profile. The caller's brand policies are the whole of the permission |
+| `save_brand_theme(uuid, text, text, text, text, text, text, text)` | `''` | Creates or replaces the profile's default theme and its seven colour values, and archives the draft's colours, or writes nothing |
+| `save_legal_entity(text, text, text, text, text, text, text, text, text)` | `''` | Inserts or updates the legal entity and its keys. The owner-only policies on `legal_entity` are what refuse a Manager, and an invoker does not step around them |
+| `save_guideline(uuid, uuid, text, text, text, text, integer)` | `''` | Creates or updates one guideline and its keys. The guideline row is the last write, so a failed ordinal does not leave the keys behind |
+| `complete_onboarding(uuid)` | `''` | Checks `BRAND_CONFIG.md` §11 and the legal entity, then makes the profile current and archives the draft, or raises and changes nothing |
+
+`EXECUTE` on each is revoked from `public`, `anon` and `service_role`, and
+granted to `authenticated`. `postgres` holds `EXECUTE` because it owns them.
+An anonymous caller cannot execute any of the five. A caller who passes
+another tenant's id writes nothing, because the body never sees that row.
+
 ---
 
 ### §11b — Platform-owned

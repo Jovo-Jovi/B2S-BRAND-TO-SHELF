@@ -144,6 +144,8 @@ PROVEN_PAIRS = [
     ("scripts/check-token-values.mjs", "lib/typeface/library.module.css"),
     ("scripts/check-token-values.mjs", "lib/typeface/registry.ts"),
     ("scripts/check-token-values.mjs", "public/fonts/library (directory)"),
+    ("scripts/check_wizard_write_paths.py", "supabase/schema.sql"),
+    ("scripts/check_wizard_write_paths.py", "docs/product/SECURITY_MODEL.md"),
 ]
 
 KNOWN_GAPS = [
@@ -591,6 +593,10 @@ def main():
     do_pair(results, "scripts/check-gallery-coverage.mjs",
             ["node", "scripts/check-gallery-coverage.mjs"],
             FileProbe("__tests__/browser/gallery.spec.ts"))
+    do_pair(results, "scripts/check_wizard_write_paths.py",
+            ["python", "scripts/check_wizard_write_paths.py"], FileProbe("supabase/schema.sql"))
+    do_pair(results, "scripts/check_wizard_write_paths.py",
+            ["python", "scripts/check_wizard_write_paths.py"], FileProbe("docs/product/SECURITY_MODEL.md"))
 
     proven = sum(1 for r in results if r["proven"])
     print(f"\n=== {proven}/{len(results)} pairs proven this run ===")

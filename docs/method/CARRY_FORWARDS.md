@@ -4212,6 +4212,8 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       AMENDED (P03-T21) — this task is error visibility. The screens are
       the next task.
       Owner: **P03-T22**.
+      AMENDED (P03-T22) — the write paths landed. The screens are the next task.
+      Owner: **P03-T23**.
 - [ ] CF-236 — Archived media rows whose objects were not fully written are
       the cleanup record. A job that removes those objects is owed.
       Owner: **the operator surface at P07**.
@@ -4226,4 +4228,21 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       sign-ups in production's authentication settings. This task did not
       change the setting.
       Owner: **the owner, before P03 merges**.
+- [x] CF-239 — The wizard's multi-table writes go through five security-invoker
+      functions, and a theme's name is a translation key.
+      CLOSED (P03-T22) by save_brand_name, save_brand_theme, save_legal_entity,
+      save_guideline and complete_onboarding, each security invoker with an
+      empty search_path and EXECUTE for authenticated only, and by the
+      amendment beside BRAND_CONFIG.md §3. The definer count stays 10.
+      Isolation proofs 36a to 36g. Proofs 15 and 22 restated; their claim
+      strings unchanged.
+      Owner: none outstanding.
+- [x] CF-240 — The reviewer wrote a prompt that adds five functions to public
+      without reading the proofs that enumerate public's functions. That is
+      the second breach of PR-43's amendment.
+      CLOSED (P03-T22) by reading proofs 15, 22, 25f and 30f before the
+      functions were written, and by restating only proofs 15 and 22. 25f
+      and 30f do not enumerate the catalog. No other assertion's expectation
+      moved.
+      Owner: none outstanding.
 

@@ -1437,6 +1437,8 @@ export const EXPECTED_ASSERTIONS = [
   "34a", "34b", "34c", "34d", "34e", "34f", "34g", "34h",
   // P03-T20 — the private bucket. D stays last.
   "35a", "35b", "35c", "35d", "35e", "35f", "35g", "35h",
+  // P03-T22 — the wizard's five invoker write paths. D stays last.
+  "36a", "36b", "36c", "36d", "36e", "36f", "36g",
   "D",
 ];
 

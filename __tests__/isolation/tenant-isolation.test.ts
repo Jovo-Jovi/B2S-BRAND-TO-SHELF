@@ -1446,7 +1446,7 @@ describe("proof 14 — nothing in public bypasses RLS by construction", () => {
 });
 
 describe("proof 15 — the roles and the function surface", () => {
-  it("anon and authenticated cannot bypass RLS, and every public function is a pinned security-definer helper", async () => {
+  it("anon and authenticated cannot bypass RLS, and every public function is a pinned helper, either a named security-definer function or a named invoker one", async () => {
     const failures: string[] = [];
 
     const roles = await sql<{ rolname: string; rolsuper: boolean; rolbypassrls: boolean }>(
@@ -1497,18 +1497,42 @@ describe("proof 15 — the roles and the function surface", () => {
       // candidate row. The ten definers above stay definers; this one must
       // not become one.
       "set_updated_at",
+      // P03-T22. Wizard write paths. Invoker, like set_updated_at, and each
+      // pins search_path to empty. The ten definers above stay definers.
+      "save_brand_name",
+      "save_brand_theme",
+      "save_legal_entity",
+      "save_guideline",
+      "complete_onboarding",
     ];
     if (!sameSet(functions.map((f) => f.proname), expectedFunctions)) {
       failures.push(`public functions are [${functions.map((f) => f.proname).join(", ")}], expected [${expectedFunctions.join(", ")}]`);
     }
-    const invokerTriggers = new Set(["set_updated_at"]);
+    const invokerFunctions = new Set([
+      "set_updated_at",
+      "save_brand_name",
+      "save_brand_theme",
+      "save_legal_entity",
+      "save_guideline",
+      "complete_onboarding",
+    ]);
+    const pinnedEmpty = new Set([
+      "save_brand_name",
+      "save_brand_theme",
+      "save_legal_entity",
+      "save_guideline",
+      "complete_onboarding",
+    ]);
     for (const fn of functions) {
-      if (invokerTriggers.has(fn.proname)) {
+      if (invokerFunctions.has(fn.proname)) {
         if (fn.prosecdef) {
           failures.push(`${fn.proname}: is security definer — it must not be`);
         }
       } else if (!fn.prosecdef) {
         failures.push(`${fn.proname}: not security definer`);
+      }
+      if (pinnedEmpty.has(fn.proname) && fn.config !== 'search_path=""') {
+        failures.push(`${fn.proname}: search_path is not pinned empty (proconfig = "${fn.config}")`);
       }
       // An unpinned search_path on a security definer function is the classic
       // privilege-escalation route: the caller chooses which table it reads.
@@ -2359,6 +2383,13 @@ describe("proof 22 — every function's EXECUTE privilege is explicit (CF-105)",
       // nobody, for the same reason materialise_member is: EXECUTE is
       // checked when the trigger is created, never when it fires.
       set_updated_at: "postgres",
+      // P03-T22. Wizard write paths. EXECUTE for authenticated and the
+      // owning role only. The eleven entries above are unchanged.
+      save_brand_name: "authenticated,postgres",
+      save_brand_theme: "authenticated,postgres",
+      save_legal_entity: "authenticated,postgres",
+      save_guideline: "authenticated,postgres",
+      complete_onboarding: "authenticated,postgres",
     };
 
     for (const row of rows) {
@@ -7300,6 +7331,497 @@ describe("proof 35 — the private tenant-media bucket", () => {
       "The new checks refuse another provider, another bucket, a foreign key prefix and a malformed checksum",
       failures,
       cases.map(([name, result]) => `${name}=${stateOf(result.body)}`).join(", "),
+    );
+    expect(failures).toEqual([]);
+  });
+});
+
+describe("proof 36 — the wizard's five invoker write paths", () => {
+  const PASSING = {
+    p_primary: "#112233",
+    p_secondary: "#445566",
+    p_accent: "#778899",
+    p_background: "#ffffff",
+    p_foreground: "#1f1f1f",
+    p_muted: "#6b6b6b",
+    p_critical: "#b42318",
+  };
+  const CHECKSUM = "0000000000000000000000000000000000000000000000000000000000000000";
+  const WIZARD = [
+    "save_brand_name",
+    "save_brand_theme",
+    "save_legal_entity",
+    "save_guideline",
+    "complete_onboarding",
+  ] as const;
+
+  async function openBrand(who: Caller, en: string, ar: string) {
+    const answer = await probe.rpc(who, "save_brand_name", { p_name_en: en, p_name_ar: ar });
+    const row = answer.rows[0] ?? {};
+    return {
+      status: answer.status,
+      body: answer.body,
+      brandId: typeof row.brand_id === "string" ? row.brand_id : null,
+      profileId: typeof row.profile_id === "string" ? row.profile_id : null,
+    };
+  }
+
+  async function fingerprint(tenantId: string): Promise<string | null> {
+    const [row] = await sql<{ fp: string | null }>(`
+      select md5(string_agg(line, E'\n' order by line)) as fp
+      from (
+        select 'brand|' || b.id::text || '|' || coalesce(b.current_profile_id::text, '') || '|' || b.name_key_id::text as line
+          from public.brand b where b.tenant_id = '${tenantId}'
+        union all
+        select 'profile|' || p.id::text || '|' || p.version::text
+          from public.brand_profile p where p.tenant_id = '${tenantId}'
+        union all
+        select 'theme|' || t.id::text || '|' || t.is_default::text || '|' || coalesce(t.archived_at::text, '')
+          from public.brand_theme t where t.tenant_id = '${tenantId}'
+        union all
+        select 'color|' || c.id::text || '|' || c.role::text || '|' || c.srgb
+          from public.color_value c where c.tenant_id = '${tenantId}'
+        union all
+        select 'guide|' || g.id::text || '|' || g.ordinal::text || '|' || coalesce(g.archived_at::text, '')
+          from public.brand_guideline g where g.tenant_id = '${tenantId}'
+        union all
+        select 'legal|' || e.id::text || '|' || coalesce(e.tax_registration_number, '') || '|'
+               || coalesce(e.contact_email, '') || '|' || coalesce(e.contact_phone, '') || '|'
+               || coalesce(e.archived_at::text, '')
+          from public.legal_entity e where e.tenant_id = '${tenantId}'
+        union all
+        select 'draft|' || d.id::text || '|' || d.resume_step || '|' || coalesce(d.archived_at::text, '')
+          from public.onboarding_draft d where d.tenant_id = '${tenantId}'
+        union all
+        select 'draftcolor|' || c.id::text || '|' || c.role::text || '|' || c.srgb || '|' || coalesce(c.archived_at::text, '')
+          from public.onboarding_draft_color c where c.tenant_id = '${tenantId}'
+        union all
+        select 'entry|' || e.id::text || '|' || e.locale || '|' || e.value || '|' || coalesce(e.archived_at::text, '')
+          from public.translation_entry e where e.tenant_id = '${tenantId}'
+      ) lines
+    `);
+    return row?.fp ?? null;
+  }
+
+  async function tally(tenantId: string) {
+    const [row] = await sql<{
+      brands: number;
+      themes: number;
+      colors: number;
+      keys: number;
+      guidelines: number;
+      legal: number;
+    }>(`
+      select
+        (select count(*) from public.brand where tenant_id = '${tenantId}')::int as brands,
+        (select count(*) from public.brand_theme where tenant_id = '${tenantId}')::int as themes,
+        (select count(*) from public.color_value where tenant_id = '${tenantId}')::int as colors,
+        (select count(*) from public.translation_key where tenant_id = '${tenantId}')::int as keys,
+        (select count(*) from public.brand_guideline where tenant_id = '${tenantId}')::int as guidelines,
+        (select count(*) from public.legal_entity where tenant_id = '${tenantId}')::int as legal
+    `);
+    return row;
+  }
+
+  it("36a tenant A calling with tenant B's ids writes nothing and leaves B unchanged", async () => {
+    const failures: string[] = [];
+    const runId = randomUUID().slice(0, 8);
+    const ownerA = await makeIdentity(config, "wiz-a", runId);
+    const ownerB = await makeIdentity(config, "wiz-b", runId);
+    const madeA = await provision(ownerA, `wiz-a-${runId}`);
+    const madeB = await provision(ownerB, `wiz-b-${runId}`);
+    if (madeA.tenantId === null || madeB.tenantId === null) {
+      failures.push(`provisioning answered ${madeA.status} and ${madeB.status}`);
+    }
+    const tenantA = madeA.tenantId ?? randomUUID();
+    const tenantB = madeB.tenantId ?? randomUUID();
+    const opened = await openBrand(ownerB, "North", "شمال");
+    if (opened.profileId === null) failures.push(`B's brand answered ${opened.status} ${opened.body.slice(0, 180)}`);
+    const profileB = opened.profileId ?? randomUUID();
+    const guided = await probe.rpc(ownerB, "save_guideline", {
+      p_profile_id: profileB,
+      p_guideline_id: null,
+      p_title_en: "Voice",
+      p_title_ar: "صوت",
+      p_body_en: "Plain",
+      p_body_ar: "واضح",
+      p_ordinal: 1,
+    });
+    const [guide] = await sql<{ id: string }>(`
+      select id::text as id from public.brand_guideline
+       where tenant_id = '${tenantB}' and profile_id = '${profileB}'
+    `);
+    if (guided.status >= 400 || guide === undefined) {
+      failures.push(`B's guideline answered ${guided.status} ${guided.body.slice(0, 180)}`);
+    }
+    const beforeB = await fingerprint(tenantB);
+    const beforeA = await fingerprint(tenantA);
+    const foreign = randomUUID();
+    const calls = [
+      probe.rpc(ownerA, "save_brand_theme", { p_profile_id: profileB, ...PASSING }),
+      probe.rpc(ownerA, "save_guideline", {
+        p_profile_id: profileB,
+        p_guideline_id: guide?.id ?? foreign,
+        p_title_en: "Stolen",
+        p_title_ar: "مسروق",
+        p_body_en: "No",
+        p_body_ar: "لا",
+        p_ordinal: 2,
+      }),
+      probe.rpc(ownerA, "complete_onboarding", { p_profile_id: profileB }),
+      probe.rpc(ownerA, "save_brand_theme", { p_profile_id: foreign, ...PASSING }),
+      probe.rpc(ownerA, "save_guideline", {
+        p_profile_id: foreign,
+        p_guideline_id: foreign,
+        p_title_en: "None",
+        p_title_ar: "لا",
+        p_body_en: "None",
+        p_body_ar: "لا",
+        p_ordinal: 1,
+      }),
+      probe.rpc(ownerA, "complete_onboarding", { p_profile_id: foreign }),
+    ];
+    const answers = await Promise.all(calls);
+    answers.forEach((answer, index) => {
+      if (answer.status < 400) failures.push(`call ${index} was accepted: ${answer.status}`);
+    });
+    const afterB = await fingerprint(tenantB);
+    const afterA = await fingerprint(tenantA);
+    if (beforeB !== afterB) failures.push("tenant B's rows changed");
+    if (beforeA !== afterA) failures.push("tenant A's rows changed");
+    record(
+      "36a",
+      "Tenant A calling the wizard functions with tenant B's ids writes nothing and leaves B unchanged",
+      failures,
+      `B ${beforeB} -> ${afterB}; A ${beforeA} -> ${afterA}`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("36b an anonymous caller cannot execute any of the five", async () => {
+    const failures: string[] = [];
+    const rows = await sql<{ proname: string; anon_exec: boolean; auth_exec: boolean }>(`
+      select p.proname,
+             has_function_privilege('anon', p.oid, 'EXECUTE') as anon_exec,
+             has_function_privilege('authenticated', p.oid, 'EXECUTE') as auth_exec
+        from pg_proc p
+        join pg_namespace n on n.oid = p.pronamespace
+       where n.nspname = 'public'
+         and p.proname in ('save_brand_name', 'save_brand_theme', 'save_legal_entity', 'save_guideline', 'complete_onboarding')
+    `);
+    if (rows.length !== WIZARD.length) failures.push(`catalog returned ${rows.length} function(s)`);
+    for (const row of rows) {
+      if (row.anon_exec) failures.push(`${row.proname} is executable by anon`);
+      if (!row.auth_exec) failures.push(`${row.proname} is not executable by authenticated`);
+    }
+    const anon = anonCaller(config);
+    for (const fn of WIZARD) {
+      const attempt = await probe.rpc(anon, fn, {});
+      if (attempt.status < 400) failures.push(`anon ${fn} answered ${attempt.status}`);
+    }
+    record(
+      "36b",
+      "An anonymous caller cannot execute any of the five wizard functions",
+      failures,
+      rows.map((row) => `${row.proname}=anon:${row.anon_exec}`).join(", "),
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("36c a Manager calling save_legal_entity writes nothing", async () => {
+    const failures: string[] = [];
+    const runId = randomUUID().slice(0, 8);
+    const owner = await makeIdentity(config, "wiz-owner", runId);
+    const manager = await makeIdentity(config, "wiz-manager", runId);
+    const created = await provision(owner, `wiz-mgr-${runId}`);
+    if (created.tenantId === null) failures.push(`provisioning answered ${created.status}`);
+    const tenantId = created.tenantId ?? randomUUID();
+    await sql(`
+      insert into public.membership (id, tenant_id, member_id, role, status, accepted_at)
+      values ('${randomUUID()}', '${tenantId}', '${manager.authId}', 'manager', 'active', now())
+    `);
+    const before = await tally(tenantId);
+    const attempt = await probe.rpc(manager, "save_legal_entity", {
+      p_legal_name_en: "North Ltd",
+      p_legal_name_ar: "شمال",
+      p_trading_name_en: "",
+      p_trading_name_ar: "",
+      p_registered_address_en: "1 Road",
+      p_registered_address_ar: "طريق",
+      p_tax_registration_number: "ABC123",
+      p_contact_email: "a@b.c",
+      p_contact_phone: "+201001234567",
+    });
+    const after = await tally(tenantId);
+    if (attempt.status < 400) failures.push(`manager call was accepted: ${attempt.status}`);
+    if (before.keys !== after.keys || before.legal !== after.legal) {
+      failures.push(`keys ${before.keys}->${after.keys}, legal ${before.legal}->${after.legal}`);
+    }
+    record(
+      "36c",
+      "A Manager calling save_legal_entity writes nothing",
+      failures,
+      `status=${attempt.status}, keys=${after.keys}, legal=${after.legal}`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("36d a malformed theme, empty names, and a failing guideline write nothing", async () => {
+    const failures: string[] = [];
+    const runId = randomUUID().slice(0, 8);
+    const owner = await makeIdentity(config, "wiz-atom", runId);
+    const created = await provision(owner, `wiz-atom-${runId}`);
+    if (created.tenantId === null) failures.push(`provisioning answered ${created.status}`);
+    const tenantId = created.tenantId ?? randomUUID();
+    const empty = await probe.rpc(owner, "save_brand_name", { p_name_en: "  ", p_name_ar: "" });
+    const afterEmpty = await tally(tenantId);
+    if (empty.status < 400) failures.push(`empty names were accepted: ${empty.status}`);
+    if (afterEmpty.brands !== 0) failures.push(`empty names left ${afterEmpty.brands} brand(s)`);
+    const opened = await openBrand(owner, "North", "شمال");
+    if (opened.profileId === null) failures.push(`brand answered ${opened.status} ${opened.body.slice(0, 160)}`);
+    const profileId = opened.profileId ?? randomUUID();
+    const beforeTheme = await tally(tenantId);
+    const theme = await probe.rpc(owner, "save_brand_theme", {
+      ...PASSING,
+      p_profile_id: profileId,
+      p_foreground: "#FFFFFF",
+    });
+    const afterTheme = await tally(tenantId);
+    if (theme.status < 400) failures.push(`malformed theme was accepted: ${theme.status}`);
+    if (
+      beforeTheme.themes !== afterTheme.themes
+      || beforeTheme.colors !== afterTheme.colors
+      || beforeTheme.keys !== afterTheme.keys
+    ) {
+      failures.push("malformed theme changed theme, colour or key counts");
+    }
+    const first = await probe.rpc(owner, "save_guideline", {
+      p_profile_id: profileId,
+      p_guideline_id: null,
+      p_title_en: "Use",
+      p_title_ar: "استخدم",
+      p_body_en: "Body",
+      p_body_ar: "نص",
+      p_ordinal: 1,
+    });
+    if (first.status >= 400) failures.push(`first guideline answered ${first.status} ${first.body.slice(0, 160)}`);
+    const afterFirst = await tally(tenantId);
+    const second = await probe.rpc(owner, "save_guideline", {
+      p_profile_id: profileId,
+      p_guideline_id: null,
+      p_title_en: "Again",
+      p_title_ar: "مرة",
+      p_body_en: "Again",
+      p_body_ar: "مرة",
+      p_ordinal: 1,
+    });
+    const afterSecond = await tally(tenantId);
+    if (second.status < 400) failures.push("colliding guideline was accepted");
+    if (afterSecond.guidelines !== 1) failures.push(`guideline count is ${afterSecond.guidelines}`);
+    if (afterSecond.keys !== afterFirst.keys) {
+      failures.push(`keys ${afterFirst.keys}->${afterSecond.keys} after the failed guideline`);
+    }
+    record(
+      "36d",
+      "A malformed theme, two empty brand names, and a guideline whose last write fails each write nothing",
+      failures,
+      `empty=${empty.status}, theme=${theme.status}, guideline=${second.status}`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("36e save_brand_theme names its first theme in both locales", async () => {
+    const failures: string[] = [];
+    const runId = randomUUID().slice(0, 8);
+    const owner = await makeIdentity(config, "wiz-theme", runId);
+    const created = await provision(owner, `wiz-theme-${runId}`);
+    if (created.tenantId === null) failures.push(`provisioning answered ${created.status}`);
+    const tenantId = created.tenantId ?? randomUUID();
+    const opened = await openBrand(owner, "North", "شمال");
+    if (opened.profileId === null) failures.push(`brand answered ${opened.status}`);
+    const profileId = opened.profileId ?? randomUUID();
+    const draftId = randomUUID();
+    await sql(`
+      insert into public.onboarding_draft (id, tenant_id, resume_step, created_by)
+      values ('${draftId}', '${tenantId}', 'brand', '${owner.authId}');
+      insert into public.onboarding_draft_color (id, tenant_id, draft_id, role, srgb, created_by)
+      values ('${randomUUID()}', '${tenantId}', '${draftId}', 'primary', '#112233', '${owner.authId}');
+    `);
+    const theme = await probe.rpc(owner, "save_brand_theme", { p_profile_id: profileId, ...PASSING });
+    if (theme.status >= 400) failures.push(`theme answered ${theme.status} ${theme.body.slice(0, 180)}`);
+    const names = await sql<{ locale: string; value: string }>(`
+      select e.locale, e.value
+        from public.brand_theme t
+        join public.translation_entry e
+          on e.key_id = t.name_key_id and e.tenant_id = t.tenant_id
+       where t.profile_id = '${profileId}'
+         and t.tenant_id = '${tenantId}'
+         and t.is_default
+         and t.archived_at is null
+         and e.archived_at is null
+    `);
+    const en = names.find((row) => row.locale === "en")?.value;
+    const ar = names.find((row) => row.locale === "ar")?.value;
+    if (en !== "Main colours") failures.push(`English theme name is ${en ?? "absent"}`);
+    if (ar !== "الألوان الرئيسية") failures.push(`Arabic theme name is ${ar ?? "absent"}`);
+    const [color] = await sql<{ archived: boolean }>(`
+      select archived_at is not null as archived
+        from public.onboarding_draft_color
+       where draft_id = '${draftId}'
+    `);
+    if (!color?.archived) failures.push("the draft colour was not archived");
+    record(
+      "36e",
+      "save_brand_theme names its first theme in both locales",
+      failures,
+      `en=${en ?? "absent"}, ar=${ar ?? "absent"}`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("36f complete_onboarding on an incomplete profile names every failed rule and changes nothing", async () => {
+    const failures: string[] = [];
+    const runId = randomUUID().slice(0, 8);
+    const owner = await makeIdentity(config, "wiz-gap", runId);
+    const created = await provision(owner, `wiz-gap-${runId}`);
+    if (created.tenantId === null) failures.push(`provisioning answered ${created.status}`);
+    const tenantId = created.tenantId ?? randomUUID();
+    const opened = await openBrand(owner, "North", "");
+    if (opened.profileId === null || opened.brandId === null) {
+      failures.push(`brand answered ${opened.status} ${opened.body.slice(0, 160)}`);
+    }
+    const profileId = opened.profileId ?? randomUUID();
+    const brandId = opened.brandId ?? randomUUID();
+    const draftId = randomUUID();
+    const themeId = randomUUID();
+    const nameKey = randomUUID();
+    await sql(`
+      insert into public.translation_key (id, tenant_id, created_by)
+      values ('${nameKey}', '${tenantId}', '${owner.authId}');
+      insert into public.translation_entry (tenant_id, key_id, locale, value, created_by)
+      values
+        ('${tenantId}', '${nameKey}', 'en', 'Main colours', '${owner.authId}'),
+        ('${tenantId}', '${nameKey}', 'ar', 'الألوان الرئيسية', '${owner.authId}');
+      insert into public.brand_theme (id, tenant_id, profile_id, name_key_id, is_default, created_by)
+      values ('${themeId}', '${tenantId}', '${profileId}', '${nameKey}', true, '${owner.authId}');
+      insert into public.color_value (tenant_id, theme_id, role, srgb, created_by)
+      values
+        ('${tenantId}', '${themeId}', 'primary', '#112233', '${owner.authId}'),
+        ('${tenantId}', '${themeId}', 'secondary', '#445566', '${owner.authId}'),
+        ('${tenantId}', '${themeId}', 'accent', '#778899', '${owner.authId}'),
+        ('${tenantId}', '${themeId}', 'background', '#ffffff', '${owner.authId}'),
+        ('${tenantId}', '${themeId}', 'foreground', '#ffffff', '${owner.authId}'),
+        ('${tenantId}', '${themeId}', 'critical', '#b42318', '${owner.authId}');
+      insert into public.onboarding_draft (id, tenant_id, resume_step, created_by)
+      values ('${draftId}', '${tenantId}', 'brand', '${owner.authId}');
+    `);
+    const attempt = await probe.rpc(owner, "complete_onboarding", { p_profile_id: profileId });
+    const phrases = [
+      "brand name missing locale ar",
+      "color role muted",
+      "foreground contrast against background is below 4.5:1",
+      "logo variant missing",
+      "typeface missing heading/latin",
+      "typeface missing heading/arabic",
+      "typeface missing body/latin",
+      "typeface missing body/arabic",
+      "legal name missing locale en",
+      "legal name missing locale ar",
+      "registered address missing locale en",
+      "registered address missing locale ar",
+    ];
+    if (attempt.status < 400) failures.push(`incomplete profile was accepted: ${attempt.status}`);
+    for (const phrase of phrases) {
+      if (!attempt.body.includes(phrase)) failures.push(`missing phrase: ${phrase}`);
+    }
+    const [brand] = await sql<{ current_profile_id: string | null }>(`
+      select current_profile_id::text as current_profile_id from public.brand where id = '${brandId}'
+    `);
+    const [draft] = await sql<{ archived_at: string | null }>(`
+      select archived_at::text as archived_at from public.onboarding_draft where id = '${draftId}'
+    `);
+    if (brand?.current_profile_id !== null) failures.push("the profile was made current");
+    if (draft?.archived_at !== null) failures.push("the draft was archived");
+    record(
+      "36f",
+      "complete_onboarding on an incomplete profile raises, names the failed rules and changes nothing",
+      failures,
+      `status=${attempt.status}`,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it("36g complete_onboarding on a complete profile makes it current and archives the draft", async () => {
+    const failures: string[] = [];
+    const runId = randomUUID().slice(0, 8);
+    const owner = await makeIdentity(config, "wiz-done", runId);
+    const created = await provision(owner, `wiz-done-${runId}`);
+    if (created.tenantId === null) failures.push(`provisioning answered ${created.status}`);
+    const tenantId = created.tenantId ?? randomUUID();
+    const opened = await openBrand(owner, "North", "شمال");
+    if (opened.profileId === null || opened.brandId === null) {
+      failures.push(`brand answered ${opened.status} ${opened.body.slice(0, 160)}`);
+    }
+    const profileId = opened.profileId ?? randomUUID();
+    const brandId = opened.brandId ?? randomUUID();
+    const draftId = randomUUID();
+    const assetId = randomUUID();
+    await sql(`
+      insert into public.onboarding_draft (id, tenant_id, resume_step, created_by)
+      values ('${draftId}', '${tenantId}', 'brand', '${owner.authId}');
+    `);
+    const theme = await probe.rpc(owner, "save_brand_theme", { p_profile_id: profileId, ...PASSING });
+    if (theme.status >= 400) failures.push(`theme answered ${theme.status} ${theme.body.slice(0, 180)}`);
+    const legal = await probe.rpc(owner, "save_legal_entity", {
+      p_legal_name_en: "North Ltd",
+      p_legal_name_ar: "شمال المحدودة",
+      p_trading_name_en: "",
+      p_trading_name_ar: "",
+      p_registered_address_en: "1 Road",
+      p_registered_address_ar: "طريق ١",
+      p_tax_registration_number: "",
+      p_contact_email: "",
+      p_contact_phone: "",
+    });
+    if (legal.status >= 400) failures.push(`legal entity answered ${legal.status} ${legal.body.slice(0, 180)}`);
+    await sql(`
+      insert into public.media_asset
+        (id, tenant_id, provider, bucket, object_key, content_type, byte_size, checksum, created_by)
+      values ('${assetId}', '${tenantId}', 'supabase-storage', 'tenant-media',
+              '${tenantId}/${assetId}/original.png', 'image/png', 1, '${CHECKSUM}', '${owner.authId}');
+      insert into public.asset_rendition
+        (tenant_id, media_asset_id, tier, provider, bucket, object_key, content_type, byte_size, created_by)
+      values
+        ('${tenantId}', '${assetId}', 'display', 'supabase-storage', 'tenant-media',
+         '${tenantId}/${assetId}/display.png', 'image/png', 1, '${owner.authId}'),
+        ('${tenantId}', '${assetId}', 'print', 'supabase-storage', 'tenant-media',
+         '${tenantId}/${assetId}/print.png', 'image/png', 1, '${owner.authId}');
+      insert into public.logo_variant
+        (tenant_id, profile_id, kind, ground, media_asset_id, created_by)
+      values ('${tenantId}', '${profileId}', 'full', 'light', '${assetId}', '${owner.authId}');
+      insert into public.typeface
+        (tenant_id, profile_id, role, script, family, weight, is_italic, created_by)
+      values
+        ('${tenantId}', '${profileId}', 'heading', 'latin', 'Inter', 700, false, '${owner.authId}'),
+        ('${tenantId}', '${profileId}', 'heading', 'arabic', 'Cairo', 700, false, '${owner.authId}'),
+        ('${tenantId}', '${profileId}', 'body', 'latin', 'Inter', 400, false, '${owner.authId}'),
+        ('${tenantId}', '${profileId}', 'body', 'arabic', 'Cairo', 400, false, '${owner.authId}');
+    `);
+    const done = await probe.rpc(owner, "complete_onboarding", { p_profile_id: profileId });
+    if (done.status >= 400) failures.push(`complete answered ${done.status} ${done.body.slice(0, 300)}`);
+    const [brand] = await sql<{ current_profile_id: string | null }>(`
+      select current_profile_id::text as current_profile_id from public.brand where id = '${brandId}'
+    `);
+    const [draft] = await sql<{ archived_at: string | null }>(`
+      select archived_at::text as archived_at from public.onboarding_draft where id = '${draftId}'
+    `);
+    if (brand?.current_profile_id !== profileId) failures.push(`current profile is ${brand?.current_profile_id ?? "absent"}`);
+    if (draft?.archived_at === null) failures.push("the draft was not archived");
+    record(
+      "36g",
+      "complete_onboarding on a complete profile makes it current and archives the draft",
+      failures,
+      `status=${done.status}, current=${brand?.current_profile_id ?? "absent"}`,
     );
     expect(failures).toEqual([]);
   });

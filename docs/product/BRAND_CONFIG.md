@@ -52,6 +52,10 @@ never a pair of `_en` / `_ar` columns. Entries hang off the key, one per
 locale. Paired columns would put the locale set in the schema shape, and a
 third locale would then be a migration against every table rather than a row.
 
+> **AMENDED 2026-10-04 — a theme's name.** The list above stands and is not
+> edited (PR-07). A theme's name is one of these human-readable brand strings,
+> held as a translation key like the others.
+
 > **Column amendment, P03-T04.** The reviewer draft named `TranslationEntry` as
 > the stored reference, and listed a typeface display name among the bilingual
 > strings. `DATA_MODEL.md` wins on columns: owning rows reference

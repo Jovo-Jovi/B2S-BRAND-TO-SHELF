@@ -1,8 +1,8 @@
 # SESSION CONTEXT
 Updated: 2026-10-04 · By: Grok 4.7 (heavyweight; prompt named Opus) · Phase: P03
 Last task: P03-T22 · Verdict: —. Last-row verdict is the declared
-placeholder; the follow-up commit fills the sha only. The previous
-P03-T21 cell is PASS. Ledger 223 rows, **44** open. Full detail in the done-steps row below.
+placeholder; the follow-up commit fills the sha only. The halted
+P03-T22 cell is PASS. Ledger 225 rows, **44** open. Full detail in the done-steps row below.
 
 ## Read these too
 - `docs/method/PRECEDENTS.md` — binding rulings and environment quirks.
@@ -102,7 +102,8 @@ Keep it short: if a paragraph is growing here, it belongs elsewhere.
 | P03-T20 | HALT 4, before any bucket, migration or upload module. On phase/03-brand-and-onboarding at 2612884. Pull request #8 stays the one draft against main, not marked ready. Node v24.21.0 matches .nvmrc 24. Prompt named Opus; this session ran as Grok 4.7. Production counts by Management API, User-Agent B2S-P03-T20-independent/1.0, project akpvvydmltmfmkmwivgn: public.tenant [{"n":0}] and auth.users [{"n":0}] at 2026-10-03T21:45:54Z and 21:45:56Z. Service-role construction remains only lib/supabase/server-only/service.ts. PART 1 found no higher-precedence contradiction. media_asset.provider and media_asset.checksum are not null, and no document states the stored provider string or the checksum algorithm and encoding. The suite's fixture literals are not that statement. 43 open at 2612884 plus 0 minus 0 equals 43. CF-234 stays open. Isolation suite not run. REVIEWER_CHAT unstaged. | PASS | `bde8899` |
 | P03-T20 | Private tenant-media bucket, storage policies, Asset-tier checks, and the upload path. On phase/03-brand-and-onboarding from 7d08c8d. Pull request #8 stays the one draft against main, not marked ready. Node v24.21.0 matches .nvmrc 24. Prompt named Opus; this session ran as Grok 4.7. The halted P03-T20 is PASS; the halt was correct. Production tenant and auth.users both 0 before the push. Schema half recorded at 2026-10-03T22:32:12Z, relation fingerprint d15e13d419ed388303241fef96a8f796, 25 migrations, no bucket. After the push: 26 migrations, one private bucket tenant-media, select and insert policies only, seven new checks, public buckets 0, tenant and auth.users still 0. Types regenerated from staging, byte-identical. Isolation 110 expected, 110 PASS, 0 FAIL, 0 LOST, D at zero including storage objects, suite wall 407468ms. Slowest assertion 19 at 20861ms. Existing claims identical, 102. Static set 30. PROVEN_PAIRS 68 of 68, KNOWN_GAPS 1. fail() 148. 43 open plus 1 landed open minus 1 closed equals 43. Closed CF-234. Open CF-236, owner the operator surface at P07. CF-162, CF-235 and CF-214 stay open. REVIEWER_CHAT unstaged. | PASS | `29d9014` |
 | P03-T21 | Error visibility (OD-H13) and production closed to new accounts until launch (OD-H15). On phase/03-brand-and-onboarding from d6ab5b7. Pull request #8 stays the one draft against main, not marked ready. Node v24.21.0 matches .nvmrc 24. Prompt named Opus; this session ran as Grok 4.7. Production auth read-only, User-Agent B2S-P03-T21-independent/1.0, project akpvvydmltmfmkmwivgn, HTTP 200 at 2026-10-04T11:18:05.699Z: disable_signup false, so new sign-ups are enabled. Not changed. Register 103 to 104. OD-H15. Both error boundaries show the digest. One redacted JSON line per unhandled server error. Probe refused when VERCEL_ENV is production. Plants: email redaction removed, its unit test failed; the boundary passed an empty identifier, the browser test failed; both restored. Browser tier: four locale and theme combinations, plus the email fixture. Static set stays 30. PROVEN_PAIRS stays 68. No new pair. File-count floors rose to the measured counts. 43 open at d6ab5b7 plus CF-237 and CF-238 landed open minus CF-162 closed equals 44. Ledger 221 to 223. CF-235 owner is P03-T22. Isolation suite not run. REVIEWER_CHAT unstaged. | PASS | `a85a169` |
-| P03-T22 | HALT 3, before any function or migration. On phase/03-brand-and-onboarding from 234ee54. Pull request #8 stays the one draft against main, not marked ready. Node v24.21.0 matches .nvmrc 24. Prompt named Opus; this session ran as Grok 4.7. Production counts by Management API, User-Agent B2S-P03-T22-independent/1.0, project akpvvydmltmfmkmwivgn: public.tenant [{"n":0}] and auth.users [{"n":0}] at 2026-10-04T12:22:58Z. .env.local host label is akpvvydmltmfmkmwivgn, production. Auth config HTTP 200 at 2026-10-04T12:22:59Z: disable_signup false. Neither changed. Proof 15 expectedFunctions is an exact set of eleven names, and every public function except set_updated_at must be security definer. Proof 22's grant map is exact and a function it does not name fails the proof. Five SECURITY INVOKER functions in public would change both expectations. No schema, no package, isolation suite not run. 44 open at 234ee54 plus 0 minus 0 equals 44. CF-235 stays with P03-T22. CF-212 and CF-238 stay with the owner. REVIEWER_CHAT unstaged. | — | `4e1be62` |
+| P03-T22 | HALT 3, before any function or migration. On phase/03-brand-and-onboarding from 234ee54. Pull request #8 stays the one draft against main, not marked ready. Node v24.21.0 matches .nvmrc 24. Prompt named Opus; this session ran as Grok 4.7. Production counts by Management API, User-Agent B2S-P03-T22-independent/1.0, project akpvvydmltmfmkmwivgn: public.tenant [{"n":0}] and auth.users [{"n":0}] at 2026-10-04T12:22:58Z. .env.local host label is akpvvydmltmfmkmwivgn, production. Auth config HTTP 200 at 2026-10-04T12:22:59Z: disable_signup false. Neither changed. Proof 15 expectedFunctions is an exact set of eleven names, and every public function except set_updated_at must be security definer. Proof 22's grant map is exact and a function it does not name fails the proof. Five SECURITY INVOKER functions in public would change both expectations. No schema, no package, isolation suite not run. 44 open at 234ee54 plus 0 minus 0 equals 44. CF-235 stays with P03-T22. CF-212 and CF-238 stay with the owner. REVIEWER_CHAT unstaged. | PASS | `4e1be62` |
+| P03-T22 | The wizard's five transactional invoker write paths. On phase/03-brand-and-onboarding from 3e00406. Pull request #8 stays the one draft against main, not marked ready. Node v24.21.0 matches .nvmrc 24. Prompt named Opus; this session ran as Grok 4.7. The halted P03-T22 is PASS; the halt was correct. Production tenant and auth.users both 0. .env.local host label akpvvydmltmfmkmwivgn. disable_signup false, read-only, not changed. Before the production push: 26 migrations, 10 definers, 1 invoker, fingerprint faff8d7d082c13e97fa738ce3e395035. After: staging and production both 27 migrations, 10 definers, 6 invokers, fingerprint 17221d2cbd4d79c0c32c73e37856e74c. Types regenerated from staging. Isolation 117 expected, 117 PASS, 0 FAIL, 0 LOST, D at zero, suite wall 423317ms. Slowest 23h at 22262ms. Proofs 15 and 22 restated; claim strings unchanged. Static set 31. PROVEN_PAIRS 70 of 70, KNOWN_GAPS 1. fail() 155. A plant making save_brand_name security definer failed the invoker check and was restored. 44 open at 3e00406 plus 2 landed minus 2 closed equals 44. Closed CF-239 and CF-240. CF-235 retargeted to P03-T23, carrying CF-214. CF-212 and CF-238 stay with the owner. No new package. REVIEWER_CHAT unstaged. | — | — |
 
 > Commit column: one or more comma-separated backticked shas, or `—` where no
 > single commit tracks the step (P-00 through P-01c predate the one-task-one-commit
@@ -158,7 +159,7 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
 - CF-207 — owner: the owner
 - CF-212 — owner: the owner, to repoint .env.local at staging
 - CF-214 — owner: the task that builds the wizard routes
-- CF-235 — owner: P03-T22
+- CF-235 — owner: P03-T23
 - CF-236 — owner: the operator surface at P07
 - CF-237 — owner: the owner, before launch
 - CF-238 — owner: the owner, before P03 merges
@@ -291,8 +292,9 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
   finds something is landed as a permanent check by the fix task that follows,
   and one that finds nothing is landed too, because a probe that passes today is
   the one that catches tomorrow's regression.
-- **The static conformance set is twelve `docs-integrity` checks and eighteen
-  `guards`, thirty in total, as of 2026-10-04 — P03-T20.** It was
+- **The static conformance set is thirteen `docs-integrity` checks and eighteen
+  `guards`, thirty-one in total, as of 2026-10-04 — P03-T22.** It was
+  twelve and eighteen, thirty, as of 2026-10-04 — P03-T20. It was
   eleven and eighteen, twenty-nine, as of 2026-09-29 — P03-T13. It was
   eleven and seventeen, twenty-eight, as of 2026-09-27 — P03-T11, and unchanged
   at P03-T12. It was
@@ -304,7 +306,7 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
   figures live where P02-T09 recorded one, split at P02-T09-FIX because they
   measure different things and neither had ever been asserted against its
   own derivation:
-  - The static-assertion count stands at **148** fail() call site(s),
+  - The static-assertion count stands at **155** fail() call site(s),
     enumerated as one `Call` node per assertion across every
     `scripts/check_*.py` (PR-23) — command: parse each file's AST and count
     `Call` nodes whose function is the bare name `fail`, never a textual
@@ -342,6 +344,10 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
     premise: `PROVEN_PAIRS` stays 39, provenance P03-T02.
     It rose again to 148 at P03-T20: ten new `fail()` sites in
     `check_storage_tenant_media.py`. One new pair, stated below.
+    It rose again to 155 at P03-T22: seven new `fail()` sites in
+    `check_wizard_write_paths.py` (the stated list, the schema list, security
+    definer, not invoker, empty search_path, a missing grant, and a grant to
+    anon). Two new pairs, stated below.
     `check_stated_counts.py`'s scan-target count stays **9**.
     `check_stated_counts.py`'s `MINIMUM_GUARD_PATHS` moved 7 → **8** with the
     new `scripts/check_mcp_containment.py` citation in both always-on files;
@@ -388,13 +394,18 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
     coverage list, the gallery renderer and the browser-tier spec.
     It moved again at P03-T14: 63 → 64, one new pair for
     `check-contrast.mjs` against `docs/product/DESIGN_SURFACE.md`.
-  - The proven two-way empty-target case count stands at **68**, last proved
-    at **P03-T20**. One new pair, `check_storage_tenant_media.py` against
-    `supabase/schema.sql`, was proved by removing the file and by emptying
-    it; both produced a one-line `FAIL:` at non-zero exit, and each was
-    restored byte-identical. The whole enumeration was reproved in the same
-    run, 68 of 68, KNOWN_GAPS 1. P03-T21 added no check and no pair.
-    PROVEN_PAIRS stays 68. The file-count floors on the existing scan
+  - The proven two-way empty-target case count stands at **70**, last proved
+    at **P03-T22**. Two new pairs, `check_wizard_write_paths.py` against
+    `supabase/schema.sql` and `docs/product/SECURITY_MODEL.md`, were proved
+    by removing each and by emptying each; both produced a one-line `FAIL:`
+    at non-zero exit, and each was restored byte-identical. The whole
+    enumeration was reproved in the same run, 70 of 70, KNOWN_GAPS 1.
+    It stood at 68, last proved at P03-T20. One pair,
+    `check_storage_tenant_media.py` against `supabase/schema.sql`, was proved
+    by removing the file and by emptying it; both produced a one-line `FAIL:`
+    at non-zero exit, and each was restored byte-identical. The whole
+    enumeration was reproved in that run, 68 of 68, KNOWN_GAPS 1. P03-T21
+    added no check and no pair. PROVEN_PAIRS stayed 68. The file-count floors on the existing scan
     guards rose to the measured counts. Those are changed conditions, not
     new premises. It stood at 67, last proved at P03-T19.
     Three new pairs, `check-token-values.mjs` against
@@ -472,7 +483,7 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
   (PR-29).
 
 ## Next action
-**P03-T22 halted** (HALT 3) before any function, migration or assertion edit. A reissue must authorise extending proof 15 and proof 22 so five SECURITY INVOKER functions can live in `public`. Proof 15's function set is exact, and every name except `set_updated_at` must be security definer. Proof 22's grant map fails on a function it does not name, and the function count must equal that map. Adding the five changes those expectations. Their claim strings were not rewritten. CF-235 stays with P03-T22, carrying CF-214. `.env.local` still resolves to production `akpvvydmltmfmkmwivgn` (CF-212). Production `disable_signup` is still false, read 2026-10-04 (CF-238). The owner turns sign-ups off before P03 merges. Production moves to a Vercel plan whose runtime logs meet OD-H13, and sign-ups open only as OD-H15 states, before launch (CF-237). CF-236 stays open: archived media rows whose objects were not fully written are the cleanup record, and a job that removes those objects is owed by the operator surface at P07. CF-214 stays open. CF-204 stays open for the P03 exit gate: one CI run finished in 525.04s, and two finished in 763.98s and 745.37s. OD-A8 places the public site in P08. The Brand and Typography specimens are gallery screens; they are not routes and they persist nothing. Save and finish later stays with CF-214. A page size and an explicit theme choice are member preferences
+**P03-T23** is the six onboarding screens, saving and resuming. CF-235 owns that work and carries CF-214. The five write paths are in the database. `.env.local` still resolves to production `akpvvydmltmfmkmwivgn` (CF-212). Production `disable_signup` is still false, read 2026-10-04 (CF-238). The owner turns sign-ups off before P03 merges. Production moves to a Vercel plan whose runtime logs meet OD-H13, and sign-ups open only as OD-H15 states, before launch (CF-237). CF-236 stays open: archived media rows whose objects were not fully written are the cleanup record, and a job that removes those objects is owed by the operator surface at P07. CF-214 stays open. CF-204 stays open for the P03 exit gate: one CI run finished in 525.04s, and two finished in 763.98s and 745.37s. OD-A8 places the public site in P08. The Brand and Typography specimens are gallery screens; they are not routes and they persist nothing. Save and finish later stays with CF-214. A page size and an explicit theme choice are member preferences
 held for the session (CF-207) until the owner decides where a member
 preference lives. Do not persist a page size or a theme choice. Pull request #8 is the phase's one draft
 against main. Do not mark it ready and do not open a second one. Money and
