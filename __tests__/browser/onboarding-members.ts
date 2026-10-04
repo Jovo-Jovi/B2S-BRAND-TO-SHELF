@@ -8,7 +8,10 @@ import { randomUUID } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-const PREFIX = "zz-test-wiz-";
+// Push and pull_request both run this suite against the same staging
+// database. A shared prefix lets one run's teardown delete the other's
+// member mid-test. The run id keeps each suite inside its own names.
+const PREFIX = `zz-test-wiz-${process.env.GITHUB_RUN_ID ?? "local"}-`;
 const PRODUCTION_REF = "akpvvydmltmfmkmwivgn";
 
 export type Member = { id: string; email: string; password: string };
