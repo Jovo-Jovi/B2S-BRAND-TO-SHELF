@@ -139,17 +139,13 @@ describe("compositions", () => {
         progress="Step {current} of {total}"
         title="Brand"
         purpose="Set the brand"
-        back="Back"
         continueCaption="Continue"
         save="Save and finish later"
         mark="B2S"
         localeHref="/ar/gallery"
         localeCaption="Arabic"
-        help="Help"
-        onBack={() => undefined}
         onContinue={() => undefined}
         onSave={() => undefined}
-        onHelp={() => undefined}
         onStep={() => undefined}
         errors={[]}
       >
@@ -158,6 +154,10 @@ describe("compositions", () => {
     );
     expect(html).toContain("Step 1 of 5");
     expect(html).toContain("Welcome");
+    expect(html).toContain("Save and finish later");
+    expect(html).toContain("Continue");
+    expect(html).not.toContain(">Back<");
+    expect(html).not.toContain("Help");
     expect(html).not.toContain(">0<");
     expect(html.match(/<li>/g)?.length).toBe(6);
   });

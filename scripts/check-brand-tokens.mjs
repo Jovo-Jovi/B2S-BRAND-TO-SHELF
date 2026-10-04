@@ -25,7 +25,8 @@ const SOURCE = "components/ui/brand-frame/brand-frame.tsx";
 // P03-T12 — measured after the data family: 85. P03-T13 adds the gallery: 89.
 // P03-T21 measured 113 after the error boundaries and the probe.
 // P03-T23 measured 140 files and 18 brand references.
-const MINIMUM_FILES = 140;
+// P03-T24 measured 151 files.
+const MINIMUM_FILES = 151;
 const MINIMUM_DEFINITIONS = 19;
 const MINIMUM_BRAND_REFERENCES = 18;
 const MINIMUM_PLATFORM_REFERENCES = 6;

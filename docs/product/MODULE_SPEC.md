@@ -67,8 +67,10 @@ app/                              route surface only, thin
         welcome/
         brand/
         typography/
-        company/                  interim stub until P03-T24
-        complete/                 interim landing until P03-T24
+        company/
+        guidelines/
+        review/
+        complete/
       brand/                      deferred
       packaging/                  deferred
       catalog/                    deferred

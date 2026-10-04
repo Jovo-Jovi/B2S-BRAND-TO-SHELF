@@ -14,6 +14,8 @@ export type WizardStepId = (typeof WIZARD_STEPS)[number] | "welcome";
 export type WizardError = {
   fieldId: string;
   message: string;
+  href?: string;
+  rule?: string;
 };
 
 type WizardStepProps = {
@@ -23,17 +25,15 @@ type WizardStepProps = {
   progress: string;
   title: string;
   purpose: string;
-  back: string;
-  continueCaption: string;
-  save: string;
+  back?: string;
+  continueCaption?: string;
+  save?: string;
   mark: string;
   localeHref: string;
   localeCaption: string;
-  help: string;
-  onBack: () => void;
-  onContinue: () => void;
-  onSave: () => void;
-  onHelp: () => void;
+  onBack?: () => void;
+  onContinue?: () => void;
+  onSave?: () => void;
   onStep: (step: WizardStepId) => void;
   errors: WizardError[];
   preview?: ReactNode;
@@ -60,11 +60,9 @@ export function WizardStep({
   mark,
   localeHref,
   localeCaption,
-  help,
   onBack,
   onContinue,
   onSave,
-  onHelp,
   onStep,
   errors,
   preview,
@@ -87,15 +85,10 @@ export function WizardStep({
         <TextLink href={localeHref} variant="standalone">
           {localeCaption}
         </TextLink>
-        <Button type="button" variant="quiet" onClick={onHelp}>
-          {help}
-        </Button>
         <ol className={styles.stepper}>
         <li>
           {welcomeReached ? (
-            <Button type="button" variant="quiet" onClick={() => onStep("welcome")}>
-              {captions.welcome}
-            </Button>
+            <span>{captions.welcome}</span>
           ) : (
             <span aria-current="step">{captions.welcome}</span>
           )}
@@ -142,9 +135,11 @@ export function WizardStep({
       {errors.length > 0 ? (
         <div className={styles.summary} role="alert" tabIndex={-1} ref={summaryRef}>
           <ul>
-            {errors.map((error) => (
-              <li key={error.fieldId}>
-                <a href={`#${error.fieldId}`}>{error.message}</a>
+            {errors.map((error, index) => (
+              <li key={`${error.fieldId}-${index}`}>
+                <a href={error.href ?? `#${error.fieldId}`} data-rule={error.rule}>
+                  {error.message}
+                </a>
               </li>
             ))}
           </ul>
@@ -153,19 +148,27 @@ export function WizardStep({
       <h2 className={styles.title}>{title}</h2>
       <p className={styles.purpose}>{purpose}</p>
       {children}
-      <div className={styles.footer}>
-        <Button type="button" variant="quiet" onClick={onBack}>
-          {back}
-        </Button>
-        <div className={styles.end}>
-          <Button type="button" variant="secondary" onClick={onSave}>
-            {save}
-          </Button>
-          <Button type="button" variant="primary" onClick={onContinue}>
-            {continueCaption}
-          </Button>
+      {back || save || continueCaption ? (
+        <div className={styles.footer}>
+          {back ? (
+            <Button type="button" variant="quiet" onClick={onBack}>
+              {back}
+            </Button>
+          ) : null}
+          <div className={styles.end}>
+            {save ? (
+              <Button type="button" variant="secondary" onClick={onSave}>
+                {save}
+              </Button>
+            ) : null}
+            {continueCaption ? (
+              <Button type="button" variant="primary" onClick={onContinue}>
+                {continueCaption}
+              </Button>
+            ) : null}
+          </div>
         </div>
-      </div>
+      ) : null}
         </div>
         {preview ? <div className={styles.preview}>{preview}</div> : null}
       </div>

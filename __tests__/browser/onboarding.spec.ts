@@ -3,12 +3,16 @@ import axe from "axe-core";
 
 import ar from "../../app/[locale]/dictionaries/ar.json";
 import en from "../../app/[locale]/dictionaries/en.json";
+import { rulesFromCompleteError } from "../../features/onboarding/completeness";
+import { fillPattern, formatCount } from "../../lib/locale/format-number";
 import {
   addViewer,
   createMember,
   markComplete,
   memberGet,
+  memberPatch,
   memberRpc,
+  memberRpcResult,
   memberToken,
   png,
   svg,
@@ -103,6 +107,31 @@ async function press(page: Page, name: string): Promise<void> {
   });
 }
 
+function raisedRules(body: string): string[] {
+  let message = body;
+  try {
+    const parsed = JSON.parse(body) as { message?: string };
+    if (parsed.message) message = parsed.message;
+  } catch {
+    message = body;
+  }
+  return (rulesFromCompleteError(message) ?? []).sort();
+}
+
+async function visibleRules(page: Page, selector: string): Promise<string[]> {
+  const rules = await page.locator(selector).evaluateAll((nodes) =>
+    nodes.map((node) => node.getAttribute("data-rule") ?? "").filter((rule) => rule.length > 0),
+  );
+  return rules.sort();
+}
+
+async function profileId(token: string): Promise<string> {
+  const profiles = await memberGet<{ id: string }[]>(token, "brand_profile?select=id&order=version.desc&limit=1");
+  const id = profiles[0]?.id;
+  if (!id) throw new Error("the synthetic member has no brand profile");
+  return id;
+}
+
 async function hold(page: Page, locale: "en" | "ar", screen: string): Promise<void> {
   const violations = await runAxe(page);
   expect(violations, screen).toEqual([]);
@@ -175,19 +204,24 @@ test("a tenant with a current profile and no draft is sent to the completion rou
   await markComplete(memberships[0]!.tenant_id);
   await page.goto("/en/onboarding/brand");
   await expect(page).toHaveURL(/\/onboarding\/complete/);
-  await expect(page.locator("[data-interim=complete]")).toContainText(en.onboarding.completeStubBody);
+  await expect(page.locator("[data-screen=complete]")).toContainText(en.onboarding.completeBody);
 });
 
 for (const locale of LOCALES) {
   for (const theme of THEMES) {
     for (const width of WIDTHS) {
       test(`wizard ${locale} ${theme} ${width}`, async ({ page }) => {
+        test.setTimeout(360_000);
         const copy = copyFor(locale);
         const member = await createMember(`${locale}-${theme}-${width}`);
         const business = `zz-test-wiz-${locale}-${theme}-${width}`;
         await signIn(page, locale, member);
         await openThemed(page, locale, theme, width, "brand");
         await expect(page).toHaveURL(/\/welcome/);
+        await expect(page.getByRole("button", { name: copy.continue })).toHaveCount(1);
+        await expect(page.getByRole("button", { name: copy.back })).toHaveCount(0);
+        await expect(page.getByRole("button", { name: copy.save })).toHaveCount(0);
+        await expect(page.getByRole("button", { name: copy.help })).toHaveCount(0);
         await hold(page, locale, "welcome");
         await page.screenshot({ path: `test-results/visual/onboarding-${locale}-${theme}-${width}-welcome.png`, fullPage: true });
 
@@ -196,6 +230,9 @@ for (const locale of LOCALES) {
         await press(page, copy.continue);
         await page.waitForURL(/\/brand/);
         await expect(page.locator("[data-screen=brand]")).toBeVisible();
+        await expect(page.getByRole("button", { name: copy.back })).toHaveCount(0);
+        await expect(page.getByRole("button", { name: copy.save })).toHaveCount(1);
+        await expect(page.getByRole("button", { name: copy.help })).toHaveCount(0);
 
         await page.goto(`/${locale}/onboarding/typography?theme=${theme}`);
         await expect(page).toHaveURL(/\/brand/);
@@ -314,10 +351,262 @@ for (const locale of LOCALES) {
 
         await press(page, copy.continue);
         await page.waitForURL(/\/company/);
-        await expect(page.locator("[data-interim=company]")).toContainText(copy.companyStubBody);
+        await expect(page.locator("#legal-name")).toBeVisible();
+        await expect(page.getByRole("button", { name: copy.back })).toHaveCount(1);
+        await expect(page.getByRole("button", { name: copy.save })).toHaveCount(1);
+        await expect(page.getByRole("button", { name: copy.help })).toHaveCount(0);
         await hold(page, locale, "company");
         await page.screenshot({ path: `test-results/visual/onboarding-${locale}-${theme}-${width}-company.png`, fullPage: true });
+
+        await memberPatch(token, "onboarding_draft?archived_at=is.null", { resume_step: "review" });
+        await page.goto(`/${locale}/onboarding/guidelines?theme=${theme}`);
+        await expect(page.locator("#guidelines")).toBeVisible();
+        await expect(page.getByRole("button", { name: copy.help })).toHaveCount(0);
+        await hold(page, locale, "guidelines");
+        await page.screenshot({ path: `test-results/visual/onboarding-${locale}-${theme}-${width}-guidelines.png`, fullPage: true });
+        await page.goto(`/${locale}/onboarding/review?theme=${theme}`);
+        await expect(page.locator("[data-needed]")).toBeVisible();
+        await expect(page.getByRole("button", { name: copy.finish })).toHaveCount(1);
+        await expect(page.getByRole("button", { name: copy.help })).toHaveCount(0);
+        await hold(page, locale, "review");
+        await page.screenshot({ path: `test-results/visual/onboarding-${locale}-${theme}-${width}-review.png`, fullPage: true });
+
+        const id = await profileId(token);
+        await memberRpc(token, "save_legal_entity", {
+          p_legal_name_en: "Northwind LLC",
+          p_legal_name_ar: "Northwind LLC",
+          p_trading_name_en: "",
+          p_trading_name_ar: "",
+          p_registered_address_en: "1 Street",
+          p_registered_address_ar: "2 Street",
+          p_tax_registration_number: "",
+          p_contact_email: "",
+          p_contact_phone: "",
+        });
+        await memberRpc(token, "complete_onboarding", { p_profile_id: id });
+        await page.goto(`/${locale}/onboarding/complete?theme=${theme}`);
+        await expect(page.locator("[data-screen=complete]")).toContainText(copy.completeBody);
+        await expect(page.getByRole("button", { name: copy.help })).toHaveCount(0);
+        await hold(page, locale, "complete");
+        await page.screenshot({ path: `test-results/visual/onboarding-${locale}-${theme}-${width}-complete.png`, fullPage: true });
+        await page.goto(`/${locale}/onboarding/brand?theme=${theme}`);
+        await expect(page).toHaveURL(/\/onboarding\/complete/);
       });
     }
   }
+}
+
+async function returnTo(page: Page, locale: "en" | "ar", member: Member, step: string): Promise<void> {
+  await page.context().clearCookies();
+  await signIn(page, locale, member);
+  await page.waitForURL(new RegExp(`/${step}(?:\\?|$)`));
+}
+
+test("review names exactly the rules complete_onboarding raises", async ({ page }) => {
+  test.setTimeout(240_000);
+  const member = await createMember("rules");
+  await signIn(page, "en", member);
+  await openThemed(page, "en", "light", 1280, "welcome");
+  await page.getByRole("radio", { name: en.onboarding.localeEn }).check();
+  await page.locator("#welcome-name").fill(`zz-test-wiz-rules-${member.id.slice(0, 8)}`);
+  await press(page, en.onboarding.continue);
+  await page.waitForURL(/\/brand/);
+  const token = await memberToken(member);
+  await memberRpc(token, "save_brand_name", { p_name_en: "Northwind", p_name_ar: "Northwind" });
+
+  async function compare(label: string): Promise<string[]> {
+    await memberPatch(token, "onboarding_draft?archived_at=is.null", { resume_step: "review" });
+    await page.goto("/en/onboarding/review");
+    await expect(page.locator("[data-needed]")).toBeVisible();
+    const listed = await visibleRules(page, "[data-needed] [data-rule]");
+    const id = await profileId(token);
+    const result = await memberRpcResult(token, "complete_onboarding", { p_profile_id: id });
+    expect(result.ok, `${label} ${result.body}`).toBe(false);
+    const raised = raisedRules(result.body);
+    expect(listed, label).toEqual(raised);
+    return raised;
+  }
+
+  const namedOnly = await compare("name only");
+  expect(namedOnly).toContain("default theme count is 0, expected 1");
+  expect(namedOnly).toContain("logo variant missing");
+  expect(namedOnly).toContain("legal name missing locale en");
+  expect(namedOnly).toContain("registered address missing locale ar");
+
+  const id = await profileId(token);
+  const same = en.onboarding.startingBackground;
+  await memberRpc(token, "save_brand_theme", {
+    p_profile_id: id,
+    p_primary: en.onboarding.startingForeground,
+    p_secondary: en.onboarding.startingMuted,
+    p_accent: en.onboarding.startingCritical,
+    p_background: same,
+    p_foreground: same,
+    p_muted: en.onboarding.startingMuted,
+    p_critical: en.onboarding.startingCritical,
+  });
+  const contrasted = await compare("contrast");
+  expect(contrasted).toContain("foreground contrast against background is below 4.5:1");
+  expect(contrasted.some((rule) => rule.startsWith("default theme count"))).toBe(false);
+  expect(contrasted).not.toEqual(namedOnly);
+
+  const written = await memberRpcResult(token, "save_guideline", {
+    p_profile_id: id,
+    p_guideline_id: null,
+    p_title_en: "Clear space",
+    p_title_ar: "",
+    p_body_en: "",
+    p_body_ar: "",
+    p_ordinal: 1,
+  });
+  expect(written.ok, written.body).toBe(true);
+  const withGuideline = await compare("guideline");
+  expect(withGuideline).toContain("guideline title missing locale ar");
+  expect(withGuideline).toContain("guideline body missing locale en");
+  expect(withGuideline).not.toEqual(contrasted);
+
+  await press(page, en.onboarding.finish);
+  await expect(page.locator('[role="alert"] [data-rule]').first()).toBeVisible();
+  expect(await visibleRules(page, '[role="alert"] [data-rule]')).toEqual(withGuideline);
+  const brand = await memberGet<{ current_profile_id: string | null }[]>(token, "brand?select=current_profile_id");
+  expect(brand[0]?.current_profile_id ?? null).toBeNull();
+  const drafts = await memberGet<{ archived_at: string | null }[]>(token, "onboarding_draft?select=archived_at");
+  expect(drafts[0]?.archived_at ?? null).toBeNull();
+});
+
+for (const locale of LOCALES) {
+  test(`company, guidelines, resume and finish ${locale}`, async ({ page }) => {
+    test.setTimeout(360_000);
+    const copy = copyFor(locale);
+    const member = await createMember(`back-${locale}`);
+    await signIn(page, locale, member);
+    await openThemed(page, locale, "light", 1280, "welcome");
+    await page.getByRole("radio", { name: copy.localeEn }).check();
+    await page.locator("#welcome-name").fill(`zz-test-wiz-back-${locale}-${member.id.slice(0, 8)}`);
+    await press(page, copy.continue);
+    await page.waitForURL(/\/brand/);
+
+    await page.locator("#role-primary").fill(PRIMARY);
+    await press(page, copy.save);
+    await expect(page.getByRole("status")).toContainText(copy.saved);
+    await returnTo(page, locale, member, "brand");
+    await expect(page.locator("#role-primary")).toHaveValue(PRIMARY);
+    await expect(page.locator("#role-secondary")).toHaveValue("");
+
+    await page.locator('[data-locale="en"] input').fill("Northwind");
+    await page.locator('[data-locale="ar"] input').fill("Northwind");
+    await page.locator("#role-secondary").fill(SECONDARY);
+    await page.locator("#role-accent").fill(ACCENT);
+    await press(page, copy.continue);
+    await page.waitForURL(/\/typography/);
+    await page.locator("#heading-latin").selectOption("Fraunces");
+    await press(page, copy.save);
+    await expect(page.getByRole("status")).toContainText(copy.saved);
+    await returnTo(page, locale, member, "typography");
+    await expect(page.locator("#heading-latin")).toHaveValue("Fraunces");
+    await page.locator("#heading-arabic").selectOption("Cairo");
+    await page.locator("#body-arabic").selectOption("Amiri");
+    await page.locator("#body-latin").selectOption("Lora");
+    await press(page, copy.continue);
+    await page.waitForURL(/\/company/);
+
+    const national = `0${"1001234567"}`;
+    const storedPhone = `+20${"1001234567"}`;
+    await page.locator('#legal-name [data-locale="en"] input').fill("Northwind LLC");
+    await page.locator("#tax").fill("TAX123");
+    await page.locator("#phone").fill(national);
+    await press(page, copy.save);
+    await expect(page.locator("#phone")).toHaveValue(storedPhone);
+    await returnTo(page, locale, member, "company");
+    await expect(page.locator('#legal-name [data-locale="en"] input')).toHaveValue("Northwind LLC");
+    await expect(page.locator("#tax")).toHaveValue("TAX123");
+    await expect(page.locator("#phone")).toHaveValue(storedPhone);
+
+    await page.locator("#tax").fill("not valid");
+    await page.locator("#email").fill("not-an-email");
+    await press(page, copy.continue);
+    const companyAlert = errorSummary(page);
+    await expect(companyAlert).toContainText(copy.taxInvalid);
+    await expect(companyAlert).toContainText(copy.emailInvalid);
+    await expect(companyAlert).toContainText(fillPattern(copy.legalNameMissing, { locale: copy.localeAr }));
+    await expect(companyAlert).toContainText(fillPattern(copy.addressMissing, { locale: copy.localeEn }));
+    await expect(companyAlert).toContainText(fillPattern(copy.addressMissing, { locale: copy.localeAr }));
+    await expect(companyAlert).not.toContainText(fillPattern(copy.legalNameMissing, { locale: copy.localeEn }));
+    await page.reload();
+    await expect(page.locator("#tax")).toHaveValue("TAX123");
+    await expect(page.locator("#email")).toHaveValue("");
+    await expect(page.locator("#phone")).toHaveValue(storedPhone);
+    await expect(page.locator('#legal-name [data-locale="en"] input')).toHaveValue("Northwind LLC");
+    const token = await memberToken(member);
+    const entity = await memberGet<{ contact_phone: string | null }[]>(token, "legal_entity?select=contact_phone");
+    expect(entity[0]?.contact_phone).toBe(storedPhone);
+
+    await page.locator('#legal-name [data-locale="ar"] input').fill("Northwind LLC");
+    await page.locator('#registered-address [data-locale="en"] textarea').fill("1 Street");
+    await page.locator('#registered-address [data-locale="ar"] textarea').fill("2 Street");
+    await press(page, copy.continue);
+    await page.waitForURL(/\/guidelines/);
+
+    await press(page, copy.addGuideline);
+    await page.locator('#guideline-1-title [data-locale="en"] input').fill("Clear space");
+    await press(page, copy.continue);
+    const guidelineAlert = errorSummary(page);
+    await expect(guidelineAlert).toContainText(fillPattern(copy.guidelineShort, { ordinal: "1", part: copy.partTitle, locale: copy.localeAr }));
+    await expect(guidelineAlert).toContainText(fillPattern(copy.guidelineShort, { ordinal: "1", part: copy.partBody, locale: copy.localeEn }));
+    await expect(guidelineAlert).toContainText(fillPattern(copy.guidelineShort, { ordinal: "1", part: copy.partBody, locale: copy.localeAr }));
+    await page.locator('#guideline-1-title [data-locale="ar"] input').fill("Clear space");
+    await page.locator('#guideline-1-body [data-locale="en"] textarea').fill("Leave room around the mark.");
+    await page.locator('#guideline-1-body [data-locale="ar"] textarea').fill("Leave room around the mark.");
+    await press(page, copy.save);
+    await expect(page.getByRole("status")).toContainText(copy.saved);
+    await returnTo(page, locale, member, "guidelines");
+    await expect(page.locator('#guideline-1-title [data-locale="en"] input')).toHaveValue("Clear space");
+    await page.locator('#guideline-1-title [data-locale="en"] input').fill("Clear space revised");
+    await press(page, copy.save);
+    await expect(page.getByRole("status")).toContainText(copy.saved);
+    await page.reload();
+    await expect(page.locator('#guideline-1-title [data-locale="en"] input')).toHaveValue("Clear space revised");
+    const removeName = fillPattern(copy.removeGuideline, { ordinal: formatCount(1, locale) });
+    await press(page, removeName);
+    await expect(page.locator("#guideline-1-title")).toHaveCount(0);
+    const guidelines = await memberGet<{ id: string; archived_at: string | null }[]>(token, "brand_guideline?select=id,archived_at");
+    expect(guidelines).toHaveLength(1);
+    expect(guidelines[0]?.archived_at).toBeTruthy();
+
+    await press(page, copy.continue);
+    await page.waitForURL(/\/review/);
+    const listed = await visibleRules(page, "[data-needed] [data-rule]");
+    const id = await profileId(token);
+    const result = await memberRpcResult(token, "complete_onboarding", { p_profile_id: id });
+    expect(result.ok).toBe(false);
+    expect(listed).toEqual(raisedRules(result.body));
+    const before = await memberGet<{ current_profile_id: string | null }[]>(token, "brand?select=current_profile_id");
+    await press(page, copy.finish);
+    await expect(page.locator('[role="alert"] [data-rule]').first()).toBeVisible();
+    expect(await visibleRules(page, '[role="alert"] [data-rule]')).toEqual(listed);
+    const after = await memberGet<{ current_profile_id: string | null }[]>(token, "brand?select=current_profile_id");
+    expect(after[0]?.current_profile_id ?? null).toBe(before[0]?.current_profile_id ?? null);
+    expect(page.url()).toContain("/review");
+
+    await page.goto(`/${locale}/onboarding/brand`);
+    await page.locator('[data-logo-ground="light"] input[type=file]').setInputFiles({
+      name: "mark.png",
+      mimeType: "image/png",
+      buffer: png(1000, 1000),
+    });
+    await expect(page.locator('[data-ground="light"]').first()).toHaveAttribute("src", /.+/);
+    await page.goto(`/${locale}/onboarding/review`);
+    await expect(page.getByText(copy.reviewReady)).toBeVisible();
+    await press(page, copy.finish);
+    await page.waitForURL(/\/complete/);
+    await expect(page.locator("[data-screen=complete]")).toContainText(copy.completeBody);
+    const finished = await memberGet<{ current_profile_id: string | null }[]>(token, "brand?select=current_profile_id");
+    expect(finished[0]?.current_profile_id).toBeTruthy();
+    const draft = await memberGet<{ archived_at: string | null }[]>(token, "onboarding_draft?select=archived_at");
+    expect(draft[0]?.archived_at).toBeTruthy();
+    await page.goto(`/${locale}/onboarding/brand`);
+    await expect(page).toHaveURL(/\/onboarding\/complete/);
+    await page.goto(`/${locale}/onboarding`);
+    await expect(page).toHaveURL(/\/onboarding\/complete/);
+  });
 }

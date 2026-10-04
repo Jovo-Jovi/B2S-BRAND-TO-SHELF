@@ -56,9 +56,10 @@ const MINIMUM_DELTA = 6;
 // P03-T19 — the typeface library stylesheet is scanned: 31 stylesheets, 1597 declarations, 38 font families, 109 sources.
 // P03-T21 measured 113 sources after the error boundaries and the probe.
 // P03-T23 measured 1598 declarations, 277 tokens and 140 sources.
+// P03-T24 measured 151 sources.
 const MINIMUM_STYLESHEETS = 31;
 const MINIMUM_DECLARATIONS = 1598;
-const MINIMUM_SOURCES = 140;
+const MINIMUM_SOURCES = 151;
 
 const FAMILIES = new Set(["IBM Plex Sans", "IBM Plex Sans Arabic"]);
 const GENERICS = new Set(["system-ui", "sans-serif"]);

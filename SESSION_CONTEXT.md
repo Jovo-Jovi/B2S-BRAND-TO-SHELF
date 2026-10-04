@@ -1,8 +1,8 @@
 # SESSION CONTEXT
-Updated: 2026-10-04 · By: Grok 4.7 (heavyweight; prompt named Opus) · Phase: P03
-Last task: P03-T23 · Verdict: —. Last-row verdict is the declared
-placeholder; the follow-up commit fills the sha only. The halted P03-T23
-is PASS. P03-T22's verdict cell is PASS. Ledger 226 rows, **44** open.
+Updated: 2026-10-05 · By: Grok 4.7 (heavyweight; prompt named Opus) · Phase: P03
+Last task: P03-T24 · Verdict: —. Last-row verdict is the declared
+placeholder; the follow-up commit fills the sha only. P03-T23's verdict
+cell is PASS. Ledger 227 rows, **40** open.
 Full detail in the done-steps row below.
 
 ## Read these too
@@ -106,7 +106,8 @@ Keep it short: if a paragraph is growing here, it belongs elsewhere.
 | P03-T22 | HALT 3, before any function or migration. On phase/03-brand-and-onboarding from 234ee54. Pull request #8 stays the one draft against main, not marked ready. Node v24.21.0 matches .nvmrc 24. Prompt named Opus; this session ran as Grok 4.7. Production counts by Management API, User-Agent B2S-P03-T22-independent/1.0, project akpvvydmltmfmkmwivgn: public.tenant [{"n":0}] and auth.users [{"n":0}] at 2026-10-04T12:22:58Z. .env.local host label is akpvvydmltmfmkmwivgn, production. Auth config HTTP 200 at 2026-10-04T12:22:59Z: disable_signup false. Neither changed. Proof 15 expectedFunctions is an exact set of eleven names, and every public function except set_updated_at must be security definer. Proof 22's grant map is exact and a function it does not name fails the proof. Five SECURITY INVOKER functions in public would change both expectations. No schema, no package, isolation suite not run. 44 open at 234ee54 plus 0 minus 0 equals 44. CF-235 stays with P03-T22. CF-212 and CF-238 stay with the owner. REVIEWER_CHAT unstaged. | PASS | `4e1be62` |
 | P03-T22 | The wizard's five transactional invoker write paths. On phase/03-brand-and-onboarding from 3e00406. Pull request #8 stays the one draft against main, not marked ready. Node v24.21.0 matches .nvmrc 24. Prompt named Opus; this session ran as Grok 4.7. The halted P03-T22 is PASS; the halt was correct. Production tenant and auth.users both 0. .env.local host label akpvvydmltmfmkmwivgn. disable_signup false, read-only, not changed. Before the production push: 26 migrations, 10 definers, 1 invoker, fingerprint faff8d7d082c13e97fa738ce3e395035. After: staging and production both 27 migrations, 10 definers, 6 invokers, fingerprint 17221d2cbd4d79c0c32c73e37856e74c. Types regenerated from staging. Isolation 117 expected, 117 PASS, 0 FAIL, 0 LOST, D at zero, suite wall 423317ms. Slowest 23h at 22262ms. Proofs 15 and 22 restated; claim strings unchanged. Static set 31. PROVEN_PAIRS 70 of 70, KNOWN_GAPS 1. fail() 155. A plant making save_brand_name security definer failed the invoker check and was restored. 44 open at 3e00406 plus 2 landed minus 2 closed equals 44. Closed CF-239 and CF-240. CF-235 retargeted to P03-T23, carrying CF-214. CF-212 and CF-238 stay with the owner. No new package. REVIEWER_CHAT unstaged. | PASS | `0a39bbd` |
 | P03-T23 | HALT 1, before any route or screen. On phase/03-brand-and-onboarding from d0588d9. Pull request #8 stays the one draft against main, not marked ready. Node v24.21.0 matches .nvmrc 24. Prompt named Opus; this session ran as Grok 4.7. PART 0(c) failed: NEXT_PUBLIC_SUPABASE_URL host is production akpvvydmltmfmkmwivgn, not staging bnjrgoaoujnrlvuxicca. No route, screen, harness, migration or package. Production auth config HTTP 200 at 2026-10-04T14:50:23.815Z, User-Agent B2S-P03-T23-independent/1.0: disable_signup false. Not changed. Service-role construction remains only lib/supabase/server-only/service.ts. 44 open at d0588d9 plus 0 minus 0 equals 44. CF-212 stays with the owner. CF-235 stays with P03-T23. CF-238 stays with the owner. Isolation suite not run. REVIEWER_CHAT unstaged. | PASS | `caa8c85` |
-| P03-T23 | The wizard's front half: the onboarding gate, Welcome, Brand and Typography. On phase/03-brand-and-onboarding from 830e996. Pull request #8 stays the one draft against main, not marked ready. Node v24.21.0 matches .nvmrc 24. Prompt named Opus; this session ran as Grok 4.7. The halted P03-T23 is PASS; the halt was correct. PART 0(c) passed: the local Supabase host is staging bnjrgoaoujnrlvuxicca. Production auth read-only, User-Agent B2S-P03-T23-independent/1.0, HTTP 200 at 2026-10-04T15:09:56.680Z: disable_signup true. Not changed. The gate routes every case. Welcome, Brand and Typography save through the member session. Company is an interim stub inside the wizard frame. Shared WizardStep preview gained overflow auto so the stated narrow height contains the proof. Browser harness: four gate cases and eight wizard cases, English and Arabic, light and dark, at 360 and 1280, each teardown at zero. Static set stays 31. PROVEN_PAIRS stays 70, last proved at P03-T22. No new pair. File-count floors rose to the measured counts. 44 open at d0588d9 plus CF-241 landed open minus CF-212 closed equals 44. Ledger 225 to 226. CF-214 and CF-235 retargeted to P03-T24. CF-238 stays with the owner. Isolation suite not run: the push path filter does not include these files. No new package. REVIEWER_CHAT unstaged. | — | `8c9741f` |
+| P03-T23 | The wizard's front half: the onboarding gate, Welcome, Brand and Typography. On phase/03-brand-and-onboarding from 830e996. Pull request #8 stays the one draft against main, not marked ready. Node v24.21.0 matches .nvmrc 24. Prompt named Opus; this session ran as Grok 4.7. The halted P03-T23 is PASS; the halt was correct. PART 0(c) passed: the local Supabase host is staging bnjrgoaoujnrlvuxicca. Production auth read-only, User-Agent B2S-P03-T23-independent/1.0, HTTP 200 at 2026-10-04T15:09:56.680Z: disable_signup true. Not changed. The gate routes every case. Welcome, Brand and Typography save through the member session. Company is an interim stub inside the wizard frame. Shared WizardStep preview gained overflow auto so the stated narrow height contains the proof. Browser harness: four gate cases and eight wizard cases, English and Arabic, light and dark, at 360 and 1280, each teardown at zero. Static set stays 31. PROVEN_PAIRS stays 70, last proved at P03-T22. No new pair. File-count floors rose to the measured counts. 44 open at d0588d9 plus CF-241 landed open minus CF-212 closed equals 44. Ledger 225 to 226. CF-214 and CF-235 retargeted to P03-T24. CF-238 stays with the owner. Isolation suite not run: the push path filter does not include these files. No new package. REVIEWER_CHAT unstaged. | PASS | `8c9741f` |
+| P03-T24 | The wizard's back half: Company, Guidelines, Review, completion and resume. On phase/03-brand-and-onboarding from d8d6cec. Pull request #8 stays the one draft against main, not marked ready. Node v24.21.0 matches .nvmrc 24. Prompt named Opus; this session ran as Grok 4.7. PART 0 passed: one draft pull request, staging host bnjrgoaoujnrlvuxicca, no privileged client in application code. Production auth read-only, User-Agent B2S-P03-T24-independent/1.0, HTTP 200, Date Sun, 04 Oct 2026 20:43:15 GMT: disable_signup true. Not changed. DESIGN_SURFACE §7, §11 and §13 corrected in place. Welcome shows Continue only; Brand has no Back; no screen shows help. Company, Guidelines, Review and completion save through the member session. Review's list matches complete_onboarding. Resume holds every saved answer, partial colours included. Browser harness 15 passed, teardown at zero. Gallery 21 passed. Static set 32. PROVEN_PAIRS 71 of 71, KNOWN_GAPS 1. fail() 160. A planted interim marker failed the route check and was restored. 44 open at d8d6cec plus CF-242 landed open minus CF-214, CF-235, CF-238, CF-241 and CF-242 closed equals 40. Ledger 226 to 227. Register 104. Live maximum PR is PR-47. Isolation suite not run: no path it covers was changed. No new package. REVIEWER_CHAT unstaged. | — | — |
 
 > Commit column: one or more comma-separated backticked shas, or `—` where no
 > single commit tracks the step (P-00 through P-01c predate the one-task-one-commit
@@ -160,12 +161,8 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
 - CF-192 — owner: the owner
 - CF-204 — owner: the P03 exit gate
 - CF-207 — owner: the owner
-- CF-214 — owner: P03-T24
-- CF-235 — owner: P03-T24
 - CF-236 — owner: the operator surface at P07
 - CF-237 — owner: the owner, before launch
-- CF-238 — owner: the owner, before P03 merges
-- CF-241 — owner: P03-T24
 
 ## Frozen decisions in force
 - Freeze point 2026-07-29 (`legacy/FREEZE.md`) — tools RETIRING, not port
@@ -295,8 +292,9 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
   finds something is landed as a permanent check by the fix task that follows,
   and one that finds nothing is landed too, because a probe that passes today is
   the one that catches tomorrow's regression.
-- **The static conformance set is thirteen `docs-integrity` checks and eighteen
-  `guards`, thirty-one in total, as of 2026-10-04 — P03-T22.** It was
+- **The static conformance set is fourteen `docs-integrity` checks and eighteen
+  `guards`, thirty-two in total, as of 2026-10-04 — P03-T24.** It was
+  thirteen and eighteen, thirty-one, as of 2026-10-04 — P03-T22. It was
   twelve and eighteen, thirty, as of 2026-10-04 — P03-T20. It was
   eleven and eighteen, twenty-nine, as of 2026-09-29 — P03-T13. It was
   eleven and seventeen, twenty-eight, as of 2026-09-27 — P03-T11, and unchanged
@@ -309,7 +307,7 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
   figures live where P02-T09 recorded one, split at P02-T09-FIX because they
   measure different things and neither had ever been asserted against its
   own derivation:
-  - The static-assertion count stands at **155** fail() call site(s),
+  - The static-assertion count stands at **160** fail() call site(s),
     enumerated as one `Call` node per assertion across every
     `scripts/check_*.py` (PR-23) — command: parse each file's AST and count
     `Call` nodes whose function is the bare name `fail`, never a textual
@@ -351,6 +349,10 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
     `check_wizard_write_paths.py` (the stated list, the schema list, security
     definer, not invoker, empty search_path, a missing grant, and a grant to
     anon). Two new pairs, stated below.
+    It rose again to 160 at P03-T24: five new `fail()` sites in
+    `check_onboarding_routes.py` (a missing route, a route that does not import
+    its screen, an interim marker on a route, a missing screen, and an interim
+    marker on a screen). One new pair, stated below.
     `check_stated_counts.py`'s scan-target count stays **9**.
     `check_stated_counts.py`'s `MINIMUM_GUARD_PATHS` moved 7 → **8** with the
     new `scripts/check_mcp_containment.py` citation in both always-on files;
@@ -397,7 +399,13 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
     coverage list, the gallery renderer and the browser-tier spec.
     It moved again at P03-T14: 63 → 64, one new pair for
     `check-contrast.mjs` against `docs/product/DESIGN_SURFACE.md`.
-  - The proven two-way empty-target case count stands at **70**, last proved
+  - The proven two-way empty-target case count stands at **71**, last proved
+    at **P03-T24**. One new pair, `check_onboarding_routes.py` against the
+    onboarding route directory, was proved by removing the directory and by
+    emptying it; both produced a one-line `FAIL:` at non-zero exit, and the
+    directory was restored byte-identical. The whole enumeration was reproved
+    in the same run, 71 of 71, KNOWN_GAPS 1.
+    It stood at **70**, last proved
     at **P03-T22**. Two new pairs, `check_wizard_write_paths.py` against
     `supabase/schema.sql` and `docs/product/SECURITY_MODEL.md`, were proved
     by removing each and by emptying each; both produced a one-line `FAIL:`
@@ -489,7 +497,7 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
   (PR-29).
 
 ## Next action
-**P03-T24** builds Company, Guidelines, Review, the completion screen and resume, and removes the interim Company stub and the interim completion landing (CF-241). CF-235 stays open, owner P03-T24, and it still carries CF-214. Welcome, Brand and Typography save through the member's own session. The onboarding gate routes every case. Production auth config, read-only, User-Agent B2S-P03-T23-independent/1.0, HTTP 200 at 2026-10-04T15:09:56.680Z: `disable_signup` is true. Not changed. CF-238 stays with the owner. Production moves to a Vercel plan whose runtime logs meet OD-H13, and sign-ups open only as OD-H15 states, before launch (CF-237). CF-236 stays open: archived media rows whose objects were not fully written are the cleanup record, and a job that removes those objects is owed by the operator surface at P07. CF-204 stays open for the P03 exit gate: one CI run finished in 525.04s, and two finished in 763.98s and 745.37s. OD-A8 places the public site in P08. The Brand and Typography specimens in the gallery persist nothing. Save and finish later on the screens still unbuilt stays with CF-214. A page size and an explicit theme choice are member preferences
+Company, Guidelines, Review and the completion screen save through the member's own session, and resume lands on the draft's step. The interim Company stub is gone. Production auth config, read-only, User-Agent B2S-P03-T24-independent/1.0, project akpvvydmltmfmkmwivgn, HTTP 200, Date Sun, 04 Oct 2026 20:43:15 GMT: `disable_signup` is true. Not changed. New sign-ups are off on that measurement. The next task is the reviewer's. Production moves to a Vercel plan whose runtime logs meet OD-H13, and sign-ups open only as OD-H15 states, before launch (CF-237). CF-236 stays open: archived media rows whose objects were not fully written are the cleanup record, and a job that removes those objects is owed by the operator surface at P07. CF-204 stays open for the P03 exit gate: one CI run finished in 525.04s, and two finished in 763.98s and 745.37s. OD-A8 places the public site in P08. The Brand and Typography specimens in the gallery persist nothing. Save and finish later is proven on Brand, Typography, Company and Guidelines. A page size and an explicit theme choice are member preferences
 held for the session (CF-207) until the owner decides where a member
 preference lives. Do not persist a page size or a theme choice. Pull request #8 is the phase's one draft
 against main. Do not mark it ready and do not open a second one. Money and

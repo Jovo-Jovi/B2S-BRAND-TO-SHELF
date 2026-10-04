@@ -988,11 +988,11 @@ What failed, in plain words; what to do next; a retry action; and the request id
 
 ### WizardStep
 
-The wizard renders in its own frame, not AppShell — nothing in the navigation exists before onboarding completes. The frame's header carries the platform mark, the stepper, the language switch and help. WizardStep gains an optional preview region: at `lg` and above, an inline-end column on `sunken` with a `border-inline-start`, the form capped at `measure-form`; below `lg`, the preview precedes the form with its proof at `proof-height-narrow`, not sticky.
+The wizard renders in its own frame, not AppShell — nothing in the navigation exists before onboarding completes. The frame's header carries the platform mark, the stepper and the language switch. It carries no help control in Release 1: help was named without a behaviour, and a control that does nothing is worse than none. It returns when there is help content to show. WizardStep gains an optional preview region: at `lg` and above, an inline-end column on `sunken` with a `border-inline-start`, the form capped at `measure-form`; below `lg`, the preview precedes the form with its proof at `proof-height-narrow`, not sticky.
 
 - **Stepper:** numbered, because onboarding genuinely is a sequence. It numbers Brand to Review, five steps. Welcome precedes the stepper and is not numbered (`BRAND_CONFIG.md` §10 amendment). Steps are completed, current or upcoming. Completed steps are reachable; upcoming ones are not until reached. Progress is also stated in text — "Step 2 of 5" — so it is never carried by the graphic alone.
 - **Body:** a step title at `3xl`, one sentence of purpose, then one or more `FormSection`s.
-- **Footer:** **Back** as `quiet` at inline-start, **Continue** as `primary` at inline-end, and **Save and finish later** as `secondary`, because the wizard is resumable (`BRAND_CONFIG.md` §10).
+- **Footer:** the actions are set per screen, never all three by default. Welcome shows Continue only. Brand, the first numbered step, shows Save and finish later and Continue, with no Back, because once Welcome has provisioned the business the gate never returns anyone to it. Typography, Company and Guidelines show Back, Save and finish later and Continue. Review shows Back and Finish setup. Back is `quiet` at inline-start. Save and finish later is `secondary`. Continue and Finish setup are `primary` at inline-end. The wizard is resumable (`BRAND_CONFIG.md` §10).
 - **Validation on Continue:** an error summary appears at the top, lists each problem as a link to its field, and takes focus. Each field also shows its own error. Input is always preserved.
 
 ---
@@ -1056,7 +1056,7 @@ Every gate the catalog landing task builds, and the part of this document it hol
 
 The catalog is finished when the first real screen it exists for can be built from it with **no page-level styling at all** (CF-180). Inventory is not the test; composition is.
 
-**The screen:** step 1, Brand (BRAND_CONFIG.md §10 amendment), in the wizard's own frame. FormSection "Brand name": a BilingualField, the business's default locale first. FormSection "Your brand's colours": ColorFields for primary, secondary and accent. FormSection "Text and background": a paired ColorField for background and foreground, and ColorFields for muted and critical, each showing its starting value as a starting value. FormSection "Logo": a FileDrop. The preview region: Tabs, Label and Sticker, each panel a BrandFrame holding its §3.1 specimen. Footer: Back to Welcome, Save and finish later, Continue.
+**The screen:** step 1, Brand (BRAND_CONFIG.md §10 amendment), in the wizard's own frame. FormSection "Brand name": a BilingualField, the business's default locale first. FormSection "Your brand's colours": ColorFields for primary, secondary and accent. FormSection "Text and background": a paired ColorField for background and foreground, and ColorFields for muted and critical, each showing its starting value as a starting value. FormSection "Logo": a FileDrop. The preview region: Tabs, Label and Sticker, each panel a BrandFrame holding its §3.1 specimen. Footer: Save and finish later, Continue.
 
 **It passes when**, in both locales, both themes, at 360 and 1280 CSS pixels:
 
@@ -1105,7 +1105,9 @@ Every screen renders in WizardStep's own frame (§7). Welcome is unnumbered; ste
 
 **4 Guidelines** — optional; help saying guidelines are rules the brand follows, shown to the team and never enforced by the platform (BRAND_CONFIG.md §8). Each guideline is a FormSection with a BilingualField title, a multiline BilingualField body and a quiet Remove button whose name says which guideline it removes. "Add a guideline" is a secondary Button. None at all is valid. Footer: Back, Save and finish later, Continue.
 
-**5 Review** — a summary FormSection per step, each with a TextLink whose name says which step it edits; the preview region; and a list of everything still needed, each item named by its rule and linked to where it is fixed. Footer: Back, and Finish setup as the primary action. Finish setup is never disabled: pressed with gaps, it shows the error summary listing each gap with its link. On success the profile becomes current, the draft is archived, and the owner arrives at the dashboard.
+**5 Review** — a summary FormSection per step, each with a TextLink whose name says which step it edits; the preview region; and a list of everything still needed, each item named by its rule and linked to where it is fixed. Footer: Back, and Finish setup as the primary action. Finish setup is never disabled: pressed with gaps, it shows the error summary listing each gap with its link. On success the profile becomes current, the draft is archived, and the owner arrives at the wizard's completion screen.
+
+**Completion** — confirms that setup is complete and shows the current brand in the preview. It states nothing about features that do not yet exist. The dashboard is module 22 and is not built in P03.
 
 **Resume** — an owner who returns with an unarchived draft lands on the draft's step, with every saved answer in place.
 
@@ -1390,3 +1392,17 @@ The slot takes the mark for its ground, or, where that ground has no mark, the f
 A gap is named when that ground has neither a mark nor a full logo.
 
 **2026-10-03 — P03-T19.** §13, The onboarding screens, is new. There is no prior text.
+
+**2026-10-04 — P03-T24.** §7 WizardStep's header named a help control, and its footer always showed Back, Save and finish later and Continue. Prior header sentence:
+
+`The wizard renders in its own frame, not AppShell — nothing in the navigation exists before onboarding completes. The frame's header carries the platform mark, the stepper, the language switch and help.`
+
+Prior footer:
+
+`- **Footer:** **Back** as `quiet` at inline-start, **Continue** as `primary` at inline-end, and **Save and finish later** as `secondary`, because the wizard is resumable (`BRAND_CONFIG.md` §10).`
+
+The header carries no help control in Release 1. The footer's actions are set per screen: Welcome shows Continue only; Brand shows Save and finish later and Continue, with no Back; Typography, Company and Guidelines show Back, Save and finish later and Continue; Review shows Back and Finish setup.
+
+**2026-10-04 — P03-T24.** §11 Brand's footer included Back to Welcome. Prior clause: `Footer: Back to Welcome, Save and finish later, Continue.` The footer is Save and finish later, Continue. Once Welcome has provisioned the business, the gate never returns anyone to it.
+
+**2026-10-04 — P03-T24.** §13 Review sent the owner to the dashboard. Prior ending: `On success the profile becomes current, the draft is archived, and the owner arrives at the dashboard.` On success the owner arrives at the wizard's completion screen. The completion screen confirms setup is complete and shows the current brand in the preview. It states nothing about features that do not yet exist. The dashboard is module 22 and is not built in P03.

@@ -37,6 +37,30 @@ export type FaceValues = {
   bodyLatin: string;
 };
 
+export type LocaleText = { en: string; ar: string };
+
+export type LegalValues = {
+  legalName: LocaleText;
+  tradingName: LocaleText;
+  address: LocaleText;
+  tax: string;
+  email: string;
+  phone: string;
+};
+
+export type GuidelineValues = {
+  id: string;
+  ordinal: number;
+  title: LocaleText;
+  body: LocaleText;
+};
+
+export type ReviewModel = {
+  legal: LegalValues;
+  guidelines: GuidelineValues[];
+  gaps: string[];
+};
+
 export type BrandSnapshot = {
   defaultLocale: LocaleCode;
   names: { en: string; ar: string };

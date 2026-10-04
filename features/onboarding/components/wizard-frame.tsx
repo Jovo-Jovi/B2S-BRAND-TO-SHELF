@@ -15,9 +15,9 @@ type FrameProps = {
   purpose: string;
   theme: string | null;
   errors: WizardError[];
-  onBack: () => void;
+  onBack?: () => void;
   onContinue: () => void;
-  onSave: () => void;
+  onSave?: () => void;
   onStep: (step: WizardStepId) => void;
   preview?: ReactNode;
   children: ReactNode;
@@ -41,6 +41,9 @@ export function WizardFrame({
   const other: LocaleCode = locale === "en" ? "ar" : "en";
   const query = theme === "light" || theme === "dark" ? `?theme=${theme}` : "";
   const step = current === "welcome" ? "welcome" : current;
+  const showBack = current === "typography" || current === "company" || current === "guidelines" || current === "review";
+  const showSave = current === "brand" || current === "typography" || current === "company" || current === "guidelines";
+  const primary = current === "review" ? copy.finish : current === "welcome" || showSave || showBack ? copy.continue : undefined;
 
   return (
     <div data-screen={current}>
@@ -58,17 +61,15 @@ export function WizardFrame({
         progress={copy.progress}
         title={title}
         purpose={purpose}
-        back={copy.back}
-        continueCaption={copy.continue}
-        save={copy.save}
+        back={showBack ? copy.back : undefined}
+        continueCaption={primary}
+        save={showSave ? copy.save : undefined}
         mark={copy.mark}
         localeHref={`/${other}/onboarding/${step}${query}`}
         localeCaption={other === "ar" ? copy.localeAr : copy.localeEn}
-        help={copy.help}
         onBack={onBack}
         onContinue={onContinue}
         onSave={onSave}
-        onHelp={() => undefined}
         onStep={onStep}
         errors={errors}
         preview={preview}

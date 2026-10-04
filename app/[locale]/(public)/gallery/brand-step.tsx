@@ -198,17 +198,13 @@ export function BrandStep({ locale, copy, otherLocale }: BrandStepProps) {
         progress={copy.compositionProgress}
         title={copy.compositionBrand}
         purpose={copy.compositionPurpose}
-        back={copy.compositionBackWelcome}
         continueCaption={copy.compositionContinue}
         save={copy.compositionSave}
         mark={copy.compositionPlatformMark}
         localeHref={`/${otherLocale}/gallery`}
         localeCaption={otherLocale === "ar" ? copy.localeAr : copy.localeEn}
-        help={copy.compositionHelp}
-        onBack={() => undefined}
         onContinue={validate}
         onSave={() => undefined}
-        onHelp={() => undefined}
         onStep={() => undefined}
         errors={errors}
         preview={

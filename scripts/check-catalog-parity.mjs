@@ -14,7 +14,8 @@ const AR = "app/[locale]/dictionaries/ar.json";
 // reads: 51.
 // P03-T12 measured 51. P03-T13 adds the gallery namespace: 170.
 // P03-T21 measured 215. P03-T23 adds the onboarding namespace: 383.
-const MINIMUM_LEAVES = 383;
+// P03-T24 measured 437 after the company, guidelines, review and completion copy.
+const MINIMUM_LEAVES = 437;
 
 let violations = 0;
 

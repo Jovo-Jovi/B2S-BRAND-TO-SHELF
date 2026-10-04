@@ -66,7 +66,7 @@ export function decide(locale: LocaleCode, state: GateState, requested: Requeste
   if (requestedIndex === undefined || requestedIndex > resumeIndex) {
     return { type: "redirect", href: screenPath(locale, resume) };
   }
-  if (requested === "welcome") return { type: "render", screen: "welcome" };
+  if (requested === "welcome") return { type: "redirect", href: screenPath(locale, resume) };
   if ((RESUME_STEPS as readonly string[]).includes(requested)) {
     return { type: "render", screen: requested as ResumeStep };
   }

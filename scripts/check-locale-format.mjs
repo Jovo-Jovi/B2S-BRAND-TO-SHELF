@@ -22,7 +22,8 @@ const METHOD_APIS = new Set(["toLocaleString", "toLocaleDateString", "toLocaleTi
 // P03-T12 — measured after the data family: 72. P03-T13 adds the gallery: 76.
 // P03-T21 measured 97 after the error boundaries and the probe.
 // P03-T23 measured 124 after the onboarding screens.
-const MINIMUM_FILES = 124;
+// P03-T24 measured 135 after Company, Guidelines, Review and completion.
+const MINIMUM_FILES = 135;
 
 function fail(message) {
   console.error(`FAIL: ${message}`);

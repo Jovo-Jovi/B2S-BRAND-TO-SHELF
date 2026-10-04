@@ -70,9 +70,7 @@ export function WelcomeStep({ locale, copy, theme }: WelcomeStepProps) {
       purpose={copy.welcomePurpose}
       theme={theme}
       errors={errors}
-      onBack={() => undefined}
       onContinue={() => void run()}
-      onSave={() => void run()}
       onStep={() => undefined}
     >
       <RadioGroup

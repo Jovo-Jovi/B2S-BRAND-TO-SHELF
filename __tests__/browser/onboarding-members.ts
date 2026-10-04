@@ -137,6 +137,42 @@ export async function memberGet<T>(token: string, path: string): Promise<T> {
   return (await response.json()) as T;
 }
 
+export async function memberPatch(token: string, path: string, body: Record<string, string>): Promise<void> {
+  const current = config();
+  const response = await fetch(`${current.url}/rest/v1/${path}`, {
+    method: "PATCH",
+    headers: {
+      apikey: current.publishableKey,
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+      Prefer: "return=minimal",
+    },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`member patch failed: ${response.status} ${text.slice(0, 200)}`);
+  }
+}
+
+export async function memberRpcResult(
+  token: string,
+  name: string,
+  args: Record<string, string | number | null>,
+): Promise<{ ok: boolean; body: string }> {
+  const current = config();
+  const response = await fetch(`${current.url}/rest/v1/rpc/${name}`, {
+    method: "POST",
+    headers: {
+      apikey: current.publishableKey,
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(args),
+  });
+  return { ok: response.ok, body: await response.text() };
+}
+
 export async function memberRpc(token: string, name: string, args: Record<string, string>): Promise<void> {
   const current = config();
   const response = await fetch(`${current.url}/rest/v1/rpc/${name}`, {

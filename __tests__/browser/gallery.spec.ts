@@ -197,9 +197,11 @@ async function assertBrandStep(page: Page, locale: "en" | "ar") {
   await expect(screen.locator("#brand-name input").nth(1)).toHaveAttribute("dir", "rtl");
   const frameDir = await screen.locator('[data-composition="WizardStep"]').evaluate((node) => getComputedStyle(node).direction);
   expect(frameDir).toBe(locale === "ar" ? "rtl" : "ltr");
-  const help = screen.getByRole("button", { name: copy.compositionHelp });
-  await help.focus();
-  const outline = await help.evaluate((node) => getComputedStyle(node).outlineStyle);
+  await expect(screen.getByRole("button", { name: copy.compositionHelp })).toHaveCount(0);
+  await expect(screen.getByRole("button", { name: copy.compositionBackWelcome })).toHaveCount(0);
+  const language = screen.getByRole("link", { name: locale === "en" ? copy.localeAr : copy.localeEn });
+  await language.focus();
+  const outline = await language.evaluate((node) => getComputedStyle(node).outlineStyle);
   expect(outline).not.toBe("none");
   await screen.locator("#brand-name input").first().fill("");
   await screen.getByRole("button", { name: copy.compositionContinue }).click();

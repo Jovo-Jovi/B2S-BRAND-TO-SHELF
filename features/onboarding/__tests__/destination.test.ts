@@ -37,8 +37,8 @@ describe("onboarding gate", () => {
       screen: "brand",
     });
     expect(decide("en", { kind: "draft", resume: "typography" }, "welcome")).toEqual({
-      type: "render",
-      screen: "welcome",
+      type: "redirect",
+      href: "/en/onboarding/typography",
     });
     expect(decide("en", { kind: "draft", resume: "brand" }, "company")).toEqual({
       type: "redirect",

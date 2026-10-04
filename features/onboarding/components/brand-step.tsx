@@ -183,7 +183,6 @@ export function BrandStep({ locale, copy, theme, snapshot }: BrandStepProps) {
       purpose={copy.brandPurpose}
       theme={theme}
       errors={errors}
-      onBack={() => void run("back")}
       onContinue={() => void run("continue")}
       onSave={() => void run("save")}
       onStep={(step) => void run("step", step)}

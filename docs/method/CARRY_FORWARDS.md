@@ -4036,7 +4036,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       details land on legal_entity. The onboarding draft holds the resume
       step and colours before all seven exist.
       Owner: none outstanding.
-- [ ] CF-214 — CF-180's sixth criterion, save and finish later preserves both
+- [x] CF-214 — CF-180's sixth criterion, save and finish later preserves both
       partial values, needs the schema CF-213 names. Criteria one to five
       are satisfiable by a gallery specimen now.
       Owner: **the task that lands the tenant business-data amendment**.
@@ -4044,7 +4044,11 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       AMENDED (P03-T23) — draft colours set on Brand survive a reload. That
       is the draft half. The remaining half, save and finish later on the
       screens still unbuilt, travels with CF-241.
-      Owner: **P03-T24**.
+      CLOSED (P03-T24) by Save and finish later on Brand, Typography, Company
+      and Guidelines. Signing out and signing in lands on that step with every
+      saved answer in place, partial colours included. The browser harness
+      proves it in English and Arabic, and each run's teardown is at zero.
+      Owner: none outstanding.
 - [x] CF-215 — STATIC. The platform colour-token set is closed against
       DESIGN_SURFACE.md §2.2 and §2.11 in both directions. proof and
       proof-edge are achromatic. The warmth ceiling and the Clay-danger
@@ -4213,7 +4217,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       insert policies, the checks on provider, bucket, object-key prefix and
       checksum, `lib/logo/store-logo.ts`, and isolation proofs 35a to 35h.
       Owner: none outstanding.
-- [ ] CF-235 — The six onboarding screens as routes, saving and resuming.
+- [x] CF-235 — The six onboarding screens as routes, saving and resuming.
       Carries CF-214.
       Owner: **P03-T21**.
       AMENDED (P03-T21) — this task is error visibility. The screens are
@@ -4224,7 +4228,11 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       AMENDED (P03-T23) — Welcome, Brand and Typography are routes and they
       save. Company, Guidelines, Review, the completion screen and resume
       remain, with the interim Company stub still in place.
-      Owner: **P03-T24**.
+      CLOSED (P03-T24) by Welcome, Brand, Typography, Company, Guidelines,
+      Review and the completion screen as routes. Each saves through the
+      member's own session. Resume lands on the draft's step. The interim
+      stub is gone, and scripts/check_onboarding_routes.py fails if one returns.
+      Owner: none outstanding.
 - [ ] CF-236 — Archived media rows whose objects were not fully written are
       the cleanup record. A job that removes those objects is owed.
       Owner: **the operator surface at P07**.
@@ -4233,12 +4241,15 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       only as OD-H15 states: that plan, and the published privacy policy
       (OD-A8), both in place.
       Owner: **the owner, before launch**.
-- [ ] CF-238 — Production authentication has new sign-ups enabled.
+- [x] CF-238 — Production authentication has new sign-ups enabled.
       Read-only, Management API, project akpvvydmltmfmkmwivgn, HTTP 200 at
       2026-10-04T11:18:05.699Z: `disable_signup` is false. Disable new
       sign-ups in production's authentication settings. This task did not
       change the setting.
-      Owner: **the owner, before P03 merges**.
+      CLOSED (P03-T24) by a read-only measurement. Management API, project
+      akpvvydmltmfmkmwivgn, User-Agent B2S-P03-T24-independent/1.0, HTTP 200,
+      Date Sun, 04 Oct 2026 20:43:15 GMT: `disable_signup` is true. Not changed.
+      Owner: none outstanding.
 - [x] CF-239 — The wizard's multi-table writes go through five security-invoker
       functions, and a theme's name is a translation key.
       CLOSED (P03-T22) by save_brand_name, save_brand_theme, save_legal_entity,
@@ -4256,9 +4267,23 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       and 30f do not enumerate the catalog. No other assertion's expectation
       moved.
       Owner: none outstanding.
-- [ ] CF-241 — Company, Guidelines, Review, the completion screen and resume.
+- [x] CF-241 — Company, Guidelines, Review, the completion screen and resume.
       Carries the remaining half of CF-214. Removes the interim Company stub
       and the interim completion landing that P03-T23 left so the gate's
       redirect is observable.
-      Owner: **P03-T24**.
+      CLOSED (P03-T24) by those four screens, resume on every step that saves,
+      and the gate sending a finished owner to completion. Review's list
+      matches the rules complete_onboarding raises. Finish with gaps changes
+      nothing; Finish when complete makes the profile current and archives
+      the draft.
+      Owner: none outstanding.
+- [x] CF-242 — DESIGN_SURFACE.md §7 named a help control with no behaviour,
+      §11 put Back to Welcome on Brand after Welcome had provisioned the
+      business, and §13 sent Review's success to the dashboard.
+      CLOSED (P03-T24) in place, prior text recorded under Corrections. The
+      header has no help control in Release 1. Brand's footer is Save and
+      finish later, Continue. Review's success arrives at the completion
+      screen, which confirms setup is complete and shows the current brand.
+      It states nothing about features that do not yet exist.
+      Owner: none outstanding.
 

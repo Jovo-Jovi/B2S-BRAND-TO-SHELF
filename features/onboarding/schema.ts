@@ -50,6 +50,46 @@ export const typographySchema = z.object({
   theme: themeSchema,
 });
 
+const localeText = z.object({ en: z.string(), ar: z.string() });
+
+export const companySchema = z.object({
+  locale: localeSchema,
+  intent: intentSchema,
+  step: z.enum(RESUME_STEPS).optional(),
+  legalName: localeText,
+  tradingName: localeText,
+  address: localeText,
+  tax: z.string(),
+  email: z.string(),
+  phone: z.string(),
+  theme: themeSchema,
+});
+
+export const guidelineInputSchema = z.object({
+  id: z.string().uuid().nullable(),
+  titleEn: z.string(),
+  titleAr: z.string(),
+  bodyEn: z.string(),
+  bodyAr: z.string(),
+  ordinal: z.number().int().positive(),
+});
+
+export const guidelinesSchema = z.object({
+  locale: localeSchema,
+  intent: z.enum(["save", "continue", "back", "step", "remove"]),
+  step: z.enum(RESUME_STEPS).optional(),
+  guidelines: z.array(guidelineInputSchema),
+  removeId: z.string().uuid().optional(),
+  theme: themeSchema,
+});
+
+export const reviewSchema = z.object({
+  locale: localeSchema,
+  intent: z.enum(["finish", "back", "step"]),
+  step: z.enum(RESUME_STEPS).optional(),
+  theme: themeSchema,
+});
+
 export const logoUploadSchema = z.preprocess((raw: unknown) => {
   if (typeof FormData !== "undefined" && raw instanceof FormData) {
     const file = raw.get("file");
