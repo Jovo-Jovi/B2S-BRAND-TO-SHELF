@@ -4386,5 +4386,17 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       left-to-right, which is the side that scrollbar already fits on,
       and the body keeps the page direction. The reflow check's bound
       is unchanged.
+      REOPENED (P03-T25-FIX-2) — b725f5c did not remove the overflow.
+      Browser run 37366181372 measured 371 again, and that run's equal
+      clientWidth and innerWidth contradicted the scrollbar reading.
+      CLOSED (P03-T25-FIX-2) — push browser 37382385862, on e184e38,
+      measured both Arabic 360 gallery cases at scrollWidth 371,
+      clientWidth 360, innerWidth 360. No text run crossed either edge,
+      and no colour swatch was past the edge. Eighty-one boxes sat at
+      left -11 with width 351, every one a bilingual fieldset or a child
+      stretched to it. The fieldset keeps the user agent's min-content
+      minimum; a3f0223 set border, margin and padding and did not set
+      min-inline-size. min-inline-size: 0 on that fieldset lets it take
+      the column. The reflow check's bound is unchanged.
       Owner: none outstanding.
 

@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { readFileSync } from "node:fs";
 import { useState } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
@@ -138,5 +139,10 @@ describe("BilingualField", () => {
     }
     const unused: BilingualLocale = "en";
     expect(unused).toBe("en");
+  });
+
+  it("shrinks the fieldset below its min-content size", () => {
+    const css = readFileSync("components/ui/bilingual-field/bilingual-field.module.css", "utf8");
+    expect(css).toMatch(/\.root\s*\{[^}]*min-inline-size:\s*0;/);
   });
 });

@@ -518,6 +518,16 @@ changed the slug rule without reading the five isolation proofs that
 assert it, and without the scope, decision, security and brand statements
 and the static check that state it too.
 
+**PR-48 — A failure seen only in CI is diagnosed by measurement in CI
+before any fix is pushed.**
+A failure seen only in CI is diagnosed by measurement in CI before any
+fix is pushed: one diagnostic run that names the cause, then one fix. A
+fix whose hypothesis contradicts the measurements that come with it is
+not pushed. Origin: P03-T25-FIX, where five commits each pushed a
+scrollbar fix for an overflow whose own numbers showed no scrollbar took
+layout width, and the commit history named a component that none of them
+examined. Closes CF-247.
+
 ---
 
 ## 2. Environment quirks — never re-discover

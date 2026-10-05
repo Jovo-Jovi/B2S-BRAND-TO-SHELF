@@ -2,6 +2,9 @@
   display: flex;
   flex-direction: column;
   row-gap: var(--b2s-field-gap);
+  /* A fieldset's own minimum is its min-content size. At Arabic and 360
+     that box is wider than the column and crosses the viewport. */
+  min-inline-size: 0;
   border: 0;
   margin-inline: 0;
   padding-inline: 0;
