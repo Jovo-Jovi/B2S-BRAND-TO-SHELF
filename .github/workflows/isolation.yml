@@ -21,6 +21,10 @@
 # the same group rather than starting it, so two writers never seed
 # together, and a run that may be mid-teardown is never cancelled. The
 # group is not branch-scoped, so two phase-branch pushes still serialise.
+# A pull-request run of this same workflow can still replace a push run
+# that has not started a job, even with cancel-in-progress false. The
+# push run is the proof. Re-run it after that pull-request run has
+# finished.
 #
 # The push trigger matches ci.yml (every branch). The path filter is
 # unchanged. BRANCHING §3 allows one pull request per phase, at the

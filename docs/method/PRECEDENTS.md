@@ -1038,3 +1038,12 @@ and the static check that state it too.
   share the concurrency group `tenant-isolation-staging`, and a local run
   is outside that group. D counts every synthetic member on staging, so a
   local run that overlaps a CI job makes a live member look like a leak.
+- Learned at P03-T25-FIX: `cancel-in-progress: false` does not protect a
+  push run that has not started a job. The pull-request event for the same
+  head creates a second run of the same workflow in `tenant-isolation-staging`,
+  and GitHub replaces the pending push run. The in-progress run is left
+  alone. On P03-T25-FIX's first push, isolation 37287421702 was cancelled
+  with no job while browser 37287421668 ran, and the draft pull-request
+  isolation then skipped. Re-run the push isolation after that
+  pull-request run has finished. A draft pull request does not itself
+  prove the suite.
