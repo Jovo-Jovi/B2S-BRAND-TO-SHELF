@@ -25,7 +25,7 @@
 # that has not started a job, even with cancel-in-progress false. The
 # push run is the proof. Re-run it after that pull-request run has
 # finished. A cancelled push run that never started a job is not a
-# failed suite.
+# failed suite. The sheet's scrollbar compensation does not change D.
 #
 # The push trigger matches ci.yml (every branch). The path filter is
 # unchanged. BRANCHING §3 allows one pull request per phase, at the

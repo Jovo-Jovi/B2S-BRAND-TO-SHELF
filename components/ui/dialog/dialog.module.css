@@ -88,24 +88,28 @@
 }
 
 @media (width < 640px) {
-  /* Stretch to the viewport and keep the classic scrollbar inside the
-     border box. A percentage size does not include that scrollbar, so the
-     bar is painted past the viewport and the page's scroll width grows by
-     it, in either direction. The stable gutter reserves the bar's space
-     inside the stretched box. */
+  /* Stretch between both insets. A definite inline size plus both insets
+     is over-constrained, and in a right-to-left page the inline-end inset
+     is the one that is dropped, so the sheet stays the viewport wide and
+     shifts past the opposite edge by the classic scrollbar. The size stays
+     auto. The end margin pulls that shift back by the scrollbar, which is
+     the difference between the viewport and the percentage box. */
   .dialog {
     position: fixed;
     inset-block: 0;
     inset-inline: 0;
     inline-size: auto;
     block-size: auto;
-    max-inline-size: 100%;
-    max-block-size: 100%;
+    max-inline-size: none;
+    max-block-size: none;
     min-inline-size: 0;
     margin-block: 0;
     margin-inline: 0;
     overflow: auto;
-    scrollbar-gutter: stable;
+  }
+
+  :root[dir="rtl"] .dialog {
+    margin-inline-end: calc(100% - 100vw);
   }
 }
 

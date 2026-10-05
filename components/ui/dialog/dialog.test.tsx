@@ -98,7 +98,7 @@ describe("Dialog", () => {
     expect(css).toContain("inset-inline: 0");
     expect(css).toContain("inline-size: auto");
     expect(css).toContain("block-size: auto");
-    expect(css).toContain("scrollbar-gutter: stable");
+    expect(css).toContain("margin-inline-end: calc(100% - 100vw)");
     expect(css).not.toMatch(/(^|\n)\s*block-size:\s*100%/);
   });
 
