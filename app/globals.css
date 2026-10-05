@@ -375,15 +375,3 @@ html {
   font-size: var(--b2s-text-md);
   line-height: var(--b2s-leading-md);
 }
-
-/* A right-to-left root paints its classic scrollbar outside the layout
-   viewport, so the document's scroll width grows by the bar even when no
-   box crosses the viewport. The root stays left-to-right, which is the
-   side the bar already fits on, and the body keeps the page direction. */
-html[dir="rtl"] {
-  direction: ltr;
-}
-
-html[dir="rtl"] body {
-  direction: rtl;
-}

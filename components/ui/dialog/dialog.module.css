@@ -88,21 +88,13 @@
 }
 
 @media (width < 640px) {
-  /* Stretch between both insets. A percentage size does not include a
-     classic scrollbar, so the bar is painted past the viewport. Auto size
-     with both insets is the viewport itself. */
   .dialog {
-    position: fixed;
-    inset-block: 0;
-    inset-inline: 0;
-    inline-size: auto;
-    block-size: auto;
-    max-inline-size: none;
-    max-block-size: none;
-    min-inline-size: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    max-inline-size: 100%;
+    max-block-size: 100%;
     margin-block: 0;
     margin-inline: 0;
-    overflow: auto;
   }
 }
 

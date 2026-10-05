@@ -13,6 +13,8 @@ import {
 } from "../../app/[locale]/(public)/gallery/coverage";
 import { readFileSync } from "node:fs";
 
+import { writeOverflowDiagnostic } from "./overflow-diagnostic";
+
 import { KNOWN_BAD_FIXTURES } from "../../scripts/known-bad-fixtures.mjs";
 import en from "../../app/[locale]/dictionaries/en.json";
 import ar from "../../app/[locale]/dictionaries/ar.json";
@@ -301,6 +303,10 @@ for (const locale of GALLERY_LOCALES) {
           fullPage: true,
         });
         await hideDialogs(page);
+
+        if (locale === "ar" && width === 360) {
+          await writeOverflowDiagnostic(page, locale, theme, width);
+        }
 
         const overflow = await page.evaluate(() => ({
           scroll: document.documentElement.scrollWidth,
