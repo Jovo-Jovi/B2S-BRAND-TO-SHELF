@@ -4382,10 +4382,9 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       inline-size 100% and block-size 100%, introduced in 13d94f5. A
       classic scrollbar is then painted outside the layout viewport.
       The narrow rule stretches the dialog with inset-block and
-      inset-inline at auto size, so the scrollbar stays inside the
-      viewport. A right-to-left classic scrollbar is still painted
-      outside that box, so on an Arabic page the sheet's own direction
-      stays left-to-right and its children keep the page direction.
-      The reflow check's bound is unchanged.
+      inset-inline at auto size, caps both axes at 100%, and reserves
+      the classic scrollbar with scrollbar-gutter stable so the bar
+      stays inside the box in either direction. The reflow check's
+      bound is unchanged.
       Owner: none outstanding.
 

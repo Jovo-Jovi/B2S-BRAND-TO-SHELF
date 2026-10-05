@@ -98,10 +98,8 @@ describe("Dialog", () => {
     expect(css).toContain("inset-inline: 0");
     expect(css).toContain("inline-size: auto");
     expect(css).toContain("block-size: auto");
-    expect(css).toContain(':root[dir="rtl"] .dialog');
-    expect(css).toContain("direction: ltr");
-    expect(css).toContain("direction: rtl");
-    expect(css).not.toContain("block-size: 100%");
+    expect(css).toContain("scrollbar-gutter: stable");
+    expect(css).not.toMatch(/(^|\n)\s*block-size:\s*100%/);
   });
 
   it("focuses the least destructive action on a confirmation and does not stack", async () => {
