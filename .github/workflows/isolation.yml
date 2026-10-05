@@ -13,12 +13,14 @@
 #
 # Staging is one database. Two suites seeding and tearing down at once
 # produce 4a "positive path empty" — the same shape as a real RLS failure.
-# Serialise every run against that database; restrict none of them.
-# concurrency.group tenant-isolation-staging with cancel-in-progress
-# false is what does it: GitHub queues a second run in the same group
-# rather than starting it, so two suites never seed together, and a run
-# that may be mid-teardown is never cancelled. The group is not
-# branch-scoped, so two phase-branch pushes still serialise.
+# The browser tier writes to the same database. Every job that holds the
+# staging write credentials declares this same group, so a browser run and
+# an isolation run never overlap. Serialise every such run; restrict none
+# of them. concurrency.group tenant-isolation-staging with
+# cancel-in-progress false is what does it: GitHub queues a second run in
+# the same group rather than starting it, so two writers never seed
+# together, and a run that may be mid-teardown is never cancelled. The
+# group is not branch-scoped, so two phase-branch pushes still serialise.
 #
 # The push trigger matches ci.yml (every branch). The path filter is
 # unchanged. BRANCHING §3 allows one pull request per phase, at the

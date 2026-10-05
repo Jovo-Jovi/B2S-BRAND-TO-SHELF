@@ -387,6 +387,16 @@ password. The Decision, Context, Consequences, Known gap, Compensating
 controls, Forecloses paragraphs and both earlier amendments above are
 unedited (PR-07).
 
+**AMENDED 2026-10-05 — staging writers take turns.** D proves teardown leaves
+no synthetic member anywhere on staging, which is only valid while nothing
+else writes there. P03-T23 added a second writer, the browser suite's
+end-to-end tests, without serialising it with the first, and on P03-T25's
+push D counted a live wizard member as a leak. Every job holding staging
+credentials now shares one concurrency group. The global count is kept
+because it also catches leaks from any earlier run. The Decision, Context,
+Consequences, Known gap, Compensating controls, Forecloses paragraphs and
+the earlier amendments above are unedited (PR-07).
+
 ---
 
 ## ADR-014 — Component-rendered accessibility tier

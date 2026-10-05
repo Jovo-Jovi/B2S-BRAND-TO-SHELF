@@ -1033,3 +1033,8 @@ and the static check that state it too.
   `gallery/sample-mark-` the same way it already excludes `_next` and
   `favicon.ico`. A new file under `public/` needs the same exclusion or
   the same console error returns.
+- Learned at P03-T25-FIX: before running the isolation suite or the browser
+  suite locally, confirm no staging job is in progress in CI. Both jobs
+  share the concurrency group `tenant-isolation-staging`, and a local run
+  is outside that group. D counts every synthetic member on staging, so a
+  local run that overlaps a CI job makes a live member look like a leak.

@@ -4366,4 +4366,23 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       is unchanged. BRANCHING.md §3 records that both suites now wait for
       ready.
       Owner: none outstanding.
+- [x] CF-246 — Isolation's teardown proof and the browser suite wrote to
+      staging at the same time.
+      CLOSED (P03-T25-FIX) — every job that receives staging write
+      credentials declares the concurrency group tenant-isolation-staging
+      with cancel-in-progress false. D's claim and its global count of
+      synthetic members are unchanged. scripts/check_staging_writers.py
+      asserts the group. Removing it from the browser job fails the check.
+      Isolation and the browser suite on the pushed head run in turn, and
+      D is zero.
+      Owner: none outstanding.
+- [x] CF-247 — At Arabic and 360, an open dialog's box was wider than the
+      viewport.
+      CLOSED (P03-T25-FIX) — below 640px the dialog was sized with
+      inline-size 100% and block-size 100%, introduced in 13d94f5. A
+      classic scrollbar is then painted outside the layout viewport.
+      The narrow rule stretches the dialog with inset-block and
+      inset-inline at auto size, so the scrollbar stays inside the
+      viewport. The reflow check's bound is unchanged.
+      Owner: none outstanding.
 

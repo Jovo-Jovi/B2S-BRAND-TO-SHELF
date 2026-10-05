@@ -8,8 +8,16 @@
 # The pull-request trigger runs only when the pull request is not a draft,
 # on opened, synchronize, reopened and ready_for_review. The push trigger
 # is unchanged.
+#
+# This job writes synthetic members to staging. It shares
+# tenant-isolation-staging with the isolation job, cancel-in-progress
+# false, so the two never write at once. A local run is outside the group.
 
 name: browser
+
+concurrency:
+  group: tenant-isolation-staging
+  cancel-in-progress: false
 
 on:
   push:

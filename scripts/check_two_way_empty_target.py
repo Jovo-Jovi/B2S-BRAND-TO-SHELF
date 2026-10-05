@@ -148,6 +148,8 @@ PROVEN_PAIRS = [
     ("scripts/check_wizard_write_paths.py", "supabase/schema.sql"),
     ("scripts/check_wizard_write_paths.py", "docs/product/SECURITY_MODEL.md"),
     ("scripts/check_onboarding_routes.py", "app/[locale]/(app)/onboarding (directory)"),
+    ("scripts/check_staging_writers.py", ".github/workflows/isolation.yml"),
+    ("scripts/check_staging_writers.py", ".github/workflows/browser.yml"),
 ]
 
 KNOWN_GAPS = [
@@ -605,6 +607,12 @@ def main():
     do_pair(results, "scripts/check_onboarding_routes.py",
             ["python", "scripts/check_onboarding_routes.py"],
             DirProbe("app/[locale]/(app)/onboarding"))
+    do_pair(results, "scripts/check_staging_writers.py",
+            ["python", "scripts/check_staging_writers.py"],
+            FileProbe(".github/workflows/isolation.yml"))
+    do_pair(results, "scripts/check_staging_writers.py",
+            ["python", "scripts/check_staging_writers.py"],
+            FileProbe(".github/workflows/browser.yml"))
 
     proven = sum(1 for r in results if r["proven"])
     print(f"\n=== {proven}/{len(results)} pairs proven this run ===")

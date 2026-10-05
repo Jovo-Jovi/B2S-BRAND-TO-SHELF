@@ -88,13 +88,23 @@
 }
 
 @media (width < 640px) {
+  /* Stretch to the viewport. A percentage size resolves against a box that
+     does not include a classic scrollbar, so the scrollbar is painted past
+     the viewport and the page's scroll width grows by it. Auto size with
+     both insets set is the stretch size of the viewport itself, and the
+     scrollbar stays inside that box. */
   .dialog {
-    inline-size: 100%;
-    block-size: 100%;
-    max-inline-size: 100%;
-    max-block-size: 100%;
+    position: fixed;
+    inset-block: 0;
+    inset-inline: 0;
+    inline-size: auto;
+    block-size: auto;
+    max-inline-size: none;
+    max-block-size: none;
+    min-inline-size: 0;
     margin-block: 0;
     margin-inline: 0;
+    overflow: auto;
   }
 }
 

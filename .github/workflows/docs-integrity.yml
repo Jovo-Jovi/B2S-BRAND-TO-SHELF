@@ -60,5 +60,8 @@ jobs:
       - name: Onboarding routes import their screens (P03-T24)
         run: python3 scripts/check_onboarding_routes.py
 
+      - name: Staging writers share one concurrency group (P03-T25-FIX)
+        run: python3 scripts/check_staging_writers.py
+
       - name: docs/ROADMAP.md and docs/roadmap.html are generated (PR-35)
         run: python3 scripts/check_roadmap.py

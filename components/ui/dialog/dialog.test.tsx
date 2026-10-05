@@ -94,7 +94,11 @@ describe("Dialog", () => {
     expect(css).toContain("var(--b2s-layer-dialog)");
     expect(css).toContain("var(--b2s-layer-scrim)");
     expect(css).toContain("width < 640px");
-    expect(css).toContain("block-size: 100%");
+    expect(css).toContain("inset-block: 0");
+    expect(css).toContain("inset-inline: 0");
+    expect(css).toContain("inline-size: auto");
+    expect(css).toContain("block-size: auto");
+    expect(css).not.toContain("block-size: 100%");
   });
 
   it("focuses the least destructive action on a confirmation and does not stack", async () => {
