@@ -92,7 +92,12 @@
      does not include a classic scrollbar, so the scrollbar is painted past
      the viewport and the page's scroll width grows by it. Auto size with
      both insets set is the stretch size of the viewport itself, and the
-     scrollbar stays inside that box. */
+     scrollbar stays inside that box.
+     A right-to-left classic scrollbar is still painted outside that box,
+     on the inline-end, and the sheet then extends past the viewport by the
+     scrollbar. The sheet's own direction stays left-to-right so the bar
+     sits on the side the stretch already contains. Its children keep the
+     page direction, so Arabic content still starts at the inline start. */
   .dialog {
     position: fixed;
     inset-block: 0;
@@ -105,6 +110,14 @@
     margin-block: 0;
     margin-inline: 0;
     overflow: auto;
+  }
+
+  :root[dir="rtl"] .dialog {
+    direction: ltr;
+  }
+
+  :root[dir="rtl"] .dialog > * {
+    direction: rtl;
   }
 }
 

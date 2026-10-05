@@ -98,6 +98,9 @@ describe("Dialog", () => {
     expect(css).toContain("inset-inline: 0");
     expect(css).toContain("inline-size: auto");
     expect(css).toContain("block-size: auto");
+    expect(css).toContain(':root[dir="rtl"] .dialog');
+    expect(css).toContain("direction: ltr");
+    expect(css).toContain("direction: rtl");
     expect(css).not.toContain("block-size: 100%");
   });
 
