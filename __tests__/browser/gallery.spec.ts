@@ -302,34 +302,11 @@ for (const locale of GALLERY_LOCALES) {
         });
         await hideDialogs(page);
 
-        const overflow = await page.evaluate(() => {
-          const root = document.documentElement;
-          const offenders = [...document.querySelectorAll("body *")]
-            .map((node) => {
-              const rect = node.getBoundingClientRect();
-              const style = getComputedStyle(node);
-              return {
-                tag: node.tagName,
-                primitive: node.getAttribute("data-primitive"),
-                open: node instanceof HTMLDialogElement ? node.open : undefined,
-                left: Math.round(rect.left),
-                right: Math.round(rect.right),
-                width: Math.round(rect.width),
-                inlineSize: style.inlineSize,
-                marginInlineEnd: style.marginInlineEnd,
-                position: style.position,
-              };
-            })
-            .filter((item) => item.right > root.clientWidth + 0.5 || item.width > root.clientWidth + 0.5)
-            .slice(0, 6);
-          return {
-            scroll: root.scrollWidth,
-            client: root.clientWidth,
-            inner: window.innerWidth,
-            offenders,
-          };
-        });
-        expect(overflow.scroll, JSON.stringify(overflow)).toBeLessThanOrEqual(overflow.client);
+        const overflow = await page.evaluate(() => ({
+          scroll: document.documentElement.scrollWidth,
+          client: document.documentElement.clientWidth,
+        }));
+        expect(overflow.scroll).toBeLessThanOrEqual(overflow.client);
 
         const rendered = await runAxe(page, CLAIMED);
         expect(rendered.violations, JSON.stringify(rendered.violations)).toEqual([]);

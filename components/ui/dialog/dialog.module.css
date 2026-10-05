@@ -88,12 +88,9 @@
 }
 
 @media (width < 640px) {
-  /* Stretch between both insets. A definite inline size plus both insets
-     is over-constrained, and in a right-to-left page the inline-end inset
-     is the one that is dropped, so the sheet stays the viewport wide and
-     shifts past the opposite edge by the classic scrollbar. The size stays
-     auto. The end margin pulls that shift back by the scrollbar, which is
-     the difference between the viewport and the percentage box. */
+  /* Stretch between both insets. A percentage size does not include a
+     classic scrollbar, so the bar is painted past the viewport. Auto size
+     with both insets is the viewport itself. */
   .dialog {
     position: fixed;
     inset-block: 0;
@@ -106,10 +103,6 @@
     margin-block: 0;
     margin-inline: 0;
     overflow: auto;
-  }
-
-  :root[dir="rtl"] .dialog {
-    margin-inline-end: calc(100% - 100vw);
   }
 }
 

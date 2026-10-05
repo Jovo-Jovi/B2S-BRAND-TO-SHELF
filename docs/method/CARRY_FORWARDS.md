@@ -4381,10 +4381,10 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       CLOSED (P03-T25-FIX) — below 640px the dialog was sized with
       inline-size 100% and block-size 100%, introduced in 13d94f5. A
       classic scrollbar is then painted outside the layout viewport.
-      The narrow rule stretches the dialog with inset-block and
-      inset-inline at auto size. On an Arabic page the end margin is
-      calc(100% - 100vw), which pulls the sheet back by the classic
-      scrollbar that a right-to-left page shifts it past the viewport.
-      The reflow check's bound is unchanged.
+      No box crosses the viewport. On an Arabic page the document's
+      scroll width includes the classic scrollbar. The root stays
+      left-to-right, which is the side that scrollbar already fits on,
+      and the body keeps the page direction. The reflow check's bound
+      is unchanged.
       Owner: none outstanding.
 
