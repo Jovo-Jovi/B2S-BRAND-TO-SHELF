@@ -4399,4 +4399,16 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       min-inline-size. min-inline-size: 0 on that fieldset lets it take
       the column. The reflow check's bound is unchanged.
       Owner: none outstanding.
+- [ ] CF-248 — SECURITY_MODEL.md §11a.2 still says all seven public tables.
+      The live catalog on staging and on production, both HTTP 201 on
+      2026-10-06, has 22 public tables, every one owned by postgres, with
+      row level security enabled and FORCE off. Ten of them are not named
+      in the document: brand_guideline, brand_line, brand_profile,
+      color_value, logo_variant, onboarding_draft, onboarding_draft_color,
+      translation_entry, translation_key and typeface. set_updated_at() is
+      a sixth public security invoker, owned by postgres, with search_path
+      pinned, and §11a.4 names five. §11.5 calls an unnamed public object a
+      hard failure of that re-derivation. The document was not edited.
+      Owner: **the next task that amends SECURITY_MODEL.md §11, before
+      pull request #8 is marked ready**.
 
