@@ -377,6 +377,7 @@ describe("component accessibility tier", () => {
               state={state as ColorFieldVisual}
               value={state === "empty" ? "" : storedColour("1a1a1a")}
               emptyName="No colour"
+              openOn={storedColour("ffffff")}
               disabled={state === "disabled"}
             />
           </Field>

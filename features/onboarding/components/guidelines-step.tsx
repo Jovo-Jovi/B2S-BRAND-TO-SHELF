@@ -11,6 +11,7 @@ import type { WizardError, WizardStepId } from "@/components/shared/wizard-step/
 import { submitGuidelines } from "../actions";
 import type { GuidelineValues, LocaleCode } from "../types";
 import type { OnboardingCopy } from "./copy";
+import { isNextRedirect, saveKind, SaveNotice, type SaveKind } from "./save-notice";
 import { WizardFrame } from "./wizard-frame";
 
 type GuidelinesStepProps = {
@@ -40,7 +41,7 @@ function rowsFrom(guidelines: GuidelineValues[]): Row[] {
 export function GuidelinesStep({ locale, copy, theme, guidelines, defaultLocale }: GuidelinesStepProps) {
   const [rows, setRows] = useState<Row[]>(rowsFrom(guidelines));
   const [errors, setErrors] = useState<WizardError[]>([]);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [notice, setNotice] = useState<SaveKind>(null);
   const busy = useRef(false);
 
   function messages(gaps: string[]): WizardError[] {
@@ -93,15 +94,17 @@ export function GuidelinesStep({ locale, copy, theme, guidelines, defaultLocale 
         setRows((current) => current.filter((row) => row.id !== removeId));
       }
       applyIds(result?.guidelines);
+      const kind = intent === "remove" && result && result.gaps.length === 0 ? "saved" : saveKind(intent, result);
       if (result?.gaps?.length) {
-        setNotice(null);
+        setNotice(kind);
         setErrors(messages(result.gaps));
         return;
       }
-      if (result?.notice === "saved" || intent === "remove") {
-        setErrors([]);
-        setNotice(copy.saved);
-      }
+      if (kind === "saved") setErrors([]);
+      setNotice(kind);
+    } catch (error) {
+      if (isNextRedirect(error)) throw error;
+      setNotice(intent === "save" ? "failed" : null);
     } finally {
       busy.current = false;
     }
@@ -126,7 +129,13 @@ export function GuidelinesStep({ locale, copy, theme, guidelines, defaultLocale 
       onSave={() => void run("save")}
       onStep={(step) => void run("step", step === "welcome" ? "brand" : step)}
     >
-      {notice ? <p role="status">{notice}</p> : null}
+      <SaveNotice
+        kind={notice}
+        savedTitle={copy.savedTitle}
+        savedMessage={copy.saved}
+        failedTitle={copy.saveFailedTitle}
+        failedMessage={fillPattern(copy.saveFailed, { step: copy.guidelines })}
+      />
       <div id="guidelines">
         <p>{copy.guidelinesHelp}</p>
         {rows.map((row, index) => {

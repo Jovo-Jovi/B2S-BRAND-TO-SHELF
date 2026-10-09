@@ -483,3 +483,44 @@ output. The package's licence is MIT.
 parsing a DOCTYPE; trusting a file name or a client-claimed type; a second
 SVG package.
 
+## ADR-017 — Function region
+
+**Decision.** Application functions run in `fra1` for preview and production.
+`vercel.json` sets `regions` to that one region, and the project's default
+function region is the same. Supabase projects stay in `eu-central-2`. No
+data moves.
+
+**Context.** P03-T27 measured the onboarding routes on preview deployment
+`dpl_GvfWDM9iux2gBCFkYc1DuEdd1snk` before this change, ten requests each,
+through the deployment bypass, as a signed-in member of staging. Time to
+first byte is milliseconds. The median is the mean of the 5th and 6th sorted
+samples. `x-vercel-id` was `fra1::iad1::…`: the edge that received this
+client was Frankfurt and the function was Washington (`iad1`). Both Supabase
+projects, read from the Management API, are `eu-central-2`.
+
+| Route | Status | Median | Slowest |
+|---|---|---|---|
+| `/en/onboarding` | 307 | 1982 | 2383 |
+| `/en/onboarding/welcome` | 307 | 1558.5 | 2413 |
+| `/en/onboarding/brand` | 200 | 2155 | 3062 |
+| `/en/onboarding/typography` | 200 | 2064 | 5167 |
+| `/en/onboarding/company` | 200 | 2745.5 | 9489 |
+| `/en/onboarding/guidelines` | 200 | 2147.5 | 2730 |
+| `/en/onboarding/review` | 200 | 2714 | 3683 |
+| `/en/onboarding/complete` | 307 | 1322 | 1655 |
+
+Every median was over one second. A signed-in request ran the session
+`getUser` in the proxy, then the onboarding gate (`getUser`,
+`current_tenant_id`, then `is_current_tenant_owner`, the draft and the
+brand, each after the last), then the step load, which repeated `getUser`
+and `current_tenant_id` and then read the tenant, brand, draft and profile
+one after another. Those independent reads now run together. Frankfurt is
+the Vercel region nearest `eu-central-2`.
+
+**Consequences.** Preview and production functions are created in `fra1`.
+The one-second median is a target, re-measured after the deploy, not a
+claim this record makes in advance.
+
+**Forecloses.** Moving either Supabase project; a second function region; a
+region chosen without a measurement.
+

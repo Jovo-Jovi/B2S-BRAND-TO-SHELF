@@ -113,6 +113,23 @@ async function press(page: Page, name: string): Promise<void> {
   });
 }
 
+async function expectSaved(page: Page, copy: Copy): Promise<void> {
+  const notice = page.getByRole("status");
+  await expect(notice).toHaveAttribute("data-tone", "success");
+  await expect(notice).toHaveAttribute("aria-live", "polite");
+  await expect(notice).toContainText(copy.saved);
+  await expect(notice).not.toBeFocused();
+  const tookFocus = await notice.evaluate((element) => element.contains(document.activeElement));
+  expect(tookFocus).toBe(false);
+}
+
+async function chooseColour(page: Page, id: string, value: string): Promise<void> {
+  const chooser = page.locator("[data-variant]").filter({ has: page.locator(`#${id}`) }).locator('input[type="color"]');
+  await expect(chooser).toHaveCount(1);
+  await chooser.fill(value);
+  await expect(page.locator(`#${id}`)).toHaveValue(value);
+}
+
 function raisedRules(body: string): string[] {
   let message = body;
   try {
@@ -257,7 +274,7 @@ for (const locale of LOCALES) {
         await page.locator('[data-locale="ar"] input').fill("شمال");
         await page.locator("#role-primary").fill(PRIMARY);
         await press(page, copy.save);
-        await expect(page.getByRole("status")).toContainText(copy.saved);
+        await expectSaved(page, copy);
         await page.reload();
         await page.waitForFunction((value) => document.documentElement.dataset.theme === value, theme);
         await expect(page.locator('[data-locale="en"] input')).toHaveValue("Northwind");
@@ -268,7 +285,7 @@ for (const locale of LOCALES) {
         await page.locator("#role-secondary").fill(SECONDARY);
         await page.locator("#role-accent").fill(ACCENT);
         await press(page, copy.save);
-        await expect(page.getByRole("status")).toContainText(copy.saved);
+        await expectSaved(page, copy);
         const token = await memberToken(member);
         const draftColours = await memberGet<{ role: string; archived_at: string | null }[]>(
           token,
@@ -340,7 +357,7 @@ for (const locale of LOCALES) {
         await page.locator("#heading-latin").selectOption("Fraunces");
         await page.locator("#body-latin").selectOption("Lora");
         await press(page, copy.save);
-        await expect(page.getByRole("status")).toContainText(copy.saved);
+        await expectSaved(page, copy);
         await page.reload();
         await expect(page.locator("#heading-latin")).toHaveValue("Fraunces");
         const family = await page.locator('[data-part="name"]').first().evaluate((node) => getComputedStyle(node).fontFamily);
@@ -482,6 +499,30 @@ test("review names exactly the rules complete_onboarding raises", async ({ page 
   expect(drafts[0]?.archived_at ?? null).toBeNull();
 });
 
+for (const locale of ["en"] as const) {
+  test(`brand colours are chosen through the visual chooser ${locale}`, async ({ page }) => {
+    test.setTimeout(180_000);
+    const copy = copyFor(locale);
+    const member = await createMember(`pick-${locale}`);
+    await signIn(page, locale, member);
+    await openThemed(page, locale, "light", 1280, "welcome");
+    await page.getByRole("radio", { name: copy.localeEn }).check();
+    await page.locator("#welcome-name").fill(`zz-test-wiz-pick-${locale}-${member.id.slice(0, 8)}`);
+    await press(page, copy.continue);
+    await page.waitForURL(/\/brand/);
+
+    await chooseColour(page, "role-primary", PRIMARY);
+    await chooseColour(page, "role-secondary", SECONDARY);
+    await chooseColour(page, "role-accent", ACCENT);
+    await press(page, copy.save);
+    await expectSaved(page, copy);
+    await page.reload();
+    await expect(page.locator("#role-primary")).toHaveValue(PRIMARY);
+    await expect(page.locator("#role-secondary")).toHaveValue(SECONDARY);
+    await expect(page.locator("#role-accent")).toHaveValue(ACCENT);
+  });
+}
+
 for (const locale of LOCALES) {
   test(`company, guidelines, resume and finish ${locale}`, async ({ page }) => {
     test.setTimeout(360_000);
@@ -496,7 +537,7 @@ for (const locale of LOCALES) {
 
     await page.locator("#role-primary").fill(PRIMARY);
     await press(page, copy.save);
-    await expect(page.getByRole("status")).toContainText(copy.saved);
+    await expectSaved(page, copy);
     await returnTo(page, locale, member, "brand");
     await expect(page.locator("#role-primary")).toHaveValue(PRIMARY);
     await expect(page.locator("#role-secondary")).toHaveValue("");
@@ -509,7 +550,7 @@ for (const locale of LOCALES) {
     await page.waitForURL(/\/typography/);
     await page.locator("#heading-latin").selectOption("Fraunces");
     await press(page, copy.save);
-    await expect(page.getByRole("status")).toContainText(copy.saved);
+    await expectSaved(page, copy);
     await returnTo(page, locale, member, "typography");
     await expect(page.locator("#heading-latin")).toHaveValue("Fraunces");
     await page.locator("#heading-arabic").selectOption("Cairo");
@@ -524,6 +565,7 @@ for (const locale of LOCALES) {
     await page.locator("#tax").fill("TAX123");
     await page.locator("#phone").fill(national);
     await press(page, copy.save);
+    await expectSaved(page, copy);
     await expect(page.locator("#phone")).toHaveValue(storedPhone);
     await returnTo(page, locale, member, "company");
     await expect(page.locator('#legal-name [data-locale="en"] input')).toHaveValue("Northwind LLC");
@@ -566,12 +608,12 @@ for (const locale of LOCALES) {
     await page.locator('#guideline-1-body [data-locale="en"] textarea').fill("Leave room around the mark.");
     await page.locator('#guideline-1-body [data-locale="ar"] textarea').fill("Leave room around the mark.");
     await press(page, copy.save);
-    await expect(page.getByRole("status")).toContainText(copy.saved);
+    await expectSaved(page, copy);
     await returnTo(page, locale, member, "guidelines");
     await expect(page.locator('#guideline-1-title [data-locale="en"] input')).toHaveValue("Clear space");
     await page.locator('#guideline-1-title [data-locale="en"] input').fill("Clear space revised");
     await press(page, copy.save);
-    await expect(page.getByRole("status")).toContainText(copy.saved);
+    await expectSaved(page, copy);
     await page.reload();
     await expect(page.locator('#guideline-1-title [data-locale="en"] input')).toHaveValue("Clear space revised");
     const removeName = fillPattern(copy.removeGuideline, { ordinal: formatCount(1, locale) });

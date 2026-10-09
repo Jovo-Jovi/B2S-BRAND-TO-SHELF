@@ -1062,3 +1062,8 @@ examined. Closes CF-247.
   so a PASS on that row marked P03 done while `P03-GATE` itself stayed
   FAIL and the roadmap check then found no open phase. The pattern is
   now `^P0*(\d+)-GATE$`. Only the exit row closes the phase.
+- Learned at P03-T27: the exact `P0N-GATE` ending restored at P03-T26 also
+  dropped a re-run. P01's only passing gate row is `P01-GATE-RUN3`, so P01
+  read QUEUED. A phase is done when a gate run passes: the row is
+  `P0N-GATE`, or a re-run whose name adds `-RERUN` or `-RUN` plus digits.
+  A row ending `-FIX` is a fix task and never a gate run.

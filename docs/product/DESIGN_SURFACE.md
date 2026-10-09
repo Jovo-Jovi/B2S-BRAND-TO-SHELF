@@ -669,7 +669,7 @@ tokens: [radius-md, color-border-control, color-sunken, color-action, color-text
 
 ```component
 name: ColorField
-parts: [swatch, hex_input, picker_button?, contrast_readout?]
+parts: [swatch, hex_input, picker_button, contrast_readout?]
 variants: [standard, paired]
 sizes: [compact, comfortable]
 states:
@@ -680,7 +680,7 @@ states:
   disabled: universal disabled
   loading: n/a — the value is local until the form saves
   error: value refused unless it matches ^#[0-9a-f]{6}$ after normalisation; Field names the problem
-  empty: swatch shows a named no-colour pattern; never a default colour pretending to be the brand's
+  empty: swatch shows the empty name; the chooser stays mounted and opens on the brand's current background colour; the field commits nothing until the person chooses
 keyboard: [native text entry in hex_input; picker_button opens the platform picker]
 aria: swatch is decorative with the value exposed as text; contrast_readout is text stating the ratio and pass or fail, never colour alone
 mirrors: swatch at inline-start; hex input always left-to-right
@@ -688,6 +688,8 @@ tokens: [control-height, radius-sm, radius-md, color-border-control, color-succe
 ```
 
 **The hex value is normalised to lowercase with a leading `#`**, because `DATA_MODEL.md` constrains `color_value.srgb` to `^#[0-9a-f]{6}$`.
+
+ColorField offers a visual chooser in every state, empty included. An empty field shows its empty name and commits nothing until the person chooses; the chooser then opens on the brand's current background colour, which always has a value (`BRAND_CONFIG.md` §10). The hex box stays, for people who have a code.
 
 **`paired`** is for `foreground` and `background` in the brand theme editor. It shows the live contrast ratio between the two and whether it meets `BRAND_CONFIG.md` §11's constant of 4.5:1 (§0 item 4). The ratio is a formatted number.
 
@@ -994,7 +996,7 @@ The wizard renders in its own frame, not AppShell — nothing in the navigation 
 
 - **Stepper:** numbered, because onboarding genuinely is a sequence. It numbers Brand to Review, five steps. Welcome precedes the stepper and is not numbered (`BRAND_CONFIG.md` §10 amendment). Steps are completed, current or upcoming. Completed steps are reachable; upcoming ones are not until reached. Progress is also stated in text — "Step 2 of 5" — so it is never carried by the graphic alone.
 - **Body:** a step title at `3xl`, one sentence of purpose, then one or more `FormSection`s.
-- **Footer:** the actions are set per screen, never all three by default. Welcome shows Continue only. Brand, the first numbered step, shows Save and finish later and Continue, with no Back, because once Welcome has provisioned the business the gate never returns anyone to it. Typography, Company and Guidelines show Back, Save and finish later and Continue. Review shows Back and Finish setup. Back is `quiet` at inline-start. Save and finish later is `secondary`. Continue and Finish setup are `primary` at inline-end. The wizard is resumable (`BRAND_CONFIG.md` §10).
+- **Footer:** the actions are set per screen, never all three by default. Welcome shows Continue only. Brand, the first numbered step, shows Save and finish later and Continue, with no Back, because once Welcome has provisioned the business the gate never returns anyone to it. Typography, Company and Guidelines show Back, Save and finish later and Continue. Review shows Back and Finish setup. Back is `quiet` at inline-start. Save and finish later is `secondary`. Continue and Finish setup are `primary` at inline-end. The wizard is resumable (`BRAND_CONFIG.md` §10). Save and finish later shows a success Notice in the step — saved, and the person can leave and return here later — announced politely, without moving focus. A save that fails shows a danger Notice naming what could not be saved.
 - **Validation on Continue:** an error summary appears at the top, lists each problem as a link to its field, and takes focus. Each field also shows its own error. Input is always preserved.
 
 ### EntryFrame
@@ -1434,3 +1436,7 @@ The header's inline end carries a quiet Button that signs out. It is the frame's
 `variants: [text, email, number, identifier, multiline]`
 
 Password is a native input type. It is not re-digited.
+
+**2026-10-09 — P03-T27.** ColorField's chooser was optional and the empty state showed only a no-colour pattern. Prior parts line: `parts: [swatch, hex_input, picker_button?, contrast_readout?]`. Prior empty state: `empty: swatch shows a named no-colour pattern; never a default colour pretending to be the brand's`. The chooser is present in every state, empty included. An empty field shows its empty name and commits nothing until the person chooses; the chooser opens on the brand's current background colour, which always has a value. The hex box stays.
+
+**2026-10-09 — P03-T27.** §7 WizardStep's footer did not say what Save and finish later shows. Prior footer ended at ``The wizard is resumable (`BRAND_CONFIG.md` §10).`` Save and finish later shows a success Notice in the step — saved, and the person can leave and return here later — announced politely, without moving focus. A save that fails shows a danger Notice naming what could not be saved.

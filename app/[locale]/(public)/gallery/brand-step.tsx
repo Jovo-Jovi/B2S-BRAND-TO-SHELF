@@ -107,6 +107,7 @@ export function BrandStep({ locale, copy, otherLocale }: BrandStepProps) {
           passText={copy.contrastPasses}
           failText={copy.contrastFails}
           emptyName={copy.sampleEmptyColour}
+          openOn={colours.background || copy.startingBackground}
           pickerName={caption}
           onValueChange={(value) => setRole(role, value)}
         />

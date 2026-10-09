@@ -320,6 +320,7 @@ function specimen(
             state={state as ColorFieldVisual}
             value={state === "empty" ? "" : swatch("1a1a1a")}
             emptyName={copy.sampleEmptyColour}
+            openOn={swatch("ffffff")}
             disabled={state === "disabled"}
           />
         </Field>

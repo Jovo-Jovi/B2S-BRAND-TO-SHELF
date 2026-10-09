@@ -20,6 +20,7 @@ import {
   signUpSchema,
   type AccessErrorKey,
 } from "./schema";
+import { acceptedSignUpPath } from "./sign-up-accepted";
 
 function signInPath(locale: "en" | "ar", errorKey: AccessErrorKey, next?: string): string {
   const base = `/${locale}/sign-in?error=${errorKey}`;
@@ -93,7 +94,7 @@ export async function signUpWithPassword(input: unknown) {
     );
   }
 
-  redirect(homePath(parsed.data.locale));
+  redirect(acceptedSignUpPath(parsed.data.locale, result.data.session));
 }
 
 export async function signInWithGoogle(input: unknown) {

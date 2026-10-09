@@ -17,30 +17,28 @@ function isResume(value: string): value is ResumeStep {
 
 export async function readOnboardingState(): Promise<GateState> {
   const supabase = await createSupabaseServerClient();
-  const auth = await supabase.auth.getUser();
+  const [auth, tenant] = await Promise.all([
+    supabase.auth.getUser(),
+    supabase.rpc("current_tenant_id"),
+  ]);
   if (!auth.data.user) return { kind: "anonymous" };
-
-  const tenant = await supabase.rpc("current_tenant_id");
   if (tenant.error) {
     throw new Error("onboarding could not resolve the current tenant");
   }
   if (!tenant.data) return { kind: "welcome" };
 
-  const owner = await supabase.rpc("is_current_tenant_owner");
+  const [owner, draft, brand] = await Promise.all([
+    supabase.rpc("is_current_tenant_owner"),
+    supabase.from("onboarding_draft").select("resume_step, archived_at").maybeSingle(),
+    supabase.from("brand").select("current_profile_id").maybeSingle(),
+  ]);
   if (owner.error) {
     throw new Error("onboarding could not resolve the caller's role");
   }
   if (!owner.data) return { kind: "pending" };
-
-  const draft = await supabase
-    .from("onboarding_draft")
-    .select("resume_step, archived_at")
-    .maybeSingle();
   if (draft.error) {
     throw new Error("onboarding could not read the draft");
   }
-
-  const brand = await supabase.from("brand").select("current_profile_id").maybeSingle();
   if (brand.error) {
     throw new Error("onboarding could not read the brand");
   }

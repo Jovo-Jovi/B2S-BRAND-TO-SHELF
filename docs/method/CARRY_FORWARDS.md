@@ -4288,7 +4288,8 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
 - [ ] CF-237 — Production runs on a Vercel plan whose runtime-log retention
       meets OD-H13 — Pro's one day, or longer — and new sign-ups are opened
       only as OD-H15 states: that plan, and the published privacy policy
-      (OD-A8), both in place.
+      (OD-A8), both in place. Before launch, production's Google provider
+      is configured and enabled, alongside those conditions.
       Owner: **the owner, before launch**.
 - [x] CF-238 — Production authentication has new sign-ups enabled.
       Read-only, Management API, project akpvvydmltmfmkmwivgn, HTTP 200 at
@@ -4441,5 +4442,34 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       Owner: none outstanding.
 - [ ] CF-251 — SCOPE.md module 01 names recovery. No password-reset flow
       exists, and no control links to one.
-      Owner: **the owner, before the walkthrough**.
+      AMENDED (P03-T27) — recovery is a build task, scheduled by the
+      reviewer before launch.
+      Owner: **the reviewer, before launch**.
+- [x] CF-252 — A primary, secondary or accent colour could not be chosen
+      visually. The swatch showed the empty name and the native chooser was
+      mounted only once a colour already existed, since P03-T25. The tests
+      set the colour through the hex box, so the missing chooser was not
+      seen.
+      CLOSED (P03-T27) by a chooser that stays mounted in every state,
+      including empty, and opens on the brand's current background colour.
+      The field commits nothing until the person chooses. The hex box stays.
+      A test chooses through the chooser, and unmounting it when the field
+      is empty fails that test.
+      Owner: none outstanding.
+- [x] CF-253 — Save and finish later wrote the draft and showed nothing a
+      person could see.
+      CLOSED (P03-T27) by a success Notice in the step: saved, and the
+      person can leave and return here later, announced politely, without
+      moving focus. A save that fails shows a danger Notice naming what
+      could not be saved. Suppressing the Notice fails its test, and a
+      reload shows the saved answers.
+      Owner: none outstanding.
+- [x] CF-254 — The Vercel preview pointed at production until the owner
+      corrected its environment variables on 2026-10-09, and nothing
+      verified it.
+      CLOSED (P03-T27) by a readout, refused in production the same way the
+      gallery is, that states the deployment's environment and its Supabase
+      project ref, both public. The current preview names the staging
+      project.
+      Owner: none outstanding.
 

@@ -12,6 +12,7 @@ import type { WizardError, WizardStepId } from "@/components/shared/wizard-step/
 import { submitCompany } from "../actions";
 import type { LegalValues, LocaleCode } from "../types";
 import type { OnboardingCopy } from "./copy";
+import { isNextRedirect, saveKind, SaveNotice, type SaveKind } from "./save-notice";
 import { WizardFrame } from "./wizard-frame";
 
 type CompanyStepProps = {
@@ -40,7 +41,7 @@ export function CompanyStep({ locale, copy, theme, values, defaultLocale }: Comp
   const [email, setEmail] = useState(values.email);
   const [phone, setPhone] = useState(values.phone);
   const [errors, setErrors] = useState<WizardError[]>([]);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [notice, setNotice] = useState<SaveKind>(null);
   const busy = useRef(false);
 
   function messages(gaps: string[]): WizardError[] {
@@ -72,15 +73,17 @@ export function CompanyStep({ locale, copy, theme, values, defaultLocale }: Comp
         theme: theme === "light" || theme === "dark" ? theme : undefined,
       });
       if (result?.phone) setPhone(result.phone);
+      const kind = saveKind(intent, result);
       if (result?.gaps?.length) {
-        setNotice(result.notice === "saved" ? copy.saved : null);
+        setNotice(kind);
         setErrors(messages(result.gaps));
         return;
       }
-      if (result?.notice === "saved") {
-        setErrors([]);
-        setNotice(copy.saved);
-      }
+      if (kind === "saved") setErrors([]);
+      setNotice(kind);
+    } catch (error) {
+      if (isNextRedirect(error)) throw error;
+      setNotice(intent === "save" ? "failed" : null);
     } finally {
       busy.current = false;
     }
@@ -107,7 +110,13 @@ export function CompanyStep({ locale, copy, theme, values, defaultLocale }: Comp
       onSave={() => void run("save")}
       onStep={(step) => void run("step", step === "welcome" ? "brand" : step)}
     >
-      {notice ? <p role="status">{notice}</p> : null}
+      <SaveNotice
+        kind={notice}
+        savedTitle={copy.savedTitle}
+        savedMessage={copy.saved}
+        failedTitle={copy.saveFailedTitle}
+        failedMessage={fillPattern(copy.saveFailed, { step: copy.company })}
+      />
       <FormSection title={copy.companyLegal} description={copy.companyLegalBody}>
         <div id="legal-name">
           <span id="legal-name-en" />

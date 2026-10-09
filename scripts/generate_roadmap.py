@@ -69,14 +69,14 @@ never writes one of its own.
 **Status derivation — stated once, in code, so both outputs agree on the same
 rule.** For a phase P0N:
 
-  DONE          the done-steps table carries a row whose Step matches
-                `P0N-GATE` (any suffix, e.g. `-RERUN`, `-RUN3`) and whose
-                Verdict column reads PASS. A gate that ran and FAILED has not
-                exited the phase — BUILD_PHASES.md's own lifecycle re-runs the
-                gate in full after the FIX task, which is exactly the shape
-                the table already holds for P01 (P01-GATE FAIL,
-                P01-GATE-RERUN FAIL, P01-GATE-RUN3 PASS: DONE only once the
-                third row exists).
+  DONE          a gate run passes. The row is named P0N-GATE, or a re-run
+                whose name adds a suffix such as -RERUN or -RUN3, and the
+                Verdict column reads PASS. A row ending -FIX is a fix task,
+                never a gate run. A gate that ran and FAILED has not exited
+                the phase — BUILD_PHASES.md's lifecycle re-runs the gate in
+                full after the FIX task, which is the shape the table holds
+                for P01 (P01-GATE FAIL, P01-GATE-RERUN FAIL, P01-GATE-RUN3
+                PASS: DONE only once the re-run passes).
   IN PROGRESS   not DONE, and it is the phase named by SESSION_CONTEXT.md's
                 header ("Phase: P0N").
   QUEUED        neither of the above.
@@ -143,10 +143,11 @@ ELLIPSIS = "\u2026"
 
 FIELD_LABELS = ["Exit standard", "Entry", "Exit, additionally"]
 
-# The exit row is exactly Pnn-GATE. A later Pnn-GATE-FIX shares the prefix,
-# and a word boundary after GATE matches that hyphen, so a PASS on the fix
-# would mark the phase done while the exit row itself is still FAIL.
-GATE_RE = re.compile(r"^P0*(\d+)-GATE$", re.I)
+# The exit row is P0N-GATE, or a re-run whose name adds a suffix such as
+# -RERUN or -RUN3. A row ending -FIX is a fix task, never a gate run: a word
+# boundary after GATE matched P03-GATE-FIX and marked the phase done, and an
+# exact GATE ending then dropped P01-GATE-RUN3.
+GATE_RE = re.compile(r"^P0*(\d+)-GATE(?:-RERUN|-RUN\d+)?$", re.I)
 
 # Task 2 (P02-T11) — a log summary's clause is cut at the first sentence
 # terminator, never at an arbitrary character offset: this repository's own
@@ -640,12 +641,14 @@ def render_markdown(data):
     )
     lines.append("")
     lines.append(
-        "Status is derived, never asserted here by hand. **DONE** means "
-        "`SESSION_CONTEXT.md`'s done-steps table carries a PASS row for that "
-        "phase's exit gate; **IN PROGRESS** means it is the current phase per "
-        "that file's header; everything else is **QUEUED**. A role-journey "
-        "capability additionally reads **PENDING A DECISION** or **NOT IN THE PLAN**, "
-        "and an open carry-forward reads **PENDING A DECISION** or **NOT IN THE PLAN**. "
+        "Status is derived, never asserted here by hand. **DONE** means a gate "
+        "run passes: a row named `P0N-GATE`, or a re-run whose name adds a "
+        "suffix such as `-RERUN` or `-RUN3`, with Verdict PASS. A row ending "
+        "`-FIX` is a fix task, never a gate run. **IN PROGRESS** means the "
+        "phase is current per `SESSION_CONTEXT.md`'s header and is not DONE; "
+        "everything else is **QUEUED**. A role-journey capability additionally "
+        "reads **PENDING A DECISION** or **NOT IN THE PLAN**, and an open "
+        "carry-forward reads **PENDING A DECISION** or **NOT IN THE PLAN**. "
         "See `scripts/generate_roadmap.py`'s docstring for the exact rules."
     )
     lines.append("")

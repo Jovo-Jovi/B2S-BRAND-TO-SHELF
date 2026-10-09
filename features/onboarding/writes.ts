@@ -27,8 +27,10 @@ function forward(current: string, next: ResumeStep): ResumeStep {
 }
 
 export async function memberContext(supabase: Client): Promise<{ tenantId: string; memberId: string } | null> {
-  const auth = await supabase.auth.getUser();
-  const tenant = await supabase.rpc("current_tenant_id");
+  const [auth, tenant] = await Promise.all([
+    supabase.auth.getUser(),
+    supabase.rpc("current_tenant_id"),
+  ]);
   if (!auth.data.user || !tenant.data) return null;
   return { tenantId: tenant.data, memberId: auth.data.user.id };
 }
@@ -327,6 +329,14 @@ export async function storeLogoVariant(
 export async function signLogo(supabase: Client, objectKey: string): Promise<string | null> {
   const who = await memberContext(supabase);
   if (!who) return null;
+  return signFor(supabase, who, objectKey);
+}
+
+async function signFor(
+  supabase: Client,
+  who: { tenantId: string; memberId: string },
+  objectKey: string,
+): Promise<string | null> {
   const session = logoStoreSession(mediaClient(supabase), who.tenantId, who.memberId);
   try {
     return await session.signObject(objectKey, SIGNED_URL_SECONDS);
@@ -351,89 +361,94 @@ export async function loadSnapshot(supabase: Client): Promise<{
   const who = await memberContext(supabase);
   if (!who) return { defaultLocale, names, storedColours, logos, faces: emptyFaces };
 
-  const tenant = await supabase.from("tenant").select("default_locale").eq("id", who.tenantId).maybeSingle();
+  const [tenant, brand, draft, profile] = await Promise.all([
+    supabase.from("tenant").select("default_locale").eq("id", who.tenantId).maybeSingle(),
+    supabase.from("brand").select("name_key_id").maybeSingle(),
+    supabase.from("onboarding_draft").select("id, archived_at").maybeSingle(),
+    supabase.from("brand_profile").select("id").order("version", { ascending: false }).limit(1).maybeSingle(),
+  ]);
   if (tenant.data?.default_locale === "ar" || tenant.data?.default_locale === "en") {
     defaultLocale = tenant.data.default_locale;
   }
 
-  const brand = await supabase.from("brand").select("name_key_id").maybeSingle();
-  if (brand.data?.name_key_id) {
-    const entries = await supabase
-      .from("translation_entry")
-      .select("locale, value")
-      .eq("key_id", brand.data.name_key_id);
-    for (const entry of entries.data ?? []) {
-      if (entry.locale === "en" || entry.locale === "ar") names[entry.locale] = entry.value;
+  const liveDraft = draft.data && !draft.data.archived_at ? draft.data : null;
+  const [entries, colours, theme, faces, variants] = await Promise.all([
+    brand.data?.name_key_id
+      ? supabase.from("translation_entry").select("locale, value").eq("key_id", brand.data.name_key_id)
+      : Promise.resolve(null),
+    liveDraft
+      ? supabase.from("onboarding_draft_color").select("role, srgb, archived_at").eq("draft_id", liveDraft.id)
+      : Promise.resolve(null),
+    profile.data
+      ? supabase
+          .from("brand_theme")
+          .select("id")
+          .eq("profile_id", profile.data.id)
+          .is("archived_at", null)
+          .eq("is_default", true)
+          .maybeSingle()
+      : Promise.resolve(null),
+    profile.data
+      ? supabase.from("typeface").select("role, script, family, archived_at").eq("profile_id", profile.data.id)
+      : Promise.resolve(null),
+    profile.data
+      ? supabase
+          .from("logo_variant")
+          .select("ground, media_asset_id, archived_at")
+          .eq("profile_id", profile.data.id)
+          .eq("kind", "full")
+      : Promise.resolve(null),
+  ]);
+
+  for (const entry of entries?.data ?? []) {
+    if (entry.locale === "en" || entry.locale === "ar") names[entry.locale] = entry.value;
+  }
+  for (const colour of colours?.data ?? []) {
+    if (colour.archived_at) continue;
+    if ((COLOUR_ROLES as readonly string[]).includes(colour.role)) {
+      storedColours[colour.role] = colour.srgb;
     }
   }
+  for (const face of faces?.data ?? []) {
+    if (face.archived_at) continue;
+    if (face.role === "heading" && face.script === "arabic") emptyFaces.headingArabic = face.family;
+    if (face.role === "body" && face.script === "arabic") emptyFaces.bodyArabic = face.family;
+    if (face.role === "heading" && face.script === "latin") emptyFaces.headingLatin = face.family;
+    if (face.role === "body" && face.script === "latin") emptyFaces.bodyLatin = face.family;
+  }
 
-  const draft = await supabase.from("onboarding_draft").select("id, archived_at").maybeSingle();
-  if (draft.data && !draft.data.archived_at) {
-    const colours = await supabase
-      .from("onboarding_draft_color")
-      .select("role, srgb, archived_at")
-      .eq("draft_id", draft.data.id);
-    for (const colour of colours.data ?? []) {
-      if (colour.archived_at) continue;
-      if ((COLOUR_ROLES as readonly string[]).includes(colour.role)) {
-        storedColours[colour.role] = colour.srgb;
+  if (theme?.data) {
+    const values = await supabase.from("color_value").select("role, srgb").eq("theme_id", theme.data.id);
+    for (const value of values.data ?? []) {
+      if (storedColours[value.role]) continue;
+      if ((COLOUR_ROLES as readonly string[]).includes(value.role)) {
+        storedColours[value.role] = value.srgb;
       }
     }
   }
 
-  const profile = await supabase
-    .from("brand_profile")
-    .select("id")
-    .order("version", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (profile.data) {
-    const theme = await supabase
-      .from("brand_theme")
-      .select("id")
-      .eq("profile_id", profile.data.id)
-      .is("archived_at", null)
-      .eq("is_default", true)
-      .maybeSingle();
-    if (theme.data) {
-      const values = await supabase.from("color_value").select("role, srgb").eq("theme_id", theme.data.id);
-      for (const value of values.data ?? []) {
-        if (storedColours[value.role]) continue;
-        if ((COLOUR_ROLES as readonly string[]).includes(value.role)) {
-          storedColours[value.role] = value.srgb;
-        }
-      }
-    }
-
-    const faces = await supabase
-      .from("typeface")
-      .select("role, script, family, archived_at")
-      .eq("profile_id", profile.data.id);
-    for (const face of faces.data ?? []) {
-      if (face.archived_at) continue;
-      if (face.role === "heading" && face.script === "arabic") emptyFaces.headingArabic = face.family;
-      if (face.role === "body" && face.script === "arabic") emptyFaces.bodyArabic = face.family;
-      if (face.role === "heading" && face.script === "latin") emptyFaces.headingLatin = face.family;
-      if (face.role === "body" && face.script === "latin") emptyFaces.bodyLatin = face.family;
-    }
-
-    const variants = await supabase
-      .from("logo_variant")
-      .select("ground, media_asset_id, archived_at")
-      .eq("profile_id", profile.data.id)
-      .eq("kind", "full");
-    for (const variant of variants.data ?? []) {
-      if (variant.archived_at) continue;
-      if (variant.ground !== "light" && variant.ground !== "dark") continue;
+  const liveVariants = (variants?.data ?? []).filter(
+    (variant) => !variant.archived_at && (variant.ground === "light" || variant.ground === "dark"),
+  );
+  const assets = await Promise.all(
+    liveVariants.map(async (variant) => {
       const asset = await supabase
         .from("media_asset")
         .select("object_key, archived_at")
         .eq("id", variant.media_asset_id)
         .maybeSingle();
-      if (!asset.data || asset.data.archived_at) continue;
-      logos[variant.ground] = await signLogo(supabase, asset.data.object_key);
-    }
+      return { ground: variant.ground, asset: asset.data };
+    }),
+  );
+  const signed = await Promise.all(
+    assets.map(async (item) => {
+      if (!item.asset || item.asset.archived_at) return { ground: item.ground, url: null as string | null };
+      if (item.ground !== "light" && item.ground !== "dark") return { ground: item.ground, url: null };
+      return { ground: item.ground, url: await signFor(supabase, who, item.asset.object_key) };
+    }),
+  );
+  for (const item of signed) {
+    if (item.ground === "light" || item.ground === "dark") logos[item.ground] = item.url;
   }
 
   return { defaultLocale, names, storedColours, logos, faces: emptyFaces };

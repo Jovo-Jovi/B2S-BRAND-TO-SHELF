@@ -41,6 +41,9 @@ function noticeFor(dictionary: AccessCopy, errorKey: AccessErrorKey) {
   if (errorKey === "oauth_cancelled") {
     return { tone: "info" as const, title: dictionary.cancelledNoticeTitle, icon: "check" as const };
   }
+  if (errorKey === "confirmation_sent") {
+    return { tone: "info" as const, title: dictionary.confirmationNoticeTitle, icon: "check" as const };
+  }
   return { tone: "warning" as const, title: dictionary.inputNoticeTitle, icon: "danger" as const };
 }
 

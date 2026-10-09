@@ -39,6 +39,8 @@ type ColorFieldProps = {
   passText?: string;
   failText?: string;
   emptyName: string;
+  /** Colour the native chooser opens on when the field itself is empty. */
+  openOn: string;
   pickerName?: string;
   disabled?: boolean;
   invalid?: boolean;
@@ -60,6 +62,7 @@ export function ColorField({
   passText,
   failText,
   emptyName,
+  openOn,
   pickerName,
   disabled = false,
   invalid = false,
@@ -72,6 +75,8 @@ export function ColorField({
   const [draft, setDraft] = useState<string | null>(null);
   const shown = draft ?? value;
   const stored = normaliseColorValue(shown);
+  const opener = normaliseColorValue(openOn);
+  const chooserValue = stored ?? opener;
   const refused = shown.length > 0 && stored === null;
   const empty = shown.length === 0;
   const pairedValue = pairedWith ? normaliseColorValue(pairedWith) : null;
@@ -109,13 +114,13 @@ export function ColorField({
         aria-labelledby={ariaLabelledBy}
         onChange={(event) => commit(event.target.value)}
       />
-      {pickerName && stored ? (
+      {chooserValue ? (
         <input
           className={styles.picker}
           type="color"
-          aria-label={pickerName}
+          aria-label={pickerName ?? emptyName}
           disabled={disabled}
-          value={stored}
+          value={chooserValue}
           onChange={(event) => commit(event.target.value)}
         />
       ) : null}

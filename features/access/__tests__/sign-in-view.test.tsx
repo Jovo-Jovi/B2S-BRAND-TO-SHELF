@@ -119,6 +119,26 @@ describe("SignInView", () => {
     expect(invalid).toContain(en.access.email_invalid);
     expect(invalid).not.toContain('data-tone="danger"');
   });
+
+  it("shows the confirmation notice for every accepted sign-up, without saying whether the address was new", () => {
+    const html = renderToStaticMarkup(
+      <SignInView
+        dictionary={en.access}
+        errorKey="confirmation_sent"
+        locale="en"
+        {...frame}
+        signInAction={noop}
+        signUpAction={noop}
+        googleAction={noop}
+      />,
+    );
+    expect(html).toContain('role="status"');
+    expect(html).toContain('data-tone="info"');
+    expect(html).toContain(en.access.confirmation_sent);
+    expect(html).toContain(en.access.confirmationNoticeTitle);
+    expect(html.toLowerCase()).not.toContain("already");
+    expect(html.toLowerCase()).not.toContain("no account");
+  });
 });
 
 describe("access catalogs", () => {

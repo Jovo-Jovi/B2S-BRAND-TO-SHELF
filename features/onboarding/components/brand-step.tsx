@@ -18,6 +18,7 @@ import type { BrandSnapshot, ColourRole, ColourValues, LocaleCode } from "../typ
 import { COLOUR_ROLES } from "../types";
 import type { OnboardingCopy } from "./copy";
 import { BrandProof } from "./proof";
+import { isNextRedirect, saveKind, SaveNotice, type SaveKind } from "./save-notice";
 import { WizardFrame } from "./wizard-frame";
 
 type BrandStepProps = {
@@ -49,7 +50,7 @@ export function BrandStep({ locale, copy, theme, snapshot }: BrandStepProps) {
   const [colours, setColours] = useState<ColourValues>(snapshot.colours);
   const [logos, setLogos] = useState(snapshot.logos);
   const [errors, setErrors] = useState<WizardError[]>([]);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [notice, setNotice] = useState<SaveKind>(null);
   const [tab, setTab] = useState("label");
   const busy = useRef(false);
 
@@ -101,15 +102,17 @@ export function BrandStep({ locale, copy, theme, snapshot }: BrandStepProps) {
         theme: theme === "light" || theme === "dark" ? theme : undefined,
         ...colours,
       });
+      const kind = saveKind(intent, result);
       if (result?.gaps?.length) {
-        setNotice(null);
+        setNotice(kind);
         setErrors(messages(result.gaps));
         return;
       }
-      if (result?.notice === "saved") {
-        setErrors([]);
-        setNotice(copy.saved);
-      }
+      if (kind === "saved") setErrors([]);
+      setNotice(kind);
+    } catch (error) {
+      if (isNextRedirect(error)) throw error;
+      setNotice(intent === "save" ? "failed" : null);
     } finally {
       busy.current = false;
     }
@@ -153,6 +156,7 @@ export function BrandStep({ locale, copy, theme, snapshot }: BrandStepProps) {
           passText={copy.contrastPasses}
           failText={copy.contrastFails}
           emptyName={copy.emptyColour}
+          openOn={colours.background || copy.startingBackground}
           pickerName={copy[ROLE_CAPTION[role]]}
           onValueChange={(value) => setColours((current) => ({ ...current, [role]: value }))}
         />
@@ -188,7 +192,13 @@ export function BrandStep({ locale, copy, theme, snapshot }: BrandStepProps) {
       onStep={(step) => void run("step", step)}
       preview={<BrandProof copy={copy} snapshot={display} tab={tab} onTab={setTab} />}
     >
-      {notice ? <p role="status">{notice}</p> : null}
+      <SaveNotice
+        kind={notice}
+        savedTitle={copy.savedTitle}
+        savedMessage={copy.saved}
+        failedTitle={copy.saveFailedTitle}
+        failedMessage={fillPattern(copy.saveFailed, { step: copy.brand })}
+      />
       <FormSection title={copy.brandSectionName} description={copy.brandSectionNameBody}>
         <div id="brand-name">
           <span id="name-en" />

@@ -17,13 +17,15 @@
     "identityNoticeTitle": "The account was not created",
     "cancelledNoticeTitle": "You can try Google again",
     "inputNoticeTitle": "Check the form",
+    "confirmationNoticeTitle": "Check your email",
     "identity_refused": "This sign-up could not be completed.",
     "sign_in_refused": "Sign-in could not be completed.",
     "email_invalid": "Enter a valid email address.",
     "password_required": "Enter a password.",
     "locale_invalid": "That language is not available.",
     "oauth_cancelled": "Google sign-in was cancelled.",
-    "input_invalid": "Check the form and try again."
+    "input_invalid": "Check the form and try again.",
+    "confirmation_sent": "A confirmation link has been sent to the address. Opening it finishes creating the account."
   },
   "data": {
     "month1": "January",
@@ -388,7 +390,10 @@
     "typefaceSectionArabicBody": "A heading face and a body face for Arabic.",
     "typefaceSectionLatin": "Latin",
     "typefaceSectionLatinBody": "A heading face and a body face for Latin.",
-    "saved": "Saved.",
+    "savedTitle": "Saved",
+    "saved": "Saved. You can leave and return here later.",
+    "saveFailedTitle": "Not saved",
+    "saveFailed": "The {step} could not be saved.",
     "companyPurpose": "Record the legal entity behind the business.",
     "companyLegal": "Legal details",
     "companyLegalBody": "The legal name is required in both languages. The trading name and tax registration number are optional.",

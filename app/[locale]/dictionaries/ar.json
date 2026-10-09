@@ -17,13 +17,15 @@
     "identityNoticeTitle": "لم يُنشأ الحساب",
     "cancelledNoticeTitle": "يمكنك المحاولة عبر Google مرة أخرى",
     "inputNoticeTitle": "تحقق من النموذج",
+    "confirmationNoticeTitle": "تحقق من بريدك",
     "identity_refused": "تعذر إكمال إنشاء الحساب.",
     "sign_in_refused": "تعذر إكمال تسجيل الدخول.",
     "email_invalid": "أدخل عنوان بريد إلكتروني صالحاً.",
     "password_required": "أدخل كلمة المرور.",
     "locale_invalid": "هذه اللغة غير متاحة.",
     "oauth_cancelled": "تم إلغاء تسجيل الدخول عبر Google.",
-    "input_invalid": "تحقق من النموذج ثم أعد المحاولة."
+    "input_invalid": "تحقق من النموذج ثم أعد المحاولة.",
+    "confirmation_sent": "أُرسل رابط التأكيد إلى العنوان. فتحه يُكمل إنشاء الحساب."
   },
   "data": {
     "month1": "يناير",
@@ -388,7 +390,10 @@
     "typefaceSectionArabicBody": "خط عنوان وخط نص للكتابة العربية.",
     "typefaceSectionLatin": "الخطوط اللاتينية",
     "typefaceSectionLatinBody": "خط عنوان وخط نص للكتابة اللاتينية.",
-    "saved": "تم الحفظ.",
+    "savedTitle": "تم الحفظ",
+    "saved": "تم الحفظ. يمكنك المغادرة والعودة إلى هنا لاحقًا.",
+    "saveFailedTitle": "لم يُحفظ",
+    "saveFailed": "تعذر حفظ {step}.",
     "companyPurpose": "سجّل الكيان القانوني الذي يقف خلف النشاط.",
     "companyLegal": "البيانات القانونية",
     "companyLegalBody": "الاسم القانوني مطلوب باللغتين. الاسم التجاري ورقم التسجيل الضريبي اختياريان.",

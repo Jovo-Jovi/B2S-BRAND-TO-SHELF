@@ -13,6 +13,7 @@ import { submitTypography } from "../actions";
 import type { BrandSnapshot, FaceValues, LocaleCode } from "../types";
 import type { OnboardingCopy } from "./copy";
 import { BrandProof } from "./proof";
+import { isNextRedirect, saveKind, SaveNotice, type SaveKind } from "./save-notice";
 import { WizardFrame } from "./wizard-frame";
 
 type TypographyStepProps = {
@@ -32,7 +33,7 @@ const PAIRS: { id: keyof FaceValues; field: string; script: TypefaceScript; role
 export function TypographyStep({ locale, copy, theme, snapshot }: TypographyStepProps) {
   const [faces, setFaces] = useState<FaceValues>(snapshot.faces);
   const [errors, setErrors] = useState<WizardError[]>([]);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [notice, setNotice] = useState<SaveKind>(null);
   const [tab, setTab] = useState("label");
   const busy = useRef(false);
 
@@ -56,15 +57,17 @@ export function TypographyStep({ locale, copy, theme, snapshot }: TypographyStep
         ...faces,
         theme: theme === "light" || theme === "dark" ? theme : undefined,
       });
+      const kind = saveKind(intent, result);
       if (result?.gaps?.length) {
-        setNotice(null);
+        setNotice(kind);
         setErrors(messages(result.gaps));
         return;
       }
-      if (result?.notice === "saved") {
-        setErrors([]);
-        setNotice(copy.saved);
-      }
+      if (kind === "saved") setErrors([]);
+      setNotice(kind);
+    } catch (error) {
+      if (isNextRedirect(error)) throw error;
+      setNotice(intent === "save" ? "failed" : null);
     } finally {
       busy.current = false;
     }
@@ -104,7 +107,13 @@ export function TypographyStep({ locale, copy, theme, snapshot }: TypographyStep
       onStep={(step) => void run("step", step)}
       preview={<BrandProof copy={copy} snapshot={{ ...snapshot, faces }} tab={tab} onTab={setTab} />}
     >
-      {notice ? <p role="status">{notice}</p> : null}
+      <SaveNotice
+        kind={notice}
+        savedTitle={copy.savedTitle}
+        savedMessage={copy.saved}
+        failedTitle={copy.saveFailedTitle}
+        failedMessage={fillPattern(copy.saveFailed, { step: copy.typography })}
+      />
       <FormSection title={copy.typefaceSectionArabic} description={copy.typefaceSectionArabicBody}>
         {select(PAIRS[0])}
         {select(PAIRS[1])}

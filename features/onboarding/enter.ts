@@ -11,13 +11,26 @@ export function themeFrom(raw: string | string[] | undefined): "light" | "dark" 
   return null;
 }
 
-export async function enter(
+type OnboardingCopy = Awaited<ReturnType<typeof getDictionary>>["onboarding"];
+
+export async function enter<T = null>(
   localeRaw: string,
   requested: RequestedScreen,
   themeRaw: string | string[] | undefined,
-): Promise<{ locale: Locale; decision: GateDecision; copy: Awaited<ReturnType<typeof getDictionary>>["onboarding"]; theme: "light" | "dark" | null } | null> {
+  load?: (copy: OnboardingCopy) => Promise<T>,
+): Promise<{
+  locale: Locale;
+  decision: GateDecision;
+  copy: OnboardingCopy;
+  theme: "light" | "dark" | null;
+  loaded: T;
+} | null> {
   if (!hasLocale(localeRaw)) return null;
   const dictionary = await getDictionary(localeRaw);
-  const decision = await resolveOnboarding(localeRaw, requested);
-  return { locale: localeRaw, decision, copy: dictionary.onboarding, theme: themeFrom(themeRaw) };
+  const copy = dictionary.onboarding;
+  const [decision, loaded] = await Promise.all([
+    resolveOnboarding(localeRaw, requested),
+    load ? load(copy) : Promise.resolve(null as T),
+  ]);
+  return { locale: localeRaw, decision, copy, theme: themeFrom(themeRaw), loaded };
 }

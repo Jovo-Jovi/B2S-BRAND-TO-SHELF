@@ -102,8 +102,10 @@ export async function readCompleteness(supabase: Client, profileId: string | nul
     registeredAddress: blank(),
   };
 
-  const brand = await supabase.from("brand").select("id, name_key_id").maybeSingle();
-  const legal = await readLegal(supabase);
+  const [brand, legal] = await Promise.all([
+    supabase.from("brand").select("id, name_key_id").maybeSingle(),
+    readLegal(supabase),
+  ]);
   input.legalName = legal.legalName;
   input.registeredAddress = legal.address;
 
@@ -112,19 +114,23 @@ export async function readCompleteness(supabase: Client, profileId: string | nul
 
   if (!profileId) return input;
 
-  const themes = await supabase
-    .from("brand_theme")
-    .select("id, name_key_id, is_default, archived_at")
-    .eq("profile_id", profileId);
+  const [themes, guidelines, lines, faces, ready] = await Promise.all([
+    supabase.from("brand_theme").select("id, name_key_id, is_default, archived_at").eq("profile_id", profileId),
+    readGuidelines(supabase, profileId),
+    brand.data
+      ? supabase.from("brand_line").select("name_key_id, archived_at, profile_id").eq("brand_id", brand.data.id)
+      : Promise.resolve({ data: null }),
+    supabase.from("typeface").select("role, script, archived_at").eq("profile_id", profileId),
+    logoReady(supabase, profileId),
+  ]);
   const liveThemes = (themes.data ?? []).filter((row) => !row.archived_at);
-  const themeNames = await texts(
-    supabase,
-    liveThemes.map((row) => row.name_key_id),
-  );
-  for (const theme of liveThemes) {
+  const [themeNames, colourRows] = await Promise.all([
+    texts(supabase, liveThemes.map((row) => row.name_key_id)),
+    Promise.all(liveThemes.map((theme) => supabase.from("color_value").select("role, srgb").eq("theme_id", theme.id))),
+  ]);
+  liveThemes.forEach((theme, index) => {
     const colours: Partial<Record<ColourRole, string>> = {};
-    const values = await supabase.from("color_value").select("role, srgb").eq("theme_id", theme.id);
-    for (const value of values.data ?? []) {
+    for (const value of colourRows[index]?.data ?? []) {
       if ((COLOUR_ROLES as readonly string[]).includes(value.role)) colours[value.role as ColourRole] = value.srgb;
     }
     input.themes.push({
@@ -132,30 +138,19 @@ export async function readCompleteness(supabase: Client, profileId: string | nul
       isDefault: theme.is_default,
       colours,
     });
-  }
+  });
 
-  const guidelines = await readGuidelines(supabase, profileId);
   input.guidelines = guidelines.map((row) => ({ title: row.title, body: row.body }));
 
-  if (brand.data) {
-    const lines = await supabase
-      .from("brand_line")
-      .select("name_key_id, archived_at, profile_id")
-      .eq("brand_id", brand.data.id);
-    const liveLines = (lines.data ?? []).filter((row) => !row.archived_at && row.profile_id === profileId);
-    const lineMap = await texts(
-      supabase,
-      liveLines.map((row) => row.name_key_id),
-    );
-    input.lineNames = liveLines.map((row) => textOf(lineMap, row.name_key_id));
-  }
+  const liveLines = (lines.data ?? []).filter((row) => !row.archived_at && row.profile_id === profileId);
+  const lineMap = await texts(supabase, liveLines.map((row) => row.name_key_id));
+  input.lineNames = liveLines.map((row) => textOf(lineMap, row.name_key_id));
 
-  const faces = await supabase.from("typeface").select("role, script, archived_at").eq("profile_id", profileId);
   input.typefaces = (faces.data ?? [])
     .filter((row) => !row.archived_at)
     .map((row) => ({ role: row.role, script: row.script }));
 
-  input.logoReady = await logoReady(supabase, profileId);
+  input.logoReady = ready;
   return input;
 }
 

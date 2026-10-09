@@ -52,7 +52,8 @@ export type AccessErrorKey =
   | "password_required"
   | "locale_invalid"
   | "oauth_cancelled"
-  | "input_invalid";
+  | "input_invalid"
+  | "confirmation_sent";
 
 export const ACCESS_ERROR_KEYS: readonly AccessErrorKey[] = [
   "identity_refused",
@@ -62,6 +63,7 @@ export const ACCESS_ERROR_KEYS: readonly AccessErrorKey[] = [
   "locale_invalid",
   "oauth_cancelled",
   "input_invalid",
+  "confirmation_sent",
 ];
 
 export function isAccessErrorKey(value: string): value is AccessErrorKey {

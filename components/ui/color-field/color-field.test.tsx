@@ -24,6 +24,7 @@ describe("ColorField", () => {
               state={state}
               value={state === "empty" ? "" : stored}
               emptyName="No colour"
+              openOn={paired}
               pickerName="Pick"
               locale={locale}
               variant="paired"
@@ -45,7 +46,7 @@ describe("ColorField", () => {
 
   it("normalises to lowercase with a leading hash and refuses anything else", async () => {
     let committed = "";
-    const view = await mount(<ColorField value="" emptyName="No colour" onValueChange={(next) => { committed = next; }} />);
+    const view = await mount(<ColorField value="" emptyName="No colour" openOn={paired} onValueChange={(next) => { committed = next; }} />);
     const input = view.host.querySelector("input");
     if (!(input instanceof HTMLInputElement)) {
       throw new Error("hex input missing");
@@ -71,6 +72,7 @@ describe("ColorField", () => {
           pairedWith={paired}
           locale={locale}
           emptyName="No colour"
+          openOn={paired}
           passText="Pass"
           failText="Fail"
         />,
@@ -82,14 +84,42 @@ describe("ColorField", () => {
 
   it("offers both sizes and both variants", () => {
     for (const size of ["compact", "comfortable"] as const) {
-      const html = renderToStaticMarkup(<ColorField size={size} value={stored} emptyName="No colour" />);
+      const html = renderToStaticMarkup(<ColorField size={size} value={stored} emptyName="No colour" openOn={paired} />);
       expect(html).toContain(`data-density="${size}"`);
     }
     for (const variant of ["standard", "paired"] as const) {
       const html = renderToStaticMarkup(
-        <ColorField variant={variant} value={stored} pairedWith={paired} emptyName="No colour" passText="Pass" failText="Fail" />,
+        <ColorField variant={variant} value={stored} pairedWith={paired} emptyName="No colour" openOn={paired} passText="Pass" failText="Fail" />,
       );
       expect(html).toContain(`data-variant="${variant}"`);
     }
+  });
+
+  it("mounts the chooser when the field is empty and commits only a chosen colour", async () => {
+    let committed = "";
+    const view = await mount(
+      <ColorField
+        value=""
+        emptyName="No colour"
+        pickerName="Pick a colour"
+        openOn={paired}
+        onValueChange={(next) => {
+          committed = next;
+        }}
+      />,
+    );
+    const chooser = view.host.querySelector('input[type="color"]');
+    if (!(chooser instanceof HTMLInputElement)) {
+      throw new Error("chooser missing while the field is empty");
+    }
+    expect(chooser.value).toBe(paired);
+    expect(committed).toBe("");
+    expect(view.host.textContent).toContain("No colour");
+    const chosen = hex("112233");
+    await act(async () => {
+      setInputValue(chooser, chosen);
+    });
+    expect(committed).toBe(chosen);
+    await view.unmount();
   });
 });
