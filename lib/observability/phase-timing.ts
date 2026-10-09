@@ -86,25 +86,6 @@ export function noteUpstreamDenied(host: string | null): void {
   current.denied += 1;
 }
 
-export function deniedCount(): number {
-  return bucket()?.denied ?? 0;
-}
-
-export function noteConnect(ms: number): void {
-  const current = bucket();
-  if (!current || !Number.isFinite(ms) || ms < 0) return;
-  const existing = current.samples.find((sample) => sample.name === "tcp");
-  if (existing) {
-    if (ms > existing.dur) existing.dur = ms;
-    return;
-  }
-  current.samples.push({ name: "tcp", dur: ms });
-}
-
-export function connectDur(): number {
-  return bucket()?.samples.find((sample) => sample.name === "tcp")?.dur ?? 0;
-}
-
 export function runWithPhases<T>(fn: () => T): T {
   return sharedStorage().run(createBucket(), fn);
 }

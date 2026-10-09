@@ -1,11 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-import { connectDur, deniedCount, runWithPhases } from "@/lib/observability/phase-timing";
 import { serverTimingHeader } from "@/lib/observability/server-timing";
 import type { Database } from "@/types/database";
-
-import { freshFetch } from "./fresh-fetch";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
@@ -18,20 +15,9 @@ export async function updateSession(request: NextRequest, phases = false) {
   }
 
   const started = performance.now();
-  return runWithPhases(() => update(request, phases, started, supabaseUrl, supabasePublishableKey));
-}
-
-async function update(
-  request: NextRequest,
-  phases: boolean,
-  started: number,
-  url: string,
-  key: string,
-) {
   let response = NextResponse.next({ request });
 
-  const supabase = createServerClient<Database>(url, key, {
-    global: { fetch: freshFetch },
+  const supabase = createServerClient<Database>(supabaseUrl, supabasePublishableKey, {
     cookies: {
       getAll() {
         return request.cookies.getAll();
@@ -53,15 +39,10 @@ async function update(
     await supabase.auth.getUser();
   } finally {
     if (phases) {
-      const samples = [
+      const header = serverTimingHeader(process.env.VERCEL_ENV, [
         { name: "proxy", dur: performance.now() - started },
         { name: "proxy-user", dur: performance.now() - userStarted },
-      ];
-      const denied = deniedCount();
-      if (denied > 0) samples.push({ name: "http-429", dur: denied });
-      const tcp = connectDur();
-      if (tcp > 0) samples.push({ name: "tcp", dur: tcp });
-      const header = serverTimingHeader(process.env.VERCEL_ENV, samples);
+      ]);
       if (header) response.headers.set("Server-Timing", header);
     }
   }
