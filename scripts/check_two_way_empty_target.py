@@ -98,6 +98,8 @@ PROVEN_PAIRS = [
     ("scripts/check_roadmap.py", "docs/roadmap.html"),
     ("scripts/check_security_model_bypass.py", "docs/product/SECURITY_MODEL.md"),
     ("scripts/check_security_model_bypass.py", "supabase/schema.sql"),
+    ("scripts/check_security_model_catalog.py", "docs/product/SECURITY_MODEL.md"),
+    ("scripts/check_security_model_catalog.py", "supabase/schema.sql"),
     ("scripts/check_session_context_shape.py", "SESSION_CONTEXT.md"),
     ("scripts/check_stated_counts.py", "docs/product/DOMAIN_MODEL.md"),
     ("scripts/check_stated_counts.py", "docs/product/DECISIONS.md"),
@@ -499,6 +501,10 @@ def main():
             ["python", "scripts/check_security_model_bypass.py"], FileProbe("docs/product/SECURITY_MODEL.md"))
     do_pair(results, "scripts/check_security_model_bypass.py",
             ["python", "scripts/check_security_model_bypass.py"], FileProbe("supabase/schema.sql"))
+    do_pair(results, "scripts/check_security_model_catalog.py",
+            ["python", "scripts/check_security_model_catalog.py"], FileProbe("docs/product/SECURITY_MODEL.md"))
+    do_pair(results, "scripts/check_security_model_catalog.py",
+            ["python", "scripts/check_security_model_catalog.py"], FileProbe("supabase/schema.sql"))
     do_pair(results, "scripts/check_session_context_shape.py",
             ["python", "scripts/check_session_context_shape.py"], FileProbe("SESSION_CONTEXT.md"))
     do_pair(results, "scripts/check_stated_counts.py",

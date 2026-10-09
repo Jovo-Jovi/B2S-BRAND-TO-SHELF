@@ -370,6 +370,11 @@ refusal and that the row already held is unchanged, field by field, afterwards.
 `not null` and a fresh `Member` belongs to no tenant. `current_tenant_id()`
 resolves null for them, which is §2.1's first contract row, and every policy in
 this schema reads them zero rows. 24a asserts both, on all seven tables.
+
+**AMENDED 2026-10-09 — 24a reads every public table.** The sentence above
+stands (PR-07). `readsAllSix` iterates the harness `TABLES` set. That set is
+the final public catalog, 22 tables. The sentence records the seven that
+existed when the assertion was first written.
 `created_by` is left null: rule 4's provenance column references `member (id)`
 and no member created this row — the person did, by proving an address, which
 `id` already records.

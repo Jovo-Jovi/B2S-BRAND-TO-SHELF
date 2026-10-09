@@ -504,6 +504,12 @@ half, including two tenants provisioned this way isolated from each other
 across all seven tables in both directions. Assertions 27a, 27b and 28a–28e
 prove the bounds.
 
+**AMENDED 2026-10-09 — those assertions read every public table.** The
+sentence above stands (PR-07). `readsAllSix` iterates the harness `TABLES`
+set, which is the final public catalog. That catalog is 22 tables. The
+sentence records the seven that existed when the assertions were first
+written.
+
 **`accept_invitation` is granted to every `authenticated` caller, and this
 states what that leaves reachable.** It is the second function that writes to
 the tenancy spine and is callable by anyone signed in.
@@ -538,6 +544,48 @@ with the `postgres` credential, which lives outside the application entirely.
 RLS is enabled on all seven tables; `FORCE` is what would additionally bind the
 owner, and its absence is the reason this row exists rather than a defect to fix
 here.
+
+**AMENDED 2026-10-06 — the catalog P03 grew.** The paragraphs above stand and
+are not edited (PR-07). §11a.2 named the seven public tables that existed at
+P02. P03 added fifteen. Each P03 task amended DATA_MODEL.md and not this
+section, and the P03 exit gate found ten tables and one function this document
+did not name — a hard failure under §11.5's own rule. Every public table and
+function is now named below, and a static check holds this section equal to
+the schema.
+
+Final set: **22** public tables and **16** public functions.
+
+The twenty-two names are `schema.sql`'s final `public` tables, after every
+`create table` and `drop table` in source order. Each is owned by `postgres`.
+Row level security is enabled on each. `FORCE ROW LEVEL SECURITY` is declared
+on none, so ownership remains the bypass this subsection records. PostgREST
+still connects as `authenticator` and, per §11b.3, cannot `SET ROLE` to
+`postgres`.
+
+| Table | Owner | RLS | FORCE |
+|---|---|---|---|
+| `activity_event` | `postgres` | enabled | off |
+| `asset_rendition` | `postgres` | enabled | off |
+| `brand` | `postgres` | enabled | off |
+| `brand_guideline` | `postgres` | enabled | off |
+| `brand_line` | `postgres` | enabled | off |
+| `brand_profile` | `postgres` | enabled | off |
+| `brand_theme` | `postgres` | enabled | off |
+| `color_value` | `postgres` | enabled | off |
+| `consent_grant` | `postgres` | enabled | off |
+| `invitation` | `postgres` | enabled | off |
+| `legal_entity` | `postgres` | enabled | off |
+| `logo_variant` | `postgres` | enabled | off |
+| `media_asset` | `postgres` | enabled | off |
+| `member` | `postgres` | enabled | off |
+| `membership` | `postgres` | enabled | off |
+| `onboarding_draft` | `postgres` | enabled | off |
+| `onboarding_draft_color` | `postgres` | enabled | off |
+| `operator` | `postgres` | enabled | off |
+| `tenant` | `postgres` | enabled | off |
+| `translation_entry` | `postgres` | enabled | off |
+| `translation_key` | `postgres` | enabled | off |
+| `typeface` | `postgres` | enabled | off |
 
 #### 11a.3 `service_role`, and what contains it
 
@@ -588,6 +636,15 @@ caller. Each is `security invoker`, `plpgsql`, owned by `postgres`, with
 `search_path` pinned to `''`. None is `security definer`. §11a.1's ten are
 unchanged by them, and the catalog total of definers is unchanged with it.
 
+**AMENDED 2026-10-09 — the sixth invoker.** The paragraph above stands
+(PR-07). `set_updated_at()` is the sixth public function that is not
+`security definer`. It is a trigger function, named in the table with the five
+cross-table writers. Those five remain the wizard write paths. The ten
+definers in §11a.1 stay ten, and the three platform definers in §11b.1 stay
+three, so the catalog total of definers stays thirteen. The public functions
+are those ten and these six, sixteen in all, which is the final set stated in
+§11a.2.
+
 | Function | `search_path` | Why it must not read past the caller's policies |
 |---|---|---|
 | `save_brand_name(text, text)` | `''` | Creates or updates the brand, its name key and entries, and the draft profile. The caller's brand policies are the whole of the permission |
@@ -595,11 +652,19 @@ unchanged by them, and the catalog total of definers is unchanged with it.
 | `save_legal_entity(text, text, text, text, text, text, text, text, text)` | `''` | Inserts or updates the legal entity and its keys. The owner-only policies on `legal_entity` are what refuse a Manager, and an invoker does not step around them |
 | `save_guideline(uuid, uuid, text, text, text, text, integer)` | `''` | Creates or updates one guideline and its keys. The guideline row is the last write, so a failed ordinal does not leave the keys behind |
 | `complete_onboarding(uuid)` | `''` | Checks `BRAND_CONFIG.md` §11 and the legal entity, then makes the profile current and archives the draft, or raises and changes nothing |
+| `set_updated_at()` | `''` | Trigger function. The create statement does not say `security definer`, so it runs as the caller. It assigns `NEW.updated_at` and returns the row, and it reads no table. `search_path` is pinned to `''`. `EXECUTE` is revoked from `public`, `anon`, `authenticated` and `service_role`; `postgres` holds it because it owns the function |
 
 `EXECUTE` on each is revoked from `public`, `anon` and `service_role`, and
 granted to `authenticated`. `postgres` holds `EXECUTE` because it owns them.
 An anonymous caller cannot execute any of the five. A caller who passes
 another tenant's id writes nothing, because the body never sees that row.
+
+**AMENDED 2026-10-09.** The sentence above stands (PR-07). `set_updated_at()`
+is revoked from `authenticated` as well as from `public`, `anon` and
+`service_role`, so an anonymous caller cannot execute it and a signed-in
+caller cannot call it as an RPC. `postgres` holds `EXECUTE` because it owns
+the function. The privilege is checked when each `{table}_set_updated_at`
+trigger is created, not when the trigger fires.
 
 ---
 

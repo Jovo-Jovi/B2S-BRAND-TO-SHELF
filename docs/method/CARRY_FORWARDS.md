@@ -4399,7 +4399,7 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       min-inline-size. min-inline-size: 0 on that fieldset lets it take
       the column. The reflow check's bound is unchanged.
       Owner: none outstanding.
-- [ ] CF-248 — SECURITY_MODEL.md §11a.2 still says all seven public tables.
+- [x] CF-248 — SECURITY_MODEL.md §11a.2 still says all seven public tables.
       The live catalog on staging and on production, both HTTP 201 on
       2026-10-06, has 22 public tables, every one owned by postgres, with
       row level security enabled and FORCE off. Ten of them are not named
@@ -4411,4 +4411,23 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       hard failure of that re-derivation. The document was not edited.
       Owner: **the next task that amends SECURITY_MODEL.md §11, before
       pull request #8 is marked ready**.
+      CLOSED (P03-GATE-FIX) — §11a.2 now names the twenty-two public tables
+      in schema.sql's final set, each owned by postgres, with row level
+      security enabled and FORCE off. §11a.1 and §11a.4 together name the
+      sixteen public functions, and set_updated_at() is the sixth that is
+      not security definer. scripts/check_security_model_catalog.py holds
+      the two equal in both directions. Re-derived live on staging and on
+      production, both HTTP 201 on 2026-10-09: zero unnamed public objects,
+      and the live catalogs equal schema.sql.
+      Owner: none outstanding.
+- [x] CF-249 — scripts/known-bad-fixtures.mjs carried a meta-viewport
+      document that no check read. The component tier builds the same meta
+      element inline, and removing the fixture changed nothing. The entry
+      is removed. The component exclusion stays, because a component root
+      cannot observe a page meta. The browser tier covers the rule: the
+      gallery spec's dedicated test, "a viewport that forbids zoom fails",
+      runs the same markup and expects the violation.
+      CLOSED (P03-GATE-FIX) — the unused fixture is gone. The exclusion
+      and the browser test stay.
+      Owner: none outstanding.
 

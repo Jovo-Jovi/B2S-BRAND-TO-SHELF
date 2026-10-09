@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 """The five wizard write paths are security invoker. P03-T22.
 
-schema.sql is the enumeration. SECURITY_MODEL.md §11a.4 is the stated list.
-A function in that list that is security definer, or a definer wearing one of
-these names, fails. The grant lines are part of the same enumeration: each
+schema.sql is the enumeration. SECURITY_MODEL.md §11a.4 names these five
+and may also name a public function that is not one of them.
+`set_updated_at()` is that extra row: a trigger function, not a wizard
+write path. This check requires the five to be present. The catalog check
+holds the whole public function set equal to the schema. A function in
+this list that is security definer, or a definer wearing one of these
+names, fails. The grant lines are part of the same enumeration: each
 function is revoked from public, anon and service_role, and granted to
 authenticated.
 
@@ -161,8 +165,9 @@ def main():
         die(f"{SCHEMA_REL} declares {len(found)} of the wizard write-path "
             f"function(s), minimum {MINIMUM_INVOKERS} (PR-27)")
 
-    if rows != FUNCTIONS:
-        fail(f"{DOC_REL} §11a.4 rows are {rows}, stated set is {FUNCTIONS}")
+    missing = [name for name in FUNCTIONS if name not in rows]
+    if missing:
+        fail(f"{DOC_REL} §11a.4 does not name wizard write path(s) {missing}")
     if sorted(found) != sorted(FUNCTIONS):
         fail(f"{SCHEMA_REL} wizard functions are {sorted(found)}, stated set "
              f"is {sorted(FUNCTIONS)}")
@@ -196,8 +201,9 @@ def main():
 
     print(
         f"OK: {DOC_REL} §11a.4 and {SCHEMA_REL} agree. "
-        f"{len(FUNCTIONS)} stated = {len(rows)} table row(s) = {len(found)} "
-        f"security invoker function(s) {FUNCTIONS}; "
+        f"the {len(FUNCTIONS)} wizard write path(s) are named among "
+        f"{len(rows)} §11a.4 row(s) and match {len(found)} security invoker "
+        f"function(s) {FUNCTIONS}; "
         f"{grant_blocks} grant block(s), each revoked from public, anon and "
         f"service_role and granted to authenticated; "
         f"minimum {MINIMUM_INVOKERS} function(s), minimum "

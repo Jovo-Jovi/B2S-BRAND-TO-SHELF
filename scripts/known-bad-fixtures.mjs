@@ -28,9 +28,4 @@ export const KNOWN_BAD_FIXTURES = [
     document:
       '<!doctype html><html lang="en"><head><title>T</title></head><body><main><h1>T</h1><p style="line-height:1.2 !important;letter-spacing:0.05em !important;word-spacing:0.05em !important">Locked</p></main></body></html>',
   },
-  {
-    id: "meta-viewport",
-    document:
-      '<!doctype html><html lang="en"><head><title>T</title><meta name="viewport" content="width=device-width, user-scalable=no"></head><body><main><h1>Page</h1></main></body></html>',
-  },
 ];

@@ -54,6 +54,9 @@ jobs:
       - name: SECURITY_MODEL §11a.1 bypass inventory against the schema (CF-132)
         run: python3 scripts/check_security_model_bypass.py
 
+      - name: SECURITY_MODEL §11a names every public table and function
+        run: python3 scripts/check_security_model_catalog.py
+
       - name: Wizard write paths are security invoker (P03-T22)
         run: python3 scripts/check_wizard_write_paths.py
 
