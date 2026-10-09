@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { expect, test, type Page } from "@playwright/test";
 import axe from "axe-core";
 
@@ -21,6 +22,7 @@ import {
   png,
   svg,
   teardownSynthetic,
+  PREFIX,
   type Member,
 } from "./onboarding-members";
 
@@ -52,7 +54,7 @@ test.afterAll(clean);
 async function signIn(page: Page, locale: "en" | "ar", member: Member): Promise<void> {
   const access = locale === "ar" ? ar.access : en.access;
   await page.goto(`/${locale}/sign-in?next=/${locale}/onboarding`);
-  const form = page.locator("form").first();
+  const form = page.locator('[role="tabpanel"]:not([hidden]) form').filter({ has: page.locator('input[name="email"]') });
   await form.locator('input[name="email"]').fill(member.email);
   await form.locator('input[name="password"]').fill(member.password);
   await form.getByRole("button", { name: access.signInSubmit }).click();
@@ -142,6 +144,7 @@ async function hold(page: Page, locale: "en" | "ar", screen: string): Promise<vo
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow, screen).toBeLessThanOrEqual(1);
   await expect(page.locator("html")).toHaveAttribute("dir", locale === "ar" ? "rtl" : "ltr");
+  await expect(page.getByRole("button", { name: copyFor(locale).signOut })).toBeVisible();
   const proof = page.locator("[data-proof-content]");
   if ((await proof.count()) > 0) {
     await expect(proof.first()).toHaveAttribute("dir", "ltr");
@@ -191,6 +194,7 @@ test("a member who is not the owner sees the pending screen", async ({ page, bro
   await viewerPage.goto("/en/onboarding/brand");
   await expect(viewerPage.locator("[data-screen=pending]")).toBeVisible();
   await expect(viewerPage.getByText(en.onboarding.pendingBody)).toBeVisible();
+  await expect(viewerPage.getByRole("button", { name: en.onboarding.signOut })).toBeVisible();
   await expect(viewerPage.locator('[data-composition="WizardStep"]')).toHaveCount(0);
   await context.close();
 });
@@ -613,4 +617,130 @@ for (const locale of LOCALES) {
     await page.goto(`/${locale}/onboarding`);
     await expect(page).toHaveURL(/\/onboarding\/complete/);
   });
+}
+
+function accessFor(locale: "en" | "ar") {
+  return locale === "ar" ? ar.access : en.access;
+}
+
+function credentialForm(page: Page) {
+  return page.locator('[role="tabpanel"]:not([hidden]) form').filter({ has: page.locator('input[name="email"]') });
+}
+
+async function holdEntry(page: Page, locale: "en" | "ar", screen: string): Promise<void> {
+  const violations = await runAxe(page);
+  expect(violations, screen).toEqual([]);
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  expect(overflow, screen).toBeLessThanOrEqual(1);
+  await expect(page.locator("html")).toHaveAttribute("dir", locale === "ar" ? "rtl" : "ltr");
+}
+
+for (const locale of LOCALES) {
+  test(`entry root and email sign-in ${locale}`, async ({ page }) => {
+    await page.goto(`/${locale}`);
+    await expect(page).toHaveURL(new RegExp(`/${locale}/sign-in`));
+
+    const member = await createMember(`door-${locale}`);
+    await signIn(page, locale, member);
+    await page.goto(`/${locale}`);
+    await expect(page).toHaveURL(new RegExp(`/${locale}/onboarding`));
+  });
+
+  test(`entry sign-up ${locale}`, async ({ page }) => {
+    const access = accessFor(locale);
+    const email = `${PREFIX}signup-${locale}-${randomUUID().slice(0, 8)}@example.com`;
+    const password = randomUUID();
+    await page.goto(`/${locale}/sign-in`);
+    await page.getByRole("tab", { name: access.signUpHeading }).click();
+    const form = credentialForm(page);
+    await form.locator('input[name="email"]').fill(email);
+    await form.locator('input[name="password"]').fill(password);
+    await form.getByRole("button", { name: access.signUpSubmit }).click();
+    await page.waitForURL((url) => {
+      const path = url.pathname;
+      return path.startsWith(`/${locale}/onboarding`) || path === `/${locale}/sign-in`;
+    });
+    expect(new URL(page.url()).searchParams.get("error")).toBeNull();
+  });
+
+  test(`entry refused sign-in ${locale}`, async ({ page }) => {
+    const access = accessFor(locale);
+    const member = await createMember(`refused-${locale}`);
+    await page.goto(`/${locale}/sign-in`);
+    const knownForm = credentialForm(page);
+    await knownForm.locator('input[name="email"]').fill(member.email);
+    await knownForm.locator('input[name="password"]').fill(`${member.password}-wrong`);
+    await knownForm.getByRole("button", { name: access.signInSubmit }).click();
+    await expect(page).toHaveURL(/error=sign_in_refused/);
+    const notice = page.locator('[data-tone="danger"][role="alert"]');
+    const known = (await notice.innerText()).replace(/\s+/g, " ").trim();
+    expect(known).toContain(access.sign_in_refused);
+    expect(known).not.toContain(member.email);
+
+    const unknown = `nobody-${randomUUID().slice(0, 8)}@example.com`;
+    await page.goto(`/${locale}/sign-in`);
+    const unknownForm = credentialForm(page);
+    await unknownForm.locator('input[name="email"]').fill(unknown);
+    await unknownForm.locator('input[name="password"]').fill(randomUUID());
+    await unknownForm.getByRole("button", { name: access.signInSubmit }).click();
+    await expect(page).toHaveURL(/error=sign_in_refused/);
+    const unknownText = (await page.locator('[data-tone="danger"][role="alert"]').innerText()).replace(/\s+/g, " ").trim();
+    expect(unknownText).toBe(known);
+    expect(unknownText).not.toContain(unknown);
+  });
+
+  test(`entry sign out ${locale}`, async ({ page }) => {
+    const member = await createMember(`out-${locale}`);
+    await signIn(page, locale, member);
+    await page.goto(`/${locale}/onboarding/welcome`);
+    await page.getByRole("button", { name: copyFor(locale).signOut }).click();
+    await expect(page).toHaveURL(new RegExp(`/${locale}/sign-in$`));
+    await page.goto(`/${locale}/onboarding/welcome`);
+    await expect(page).toHaveURL(new RegExp(`/${locale}/sign-in`));
+  });
+
+  test(`entry google ${locale}`, async ({ page }) => {
+    const raw = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (!raw) throw new Error("staging URL is absent");
+    const host = new URL(raw).hostname;
+    let seen = "";
+    await page.route("**/auth/v1/authorize**", async (route) => {
+      seen = route.request().url();
+      await route.fulfill({
+        status: 200,
+        contentType: "text/html",
+        body: "<!doctype html><title>held</title>",
+      });
+    });
+    await page.goto(`/${locale}/sign-in`);
+    await page.getByRole("button", { name: accessFor(locale).googleSubmit }).click();
+    await expect.poll(() => seen, { timeout: 30_000 }).not.toBe("");
+    const url = new URL(seen);
+    expect(url.hostname).toBe(host);
+    expect(url.pathname).toContain("/auth/v1/authorize");
+    expect(url.searchParams.get("provider")).toBe("google");
+  });
+}
+
+for (const locale of LOCALES) {
+  for (const theme of THEMES) {
+    for (const width of WIDTHS) {
+      test(`entry ${locale} ${theme} ${width}`, async ({ page }) => {
+        const access = accessFor(locale);
+        await page.setViewportSize({ width, height: 900 });
+        await page.emulateMedia({ colorScheme: theme === "dark" ? "dark" : "light" });
+        await page.goto(`/${locale}/sign-in`);
+        await expect(page.getByRole("tab", { name: access.signInHeading })).toBeVisible();
+        await expect(page.getByRole("button", { name: access.googleSubmit })).toBeVisible();
+        await expect(page.locator("img")).toHaveCount(0);
+        await holdEntry(page, locale, "sign-in");
+        await page.getByRole("tab", { name: access.signUpHeading }).click();
+        await expect(page.getByRole("button", { name: access.signUpSubmit })).toBeVisible();
+        await holdEntry(page, locale, "create");
+        await page.goto(`/${locale}/sign-in?error=sign_in_refused`);
+        await expect(page.locator('[data-tone="danger"][role="alert"]')).toContainText(access.sign_in_refused);
+        await holdEntry(page, locale, "refused");
+      });
+    }
+  }
 }

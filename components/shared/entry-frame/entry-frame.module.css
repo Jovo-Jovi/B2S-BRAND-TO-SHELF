@@ -1,0 +1,42 @@
+.canvas {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-block-size: 100vh;
+  padding-block: var(--b2s-space-5);
+  padding-inline: var(--b2s-space-5);
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  row-gap: var(--b2s-space-5);
+  inline-size: 100%;
+  max-inline-size: var(--b2s-measure-form);
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  column-gap: var(--b2s-space-3);
+  row-gap: var(--b2s-space-2);
+}
+
+.wordmark {
+  margin-block: 0;
+  margin-inline: 0;
+  font-family: var(--b2s-font-family);
+  font-weight: var(--b2s-weight-semibold);
+  color: var(--b2s-color-text);
+}
+
+.wordmark > :global(*) {
+  margin-block: 0;
+  margin-inline: 0;
+  font: inherit;
+  color: inherit;
+}

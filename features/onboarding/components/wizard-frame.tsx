@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 
 import { WizardStep, type WizardError, type WizardStepId } from "@/components/shared/wizard-step/wizard-step";
+import { SignOutControl } from "@/features/access/components/sign-out-control";
 
 import type { OnboardingCopy } from "./copy";
 import type { LocaleCode } from "../types";
@@ -73,6 +74,7 @@ export function WizardFrame({
         onStep={onStep}
         errors={errors}
         preview={preview}
+        signOut={<SignOutControl locale={locale} caption={copy.signOut} />}
       >
         {children}
       </WizardStep>

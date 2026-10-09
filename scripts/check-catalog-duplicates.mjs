@@ -14,15 +14,22 @@ const CATALOGS = [
 // P03-T13 adds gallery: 4. P03-T23 adds onboarding and measures 6.
 const MINIMUM_NAMESPACES = 6;
 
-// access.title is the page name. access.signInSubmit is the submit control.
-// They are the same words in both locales because that is the name of the
-// page and the name of the action. One key would make a button-label change
-// rewrite the document title.
+// access.title is the page name. access.signInHeading is the tab.
+// access.signInSubmit is the submit control. They are the same words in
+// both locales. One key would make a button-label change rewrite the tab
+// and the document title.
+// access.signUpHeading is the other tab. access.signUpSubmit is its
+// submit control. They are the same words for the same reason.
 const JUSTIFIED = [
   {
     namespace: "access",
-    keys: ["title", "signInSubmit"],
-    reason: "page name and submit control",
+    keys: ["signInHeading", "signInSubmit", "title"],
+    reason: "the tab, the submit control and the page name are the same words",
+  },
+  {
+    namespace: "access",
+    keys: ["signUpHeading", "signUpSubmit"],
+    reason: "the tab and the submit control are the same words",
   },
   {
     namespace: "gallery",

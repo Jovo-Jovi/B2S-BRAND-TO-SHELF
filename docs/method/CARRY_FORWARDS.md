@@ -4430,4 +4430,16 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       CLOSED (P03-GATE-FIX) — the unused fixture is gone. The exclusion
       and the browser test stay.
       Owner: none outstanding.
+- [x] CF-250 — The locale root was the P01 placeholder, and the sign-in
+      surface was the P02 form that P03 never rebuilt. The owner's
+      walkthrough found both. Neither was named in a P03 prompt.
+      CLOSED (P03-T26) by the locale root sending a signed-out visitor to
+      sign-in and a signed-in person through the onboarding gate, by
+      sign-in and account creation composed in EntryFrame from the catalog,
+      and by Sign out on the wizard, the pending screen and completion.
+      The inventoried authentication behaviour is unchanged.
+      Owner: none outstanding.
+- [ ] CF-251 — SCOPE.md module 01 names recovery. No password-reset flow
+      exists, and no control links to one.
+      Owner: **the owner, before the walkthrough**.
 

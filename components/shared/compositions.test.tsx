@@ -148,6 +148,7 @@ describe("compositions", () => {
         onSave={() => undefined}
         onStep={() => undefined}
         errors={[]}
+        signOut={<button type="button">Sign out</button>}
       >
         <p>Fields</p>
       </WizardStep>,
@@ -156,6 +157,7 @@ describe("compositions", () => {
     expect(html).toContain("Welcome");
     expect(html).toContain("Save and finish later");
     expect(html).toContain("Continue");
+    expect(html).toContain("Sign out");
     expect(html).not.toContain(">Back<");
     expect(html).not.toContain("Help");
     expect(html).not.toContain(">0<");

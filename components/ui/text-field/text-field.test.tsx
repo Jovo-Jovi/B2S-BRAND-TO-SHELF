@@ -26,7 +26,7 @@ describe("TextField", () => {
   });
 
   it("offers the declared variants and sizes", () => {
-    for (const variant of ["text", "email", "number", "identifier", "multiline"] as const) {
+    for (const variant of ["text", "email", "number", "identifier", "multiline", "password"] as const) {
       const html = renderToStaticMarkup(<TextField variant={variant} value="" />);
       expect(html).toContain(`data-variant="${variant}"`);
     }
@@ -47,6 +47,13 @@ describe("TextField", () => {
     expect(normaliseNumberInput("\u06f1\u06f2")).toBe("12");
     expect(normaliseNumberInput("\u06f1\u066b\u06f5")).toBe("1.5");
 
+    const password = renderToStaticMarkup(
+      <TextField variant="password" value="secret" name="password" autoComplete="current-password" required />,
+    );
+    expect(password).toContain('type="password"');
+    expect(password).toContain('autoComplete="current-password"');
+    expect(password).toContain("required");
+    expect(password).not.toContain('dir="ltr"');
     const email = renderToStaticMarkup(<TextField variant="email" value="a@b.c" />);
     expect(email).toContain('dir="ltr"');
     const identifier = renderToStaticMarkup(<TextField variant="identifier" value="SKU-1" />);

@@ -12,7 +12,7 @@ import {
 } from "./digits";
 import styles from "./text-field.module.css";
 
-export type TextFieldVariant = "text" | "email" | "number" | "identifier" | "multiline";
+export type TextFieldVariant = "text" | "email" | "number" | "identifier" | "multiline" | "password";
 export type TextFieldSize = "compact" | "comfortable";
 
 export type TextFieldVisual = "default" | "hover" | "focus" | "disabled" | "loading" | "error" | "empty";
@@ -35,6 +35,8 @@ type TextFieldProps = {
   loading?: boolean;
   id?: string;
   name?: string;
+  autoComplete?: string;
+  required?: boolean;
   dir?: "ltr" | "rtl";
   lang?: string;
   "aria-invalid"?: boolean;
@@ -60,6 +62,8 @@ export function TextField({
   loading = false,
   id,
   name,
+  autoComplete,
+  required,
   dir,
   lang,
   "aria-invalid": ariaInvalid,
@@ -102,6 +106,8 @@ export function TextField({
   const shared = {
     id: id ?? generatedId,
     name,
+    autoComplete,
+    required,
     className: classes(styles.input, variant === "multiline" && styles.multiline, variant === "number" && styles.number, (isolated || inputDir) && styles.isolate),
     value: current,
     placeholder,
@@ -128,7 +134,7 @@ export function TextField({
     <div>
       <div className={styles.root} data-variant={variant} data-state={visual} data-density={size} data-error-code={digitRejected ? IDENTIFIER_DIGIT_ERROR : undefined}>
         {prefix ? <span className={styles.affix}>{prefix}</span> : null}
-        {variant === "multiline" ? <textarea {...shared} /> : <input {...shared} type={variant === "email" ? "email" : "text"} />}
+        {variant === "multiline" ? <textarea {...shared} /> : <input {...shared} type={variant === "email" ? "email" : variant === "password" ? "password" : "text"} />}
         {loading ? <Spinner state="loading" /> : null}
         {suffix ? <span className={styles.affix}>{suffix}</span> : null}
         {clearAccessibleName ? (

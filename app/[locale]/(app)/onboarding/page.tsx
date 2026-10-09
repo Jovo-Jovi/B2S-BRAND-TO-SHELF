@@ -16,7 +16,7 @@ export default async function OnboardingIndex({ params, searchParams }: PageProp
   if (!entered) notFound();
   if (entered.decision.type === "redirect") redirect(themedHref(entered.decision.href, entered.theme));
   if (entered.decision.screen === "pending") {
-    return <NamedScreen copy={entered.copy} />;
+    return <NamedScreen copy={entered.copy} locale={entered.locale} />;
   }
   redirect(themedHref(`/${entered.locale}/onboarding/${entered.decision.screen}`, entered.theme));
 }

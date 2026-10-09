@@ -143,7 +143,10 @@ ELLIPSIS = "\u2026"
 
 FIELD_LABELS = ["Exit standard", "Entry", "Exit, additionally"]
 
-GATE_RE = re.compile(r"^P0*(\d+)-GATE\b", re.I)
+# The exit row is exactly Pnn-GATE. A later Pnn-GATE-FIX shares the prefix,
+# and a word boundary after GATE matches that hyphen, so a PASS on the fix
+# would mark the phase done while the exit row itself is still FAIL.
+GATE_RE = re.compile(r"^P0*(\d+)-GATE$", re.I)
 
 # Task 2 (P02-T11) — a log summary's clause is cut at the first sentence
 # terminator, never at an arbitrary character offset: this repository's own

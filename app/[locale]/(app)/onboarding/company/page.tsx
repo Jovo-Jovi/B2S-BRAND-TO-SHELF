@@ -17,7 +17,7 @@ export default async function CompanyPage({ params, searchParams }: PageProps) {
   const entered = await enter(locale, "company", query.theme);
   if (!entered) notFound();
   if (entered.decision.type === "redirect") redirect(themedHref(entered.decision.href, entered.theme));
-  if (entered.decision.screen === "pending") return <NamedScreen copy={entered.copy} />;
+  if (entered.decision.screen === "pending") return <NamedScreen copy={entered.copy} locale={entered.locale} />;
   if (entered.decision.screen !== "company") redirect(themedHref(`/${entered.locale}/onboarding`, entered.theme));
 
   const [values, snapshot] = await Promise.all([

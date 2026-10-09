@@ -486,7 +486,7 @@ tokens: [field-gap, text-sm, color-text, color-text-muted, color-text-subtle, co
 ```component
 name: TextField
 parts: [container, prefix?, input, suffix?, clear_action?]
-variants: [text, email, number, identifier, multiline]
+variants: [text, email, number, identifier, multiline, password]
 sizes: [compact, comfortable]
 states:
   default: surface fill, border-control boundary, radius-md
@@ -508,6 +508,8 @@ tokens: [control-height, control-padding-inline, radius-md, color-surface, color
 **`identifier`** — SKUs, GTINs, batch and invoice numbers. **Never normalised and never re-digited.** A scanned code has to match what is printed character for character, so every digit in U+0660–U+0669 and U+06F0–U+06F9 typed into an identifier is refused with the named error — "Use the digits 0 to 9" — rather than silently converted. The Extended Arabic-Indic range adopts P03-T09's choice.
 
 **`multiline`** — grows with content to eight rows (`--b2s-multiline-rows-max`), from a floor of three (`--b2s-multiline-rows-min`), then scrolls. Guideline bodies use it through `BilingualField`.
+
+**`password`** — a native password input. It is not re-digited, and it is not isolated to one direction. Sign-in and account creation use it.
 
 ### BilingualField
 
@@ -988,12 +990,16 @@ What failed, in plain words; what to do next; a retry action; and the request id
 
 ### WizardStep
 
-The wizard renders in its own frame, not AppShell — nothing in the navigation exists before onboarding completes. The frame's header carries the platform mark, the stepper and the language switch. It carries no help control in Release 1: help was named without a behaviour, and a control that does nothing is worse than none. It returns when there is help content to show. WizardStep gains an optional preview region: at `lg` and above, an inline-end column on `sunken` with a `border-inline-start`, the form capped at `measure-form`; below `lg`, the preview precedes the form with its proof at `proof-height-narrow`, not sticky.
+The wizard renders in its own frame, not AppShell — nothing in the navigation exists before onboarding completes. The frame's header carries the platform mark, the stepper and the language switch. The header's inline end carries a quiet Button "Sign out", which ends the session and returns to sign-in. It is the frame's only header action in Release 1. It carries no help control in Release 1: help was named without a behaviour, and a control that does nothing is worse than none. It returns when there is help content to show. WizardStep gains an optional preview region: at `lg` and above, an inline-end column on `sunken` with a `border-inline-start`, the form capped at `measure-form`; below `lg`, the preview precedes the form with its proof at `proof-height-narrow`, not sticky.
 
 - **Stepper:** numbered, because onboarding genuinely is a sequence. It numbers Brand to Review, five steps. Welcome precedes the stepper and is not numbered (`BRAND_CONFIG.md` §10 amendment). Steps are completed, current or upcoming. Completed steps are reachable; upcoming ones are not until reached. Progress is also stated in text — "Step 2 of 5" — so it is never carried by the graphic alone.
 - **Body:** a step title at `3xl`, one sentence of purpose, then one or more `FormSection`s.
 - **Footer:** the actions are set per screen, never all three by default. Welcome shows Continue only. Brand, the first numbered step, shows Save and finish later and Continue, with no Back, because once Welcome has provisioned the business the gate never returns anyone to it. Typography, Company and Guidelines show Back, Save and finish later and Continue. Review shows Back and Finish setup. Back is `quiet` at inline-start. Save and finish later is `secondary`. Continue and Finish setup are `primary` at inline-end. The wizard is resumable (`BRAND_CONFIG.md` §10).
 - **Validation on Continue:** an error summary appears at the top, lists each problem as a link to its field, and takes focus. Each field also shows its own error. Input is always preserved.
+
+### EntryFrame
+
+The frame for screens a person sees before they belong to a business. It holds the platform's name as a wordmark in the platform face (`--b2s-font-family`), with no new logo asset; a TextLink to the same screen in the other language; and one column at the form measure (`--b2s-measure-form`), centred on the canvas. At 360 CSS pixels the column fills the width inside `space-5` margins. It carries no tenant brand, ever (OD-G24).
 
 ---
 
@@ -1110,6 +1116,12 @@ Every screen renders in WizardStep's own frame (§7). Welcome is unnumbered; ste
 **Completion** — confirms that setup is complete and shows the current brand in the preview. It states nothing about features that do not yet exist. The dashboard is module 22 and is not built in P03.
 
 **Resume** — an owner who returns with an unarchived draft lands on the draft's step, with every saved answer in place.
+
+## 14. The entry screens
+
+**Root** — until the public site exists (OD-A8, P08), the locale root shows nothing of its own: a signed-out visitor goes to sign-in, and a signed-in person goes wherever the onboarding gate sends them.
+
+**Sign in** — one screen in EntryFrame, with Tabs for "Sign in" and "Create account". Each tab holds a secondary Button "Continue with Google", in text only and with no third-party logo drawn; a divider reading "or"; an email TextField and a password TextField, each in Field with its label and error; and a primary Button. Field errors are inline. A failed sign-in is a danger Notice that never reveals whether an email address has an account (`SECURITY_MODEL.md` §2). Identity refused renders as a danger Notice. A cancelled Google sign-in renders as an info Notice. A sign-up the server accepts redirects to the locale root and shows no confirmation message: the catalogs have none.
 
 ## Corrections
 
@@ -1406,3 +1418,19 @@ The header carries no help control in Release 1. The footer's actions are set pe
 **2026-10-04 — P03-T24.** §11 Brand's footer included Back to Welcome. Prior clause: `Footer: Back to Welcome, Save and finish later, Continue.` The footer is Save and finish later, Continue. Once Welcome has provisioned the business, the gate never returns anyone to it.
 
 **2026-10-04 — P03-T24.** §13 Review sent the owner to the dashboard. Prior ending: `On success the profile becomes current, the draft is archived, and the owner arrives at the dashboard.` On success the owner arrives at the wizard's completion screen. The completion screen confirms setup is complete and shows the current brand in the preview. It states nothing about features that do not yet exist. The dashboard is module 22 and is not built in P03.
+
+**2026-10-09 — P03-T26.** §7 gained EntryFrame. There is no prior text.
+
+**2026-10-09 — P03-T26.** §14, The entry screens, is new. There is no prior text.
+
+**2026-10-09 — P03-T26.** WizardStep's header did not carry Sign out. Prior text:
+
+`The wizard renders in its own frame, not AppShell — nothing in the navigation exists before onboarding completes. The frame's header carries the platform mark, the stepper and the language switch. It carries no help control in Release 1: help was named without a behaviour, and a control that does nothing is worse than none. It returns when there is help content to show.`
+
+The header's inline end carries a quiet Button that signs out. It is the frame's only header action in Release 1. It still carries no help control.
+
+**2026-10-09 — P03-T26.** TextField gained a password variant. Prior variants line:
+
+`variants: [text, email, number, identifier, multiline]`
+
+Password is a native input type. It is not re-digited.

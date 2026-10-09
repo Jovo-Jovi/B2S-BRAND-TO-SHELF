@@ -52,7 +52,7 @@ enumerate every file, and the check does not pretend otherwise.
 app/                              route surface only, thin
   [locale]/
     dictionaries.ts
-    page.tsx                      placeholder until the public site, P08 (OD-A8)
+    page.tsx                      locale root redirects; the public site is P08 (OD-A8)
     dictionaries/                 locale resolution, dictionary loading
     (public)/                     unauthenticated
       sign-in/                    email-and-password and Google (OD-G13)
@@ -142,6 +142,7 @@ components/                       the design-surface catalog
     empty-state/                  EmptyState
     error-state/                  ErrorState
     wizard-step/                  WizardStep
+    entry-frame/                  EntryFrame
 
 lib/
   supabase/

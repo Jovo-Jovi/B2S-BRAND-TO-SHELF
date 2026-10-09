@@ -28,12 +28,16 @@ export const signInSchema = z.preprocess(credentialsFromUnknown, credentialsObje
 
 export const signUpSchema = z.preprocess(credentialsFromUnknown, credentialsObject);
 
-export const googleSignInSchema = z.preprocess((raw: unknown) => {
+function localeFromForm(raw: unknown): unknown {
   if (typeof FormData !== "undefined" && raw instanceof FormData) {
     return { locale: String(raw.get("locale") ?? "") };
   }
   return raw;
-}, z.object({ locale: localeSchema }));
+}
+
+export const googleSignInSchema = z.preprocess(localeFromForm, z.object({ locale: localeSchema }));
+
+export const signOutSchema = z.preprocess(localeFromForm, z.object({ locale: localeSchema }));
 
 export const oauthCallbackSchema = z.object({
   locale: localeSchema,

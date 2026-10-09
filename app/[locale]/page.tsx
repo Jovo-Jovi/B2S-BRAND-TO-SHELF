@@ -1,9 +1,13 @@
-import { notFound } from "next/navigation";
-import { getDictionary, hasLocale } from "./dictionaries";
+import { notFound, redirect } from "next/navigation";
+
+import { hasLocale, type Locale } from "./dictionaries";
+import { resolveOnboarding } from "@/features/onboarding/resolve";
 
 type LocalePageProps = {
   params: Promise<{ locale: string }>;
 };
+
+export const dynamic = "force-dynamic";
 
 export default async function LocalePage({ params }: LocalePageProps) {
   const { locale } = await params;
@@ -12,12 +16,10 @@ export default async function LocalePage({ params }: LocalePageProps) {
     notFound();
   }
 
-  const dictionary = await getDictionary(locale);
-
-  return (
-    <main>
-      <h1>{dictionary.shell.title}</h1>
-      <p>{dictionary.shell.description}</p>
-    </main>
-  );
+  const typed: Locale = locale;
+  const decision = await resolveOnboarding(typed, "index");
+  if (decision.type === "redirect") {
+    redirect(decision.href);
+  }
+  redirect(`/${typed}/onboarding`);
 }

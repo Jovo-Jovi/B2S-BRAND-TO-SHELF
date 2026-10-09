@@ -27,6 +27,7 @@ import { TextField, type TextFieldVisual } from "@/components/ui/text-field/text
 import { TextLink, type TextLinkVisual } from "@/components/ui/text-link/text-link";
 import { Tooltip, type TooltipVisual } from "@/components/ui/tooltip/tooltip";
 import { AppShell } from "@/components/shared/app-shell/app-shell";
+import { EntryFrame } from "@/components/shared/entry-frame/entry-frame";
 import { EmptyState } from "@/components/shared/empty-state/empty-state";
 import { ErrorState } from "@/components/shared/error-state/error-state";
 import { FilteredDataTable } from "@/components/shared/filtered-data-table/filtered-data-table";
@@ -536,6 +537,13 @@ export function Gallery({ locale, theme, copy, data }: GalleryProps) {
     >
       <ThemeAttribute theme={theme} />
       <h1>{copy.title}</h1>
+      <EntryFrame
+        wordmark={<p>{copy.compositionPlatformMark}</p>}
+        localeHref={`/${other}/gallery?theme=${theme}`}
+        localeCaption={other === "ar" ? copy.localeAr : copy.localeEn}
+      >
+        <p>{copy.compositionPurpose}</p>
+      </EntryFrame>
       <BrandStep locale={locale} copy={copy} otherLocale={other} />
       <TypographyStep locale={locale} copy={copy} otherLocale={other} />
       <FilteredDataTable

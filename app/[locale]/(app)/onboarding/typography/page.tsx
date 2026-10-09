@@ -17,7 +17,7 @@ export default async function TypographyPage({ params, searchParams }: PageProps
   const entered = await enter(locale, "typography", query.theme);
   if (!entered) notFound();
   if (entered.decision.type === "redirect") redirect(themedHref(entered.decision.href, entered.theme));
-  if (entered.decision.screen === "pending") return <NamedScreen copy={entered.copy} />;
+  if (entered.decision.screen === "pending") return <NamedScreen copy={entered.copy} locale={entered.locale} />;
   if (entered.decision.screen !== "typography") redirect(themedHref(`/${entered.locale}/onboarding`, entered.theme));
 
   const snapshot = await readBrandSnapshot({

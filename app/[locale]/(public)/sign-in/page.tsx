@@ -27,6 +27,8 @@ function returnPathFromSearch(raw: string | string[] | undefined): string | unde
   return value;
 }
 
+export const dynamic = "force-dynamic";
+
 export default async function SignInPage({ params, searchParams }: SignInPageProps) {
   const { locale } = await params;
   if (!hasLocale(locale)) {
@@ -36,16 +38,28 @@ export default async function SignInPage({ params, searchParams }: SignInPagePro
   const dictionary = await getDictionary(locale);
   const query = await searchParams;
   const typedLocale: Locale = locale;
+  const other: Locale = typedLocale === "en" ? "ar" : "en";
+  const errorKey = errorFromSearch(query.error);
+  const returnPath = returnPathFromSearch(query.next);
+  const preserved = new URLSearchParams();
+  if (errorKey) preserved.set("error", errorKey);
+  if (returnPath) preserved.set("next", returnPath);
+  const suffix = preserved.size > 0 ? `?${preserved.toString()}` : "";
 
   return (
-    <SignInView
-      dictionary={dictionary.access}
-      errorKey={errorFromSearch(query.error)}
-      locale={typedLocale}
-      returnPath={returnPathFromSearch(query.next)}
-      signInAction={signInWithPassword}
-      signUpAction={signUpWithPassword}
-      googleAction={signInWithGoogle}
-    />
+    <main>
+      <SignInView
+        dictionary={dictionary.access}
+        errorKey={errorKey}
+        locale={typedLocale}
+        returnPath={returnPath}
+        wordmark={<h1>{dictionary.onboarding.mark}</h1>}
+        localeHref={`/${other}/sign-in${suffix}`}
+        localeCaption={other === "ar" ? dictionary.onboarding.localeAr : dictionary.onboarding.localeEn}
+        signInAction={signInWithPassword}
+        signUpAction={signUpWithPassword}
+        googleAction={signInWithGoogle}
+      />
+    </main>
   );
 }

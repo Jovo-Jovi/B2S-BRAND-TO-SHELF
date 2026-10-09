@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import type en from "../../dictionaries/en.json";
 import { BrandFrame } from "@/components/ui/brand-frame/brand-frame";
+import { Button } from "@/components/ui/button/button";
 import { Field } from "@/components/ui/field/field";
 import { FormSection } from "@/components/shared/form-section/form-section";
 import { Select } from "@/components/ui/select/select";
@@ -178,6 +179,11 @@ export function TypographyStep({ locale, copy, otherLocale }: TypographyStepProp
         onSave={() => undefined}
         onStep={() => undefined}
         errors={errors}
+        signOut={
+          <Button type="button" variant="quiet">
+            {copy.compositionSignOut}
+          </Button>
+        }
         preview={
           <>
             <p>{copy.fictionalSample}</p>

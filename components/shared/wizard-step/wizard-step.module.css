@@ -93,6 +93,10 @@
   margin-inline-start: auto;
 }
 
+.signOut {
+  margin-inline-start: auto;
+}
+
 .summary {
   color: var(--b2s-color-text);
   background-color: var(--b2s-color-canvas);

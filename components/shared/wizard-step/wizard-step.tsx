@@ -37,6 +37,7 @@ type WizardStepProps = {
   onStep: (step: WizardStepId) => void;
   errors: WizardError[];
   preview?: ReactNode;
+  signOut: ReactNode;
   children: ReactNode;
 };
 
@@ -66,6 +67,7 @@ export function WizardStep({
   onStep,
   errors,
   preview,
+  signOut,
   children,
 }: WizardStepProps) {
   const summaryRef = useRef<HTMLDivElement>(null);
@@ -126,6 +128,7 @@ export function WizardStep({
           );
         })}
         </ol>
+        <div className={styles.signOut}>{signOut}</div>
       </header>
       <div className={styles.layout}>
         <div className={styles.formColumn}>

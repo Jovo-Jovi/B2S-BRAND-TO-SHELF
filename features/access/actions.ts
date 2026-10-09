@@ -16,6 +16,7 @@ import {
   googleSignInSchema,
   oauthCallbackSchema,
   signInSchema,
+  signOutSchema,
   signUpSchema,
   type AccessErrorKey,
 } from "./schema";
@@ -143,4 +144,19 @@ export async function completeOAuthCallback(input: unknown) {
   }
 
   redirect(homePath(parsed.data.locale));
+}
+
+export async function signOut(input: unknown) {
+  const parsed = signOutSchema.safeParse(input);
+  if (!parsed.success) {
+    redirect(signInPath(localeFromInput(input), zodErrorKey(parsed.error)));
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const result = await supabase.auth.signOut();
+  if (result.error) {
+    throw new Error("sign-out could not be completed");
+  }
+
+  redirect(`/${parsed.data.locale}/sign-in`);
 }

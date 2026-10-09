@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import type en from "../../dictionaries/en.json";
 import { BrandFrame } from "@/components/ui/brand-frame/brand-frame";
+import { Button } from "@/components/ui/button/button";
 import { BilingualField } from "@/components/ui/bilingual-field/bilingual-field";
 import { byteUnits } from "@/components/ui/data-catalog";
 import { ColorField } from "@/components/ui/color-field/color-field";
@@ -207,6 +208,11 @@ export function BrandStep({ locale, copy, otherLocale }: BrandStepProps) {
         onSave={() => undefined}
         onStep={() => undefined}
         errors={errors}
+        signOut={
+          <Button type="button" variant="quiet">
+            {copy.compositionSignOut}
+          </Button>
+        }
         preview={
           <>
             <p>{copy.fictionalSample}</p>

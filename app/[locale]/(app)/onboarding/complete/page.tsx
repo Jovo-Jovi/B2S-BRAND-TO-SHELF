@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 
+import { SignOutControl } from "@/features/access/components/sign-out-control";
 import { CompletionScreen } from "@/features/onboarding/components/completion-screen";
 import { NamedScreen } from "@/features/onboarding/components/named-screen";
 import { themedHref } from "@/features/onboarding/destination";
@@ -17,7 +18,7 @@ export default async function CompletePage({ params, searchParams }: PageProps) 
   const entered = await enter(locale, "complete", query.theme);
   if (!entered) notFound();
   if (entered.decision.type === "redirect") redirect(themedHref(entered.decision.href, entered.theme));
-  if (entered.decision.screen === "pending") return <NamedScreen copy={entered.copy} />;
+  if (entered.decision.screen === "pending") return <NamedScreen copy={entered.copy} locale={entered.locale} />;
 
   const snapshot = await readBrandSnapshot({
     background: entered.copy.startingBackground,
@@ -28,6 +29,7 @@ export default async function CompletePage({ params, searchParams }: PageProps) 
 
   return (
     <main>
+      <SignOutControl locale={entered.locale} caption={entered.copy.signOut} />
       <h1>{entered.copy.completeTitle}</h1>
       <CompletionScreen copy={entered.copy} snapshot={snapshot} />
     </main>

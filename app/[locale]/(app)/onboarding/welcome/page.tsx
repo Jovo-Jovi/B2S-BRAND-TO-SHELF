@@ -16,7 +16,7 @@ export default async function WelcomePage({ params, searchParams }: PageProps) {
   const entered = await enter(locale, "welcome", query.theme);
   if (!entered) notFound();
   if (entered.decision.type === "redirect") redirect(themedHref(entered.decision.href, entered.theme));
-  if (entered.decision.screen === "pending") return <NamedScreen copy={entered.copy} />;
+  if (entered.decision.screen === "pending") return <NamedScreen copy={entered.copy} locale={entered.locale} />;
   if (entered.decision.screen !== "welcome") redirect(themedHref(`/${entered.locale}/onboarding`, entered.theme));
 
   return (

@@ -4,6 +4,7 @@ import {
   googleSignInSchema,
   oauthCallbackSchema,
   signInSchema,
+  signOutSchema,
   signUpSchema,
 } from "../schema";
 
@@ -57,6 +58,17 @@ describe("access schemas", () => {
   it("accepts a Google sign-in locale", () => {
     const result = googleSignInSchema.safeParse({ locale: "en" });
     expect(result.success).toBe(true);
+  });
+
+  it("accepts a sign-out locale from FormData and rejects any other locale", () => {
+    const formData = new FormData();
+    formData.set("locale", "ar");
+    const accepted = signOutSchema.safeParse(formData);
+    expect(accepted.success).toBe(true);
+    if (accepted.success) {
+      expect(accepted.data.locale).toBe("ar");
+    }
+    expect(signOutSchema.safeParse({ locale: "fr" }).success).toBe(false);
   });
 
   it("accepts an OAuth callback with a code and no error", () => {

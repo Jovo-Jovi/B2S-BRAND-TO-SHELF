@@ -1057,3 +1057,8 @@ examined. Closes CF-247.
   isolation then skipped. Re-run the push isolation after that
   pull-request run has finished. A draft pull request does not itself
   prove the suite.
+- Learned at P03-T26: `generate_roadmap.py`'s phase-status pattern was
+  `^P0*(\d+)-GATE\b`. The boundary matches the hyphen in `P03-GATE-FIX`,
+  so a PASS on that row marked P03 done while `P03-GATE` itself stayed
+  FAIL and the roadmap check then found no open phase. The pattern is
+  now `^P0*(\d+)-GATE$`. Only the exit row closes the phase.
