@@ -60,6 +60,7 @@ app/                              route surface only, thin
       invitation/                 accept — deferred, P02
       gallery/                    catalog gallery — refused when the deployment is production
       error-probe/                throws on request so the error record can be proved — refused when the deployment is production
+      wiring/                     deployment environment and Supabase project ref — refused when the deployment is production
       privacy/                    privacy policy — deferred, P08 (OD-A8)
       terms/                      terms of service — deferred, P08 (OD-A8)
     (app)/                        authenticated tenant surface
