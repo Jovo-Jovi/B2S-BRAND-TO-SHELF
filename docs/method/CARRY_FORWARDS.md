@@ -4472,4 +4472,13 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       project ref, both public. The current preview names the staging
       project.
       Owner: none outstanding.
+- [ ] CF-255 — One onboarding request can wait tens of seconds on a single
+      upstream call after the socket has already connected. The connect is
+      a few milliseconds. The calls beside it in the same request stay under
+      200 ms. Supabase does not answer 429, and the session is not refreshed.
+      Opening a new socket and closing it cleanly did not remove the wait.
+      At human pace on the clean-close preview the bound was missed: brand
+      median 1353 ms, p95 4620, max 33865, six of fifty over 3 s; guidelines
+      max 58689. A retry or a longer timeout would hide the wait.
+      Owner: **the reviewer**.
 
