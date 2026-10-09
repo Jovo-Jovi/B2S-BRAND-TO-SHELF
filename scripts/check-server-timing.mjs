@@ -15,9 +15,11 @@ const WRITERS = [
   "lib/observability/phase-timing.ts",
   "lib/supabase/session.ts",
 ];
+const READERS = ["scripts/measure-onboarding-tail.mjs"];
 const ALLOWED = new Set([
   MODULE,
   ...WRITERS,
+  ...READERS,
   "scripts/check-server-timing.mjs",
   "__tests__/server-timing.test.ts",
 ]);
@@ -90,6 +92,13 @@ for (const writer of WRITERS) {
   }
   if (!text.includes("serverTimingHeader")) {
     fail(`${writer} sets timings without the production gate`);
+  }
+}
+
+for (const reader of READERS) {
+  const text = read(reader);
+  if (text !== null && text.includes("serverTimingHeader")) {
+    fail(`${reader} produces the timing header; only the gated writers may`);
   }
 }
 

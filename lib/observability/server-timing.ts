@@ -39,6 +39,14 @@ export type PhaseSample = {
 const ALLOWED = new Set<string>(PHASES);
 const METRIC = /^([a-z0-9-]+);dur=(\d+\.\d+)$/;
 
+function oneDecimal(value: number): string {
+  const scaled = Math.round(value * 10);
+  const absolute = Math.abs(scaled);
+  const whole = Math.floor(absolute / 10);
+  const fraction = absolute % 10;
+  return `${scaled < 0 ? "-" : ""}${whole}.${fraction}`;
+}
+
 export function serverTimingHeader(
   env: string | undefined,
   samples: readonly PhaseSample[],
@@ -48,7 +56,7 @@ export function serverTimingHeader(
   for (const sample of samples) {
     if (!ALLOWED.has(sample.name)) continue;
     if (!Number.isFinite(sample.dur) || sample.dur < 0) continue;
-    parts.push(`${sample.name};dur=${sample.dur.toFixed(1)}`);
+    parts.push(`${sample.name};dur=${oneDecimal(sample.dur)}`);
   }
   if (parts.length === 0) return null;
   return parts.join(", ");
