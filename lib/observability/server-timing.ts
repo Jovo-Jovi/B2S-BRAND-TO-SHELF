@@ -26,6 +26,7 @@ export const PHASES = [
   "review-wave",
   "render",
   "wall",
+  "tcp",
   "http-429",
 ] as const;
 

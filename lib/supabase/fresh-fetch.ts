@@ -1,7 +1,7 @@
 import https from "node:https";
 import type { IncomingHttpHeaders } from "node:http";
 
-import { noteUpstreamDenied } from "@/lib/observability/phase-timing";
+import { noteConnect, noteUpstreamDenied } from "@/lib/observability/phase-timing";
 
 // An idle socket kept for the next call is often already closed at the other
 // end. Reusing it waits out a TCP timeout, which is one call taking tens of
@@ -75,6 +75,7 @@ function once(
       settled = true;
       fn();
     };
+    const opened = performance.now();
     const req = https.request(
       {
         protocol: url.protocol,
@@ -89,7 +90,6 @@ function once(
         const chunks: Buffer[] = [];
         incoming.on("data", (chunk: Buffer) => chunks.push(chunk));
         incoming.on("end", () => {
-          incoming.socket?.destroy();
           finish(() => {
             resolve(
               new Response(Buffer.concat(chunks), {
@@ -110,6 +110,11 @@ function once(
       finish(() => reject(error instanceof Error ? error : new Error("fresh fetch failed")));
     };
     req.on("error", fail);
+    req.on("socket", (socket) => {
+      const mark = () => noteConnect(performance.now() - opened);
+      if (socket.connecting) socket.once("connect", mark);
+      else mark();
+    });
     if (signal) {
       const onAbort = () => {
         fail(signal.reason instanceof Error ? signal.reason : new Error("fresh fetch aborted"));

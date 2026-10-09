@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-import { deniedCount, runWithPhases } from "@/lib/observability/phase-timing";
+import { connectDur, deniedCount, runWithPhases } from "@/lib/observability/phase-timing";
 import { serverTimingHeader } from "@/lib/observability/server-timing";
 import type { Database } from "@/types/database";
 
@@ -59,6 +59,8 @@ async function update(
       ];
       const denied = deniedCount();
       if (denied > 0) samples.push({ name: "http-429", dur: denied });
+      const tcp = connectDur();
+      if (tcp > 0) samples.push({ name: "tcp", dur: tcp });
       const header = serverTimingHeader(process.env.VERCEL_ENV, samples);
       if (header) response.headers.set("Server-Timing", header);
     }
