@@ -2,6 +2,8 @@ import "server-only";
 
 import { getDictionary, hasLocale, type Locale } from "@/app/[locale]/dictionaries";
 
+import { closePhases } from "@/lib/observability/phase-timing";
+
 import { resolveOnboarding } from "./resolve";
 import type { GateDecision, RequestedScreen } from "./types";
 
@@ -25,12 +27,16 @@ export async function enter<T = null>(
   theme: "light" | "dark" | null;
   loaded: T;
 } | null> {
-  if (!hasLocale(localeRaw)) return null;
-  const dictionary = await getDictionary(localeRaw);
-  const copy = dictionary.onboarding;
-  const [decision, loaded] = await Promise.all([
-    resolveOnboarding(localeRaw, requested),
-    load ? load(copy) : Promise.resolve(null as T),
-  ]);
-  return { locale: localeRaw, decision, copy, theme: themeFrom(themeRaw), loaded };
+  try {
+    if (!hasLocale(localeRaw)) return null;
+    const dictionary = await getDictionary(localeRaw);
+    const copy = dictionary.onboarding;
+    const [decision, loaded] = await Promise.all([
+      resolveOnboarding(localeRaw, requested),
+      load ? load(copy) : Promise.resolve(null as T),
+    ]);
+    return { locale: localeRaw, decision, copy, theme: themeFrom(themeRaw), loaded };
+  } finally {
+    closePhases();
+  }
 }

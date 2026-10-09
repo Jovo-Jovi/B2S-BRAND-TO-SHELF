@@ -1,5 +1,6 @@
 import "server-only";
 
+import { timePhase } from "@/lib/observability/phase-timing";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 import { completenessGaps } from "./completeness";
@@ -61,10 +62,12 @@ export async function readGuidelineForm(): Promise<GuidelineValues[]> {
 export async function readReviewModel(): Promise<ReviewModel> {
   const supabase = await createSupabaseServerClient();
   const profileId = await latestProfileId(supabase);
-  const [legal, guidelines, input] = await Promise.all([
-    readLegal(supabase),
-    readGuidelines(supabase, profileId),
-    readCompleteness(supabase, profileId),
-  ]);
+  const [legal, guidelines, input] = await timePhase("review-wave", () =>
+    Promise.all([
+      readLegal(supabase),
+      readGuidelines(supabase, profileId),
+      readCompleteness(supabase, profileId),
+    ]),
+  );
   return { legal, guidelines, gaps: completenessGaps(input) };
 }

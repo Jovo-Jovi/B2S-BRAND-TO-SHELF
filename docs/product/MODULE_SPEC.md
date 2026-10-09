@@ -159,6 +159,9 @@ lib/
     store-logo.ts                 the upload path, wired to no route — P03-T20
   observability/                  the unhandled-error record, OD-H13 — P03
     server-error-line.ts          one redacted line; the only writer of that record
+    server-timing.ts              phase durations only; absent in production — P03
+    phase-timing.ts               records those durations for one request
+    install-phase-timing.ts       publishes them on a non-production response
   money/                          exact decimal, ADR-011 — deferred, P05
   print/                          the print engine, ADR-009 — deferred, P06
 

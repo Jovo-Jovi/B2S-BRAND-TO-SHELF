@@ -2,6 +2,7 @@ import "server-only";
 
 import { redirect } from "next/navigation";
 
+import { timePhase } from "@/lib/observability/phase-timing";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 import { decide } from "./destination";
@@ -18,8 +19,8 @@ function isResume(value: string): value is ResumeStep {
 export async function readOnboardingState(): Promise<GateState> {
   const supabase = await createSupabaseServerClient();
   const [auth, tenant] = await Promise.all([
-    supabase.auth.getUser(),
-    supabase.rpc("current_tenant_id"),
+    timePhase("gate-user", () => supabase.auth.getUser()),
+    timePhase("gate-tenant", () => supabase.rpc("current_tenant_id")),
   ]);
   if (!auth.data.user) return { kind: "anonymous" };
   if (tenant.error) {
@@ -27,11 +28,13 @@ export async function readOnboardingState(): Promise<GateState> {
   }
   if (!tenant.data) return { kind: "welcome" };
 
-  const [owner, draft, brand] = await Promise.all([
-    supabase.rpc("is_current_tenant_owner"),
-    supabase.from("onboarding_draft").select("resume_step, archived_at").maybeSingle(),
-    supabase.from("brand").select("current_profile_id").maybeSingle(),
-  ]);
+  const [owner, draft, brand] = await timePhase("gate-wave", () =>
+    Promise.all([
+      supabase.rpc("is_current_tenant_owner"),
+      supabase.from("onboarding_draft").select("resume_step, archived_at").maybeSingle(),
+      supabase.from("brand").select("current_profile_id").maybeSingle(),
+    ]),
+  );
   if (owner.error) {
     throw new Error("onboarding could not resolve the caller's role");
   }

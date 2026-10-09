@@ -290,8 +290,9 @@ Full text in `docs/method/CARRY_FORWARDS.md`.
   finds something is landed as a permanent check by the fix task that follows,
   and one that finds nothing is landed too, because a probe that passes today is
   the one that catches tomorrow's regression.
-- **The static conformance set is sixteen `docs-integrity` checks and eighteen
-  `guards`, thirty-four in total, as of 2026-10-09 — P03-T27.** It was
+- **The static conformance set is sixteen `docs-integrity` checks and nineteen
+  `guards`, thirty-five in total, as of 2026-10-09 — P03-T28.** It was
+  sixteen and eighteen, thirty-four, as of 2026-10-09 — P03-T27. It was
   sixteen and eighteen, thirty-four, as of 2026-10-09 — P03-T26. It was
   sixteen and eighteen, thirty-four, as of 2026-10-09 — P03-GATE-FIX. It was
   fifteen and eighteen, thirty-three, as of 2026-10-05 — P03-T25-FIX. It was

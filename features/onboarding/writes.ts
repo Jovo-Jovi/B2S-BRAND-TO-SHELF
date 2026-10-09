@@ -3,6 +3,7 @@ import "server-only";
 import catalog from "@/app/[locale]/dictionaries/en.json";
 import { logoStoreSession, mintLogoReadUrl, SIGNED_URL_SECONDS, storeLogo, type MemberMediaClient } from "@/lib/logo/store-logo";
 import { LIBRARY_BODY_WEIGHT, LIBRARY_HEADING_WEIGHT, familiesFor } from "@/lib/typeface/registry";
+import { timePhase } from "@/lib/observability/phase-timing";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 import { isHex } from "./schema";
@@ -28,8 +29,8 @@ function forward(current: string, next: ResumeStep): ResumeStep {
 
 export async function memberContext(supabase: Client): Promise<{ tenantId: string; memberId: string } | null> {
   const [auth, tenant] = await Promise.all([
-    supabase.auth.getUser(),
-    supabase.rpc("current_tenant_id"),
+    timePhase("load-user", () => supabase.auth.getUser()),
+    timePhase("load-tenant", () => supabase.rpc("current_tenant_id")),
   ]);
   if (!auth.data.user || !tenant.data) return null;
   return { tenantId: tenant.data, memberId: auth.data.user.id };
@@ -138,13 +139,15 @@ export async function saveName(
 }
 
 export async function latestProfileId(supabase: Client): Promise<string | null> {
-  const profile = await supabase
-    .from("brand_profile")
-    .select("id")
-    .order("version", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  return profile.data?.id ?? null;
+  return timePhase("profile", async () => {
+    const profile = await supabase
+      .from("brand_profile")
+      .select("id")
+      .order("version", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    return profile.data?.id ?? null;
+  });
 }
 
 export async function saveThemeIfComplete(
@@ -361,18 +364,20 @@ export async function loadSnapshot(supabase: Client): Promise<{
   const who = await memberContext(supabase);
   if (!who) return { defaultLocale, names, storedColours, logos, faces: emptyFaces };
 
-  const [tenant, brand, draft, profile] = await Promise.all([
-    supabase.from("tenant").select("default_locale").eq("id", who.tenantId).maybeSingle(),
-    supabase.from("brand").select("name_key_id").maybeSingle(),
-    supabase.from("onboarding_draft").select("id, archived_at").maybeSingle(),
-    supabase.from("brand_profile").select("id").order("version", { ascending: false }).limit(1).maybeSingle(),
-  ]);
+  const [tenant, brand, draft, profile] = await timePhase("load-wave", () =>
+    Promise.all([
+      supabase.from("tenant").select("default_locale").eq("id", who.tenantId).maybeSingle(),
+      supabase.from("brand").select("name_key_id").maybeSingle(),
+      supabase.from("onboarding_draft").select("id, archived_at").maybeSingle(),
+      supabase.from("brand_profile").select("id").order("version", { ascending: false }).limit(1).maybeSingle(),
+    ]),
+  );
   if (tenant.data?.default_locale === "ar" || tenant.data?.default_locale === "en") {
     defaultLocale = tenant.data.default_locale;
   }
 
   const liveDraft = draft.data && !draft.data.archived_at ? draft.data : null;
-  const [entries, colours, theme, faces, variants] = await Promise.all([
+  const [entries, colours, theme, faces, variants] = await timePhase("load-wave-2", () => Promise.all([
     brand.data?.name_key_id
       ? supabase.from("translation_entry").select("locale, value").eq("key_id", brand.data.name_key_id)
       : Promise.resolve(null),
@@ -398,7 +403,7 @@ export async function loadSnapshot(supabase: Client): Promise<{
           .eq("profile_id", profile.data.id)
           .eq("kind", "full")
       : Promise.resolve(null),
-  ]);
+  ]));
 
   for (const entry of entries?.data ?? []) {
     if (entry.locale === "en" || entry.locale === "ar") names[entry.locale] = entry.value;
@@ -418,7 +423,10 @@ export async function loadSnapshot(supabase: Client): Promise<{
   }
 
   if (theme?.data) {
-    const values = await supabase.from("color_value").select("role, srgb").eq("theme_id", theme.data.id);
+    const themeId = theme.data.id;
+    const values = await timePhase("load-colours", () =>
+      supabase.from("color_value").select("role, srgb").eq("theme_id", themeId),
+    );
     for (const value of values.data ?? []) {
       if (storedColours[value.role]) continue;
       if ((COLOUR_ROLES as readonly string[]).includes(value.role)) {
@@ -430,22 +438,26 @@ export async function loadSnapshot(supabase: Client): Promise<{
   const liveVariants = (variants?.data ?? []).filter(
     (variant) => !variant.archived_at && (variant.ground === "light" || variant.ground === "dark"),
   );
-  const assets = await Promise.all(
-    liveVariants.map(async (variant) => {
-      const asset = await supabase
-        .from("media_asset")
-        .select("object_key, archived_at")
-        .eq("id", variant.media_asset_id)
-        .maybeSingle();
-      return { ground: variant.ground, asset: asset.data };
-    }),
+  const assets = await timePhase("load-assets", () =>
+    Promise.all(
+      liveVariants.map(async (variant) => {
+        const asset = await supabase
+          .from("media_asset")
+          .select("object_key, archived_at")
+          .eq("id", variant.media_asset_id)
+          .maybeSingle();
+        return { ground: variant.ground, asset: asset.data };
+      }),
+    ),
   );
-  const signed = await Promise.all(
-    assets.map(async (item) => {
-      if (!item.asset || item.asset.archived_at) return { ground: item.ground, url: null as string | null };
-      if (item.ground !== "light" && item.ground !== "dark") return { ground: item.ground, url: null };
-      return { ground: item.ground, url: await signFor(supabase, who, item.asset.object_key) };
-    }),
+  const signed = await timePhase("load-sign", () =>
+    Promise.all(
+      assets.map(async (item) => {
+        if (!item.asset || item.asset.archived_at) return { ground: item.ground, url: null as string | null };
+        if (item.ground !== "light" && item.ground !== "dark") return { ground: item.ground, url: null };
+        return { ground: item.ground, url: await signFor(supabase, who, item.asset.object_key) };
+      }),
+    ),
   );
   for (const item of signed) {
     if (item.ground === "light" || item.ground === "dark") logos[item.ground] = item.url;

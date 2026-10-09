@@ -39,7 +39,10 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  return updateSession(request);
+  const phases = locales.some(
+    (locale) => pathname === `/${locale}/onboarding` || pathname.startsWith(`/${locale}/onboarding/`),
+  );
+  return updateSession(request, phases);
 }
 
 export const config = {
