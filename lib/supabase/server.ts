@@ -3,6 +3,8 @@ import { cookies } from "next/headers";
 
 import type { Database } from "@/types/database";
 
+import { freshFetch } from "./fresh-fetch";
+
 // ARCHITECTURE.md §4 — the server client also acts AS THE MEMBER. Server
 // Components and Server Actions read through RLS exactly as the browser does;
 // running on the server buys no additional reach, which is the point. The
@@ -20,6 +22,7 @@ export async function createSupabaseServerClient() {
   const cookieStore = await cookies();
 
   return createServerClient<Database>(supabaseUrl, supabasePublishableKey, {
+    global: { fetch: freshFetch },
     cookies: {
       getAll() {
         return cookieStore.getAll();

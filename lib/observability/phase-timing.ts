@@ -86,6 +86,10 @@ export function noteUpstreamDenied(host: string | null): void {
   current.denied += 1;
 }
 
+export function deniedCount(): number {
+  return bucket()?.denied ?? 0;
+}
+
 export function runWithPhases<T>(fn: () => T): T {
   return sharedStorage().run(createBucket(), fn);
 }

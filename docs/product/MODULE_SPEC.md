@@ -149,6 +149,7 @@ lib/
   supabase/
     client.ts                     browser client, acts as the member
     server.ts                     server client, acts as the member
+    fresh-fetch.ts                one socket per call, so none is reused idle
     session.ts                    session refresh, after locale normalisation
     server-only/                  QUARANTINE — ADR-005
       service.ts                  the only construction of the privileged client
