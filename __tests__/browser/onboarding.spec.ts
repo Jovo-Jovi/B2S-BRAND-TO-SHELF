@@ -115,6 +115,14 @@ async function press(page: Page, name: string): Promise<void> {
   });
 }
 
+async function flushPage(page: Page): Promise<void> {
+  await page.evaluate(() => new Promise<void>((resolve) => {
+    requestAnimationFrame(() => {
+      setTimeout(resolve, 50);
+    });
+  }));
+}
+
 async function expectSaved(page: Page, copy: Copy): Promise<void> {
   const notice = page.getByRole("status");
   await expect(notice).toHaveAttribute("data-tone", "success");
@@ -308,6 +316,7 @@ for (const locale of LOCALES) {
           buffer: png(1000, 1000),
         });
         await lightUpload;
+        await flushPage(page);
         await expect(page.locator('[data-ground="light"]')).toHaveCount(0);
         await expect(page.locator('[data-note="missing-mark"]')).toBeVisible();
         const darkUpload = page.waitForResponse(
@@ -319,6 +328,7 @@ for (const locale of LOCALES) {
           buffer: svg("<circle r='1'/>"),
         });
         await darkUpload;
+        await flushPage(page);
         await expect(page.locator('[data-ground="dark"]').first()).toHaveAttribute("src", /.+/);
         const firstLight = await memberGet<{ media_asset_id: string }[]>(
           token,
@@ -334,6 +344,7 @@ for (const locale of LOCALES) {
           buffer: png(1200, 1200),
         });
         await replaced;
+        await flushPage(page);
         await expect(page.locator('[data-ground="light"]')).toHaveCount(0);
         await expect(page.locator('[data-ground="dark"]').first()).toHaveAttribute("src", darkSrc ?? "");
         const secondLight = await memberGet<{ media_asset_id: string }[]>(
@@ -660,6 +671,7 @@ for (const locale of LOCALES) {
       buffer: png(1000, 1000),
     });
     await logoUpload;
+    await flushPage(page);
     await expect(page.locator('[data-ground="dark"]').first()).toHaveAttribute("src", /.+/);
     await page.goto(`/${locale}/onboarding/review`);
     await expect(page.getByText(copy.reviewReady)).toBeVisible();
