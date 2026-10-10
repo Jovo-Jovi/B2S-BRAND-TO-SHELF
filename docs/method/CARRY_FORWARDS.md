@@ -4480,5 +4480,9 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       At human pace on the clean-close preview the bound was missed: brand
       median 1353 ms, p95 4620, max 33865, six of fifty over 3 s; guidelines
       max 58689. A retry or a longer timeout would hide the wait.
+      The long waits measured on 2026-10-09 sat between the measuring
+      machine and the edge, while server wall stayed under 540 ms and both
+      databases were idle. The neutral-client measurement moves into
+      P03-GATE-RERUN.
       Owner: **the reviewer**.
 

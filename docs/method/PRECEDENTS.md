@@ -1067,3 +1067,16 @@ examined. Closes CF-247.
   read QUEUED. A phase is done when a gate run passes: the row is
   `P0N-GATE`, or a re-run whose name adds `-RERUN` or `-RUN` plus digits.
   A row ending `-FIX` is a fix task and never a gate run.
+- Learned at P03-T29: PowerShell treats an unquoted `@` as the splat
+  operator. `npx playwright test --grep @design-review` therefore does not
+  pass the tag to Playwright. Quote the argument.
+- Learned at P03-T29: Playwright's default testMatch requires the filename
+  to contain `test` or `spec` before the extension. A file named
+  `design-review.capture.ts` is never loaded, so ignoring that name and
+  inverting its tag both match nothing. The capture file has to end in
+  `.spec.ts`. CI leaves it unloaded unless `B2S_CAPTURE` is `1`, and the
+  browser job also passes `--grep-invert` for the tag.
+- Learned at P03-T29: `page.waitForURL` with a regular expression tests the
+  whole URL, including the query. A sign-in address whose `next` parameter
+  already contains `/en/onboarding` satisfies `/\/en\/onboarding/` before
+  the form has left the page. Match `url.pathname`.
