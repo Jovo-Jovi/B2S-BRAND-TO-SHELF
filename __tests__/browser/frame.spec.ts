@@ -14,9 +14,12 @@ import {
   memberGet,
   memberPatch,
   memberToken,
+  setSyntheticPrefix,
   teardownSynthetic,
   type Member,
 } from "./onboarding-members";
+
+setSyntheticPrefix(`zz-test-frame-${process.env.GITHUB_RUN_ID ?? "local"}-`);
 
 test.describe.configure({ mode: "serial" });
 

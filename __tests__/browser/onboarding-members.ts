@@ -11,7 +11,18 @@ import { resolve } from "node:path";
 // Push and pull_request both run this suite against the same staging
 // database. A shared prefix lets one run's teardown delete the other's
 // member mid-test. The run id keeps each suite inside its own names.
-export const PREFIX = `zz-test-wiz-${process.env.GITHUB_RUN_ID ?? "local"}-`;
+// Two files in one run share that id and run on separate workers, and
+// each worker's teardown deletes every member under this prefix. A second
+// file calls setSyntheticPrefix before it creates anyone.
+export let PREFIX = `zz-test-wiz-${process.env.GITHUB_RUN_ID ?? "local"}-`;
+
+export function setSyntheticPrefix(value: string): void {
+  if (!/^zz-test-[a-z0-9-]+-$/.test(value)) {
+    throw new Error("refusing a harness prefix that is not a synthetic label");
+  }
+  PREFIX = value;
+}
+
 const PRODUCTION_REF = "akpvvydmltmfmkmwivgn";
 
 export type Member = { id: string; email: string; password: string };
