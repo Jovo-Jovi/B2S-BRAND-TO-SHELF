@@ -136,32 +136,40 @@ describe("compositions", () => {
           guidelines: "Guidelines",
           review: "Review",
         }}
-        progress="Step {current} of {total}"
-        title="Brand"
-        purpose="Set the brand"
+        progress="Step {current} of {total} · {label}"
+        eyebrowLabel="Your brand"
+        title="See your brand on your product"
+        purpose="Start with the essentials."
         continueCaption="Continue"
         save="Save and finish later"
         mark="B2S"
+        tagline="Brand to Shelf"
         localeHref="/ar/gallery"
         localeCaption="Arabic"
         onContinue={() => undefined}
         onSave={() => undefined}
         onStep={() => undefined}
+        stepHref={(step) => `/en/onboarding/${step}`}
         errors={[]}
         signOut={<button type="button">Sign out</button>}
       >
         <p>Fields</p>
       </WizardStep>,
     );
-    expect(html).toContain("Step 1 of 5");
-    expect(html).toContain("Welcome");
+    expect(html).toContain("Step 1 of 5 · Your brand");
+    expect(html).toContain("Brand to Shelf");
+    expect(html).not.toContain("Welcome");
     expect(html).toContain("Save and finish later");
     expect(html).toContain("Continue");
     expect(html).toContain("Sign out");
+    expect(html).toContain('aria-current="step"');
+    expect(html).toContain('data-step-state="current"');
+    expect(html).toContain('data-step-state="upcoming"');
     expect(html).not.toContain(">Back<");
     expect(html).not.toContain("Help");
     expect(html).not.toContain(">0<");
-    expect(html.match(/<li>/g)?.length).toBe(6);
+    expect(html.match(/<li /g)?.length).toBe(5);
+    expect((html.match(/<h1/g) ?? []).length).toBe(1);
   });
 
   it("isolates the request identifier and does not say whether a record exists", () => {

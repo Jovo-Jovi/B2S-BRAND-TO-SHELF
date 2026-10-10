@@ -8,9 +8,9 @@ create a member, a tenant, or an object. The types job's project id and
 access token are a read, and that job is not in this set.
 
 Every such job declares concurrency group tenant-isolation-staging with
-cancel-in-progress false, on the job or on the workflow. The floor is two
-jobs: isolation and browser. Removing or emptying either workflow examines
-fewer and does not report success (PR-27).
+cancel-in-progress false, on the job or on the workflow. The floor is three
+jobs: isolation, browser and onboarding-tail. Removing or emptying any one
+of those workflows examines fewer and does not report success (PR-27).
 """
 import glob
 import os
@@ -19,7 +19,12 @@ import sys
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 WORKFLOWS = os.path.join(REPO, ".github", "workflows")
 GROUP = "tenant-isolation-staging"
-MINIMUM_WRITERS = 2
+MINIMUM_WRITERS = 3
+REQUIRED = (
+    ".github/workflows/isolation.yml",
+    ".github/workflows/browser.yml",
+    ".github/workflows/onboarding-tail.yml",
+)
 WRITE_SECRETS = (
     "secrets.SUPABASE_STAGING_URL",
     "secrets.SUPABASE_STAGING_PUBLISHABLE_KEY",
@@ -161,6 +166,12 @@ def main():
     if len(writers) < MINIMUM_WRITERS:
         die(f"{len(writers)} staging-writing job(s) found, minimum {MINIMUM_WRITERS}. "
             f"A removed or emptied writer workflow examined nothing (PR-27)")
+
+    found = {relative for relative, _name, _ok, _reason in writers}
+    for required in REQUIRED:
+        if required not in found:
+            die(f"{required} has no staging-writing job. A removed or emptied "
+                f"writer workflow is not a pass (PR-27)")
 
     for relative, name, ok, reason in writers:
         if not ok:

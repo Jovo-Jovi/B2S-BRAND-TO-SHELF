@@ -540,6 +540,7 @@ export function Gallery({ locale, theme, copy, data }: GalleryProps) {
       <h1>{copy.title}</h1>
       <EntryFrame
         wordmark={<p>{copy.compositionPlatformMark}</p>}
+        tagline={copy.compositionTagline}
         localeHref={`/${other}/gallery?theme=${theme}`}
         localeCaption={other === "ar" ? copy.localeAr : copy.localeEn}
       >

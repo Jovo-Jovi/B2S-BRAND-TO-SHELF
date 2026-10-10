@@ -25,7 +25,6 @@ export default async function CompanyPage({ params, searchParams }: PageProps) {
 
   return (
     <main>
-      <h1>{entered.copy.company}</h1>
       <CompanyStep
         locale={entered.locale}
         copy={entered.copy}

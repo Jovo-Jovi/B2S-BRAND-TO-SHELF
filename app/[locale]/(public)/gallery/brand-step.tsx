@@ -203,6 +203,8 @@ export function BrandStep({ locale, copy, otherLocale }: BrandStepProps) {
         continueCaption={copy.compositionContinue}
         save={copy.compositionSave}
         mark={copy.compositionPlatformMark}
+        tagline={copy.compositionTagline}
+        titleLevel="h2"
         localeHref={`/${otherLocale}/gallery`}
         localeCaption={otherLocale === "ar" ? copy.localeAr : copy.localeEn}
         onContinue={validate}

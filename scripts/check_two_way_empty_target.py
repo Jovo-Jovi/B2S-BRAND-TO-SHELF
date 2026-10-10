@@ -152,6 +152,7 @@ PROVEN_PAIRS = [
     ("scripts/check_onboarding_routes.py", "app/[locale]/(app)/onboarding (directory)"),
     ("scripts/check_staging_writers.py", ".github/workflows/isolation.yml"),
     ("scripts/check_staging_writers.py", ".github/workflows/browser.yml"),
+    ("scripts/check_staging_writers.py", ".github/workflows/onboarding-tail.yml"),
     ("scripts/check-server-timing.mjs", "lib/observability/server-timing.ts"),
     ("scripts/check-server-timing.mjs", "lib/observability/phase-timing.ts"),
     ("scripts/check-server-timing.mjs", "lib/supabase/session.ts"),
@@ -622,6 +623,9 @@ def main():
     do_pair(results, "scripts/check_staging_writers.py",
             ["python", "scripts/check_staging_writers.py"],
             FileProbe(".github/workflows/browser.yml"))
+    do_pair(results, "scripts/check_staging_writers.py",
+            ["python", "scripts/check_staging_writers.py"],
+            FileProbe(".github/workflows/onboarding-tail.yml"))
     do_pair(results, "scripts/check-server-timing.mjs",
             ["node", "scripts/check-server-timing.mjs"],
             FileProbe("lib/observability/server-timing.ts"))

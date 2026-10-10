@@ -25,7 +25,6 @@ export default async function ReviewPage({ params, searchParams }: PageProps) {
 
   return (
     <main>
-      <h1>{entered.copy.review}</h1>
       <ReviewStep
         locale={entered.locale}
         copy={entered.copy}

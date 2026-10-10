@@ -4485,4 +4485,14 @@ Numbering is permanent. CF-44 is VOID and reserved — see its row.
       databases were idle. The neutral-client measurement moves into
       P03-GATE-RERUN.
       Owner: **the reviewer**.
+- [x] CF-256 — DESIGN_SURFACE.md specified the wizard's components and never
+      the approved mockup's composition, and the gallery's fictional-sample
+      disclaimer was shown on a tenant's brand.
+      CLOSED (P03-T30) by stating the frame in DESIGN_SURFACE.md and building
+      it from the primitives, compositions and tokens: one heading, the
+      header, the step indicator, the two-column body, the sticky preview
+      and footer, the preview panel, EntryFrame and completion. The
+      disclaimer stays in the gallery. A second heading and a disclaimer
+      inside the wizard each fail a browser test.
+      Owner: none outstanding.
 

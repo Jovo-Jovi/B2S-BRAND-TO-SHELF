@@ -79,7 +79,7 @@ export function ReviewStep({ locale, copy, theme, snapshot, review }: ReviewStep
       locale={locale}
       copy={copy}
       current="review"
-      title={copy.review}
+      title={copy.reviewTitle}
       purpose={copy.reviewPurpose}
       theme={theme}
       errors={errors}

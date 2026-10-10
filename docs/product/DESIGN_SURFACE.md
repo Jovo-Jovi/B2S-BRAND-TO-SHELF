@@ -305,8 +305,21 @@ Every fixed measure a component uses is a token here, so that no component carri
 | `--b2s-drawer-width` | min(18rem, 85vw) | `AppShell` navigation drawer |
 | `--b2s-preview-label-max` | 30rem | Label preview specimen |
 | `--b2s-preview-sticker-max` | 15rem | Sticker preview specimen |
-| `--b2s-proof-height-narrow` | 15rem | Wizard preview below `lg` |
+| `--b2s-proof-height-narrow` | 15rem | Retained; the narrow wizard specimen uses `--b2s-preview-narrow-block` |
 | `--b2s-preview-rule-block` | 3px | Label preview specimen, the accent rule's block size (§3.1) |
+| `--b2s-wizard-header-block` | 4.5rem · 72px | `WizardStep` header band |
+| `--b2s-mark-tile` | 2.25rem · 36px | Platform mark tile, `WizardStep` and `EntryFrame` |
+| `--b2s-step-mark` | 1.75rem · 28px | Step indicator circle, and the connector's inline size |
+| `--b2s-wizard-layout` | 60rem · 960px | Wizard two-column threshold |
+| `--b2s-wizard-form-pad-block` | 2.75rem · 44px | Wizard form column, padding at the block start |
+| `--b2s-wizard-action-block` | 2.75rem · 44px | Wizard footer actions |
+| `--b2s-text-preview` | 0.9375rem · 15px | Preview panel heading; leading is `--b2s-leading-sm` |
+| `--b2s-segment-block` | 2.25rem · 36px | Segmented control buttons |
+| `--b2s-preview-label-block` | 18.125rem · 290px | Label specimen block size at the wide cap |
+| `--b2s-preview-narrow-block` | 17.5rem · 280px | Label specimen block size below the wizard layout |
+| `--b2s-specimen-arabic` | 1.875rem · 30px | Arabic brand name at the 480px label cap (§3.1) |
+| `--b2s-specimen-latin` | 1.1875rem · 19px | English brand name at the 480px label cap (§3.1) |
+| `--b2s-entry-width` | 27.5rem · 440px | `EntryFrame` card |
 
 The six `--b2s-layer-*` tokens are every z-index in the catalog, and no other value is a z-index. The switch tokens are the same in both densities, because the whole row is the target. A multiline `TextField` grows to eight rows, then scrolls. The skeleton pulse runs between 0.6 and 1, so a placeholder never vanishes.
 
@@ -342,7 +355,7 @@ A preview specimen is a fixed illustration drawn from a resolved BrandProfile in
 
 Both render in the output's own direction and never mirror with the interface (OD-G24, §3 rule 9). Typography comes from the profile's heading and body typefaces for each script; a missing pair renders in the interim reset type with its named gap (§3 rule 5). Colours come only from the default theme's roles, mapped as below, and are never adjusted (§3 rule 4): a combination that reads poorly here reads poorly on the shelf, which is what a proof is for.
 
-Label — a landscape rectangle, aspect ratio 48:29, at most preview-label-max wide, scaled to fit the proof with space-5 clear on every side, corner radius 3% of its width. An inline-start band, 33% of the width, in `primary`, holding the logo slot for the band's ground at 45% of the band's width. A content panel in `background`, a centred column: the brand name in the business's default locale in its script's heading face, in `foreground`; the name in the other locale in its script's heading face at 60% of that size, in `foreground`; a rule 10% of the label's width and 3px high in `accent`; a product-name line and a net-weight line in the body face, in `muted`. A strip along the block-end edge, 4% of the label's height, in `secondary`.
+Label — a landscape rectangle, aspect ratio 48:29, at most preview-label-max wide and preview-label-block tall, scaled down to fit and centred, with space-5 clear on every side, corner radius 3% of its width. Below the wizard layout the specimen is at most preview-narrow-block tall. An inline-start band, 33% of the width, in `primary`, holding the logo slot for the band's ground at 45% of the band's width. A content panel in `background`, a centred column: the Arabic name at specimen-arabic and the English name at specimen-latin, both in the heading face, in `foreground`. At the 480px cap those are 30px and 19px. The Arabic name is never smaller than the English. Inside BrandFrame the sizes are container-query widths of the label, 6.25cqw and 3.958333cqw, because a platform token and a raw length are both forbidden on the specimen (§3 rule 10, CF-171). A rule 10% of the label's width and 3px high in `accent`; a product-name line and a net-weight line in the body face, in `muted`. A strip along the block-end edge, 4% of the label's height, in `secondary`. A missing logo for the band's ground is an info note above the specimen, never a bullet list. The gallery's fictional-sample disclaimer appears only in the gallery, never on a tenant's brand.
 
 Sticker — a circle, at most preview-sticker-max in diameter, scaled to fit. Fill `primary`; an inner ring 4% of the diameter thick, inset 6%, in `accent`; centred, the logo slot for the primary's ground at 40% of the diameter, and beneath it the brand name in the business's default locale, heading face, in `background`.
 
@@ -491,7 +504,7 @@ sizes: [compact, comfortable]
 states:
   default: surface fill, border-control boundary, radius-md
   hover: boundary to text-muted
-  focus: universal focus ring; boundary to text
+  focus: one universal focus ring on the control's border box; the inner control draws no second ring; boundary to text
   active: n/a — text entry has no pressed state distinct from focus
   disabled: universal disabled
   loading: spinner in the suffix position while a value is validated remotely; input stays editable
@@ -550,7 +563,7 @@ sizes: [compact, comfortable]
 states:
   default: TextField boundary and fill; chevron at inline-end
   hover: boundary to text-muted
-  focus: universal focus ring
+  focus: one universal focus ring on the control's border box; the inner control draws no second ring
   active: listbox open, elevation-1, layer-dropdown
   disabled: universal disabled
   loading: spinner replaces the chevron while options load; the trigger stays focusable
@@ -675,7 +688,7 @@ sizes: [compact, comfortable]
 states:
   default: swatch at inline-start showing the stored value; hex input left-to-right and isolated
   hover: boundary to text-muted
-  focus: universal focus ring on the focused part
+  focus: one universal focus ring on the control's border box; the inner parts draw no second ring
   active: native picker open
   disabled: universal disabled
   loading: n/a — the value is local until the form saves
@@ -705,7 +718,7 @@ sizes: [compact, comfortable]
 states:
   default: TextField appearance; display format from the locale definition
   hover: boundary to text-muted
-  focus: universal focus ring
+  focus: one universal focus ring on the entry's border box; the inner input draws no second ring
   active: calendar_popover open, elevation-1
   disabled: universal disabled
   loading: n/a — dates are local until the form saves
@@ -992,16 +1005,20 @@ What failed, in plain words; what to do next; a retry action; and the request id
 
 ### WizardStep
 
-The wizard renders in its own frame, not AppShell — nothing in the navigation exists before onboarding completes. The frame's header carries the platform mark, the stepper and the language switch. The header's inline end carries a quiet Button "Sign out", which ends the session and returns to sign-in. It is the frame's only header action in Release 1. It carries no help control in Release 1: help was named without a behaviour, and a control that does nothing is worse than none. It returns when there is help content to show. WizardStep gains an optional preview region: at `lg` and above, an inline-end column on `sunken` with a `border-inline-start`, the form capped at `measure-form`; below `lg`, the preview precedes the form with its proof at `proof-height-narrow`, not sticky.
+The wizard renders in its own frame, not AppShell — nothing in the navigation exists before onboarding completes. Every screen renders exactly one `h1`, and that heading is inside this frame.
 
-- **Stepper:** numbered, because onboarding genuinely is a sequence. It numbers Brand to Review, five steps. Welcome precedes the stepper and is not numbered (`BRAND_CONFIG.md` §10 amendment). Steps are completed, current or upcoming. Completed steps are reachable; upcoming ones are not until reached. Progress is also stated in text — "Step 2 of 5" — so it is never carried by the graphic alone.
-- **Body:** a step title at `3xl`, one sentence of purpose, then one or more `FormSection`s.
-- **Footer:** the actions are set per screen, never all three by default. Welcome shows Continue only. Brand, the first numbered step, shows Save and finish later and Continue, with no Back, because once Welcome has provisioned the business the gate never returns anyone to it. Typography, Company and Guidelines show Back, Save and finish later and Continue. Review shows Back and Finish setup. Back is `quiet` at inline-start. Save and finish later is `secondary`. Continue and Finish setup are `primary` at inline-end. The wizard is resumable (`BRAND_CONFIG.md` §10). Save and finish later shows a success Notice in the step — saved, and the person can leave and return here later — announced politely, without moving focus. A save that fails shows a danger Notice naming what could not be saved.
+- **Header:** a band `--b2s-wizard-header-block` tall across the full width, on `surface`, with a bottom border. At the wizard layout and above the band is exactly that tall; below it, the band is at least that tall. The lockup and the header actions share the first row, and the one-line indicator takes the full width of the next row, so the line is not squeezed between them. Inline start: a mark tile `--b2s-mark-tile` square, radius `radius-md`, in `action` with `action-text`, carrying the platform mark glyph — an isometric box drawn as two paths, registered as `mark` and never mirrored, because it is a brand mark (§2.10). Beside it "B2S" at `text-md` semibold, and the tagline beneath at `text-xs` in `text-muted`: "Brand to Shelf" / "من العلامة إلى الرف". Centre: the step indicator. Inline end: the other-language link and Sign out. Sign out ends the session and returns to sign-in. It is the frame's only header action in Release 1. The frame carries no help control in Release 1: help was named without a behaviour, and a control that does nothing is worse than none. It returns when there is help content to show.
+- **Step indicator:** an ordered list of the five numbered steps, Brand to Review. Welcome precedes it and is not shown. Each step is a circle `--b2s-step-mark` across holding its number, its label at `text-sm`, and a connector `--b2s-step-mark` by `--b2s-indicator-width` before the next. Completed: `action` fill with the number in `action-text`, label regular, a link to that step. Current: a `--b2s-focus-width` ring in `action` with the number in `action`, label semibold, `aria-current="step"`. Upcoming: a `border-control` boundary, number in `text-muted`, not a link. Below the wizard layout it becomes one line — "Step 2 of 5 · Typography" / "الخطوة 2 من 5 · الطباعة" — over a progress bar `--b2s-space-2` thick, on completion as on every numbered step. Completion's line names the last step, "Step 5 of 5 · Review" / "الخطوة 5 من 5 · المراجعة", and the bar is full.
+- **Body:** from the wizard layout, two columns. The form column is `--b2s-measure-form` wide, including `--b2s-space-11` inline padding and `--b2s-wizard-form-pad-block` padding at the block start. The preview column fills the rest, on `surface`, as tall as the viewport below the header, its content sticky at the block start so the preview stays in view while the form scrolls. Below the wizard layout: one column. The preview is a card after the heading block, and the specimen is scaled to the column at most `--b2s-preview-narrow-block` tall. A step with no preview stays one column, capped at `measure-form`.
+- **Heading block:** an eyebrow at `text-sm` semibold in `accent-text`, "Step 1 of 5 · Your brand" / "الخطوة 1 من 5 · علامتك التجارية"; the `h1` at `text-3xl` semibold; the lead at `text-md` in `text-muted`. Welcome has no eyebrow. For Brand the copy is binding: "See your brand on your product" / "شاهد علامتك التجارية على منتجك", and "Start with the essentials. Your packaging takes shape as you type." / "ابدأ بالأساسيات، وشاهد عبوتك تتشكّل أثناء الكتابة." Other steps' headings are the builder's to draft in that voice.
+- **Footer:** sticky to the bottom of the form column, on `canvas`, with a top border. The actions are set per screen, never all three by default, and they are `--b2s-wizard-action-block` tall. Welcome shows Continue only. Brand, the first numbered step, shows Save and finish later and Continue, with no Back, because once Welcome has provisioned the business the gate never returns anyone to it. Typography, Company and Guidelines show Back, Save and finish later and Continue. Review shows Back and Finish setup. Back is `quiet` at inline-start where the step has it. Save and finish later is `secondary`, and Continue or Finish setup is `primary`, both at inline-end. The wizard is resumable (`BRAND_CONFIG.md` §10). The save Notice appears directly above the footer — saved, and the person can leave and return here later — announced politely, without moving focus. A save that fails shows a danger Notice naming what could not be saved.
+- **Preview panel:** a header row: a dot `--b2s-space-3` in `action`, "Live preview" / "معاينة مباشرة" as an `h2` at `--b2s-text-preview` semibold, and a segmented control for Label and Sticker. The buttons are `--b2s-segment-block` tall in a group with `--b2s-space-2` padding. The control replaces Tabs on the wizard preview. The label specimen is at most preview-label-max by preview-label-block, scaled down to fit and centred. Help text is stated once per section, never repeated under each field.
+- **Completion:** the same header, with every step completed. A centred column holds the heading "Your brand is ready" / "علامتك التجارية جاهزة", one sentence, and the preview at the bounded size, with no disclaimer. There is no footer.
 - **Validation on Continue:** an error summary appears at the top, lists each problem as a link to its field, and takes focus. Each field also shows its own error. Input is always preserved.
 
 ### EntryFrame
 
-The frame for screens a person sees before they belong to a business. It holds the platform's name as a wordmark in the platform face (`--b2s-font-family`), with no new logo asset; a TextLink to the same screen in the other language; and one column at the form measure (`--b2s-measure-form`), centred on the canvas. At 360 CSS pixels the column fills the width inside `space-5` margins. It carries no tenant brand, ever (OD-G24).
+The frame for screens a person sees before they belong to a business. A card on `surface`, at most `--b2s-entry-width` wide, padding `--b2s-space-8`, radius `radius-lg`, with a border, centred on the canvas. At 360 CSS pixels the card fills the width inside `space-5` margins. Inside it, the mark tile, "B2S" and the tagline at the top, and the other-language link at the inline end. The wordmark is the caller's; the frame itself does not add a heading, so the screen's one `h1` is the caller's. The Google button and the primary button are full width. The divider is a rule on each side of "or". It carries no tenant brand, ever (OD-G24), and it draws no third-party mark.
 
 ---
 
@@ -1064,7 +1081,7 @@ Every gate the catalog landing task builds, and the part of this document it hol
 
 The catalog is finished when the first real screen it exists for can be built from it with **no page-level styling at all** (CF-180). Inventory is not the test; composition is.
 
-**The screen:** step 1, Brand (BRAND_CONFIG.md §10 amendment), in the wizard's own frame. FormSection "Brand name": a BilingualField, the business's default locale first. FormSection "Your brand's colours": ColorFields for primary, secondary and accent. FormSection "Text and background": a paired ColorField for background and foreground, and ColorFields for muted and critical, each showing its starting value as a starting value. FormSection "Logo": a FileDrop. The preview region: Tabs, Label and Sticker, each panel a BrandFrame holding its §3.1 specimen. Footer: Save and finish later, Continue.
+**The screen:** step 1, Brand (BRAND_CONFIG.md §10 amendment), in the wizard's own frame. FormSection "Brand name": a BilingualField, the business's default locale first. FormSection "Your brand's colours": ColorFields for primary, secondary and accent. FormSection "Text and background": a paired ColorField for background and foreground, and ColorFields for muted and critical, each showing its starting value as a starting value. FormSection "Logo": a FileDrop. The preview region: a segmented control, Label and Sticker, each choice a BrandFrame holding its §3.1 specimen. Footer: Save and finish later, Continue. Help text is once per section.
 
 **It passes when**, in both locales, both themes, at 360 and 1280 CSS pixels:
 
@@ -1073,7 +1090,7 @@ The catalog is finished when the first real screen it exists for can be built fr
 3. In the Arabic interface the frame, stepper, footer and sections mirror, the bilingual field keeps the business's default locale first, each input keeps its own direction, and the preview is identical to the English interface's.
 4. Every string comes from the catalogs, with equal key sets.
 5. Every control is keyboard-reachable in reading order with a visible focus ring and AA contrast, the proof's content excepted under §3 rule 4.
-6. Editing the brand name, any colour, or the logo updates the specimen, switching tabs shows the label or the sticker, and a ground with neither a mark nor a full logo shows its named gap.
+6. Editing the brand name, any colour, or the logo updates the specimen, the segmented control shows the label or the sticker, and a ground with neither a mark nor a full logo shows its named gap as an info note above the specimen.
 
 Persistence — save and finish later keeping partial values — is not claimed here; it stays with CF-214.
 
@@ -1105,9 +1122,9 @@ Every screen renders in WizardStep's own frame (§7). Welcome is unnumbered; ste
 
 **Welcome** — a headline welcoming the owner and one sentence saying setup takes a few steps and can be resumed. A FormSection with: the business's main language, a RadioGroup of العربية and English, preselected to the interface language; the base currency, a Select of EGP, USD, SAR, AED and EUR (OD-G17), preselected to EGP, help "Prices and invoices use this currency"; the business's name, a TextField whose direction follows the chosen language, help saying the names that print on labels come next. Footer: Continue only. Continue validates all three, provisions the tenant (OD-G26) and opens the draft at `brand`.
 
-**1 Brand** — as §11.
+**1 Brand** — as §11. The heading block is binding: eyebrow "Step 1 of 5 · Your brand" / "الخطوة 1 من 5 · علامتك التجارية"; heading "See your brand on your product" / "شاهد علامتك التجارية على منتجك"; lead "Start with the essentials. Your packaging takes shape as you type." / "ابدأ بالأساسيات، وشاهد عبوتك تتشكّل أثناء الكتابة."
 
-**2 Typography** — a FormSection "Arabic" with Selects for heading and body; a FormSection "Latin" with Selects for heading and body. Each lists the library's families for its script by name, in the platform face; help saying the choices appear on the label as they are made. No starting values; an unchosen pair is named on Continue (§11 rule 6 of BRAND_CONFIG.md). The preview region as in Brand, rendering the chosen faces at 700 for headings and 400 for body. Footer: Back, Save and finish later, Continue.
+**2 Typography** — a FormSection "Arabic" with Selects for heading and body; a FormSection "Latin" with Selects for heading and body. Each lists the library's families for its script by name, in the platform face. The help saying the choices appear on the label as they are made is the section description, once, not repeated under each field. No starting values; an unchosen pair is named on Continue (§11 rule 6 of BRAND_CONFIG.md). The preview region as in Brand, rendering the chosen faces at 700 for headings and 400 for body. Footer: Back, Save and finish later, Continue.
 
 **3 Company** — no preview region. FormSection "Legal details": BilingualField legal name, required; BilingualField trading name, optional; TextField `identifier` tax registration number, optional. FormSection "Registered address": a multiline BilingualField, required. FormSection "Contact": TextField email, optional; TextField phone, optional, accepting international form or an Egyptian national number, shown as stored, left-to-right and isolated. Footer: Back, Save and finish later, Continue.
 
@@ -1115,7 +1132,7 @@ Every screen renders in WizardStep's own frame (§7). Welcome is unnumbered; ste
 
 **5 Review** — a summary FormSection per step, each with a TextLink whose name says which step it edits; the preview region; and a list of everything still needed, each item named by its rule and linked to where it is fixed. Footer: Back, and Finish setup as the primary action. Finish setup is never disabled: pressed with gaps, it shows the error summary listing each gap with its link. On success the profile becomes current, the draft is archived, and the owner arrives at the wizard's completion screen.
 
-**Completion** — confirms that setup is complete and shows the current brand in the preview. It states nothing about features that do not yet exist. The dashboard is module 22 and is not built in P03.
+**Completion** — WizardStep's header with every step completed; a centred column holding the heading "Your brand is ready" / "علامتك التجارية جاهزة", one sentence, and the preview at the bounded size, with no disclaimer. It states nothing about features that do not yet exist. The dashboard is module 22 and is not built in P03.
 
 **Resume** — an owner who returns with an unarchived draft lands on the draft's step, with every saved answer in place.
 
@@ -1440,3 +1457,31 @@ Password is a native input type. It is not re-digited.
 **2026-10-09 — P03-T27.** ColorField's chooser was optional and the empty state showed only a no-colour pattern. Prior parts line: `parts: [swatch, hex_input, picker_button?, contrast_readout?]`. Prior empty state: `empty: swatch shows a named no-colour pattern; never a default colour pretending to be the brand's`. The chooser is present in every state, empty included. An empty field shows its empty name and commits nothing until the person chooses; the chooser opens on the brand's current background colour, which always has a value. The hex box stays.
 
 **2026-10-09 — P03-T27.** §7 WizardStep's footer did not say what Save and finish later shows. Prior footer ended at ``The wizard is resumable (`BRAND_CONFIG.md` §10).`` Save and finish later shows a success Notice in the step — saved, and the person can leave and return here later — announced politely, without moving focus. A save that fails shows a danger Notice naming what could not be saved.
+
+**2026-10-10 — P03-T30.** §2.11 gained the wizard frame's measures. Prior table ended at `--b2s-preview-rule-block`. The new rows are `--b2s-wizard-header-block` 4.5rem, `--b2s-mark-tile` 2.25rem, `--b2s-step-mark` 1.75rem, `--b2s-wizard-layout` 60rem, `--b2s-wizard-form-pad-block` 2.75rem, `--b2s-wizard-action-block` 2.75rem, `--b2s-text-preview` 0.9375rem, `--b2s-segment-block` 2.25rem, `--b2s-preview-label-block` 18.125rem, `--b2s-preview-narrow-block` 17.5rem, `--b2s-specimen-arabic` 1.875rem, `--b2s-specimen-latin` 1.1875rem, and `--b2s-entry-width` 27.5rem. Prior `--b2s-proof-height-narrow` used-by cell: `Wizard preview below lg`. The narrow specimen now uses `--b2s-preview-narrow-block`.
+
+**2026-10-10 — P03-T30.** §3.1 sized the other locale's name at 60% of the default. Prior sentence: `the brand name in the business's default locale in its script's heading face, in foreground; the name in the other locale in its script's heading face at 60% of that size, in foreground`. The Arabic name is specimen-arabic and the English name is specimen-latin, both in the heading face, and the Arabic name is never smaller than the English.
+
+**2026-10-10 — P03-T30.** §7 WizardStep specified components and never the approved mockup's composition. Prior opening:
+
+`The wizard renders in its own frame, not AppShell — nothing in the navigation exists before onboarding completes. The frame's header carries the platform mark, the stepper and the language switch. The header's inline end carries a quiet Button "Sign out", which ends the session and returns to sign-in. It is the frame's only header action in Release 1. It carries no help control in Release 1: help was named without a behaviour, and a control that does nothing is worse than none. It returns when there is help content to show. WizardStep gains an optional preview region: at lg and above, an inline-end column on sunken with a border-inline-start, the form capped at measure-form; below lg, the preview precedes the form with its proof at proof-height-narrow, not sticky.`
+
+Prior stepper: `numbered, because onboarding genuinely is a sequence. It numbers Brand to Review, five steps. Welcome precedes the stepper and is not numbered. Steps are completed, current or upcoming. Completed steps are reachable; upcoming ones are not until reached. Progress is also stated in text — "Step 2 of 5" — so it is never carried by the graphic alone.`
+
+Prior body: `a step title at 3xl, one sentence of purpose, then one or more FormSections.`
+
+The header, indicator, two-column body, heading block, sticky footer, preview panel and completion are stated in §7.
+
+**2026-10-10 — P03-T30.** §7 EntryFrame was a column at the form measure. Prior text:
+
+`The frame for screens a person sees before they belong to a business. It holds the platform's name as a wordmark in the platform face (--b2s-font-family), with no new logo asset; a TextLink to the same screen in the other language; and one column at the form measure (--b2s-measure-form), centred on the canvas. At 360 CSS pixels the column fills the width inside space-5 margins. It carries no tenant brand, ever (OD-G24).`
+
+It is a card at most entry-width, with the mark tile, the tagline, full-width actions and a ruled divider.
+
+**2026-10-10 — P03-T30.** TextField, Select, ColorField and DateField put the focus ring on the inner control as well as the border box. Prior TextField focus: `universal focus ring; boundary to text`. Prior Select focus: `universal focus ring`. Prior ColorField focus: `universal focus ring on the focused part`. Prior DateField focus: `universal focus ring`. Each now draws one ring on the control's border box.
+
+**2026-10-10 — P03-T30.** §11's preview region was Tabs. Prior clause: `The preview region: Tabs, Label and Sticker, each panel a BrandFrame holding its §3.1 specimen.` It is a segmented control. Criterion six's "switching tabs" is that control. The gallery's fictional-sample disclaimer is not part of a tenant's brand.
+
+**2026-10-10 — P03-T30.** §13 Brand was "as §11" with no heading copy, Typography repeated its help under each field, and Completion only confirmed that setup is complete. Prior Typography clause included `help saying the choices appear on the label as they are made`. That sentence is the section description, once. Prior Completion: `confirms that setup is complete and shows the current brand in the preview`. The heading is "Your brand is ready" / "علامتك التجارية جاهزة", with one sentence and the preview at the bounded size, and no disclaimer.
+
+**2026-10-10 — P03-T30.** §7 said completion kept the five circles below the wizard layout. Prior sentence: `On completion, below the wizard layout, the five completed circles stay visible and the one-line form is hidden.` Below the wizard layout the indicator is the one line on every screen, completion included. At the wizard layout and above, completion shows the five completed circles. Prior header sentence said the one-line indicator sits with the lockup. Below the wizard layout the lockup and the header actions share the first row, and the one-line indicator takes the full width of the next.

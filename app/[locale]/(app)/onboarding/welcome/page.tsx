@@ -21,7 +21,6 @@ export default async function WelcomePage({ params, searchParams }: PageProps) {
 
   return (
     <main>
-      <h1>{entered.copy.welcome}</h1>
       <WelcomeStep locale={entered.locale} copy={entered.copy} theme={entered.theme} />
     </main>
   );

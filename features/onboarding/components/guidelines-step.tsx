@@ -120,7 +120,7 @@ export function GuidelinesStep({ locale, copy, theme, guidelines, defaultLocale 
       locale={locale}
       copy={copy}
       current="guidelines"
-      title={copy.guidelines}
+      title={copy.guidelinesTitle}
       purpose={copy.guidelinesPurpose}
       theme={theme}
       errors={errors}
@@ -128,14 +128,16 @@ export function GuidelinesStep({ locale, copy, theme, guidelines, defaultLocale 
       onContinue={() => void run("continue")}
       onSave={() => void run("save")}
       onStep={(step) => void run("step", step === "welcome" ? "brand" : step)}
+      notice={
+        <SaveNotice
+          kind={notice}
+          savedTitle={copy.savedTitle}
+          savedMessage={copy.saved}
+          failedTitle={copy.saveFailedTitle}
+          failedMessage={fillPattern(copy.saveFailed, { step: copy.guidelines })}
+        />
+      }
     >
-      <SaveNotice
-        kind={notice}
-        savedTitle={copy.savedTitle}
-        savedMessage={copy.saved}
-        failedTitle={copy.saveFailedTitle}
-        failedMessage={fillPattern(copy.saveFailed, { step: copy.guidelines })}
-      />
       <div id="guidelines">
         <p>{copy.guidelinesHelp}</p>
         {rows.map((row, index) => {

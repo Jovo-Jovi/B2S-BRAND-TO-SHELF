@@ -65,7 +65,7 @@ async function signIn(page: Page, locale: "en" | "ar", member: Member): Promise<
 }
 
 async function openThemed(page: Page, locale: "en" | "ar", theme: "light" | "dark", width: number, screen: string): Promise<void> {
-  await page.setViewportSize({ width, height: 900 });
+  await page.setViewportSize({ width, height: 1400 });
   await page.emulateMedia({ colorScheme: theme === "dark" ? "dark" : "light" });
   await page.goto(`/${locale}/onboarding/${screen}?theme=${theme}`);
   await page.waitForFunction((value) => document.documentElement.dataset.theme === value, theme);
@@ -77,22 +77,24 @@ async function runAxe(page: Page): Promise<string[]> {
     const watched = ["color-contrast", "target-size", "landmark-one-main", "page-has-heading-one", "heading-order"];
     const engine = (window as unknown as {
       axe: {
-        run: (node: Document, options: unknown) => Promise<{
+        run: (context: { exclude: string[][] }, options: unknown) => Promise<{
           violations: Array<{ id: string }>;
           incomplete: Array<{ id: string }>;
         }>;
       };
     }).axe;
-    const result = await engine.run(document, {
-      rules: {
-        "color-contrast": { enabled: true },
-        "target-size": { enabled: true },
-        "landmark-one-main": { enabled: true },
-        "page-has-heading-one": { enabled: true },
-        "heading-order": { enabled: true },
+    const result = await engine.run(
+      { exclude: [["[data-proof-content]"]] },
+      {
+        rules: {
+          "color-contrast": { enabled: true },
+          "target-size": { enabled: true },
+          "landmark-one-main": { enabled: true },
+          "page-has-heading-one": { enabled: true },
+          "heading-order": { enabled: true },
+        },
       },
-      exclude: [["[data-proof-content]"]],
-    });
+    );
     return [...result.violations, ...result.incomplete]
       .filter((item) => watched.includes(item.id))
       .flatMap((item) => {
@@ -297,23 +299,32 @@ for (const locale of LOCALES) {
         expect(themes.length).toBeGreaterThan(0);
 
         const before = await memberGet<{ id: string }[]>(token, "media_asset?select=id");
+        const lightUpload = page.waitForResponse(
+          (response) => response.url().includes("/onboarding/brand") && response.request().method() === "POST",
+        );
         await page.locator('[data-logo-ground="light"] input[type=file]').setInputFiles({
           name: "mark.png",
           mimeType: "image/png",
           buffer: png(1000, 1000),
         });
-        await expect(page.locator('[data-ground="light"]').first()).toHaveAttribute("src", /.+/);
+        await lightUpload;
+        await expect(page.locator('[data-ground="light"]')).toHaveCount(0);
+        await expect(page.locator('[data-note="missing-mark"]')).toBeVisible();
+        const darkUpload = page.waitForResponse(
+          (response) => response.url().includes("/onboarding/brand") && response.request().method() === "POST",
+        );
         await page.locator('[data-logo-ground="dark"] input[type=file]').setInputFiles({
           name: "mark.svg",
           mimeType: "image/svg+xml",
           buffer: svg("<circle r='1'/>"),
         });
+        await darkUpload;
         await expect(page.locator('[data-ground="dark"]').first()).toHaveAttribute("src", /.+/);
         const firstLight = await memberGet<{ media_asset_id: string }[]>(
           token,
           "logo_variant?select=media_asset_id&kind=eq.full&ground=eq.light",
         );
-        const previousLight = await page.locator('[data-ground="light"]').first().getAttribute("src");
+        const darkSrc = await page.locator('[data-ground="dark"]').first().getAttribute("src");
         const replaced = page.waitForResponse(
           (response) => response.url().includes("/onboarding/brand") && response.request().method() === "POST",
         );
@@ -323,7 +334,8 @@ for (const locale of LOCALES) {
           buffer: png(1200, 1200),
         });
         await replaced;
-        await expect(page.locator('[data-ground="light"]').first()).not.toHaveAttribute("src", previousLight ?? "");
+        await expect(page.locator('[data-ground="light"]')).toHaveCount(0);
+        await expect(page.locator('[data-ground="dark"]').first()).toHaveAttribute("src", darkSrc ?? "");
         const secondLight = await memberGet<{ media_asset_id: string }[]>(
           token,
           "logo_variant?select=media_asset_id&kind=eq.full&ground=eq.light&archived_at=is.null",
@@ -639,12 +651,16 @@ for (const locale of LOCALES) {
     expect(page.url()).toContain("/review");
 
     await page.goto(`/${locale}/onboarding/brand`);
-    await page.locator('[data-logo-ground="light"] input[type=file]').setInputFiles({
+    const logoUpload = page.waitForResponse(
+      (response) => response.url().includes("/onboarding/brand") && response.request().method() === "POST",
+    );
+    await page.locator('[data-logo-ground="dark"] input[type=file]').setInputFiles({
       name: "mark.png",
       mimeType: "image/png",
       buffer: png(1000, 1000),
     });
-    await expect(page.locator('[data-ground="light"]').first()).toHaveAttribute("src", /.+/);
+    await logoUpload;
+    await expect(page.locator('[data-ground="dark"]').first()).toHaveAttribute("src", /.+/);
     await page.goto(`/${locale}/onboarding/review`);
     await expect(page.getByText(copy.reviewReady)).toBeVisible();
     await press(page, copy.finish);

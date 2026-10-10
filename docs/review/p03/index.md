@@ -1,8 +1,8 @@
 # P03 design review
 
-Photographs of the screens as they are. Nothing on a screen was restyled or rewritten for this set.
+Photographs of the wizard frame after the approved composition was built. The screens were not restyled again for the camera.
 
-The business is invented for the review. It is not a real brand, and the address is not a real place. The light-ground mark is a generated square. Four colours were chosen: primary, secondary, accent and background. Foreground, muted and critical stay at the values the brand screen already shows, so the theme can be saved. All four typefaces are chosen. Company details are half filled until the completion shots. One guideline is filled in both languages.
+The business is invented for the review. It is not a real brand, and the address is not a real place. The dark-ground mark is a generated square, because the chosen primary is a dark ground. Four colours were chosen: primary, secondary, accent and background. Foreground, muted and critical stay at the values the brand screen already shows, so the theme can be saved. All four typefaces are chosen. Company details are half filled until the completion shots. One guideline is filled in both languages.
 
 JPEG quality 80.
 
@@ -30,12 +30,12 @@ JPEG quality 80.
 | `brand-empty-ar-360.jpg` | Brand on arrival: no name, no mark, primary, secondary and accent unset. The four text colours show the screen's starting values. |
 | `brand-empty-en-1280-dark.jpg` | Brand on arrival, dark, 1280. Same empty state as the light arrival. |
 | `brand-empty-ar-1280-dark.jpg` | Brand on arrival, dark, 1280. Same empty state as the light arrival. |
-| `brand-filled-en-1280.jpg` | Brand filled: both names, a light-ground mark, and four chosen colours. Foreground, muted and critical remain the screen's starting values. No dark-ground mark. |
-| `brand-filled-en-360.jpg` | Brand filled: both names, a light-ground mark, and four chosen colours. Foreground, muted and critical remain the screen's starting values. No dark-ground mark. |
-| `brand-filled-ar-1280.jpg` | Brand filled: both names, a light-ground mark, and four chosen colours. Foreground, muted and critical remain the screen's starting values. No dark-ground mark. |
-| `brand-filled-ar-360.jpg` | Brand filled: both names, a light-ground mark, and four chosen colours. Foreground, muted and critical remain the screen's starting values. No dark-ground mark. |
-| `brand-filled-en-1280-dark.jpg` | Brand filled, dark, 1280. Same content as the light filled state. |
-| `brand-filled-ar-1280-dark.jpg` | Brand filled, dark, 1280. Same content as the light filled state. |
+| `brand-filled-en-1280.jpg` | Brand filled: both names, a dark-ground mark for the primary, and four chosen colours. Foreground, muted and critical remain the screen's starting values. No light-ground mark. |
+| `brand-filled-en-360.jpg` | Brand filled: both names, a dark-ground mark for the primary, and four chosen colours. Foreground, muted and critical remain the screen's starting values. No light-ground mark. |
+| `brand-filled-ar-1280.jpg` | Brand filled: both names, a dark-ground mark for the primary, and four chosen colours. Foreground, muted and critical remain the screen's starting values. No light-ground mark. |
+| `brand-filled-ar-360.jpg` | Brand filled: both names, a dark-ground mark for the primary, and four chosen colours. Foreground, muted and critical remain the screen's starting values. No light-ground mark. |
+| `brand-filled-en-1280-dark.jpg` | Brand filled, dark, 1280. Same content as the light filled state. The mark is the dark-ground file. |
+| `brand-filled-ar-1280-dark.jpg` | Brand filled, dark, 1280. Same content as the light filled state. The mark is the dark-ground file. |
 | `typography-chosen-en-1280.jpg` | Typography with all four faces chosen: Cairo, Amiri, Fraunces and Lora. |
 | `typography-chosen-en-360.jpg` | Typography with all four faces chosen: Cairo, Amiri, Fraunces and Lora. |
 | `typography-chosen-ar-1280.jpg` | Typography with all four faces chosen: Cairo, Amiri, Fraunces and Lora. |

@@ -82,11 +82,17 @@ export function LabelSpecimen({ defaultLocale, names, primary, marks, copy }: Sp
         </span>
       </div>
       <div className={styles.panel} data-part="panel" data-role="background">
-        <p className={scriptClass(defaultLocale, "heading")} data-part="name" data-role="foreground" lang={defaultLocale} dir={direction(defaultLocale)}>
+        <p
+          className={`${scriptClass(defaultLocale, "heading")} ${defaultLocale === "ar" ? styles.nameArabic : styles.nameEnglish}`}
+          data-part="name"
+          data-role="foreground"
+          lang={defaultLocale}
+          dir={direction(defaultLocale)}
+        >
           {names[defaultLocale]}
         </p>
         <p
-          className={`${scriptClass(other, "heading")} ${styles.otherName}`}
+          className={`${scriptClass(other, "heading")} ${other === "ar" ? styles.nameArabic : styles.nameEnglish}`}
           data-part="name-other"
           data-role="foreground"
           lang={other}

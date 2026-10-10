@@ -10,6 +10,7 @@ const noop = async () => {};
 
 const frame = {
   wordmark: <p>B2S</p>,
+  tagline: "Brand to Shelf",
   localeHref: "/ar/sign-in",
   localeCaption: "Arabic",
 };
@@ -51,6 +52,7 @@ describe("SignInView", () => {
         errorKey={null}
         locale="ar"
         wordmark={<p>B2S</p>}
+        tagline={ar.onboarding.tagline}
         localeHref="/en/sign-in"
         localeCaption="English"
         signInAction={noop}

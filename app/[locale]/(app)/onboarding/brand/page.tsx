@@ -22,7 +22,6 @@ export default async function BrandPage({ params, searchParams }: PageProps) {
 
   return (
     <main>
-      <h1>{entered.copy.brand}</h1>
       <BrandStep locale={entered.locale} copy={entered.copy} theme={entered.theme} snapshot={entered.loaded} />
     </main>
   );

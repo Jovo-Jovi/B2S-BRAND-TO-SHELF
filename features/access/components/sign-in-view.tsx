@@ -4,7 +4,7 @@ import { useState, type ReactNode } from "react";
 
 import type { Locale } from "@/app/[locale]/dictionaries";
 import type en from "@/app/[locale]/dictionaries/en.json";
-import { EntryFrame } from "@/components/shared/entry-frame/entry-frame";
+import { EntryDivider, EntryFrame } from "@/components/shared/entry-frame/entry-frame";
 import { Button } from "@/components/ui/button/button";
 import { Field } from "@/components/ui/field/field";
 import { Glyph } from "@/components/ui/glyphs";
@@ -24,6 +24,7 @@ type SignInViewProps = {
   wordmark: ReactNode;
   localeHref: string;
   localeCaption: string;
+  tagline: string;
   signInAction: (formData: FormData) => void | Promise<void>;
   signUpAction: (formData: FormData) => void | Promise<void>;
   googleAction: (formData: FormData) => void | Promise<void>;
@@ -55,6 +56,7 @@ export function SignInView({
   wordmark,
   localeHref,
   localeCaption,
+  tagline,
   signInAction,
   signUpAction,
   googleAction,
@@ -99,7 +101,7 @@ export function SignInView({
   }
 
   return (
-    <EntryFrame wordmark={wordmark} localeHref={localeHref} localeCaption={localeCaption}>
+    <EntryFrame wordmark={wordmark} tagline={tagline} localeHref={localeHref} localeCaption={localeCaption}>
       {notice && errorKey ? (
         <Notice variant="inline" tone={notice.tone} title={notice.title} message={dictionary[errorKey]} icon={<Glyph name={notice.icon} />} />
       ) : null}
@@ -111,7 +113,7 @@ export function SignInView({
             panel: (
               <>
                 {googleForm()}
-                <p>{dictionary.or}</p>
+                <EntryDivider label={dictionary.or} />
                 {credentials(signInAction, dictionary.signInSubmit, "current-password", returnPath)}
               </>
             ),
@@ -122,7 +124,7 @@ export function SignInView({
             panel: (
               <>
                 {googleForm()}
-                <p>{dictionary.or}</p>
+                <EntryDivider label={dictionary.or} />
                 {credentials(signUpAction, dictionary.signUpSubmit, "new-password")}
               </>
             ),

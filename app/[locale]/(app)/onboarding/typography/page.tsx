@@ -22,7 +22,6 @@ export default async function TypographyPage({ params, searchParams }: PageProps
 
   return (
     <main>
-      <h1>{entered.copy.typography}</h1>
       <TypographyStep locale={entered.locale} copy={entered.copy} theme={entered.theme} snapshot={entered.loaded} />
     </main>
   );

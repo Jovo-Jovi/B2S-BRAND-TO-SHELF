@@ -49,16 +49,16 @@ async function runAxe(page: Page, rules: Record<string, { enabled: boolean }>): 
   await page.addScriptTag({ content: axe.source });
   return page.evaluate(
     async ({ enabled, watched }) => {
-      const engine = (window as unknown as { axe: { run: (node: Document, options: unknown) => Promise<{
+      const engine = (window as unknown as { axe: { run: (context: { exclude: string[][] }, options: unknown) => Promise<{
         violations: Array<{ id: string; nodes: Array<{ target: string[]; html?: string; failureSummary?: string }> }>;
         passes: Array<{ id: string }>;
         incomplete: Array<{ id: string; nodes: Array<{ failureSummary?: string; html?: string }> }>;
         inapplicable: Array<{ id: string }>;
       }> } }).axe;
-      const result = await engine.run(document, {
-        rules: enabled,
-        exclude: [["[data-proof-content]"]],
-      });
+      const result = await engine.run(
+        { exclude: [["[data-proof-content]"]] },
+        { rules: enabled },
+      );
       const buckets: Record<string, string> = {};
       for (const id of watched) {
         const hit = (["violations", "passes", "incomplete", "inapplicable"] as const).find((key) =>

@@ -54,8 +54,14 @@
   border-inline-color: var(--b2s-color-text-muted);
 }
 
+.input:focus,
 .input:focus-visible,
-.multiline:focus-visible,
+.multiline:focus,
+.multiline:focus-visible {
+  outline: none;
+}
+
+.root:has(:focus-visible),
 .root[data-state="focus"] {
   outline-style: solid;
   outline-width: var(--b2s-focus-width);

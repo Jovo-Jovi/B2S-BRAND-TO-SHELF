@@ -67,8 +67,14 @@
   border-inline-color: var(--b2s-color-text-muted);
 }
 
+.hex:focus,
 .hex:focus-visible,
-.picker:focus-visible,
+.picker:focus,
+.picker:focus-visible {
+  outline: none;
+}
+
+.root:has(:focus-visible),
 .root[data-state="focus"] {
   outline-style: solid;
   outline-width: var(--b2s-focus-width);

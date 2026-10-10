@@ -50,6 +50,8 @@
 }
 
 .content .label {
+  container-type: inline-size;
+  overflow: hidden;
   display: grid;
   grid-template-columns: 33% minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr) 4%;
@@ -86,6 +88,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+  min-block-size: 0;
   background-color: var(--brand-background);
   color: var(--brand-foreground);
 }
@@ -104,8 +108,12 @@
   color: var(--brand-foreground);
 }
 
-.content .otherName {
-  font-size: 60%;
+.content .nameArabic {
+  font-size: 6.25cqw;
+}
+
+.content .nameEnglish {
+  font-size: 3.958333cqw;
 }
 
 .content .rule {

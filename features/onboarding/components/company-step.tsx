@@ -101,7 +101,7 @@ export function CompanyStep({ locale, copy, theme, values, defaultLocale }: Comp
       locale={locale}
       copy={copy}
       current="company"
-      title={copy.company}
+      title={copy.companyTitle}
       purpose={copy.companyPurpose}
       theme={theme}
       errors={errors}
@@ -109,14 +109,16 @@ export function CompanyStep({ locale, copy, theme, values, defaultLocale }: Comp
       onContinue={() => void run("continue")}
       onSave={() => void run("save")}
       onStep={(step) => void run("step", step === "welcome" ? "brand" : step)}
+      notice={
+        <SaveNotice
+          kind={notice}
+          savedTitle={copy.savedTitle}
+          savedMessage={copy.saved}
+          failedTitle={copy.saveFailedTitle}
+          failedMessage={fillPattern(copy.saveFailed, { step: copy.company })}
+        />
+      }
     >
-      <SaveNotice
-        kind={notice}
-        savedTitle={copy.savedTitle}
-        savedMessage={copy.saved}
-        failedTitle={copy.saveFailedTitle}
-        failedMessage={fillPattern(copy.saveFailed, { step: copy.company })}
-      />
       <FormSection title={copy.companyLegal} description={copy.companyLegalBody}>
         <div id="legal-name">
           <span id="legal-name-en" />
@@ -139,7 +141,6 @@ export function CompanyStep({ locale, copy, theme, values, defaultLocale }: Comp
           onValuesChange={setTradingName}
           {...bilingual}
           completeText={copy.tradingName}
-          help={copy.optional}
         />
         <Field caption={copy.taxNumber} optional={copy.optional} error={errors.find((item) => item.fieldId === "tax")?.message}>
           <TextField id="tax" variant="identifier" value={tax} onValueChange={setTax} dir="ltr" />

@@ -80,7 +80,7 @@ export function TypographyStep({ locale, copy, theme, snapshot }: TypographyStep
     ];
     const role = pair.role === "heading" ? copy.typefaceHeading : copy.typefaceBody;
     return (
-      <Field key={pair.field} caption={role} help={copy.typefaceHelp} error={errors.find((item) => item.fieldId === pair.field)?.message}>
+      <Field key={pair.field} caption={role} error={errors.find((item) => item.fieldId === pair.field)?.message}>
         <Select
           id={pair.field}
           options={options}
@@ -97,7 +97,7 @@ export function TypographyStep({ locale, copy, theme, snapshot }: TypographyStep
       locale={locale}
       copy={copy}
       current="typography"
-      title={copy.typography}
+      title={copy.typefaceTitle}
       purpose={copy.typefacePurpose}
       theme={theme}
       errors={errors}
@@ -106,19 +106,21 @@ export function TypographyStep({ locale, copy, theme, snapshot }: TypographyStep
       onSave={() => void run("save")}
       onStep={(step) => void run("step", step)}
       preview={<BrandProof copy={copy} snapshot={{ ...snapshot, faces }} tab={tab} onTab={setTab} />}
+      notice={
+        <SaveNotice
+          kind={notice}
+          savedTitle={copy.savedTitle}
+          savedMessage={copy.saved}
+          failedTitle={copy.saveFailedTitle}
+          failedMessage={fillPattern(copy.saveFailed, { step: copy.typography })}
+        />
+      }
     >
-      <SaveNotice
-        kind={notice}
-        savedTitle={copy.savedTitle}
-        savedMessage={copy.saved}
-        failedTitle={copy.saveFailedTitle}
-        failedMessage={fillPattern(copy.saveFailed, { step: copy.typography })}
-      />
-      <FormSection title={copy.typefaceSectionArabic} description={copy.typefaceSectionArabicBody}>
+      <FormSection title={copy.typefaceSectionArabic} description={copy.typefaceHelp}>
         {select(PAIRS[0])}
         {select(PAIRS[1])}
       </FormSection>
-      <FormSection title={copy.typefaceSectionLatin} description={copy.typefaceSectionLatinBody}>
+      <FormSection title={copy.typefaceSectionLatin} description={copy.typefaceHelp}>
         {select(PAIRS[2])}
         {select(PAIRS[3])}
       </FormSection>

@@ -56,6 +56,7 @@ export default async function SignInPage({ params, searchParams }: SignInPagePro
         wordmark={<h1>{dictionary.onboarding.mark}</h1>}
         localeHref={`/${other}/sign-in${suffix}`}
         localeCaption={other === "ar" ? dictionary.onboarding.localeAr : dictionary.onboarding.localeEn}
+        tagline={dictionary.onboarding.tagline}
         signInAction={signInWithPassword}
         signUpAction={signUpWithPassword}
         googleAction={signInWithGoogle}

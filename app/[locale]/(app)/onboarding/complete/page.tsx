@@ -1,6 +1,5 @@
 import { notFound, redirect } from "next/navigation";
 
-import { SignOutControl } from "@/features/access/components/sign-out-control";
 import { CompletionScreen } from "@/features/onboarding/components/completion-screen";
 import { NamedScreen } from "@/features/onboarding/components/named-screen";
 import { themedHref } from "@/features/onboarding/destination";
@@ -22,9 +21,7 @@ export default async function CompletePage({ params, searchParams }: PageProps) 
 
   return (
     <main>
-      <SignOutControl locale={entered.locale} caption={entered.copy.signOut} />
-      <h1>{entered.copy.completeTitle}</h1>
-      <CompletionScreen copy={entered.copy} snapshot={entered.loaded} />
+      <CompletionScreen locale={entered.locale} copy={entered.copy} theme={entered.theme} snapshot={entered.loaded} />
     </main>
   );
 }

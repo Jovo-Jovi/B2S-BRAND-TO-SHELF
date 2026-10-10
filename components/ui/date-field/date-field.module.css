@@ -40,7 +40,12 @@
   border-inline-color: var(--b2s-color-text-muted);
 }
 
-.input:focus-visible,
+.input:focus,
+.input:focus-visible {
+  outline: none;
+}
+
+.entry:has(:focus-visible),
 .root[data-state="focus"] .entry {
   outline-style: solid;
   outline-width: var(--b2s-focus-width);

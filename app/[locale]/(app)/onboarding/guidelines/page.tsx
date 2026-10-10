@@ -25,7 +25,6 @@ export default async function GuidelinesPage({ params, searchParams }: PageProps
 
   return (
     <main>
-      <h1>{entered.copy.guidelines}</h1>
       <GuidelinesStep
         locale={entered.locale}
         copy={entered.copy}

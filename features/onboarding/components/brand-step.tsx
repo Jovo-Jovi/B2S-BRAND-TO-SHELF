@@ -38,13 +38,6 @@ const ROLE_CAPTION: Record<ColourRole, keyof OnboardingCopy> = {
   critical: "roleCritical",
 };
 
-const STARTING_HELP: Partial<Record<ColourRole, keyof OnboardingCopy>> = {
-  background: "startingBackground",
-  foreground: "startingForeground",
-  muted: "startingMuted",
-  critical: "startingCritical",
-};
-
 export function BrandStep({ locale, copy, theme, snapshot }: BrandStepProps) {
   const [names, setNames] = useState(snapshot.names);
   const [colours, setColours] = useState<ColourValues>(snapshot.colours);
@@ -143,10 +136,8 @@ export function BrandStep({ locale, copy, theme, snapshot }: BrandStepProps) {
   }
 
   function roleField(role: ColourRole) {
-    const helpKey = STARTING_HELP[role];
-    const help = helpKey ? fillPattern(copy.startingHelp, { hex: copy[helpKey] }) : undefined;
     return (
-      <Field key={role} caption={copy[ROLE_CAPTION[role]]} help={help} error={errors.find((item) => item.fieldId === `role-${role}`)?.message}>
+      <Field key={role} caption={copy[ROLE_CAPTION[role]]} error={errors.find((item) => item.fieldId === `role-${role}`)?.message}>
         <ColorField
           id={`role-${role}`}
           variant={role === "foreground" ? "paired" : "standard"}
@@ -183,22 +174,24 @@ export function BrandStep({ locale, copy, theme, snapshot }: BrandStepProps) {
       locale={locale}
       copy={copy}
       current="brand"
-      title={copy.brand}
-      purpose={copy.brandPurpose}
+      title={copy.brandTitle}
+      purpose={copy.brandLead}
       theme={theme}
       errors={errors}
       onContinue={() => void run("continue")}
       onSave={() => void run("save")}
       onStep={(step) => void run("step", step)}
       preview={<BrandProof copy={copy} snapshot={display} tab={tab} onTab={setTab} />}
+      notice={
+        <SaveNotice
+          kind={notice}
+          savedTitle={copy.savedTitle}
+          savedMessage={copy.saved}
+          failedTitle={copy.saveFailedTitle}
+          failedMessage={fillPattern(copy.saveFailed, { step: copy.brand })}
+        />
+      }
     >
-      <SaveNotice
-        kind={notice}
-        savedTitle={copy.savedTitle}
-        savedMessage={copy.saved}
-        failedTitle={copy.saveFailedTitle}
-        failedMessage={fillPattern(copy.saveFailed, { step: copy.brand })}
-      />
       <FormSection title={copy.brandSectionName} description={copy.brandSectionNameBody}>
         <div id="brand-name">
           <span id="name-en" />

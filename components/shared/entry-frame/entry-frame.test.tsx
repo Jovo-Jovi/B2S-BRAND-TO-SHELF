@@ -30,7 +30,7 @@ function boot() {
 describe("EntryFrame", () => {
   it("names itself, carries the wordmark and the other language, and draws no image", () => {
     const html = renderToStaticMarkup(
-      <EntryFrame wordmark={<p>B2S</p>} localeHref="/ar/sign-in" localeCaption="Arabic">
+      <EntryFrame wordmark={<p>B2S</p>} tagline="Brand to Shelf" localeHref="/ar/sign-in" localeCaption="Arabic">
         <p>Sign in</p>
       </EntryFrame>,
     );
@@ -53,8 +53,9 @@ describe("EntryFrame", () => {
     for (const locale of ["en", "ar"] as const) {
       const view = await mount(
         <div lang={locale} dir={locale === "ar" ? "rtl" : "ltr"}>
-          <EntryFrame
+            <EntryFrame
             wordmark={<p>B2S</p>}
+            tagline="Brand to Shelf"
             localeHref={locale === "en" ? "/ar/sign-in" : "/en/sign-in"}
             localeCaption={locale === "en" ? "Arabic" : "English"}
           >

@@ -7,29 +7,61 @@
   min-block-size: 100vh;
   padding-block: var(--b2s-space-5);
   padding-inline: var(--b2s-space-5);
+  background-color: var(--b2s-color-canvas);
 }
 
 .column {
   display: flex;
   flex-direction: column;
   row-gap: var(--b2s-space-5);
+  box-sizing: border-box;
   inline-size: 100%;
-  max-inline-size: var(--b2s-measure-form);
+  max-inline-size: var(--b2s-entry-width);
+  padding-block: var(--b2s-space-8);
+  padding-inline: var(--b2s-space-8);
+  background-color: var(--b2s-color-surface);
+  border: var(--b2s-border-width) solid var(--b2s-color-border);
+  border-radius: var(--b2s-radius-lg);
 }
 
 .header {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   column-gap: var(--b2s-space-3);
   row-gap: var(--b2s-space-2);
+}
+
+.lockup {
+  display: flex;
+  align-items: center;
+  column-gap: var(--b2s-space-3);
+}
+
+.tile {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--b2s-mark-tile);
+  block-size: var(--b2s-mark-tile);
+  border-radius: var(--b2s-radius-md);
+  background-color: var(--b2s-color-action);
+  color: var(--b2s-color-action-text);
+}
+
+.tile :global(svg) {
+  inline-size: var(--b2s-icon-size);
+  block-size: var(--b2s-icon-size);
 }
 
 .wordmark {
   margin-block: 0;
   margin-inline: 0;
   font-family: var(--b2s-font-family);
+  font-size: var(--b2s-text-md);
+  line-height: var(--b2s-leading-md);
   font-weight: var(--b2s-weight-semibold);
   color: var(--b2s-color-text);
 }
@@ -39,4 +71,37 @@
   margin-inline: 0;
   font: inherit;
   color: inherit;
+}
+
+.tagline {
+  margin-block: 0;
+  margin-inline: 0;
+  font-size: var(--b2s-text-xs);
+  line-height: var(--b2s-leading-xs);
+  color: var(--b2s-color-text-muted);
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  column-gap: var(--b2s-space-3);
+  color: var(--b2s-color-text-muted);
+  font-size: var(--b2s-text-sm);
+  line-height: var(--b2s-leading-sm);
+}
+
+.rule {
+  flex: 1 1 auto;
+  block-size: var(--b2s-border-width);
+  background-color: var(--b2s-color-border);
+}
+
+.column form {
+  display: flex;
+  flex-direction: column;
+  row-gap: var(--b2s-space-4);
+}
+
+.column form button {
+  inline-size: 100%;
 }

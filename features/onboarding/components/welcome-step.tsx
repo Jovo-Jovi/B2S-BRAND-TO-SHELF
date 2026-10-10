@@ -66,7 +66,7 @@ export function WelcomeStep({ locale, copy, theme }: WelcomeStepProps) {
       locale={locale}
       copy={copy}
       current="welcome"
-      title={copy.welcome}
+      title={copy.welcomeTitle}
       purpose={copy.welcomePurpose}
       theme={theme}
       errors={errors}

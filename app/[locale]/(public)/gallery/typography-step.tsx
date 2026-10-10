@@ -172,6 +172,8 @@ export function TypographyStep({ locale, copy, otherLocale }: TypographyStepProp
         continueCaption={copy.compositionContinue}
         save={copy.compositionSave}
         mark={copy.compositionPlatformMark}
+        tagline={copy.compositionTagline}
+        titleLevel="h2"
         localeHref={`/${otherLocale}/gallery`}
         localeCaption={otherLocale === "ar" ? copy.localeAr : copy.localeEn}
         onBack={() => undefined}
