@@ -2,7 +2,7 @@
 
 **Status:** AUTHORED. Precedence slot 12.
 **Authored:** 2026-08-01 by the reviewer surface.
-**Depends on:** `SCOPE.md` (22 modules), `ARCHITECTURE.md`, `GLOSSARY.md`.
+**Depends on:** `SCOPE.md` (23 modules), `ARCHITECTURE.md`, `GLOSSARY.md`.
 
 > The repository is the specification's index. A feature folder maps one-to-one
 > to a module in `SCOPE.md`. A folder that maps to nothing is out of scope by
@@ -52,19 +52,32 @@ enumerate every file, and the check does not pretend otherwise.
 app/                              route surface only, thin
   [locale]/
     dictionaries.ts
+    page.tsx                      locale root redirects; the public site is P08 (OD-A8)
     dictionaries/                 locale resolution, dictionary loading
     (public)/                     unauthenticated
       sign-in/                    email-and-password and Google (OD-G13)
       callback/                   Google OAuth return
       invitation/                 accept — deferred, P02
-    (app)/                        authenticated tenant surface — deferred, P02
-      onboarding/
-      brand/
-      packaging/
-      catalog/
-      inventory/
-      sales/
-      settings/
+      gallery/                    catalog gallery — refused when the deployment is production
+      error-probe/                throws on request so the error record can be proved — refused when the deployment is production
+      wiring/                     deployment environment and Supabase project ref — refused when the deployment is production
+      privacy/                    privacy policy — deferred, P08 (OD-A8)
+      terms/                      terms of service — deferred, P08 (OD-A8)
+    (app)/                        authenticated tenant surface
+      onboarding/                 the wizard
+        welcome/
+        brand/
+        typography/
+        company/
+        guidelines/
+        review/
+        complete/
+      brand/                      deferred
+      packaging/                  deferred
+      catalog/                    deferred
+      inventory/                  deferred
+      sales/                      deferred
+      settings/                   deferred
     (operator)/                   the B2S operator surface, OD-G10 — deferred, P08
   api/                            only where a route handler is unavoidable — deferred until one is
 
@@ -74,7 +87,12 @@ features/                         one folder per SCOPE.md module
     schema.ts                     the zod schemas for this module
     components/                   module-private components
     __tests__/
-  onboarding/                     deferred, P03
+  onboarding/                     the wizard, P03
+    actions.ts                    mutations, zod-validated at entry (ADR-010)
+    schema.ts                     the zod schemas for this module
+    queries.ts                    reads, executed as the member
+    components/                   module-private components, composed from ui/
+    __tests__/
   brand/                          deferred
   assets/                         deferred
   packaging/                      deferred
@@ -93,9 +111,39 @@ features/                         one folder per SCOPE.md module
     components/                   module-private components, composed from ui/
     __tests__/
 
-components/                       deferred, the design-surface catalog lands before P03
+components/                       the design-surface catalog
   ui/                             DESIGN SURFACE — primitives
-  shared/                         DESIGN SURFACE — composed, cross-module
+    button/                       Button
+    text-link/                    TextLink
+    field/                        Field
+    text-field/                   TextField
+    bilingual-field/              BilingualField
+    select/                       Select
+    checkbox/                     Checkbox
+    radio-group/                  RadioGroup
+    switch/                       Switch
+    spinner/                      Spinner
+    skeleton/                     Skeleton
+    tabs/                         Tabs
+    dialog/                       Dialog
+    notice/                       Notice
+    tooltip/                      Tooltip
+    status-badge/                 StatusBadge
+    color-field/                  ColorField
+    brand-frame/                  BrandFrame
+    date-field/                   DateField
+    file-drop/                    FileDrop
+    data-table/                   DataTable
+  shared/
+    app-shell/                    AppShell
+    page-header/                  PageHeader
+    tenant-switcher/              TenantSwitcher
+    form-section/                 FormSection
+    filtered-data-table/          the filtered data table
+    empty-state/                  EmptyState
+    error-state/                  ErrorState
+    wizard-step/                  WizardStep
+    entry-frame/                  EntryFrame
 
 lib/
   supabase/
@@ -104,6 +152,16 @@ lib/
     session.ts                    session refresh, after locale normalisation
     server-only/                  QUARANTINE — ADR-005
       service.ts                  the only construction of the privileged client
+  locale/                         dates, and every number CALC_SPEC.md does not govern — P03
+  colour/                         the WCAG contrast function, OD-H9 — P03
+  typeface/                       the platform typeface library — P03
+  logo/                           the logo file check, ADR-016 — P03
+    store-logo.ts                 the upload path, wired to no route — P03-T20
+  observability/                  the unhandled-error record, OD-H13 — P03
+    server-error-line.ts          one redacted line; the only writer of that record
+    server-timing.ts              phase durations only; absent in production — P03
+    phase-timing.ts               records those durations for one request
+    install-phase-timing.ts       publishes them on a non-production response
   money/                          exact decimal, ADR-011 — deferred, P05
   print/                          the print engine, ADR-009 — deferred, P06
 
@@ -116,6 +174,7 @@ types/
 
 __tests__/                        cross-cutting suites only
   isolation/                      the tenant-isolation harness and suite
+  browser/                        the browser-rendered tier
   *.test.tsx                      shell and cross-cutting tests
 
 scripts/                          CI guards and integrity checks

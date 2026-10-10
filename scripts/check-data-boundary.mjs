@@ -24,10 +24,16 @@ const SCANNED_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx", ".mts", ".mjs"
 // commit (P02-T11, CF-148): 10 files under [app, lib, __tests__, proxy.ts]
 // (features/ and components/ do not exist yet) and 3 Supabase import sites,
 // all inside lib/supabase/. P02-T14 creates features/ and lib/supabase/session.ts:
-// 20 files and 4 import sites. Raise both the day either count grows; never
-// lower either to make a shrinking result pass. Changed condition, not a new
-// premise: PROVEN_PAIRS does not gain a pair for this guard.
-const MINIMUM_FILES_SCANNED = 20;
+// 20 files and 4 import sites. P03-T09 creates components/ and raises the
+// file floor to the true count measured with that root present. Import
+// sites stay 4: no component imports Supabase. Changed condition, not a
+// new premise: PROVEN_PAIRS does not gain a pair for this guard.
+// P03-T12 — measured after the data family: 76. P03-T13 adds the gallery
+// and the browser tier: 82. P03-T21 measured 110 after the error
+// boundaries, the probe and their tests.
+// P03-T23 measured 139 after the onboarding routes, actions and browser harness.
+// P03-T24 measured 150 after Company, Guidelines, Review and completion.
+const MINIMUM_FILES_SCANNED = 150;
 const MINIMUM_IMPORT_SITES = 4;
 
 // An import of any Supabase client package, in either module syntax.

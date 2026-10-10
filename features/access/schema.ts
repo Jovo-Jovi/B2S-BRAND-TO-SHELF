@@ -2,10 +2,12 @@ import { z } from "zod";
 
 function credentialsFromUnknown(raw: unknown): unknown {
   if (typeof FormData !== "undefined" && raw instanceof FormData) {
+    const next = String(raw.get("next") ?? "");
     return {
       email: String(raw.get("email") ?? ""),
       password: String(raw.get("password") ?? ""),
       locale: String(raw.get("locale") ?? ""),
+      ...(next ? { next } : {}),
     };
   }
   return raw;
@@ -13,22 +15,29 @@ function credentialsFromUnknown(raw: unknown): unknown {
 
 const localeSchema = z.enum(["en", "ar"]);
 
+const onboardingReturn = z.string().regex(/^\/(en|ar)\/onboarding(\/[\w-]+)?$/);
+
 const credentialsObject = z.object({
   email: z.email(),
   password: z.string().min(1),
   locale: localeSchema,
+  next: onboardingReturn.optional(),
 });
 
 export const signInSchema = z.preprocess(credentialsFromUnknown, credentialsObject);
 
 export const signUpSchema = z.preprocess(credentialsFromUnknown, credentialsObject);
 
-export const googleSignInSchema = z.preprocess((raw: unknown) => {
+function localeFromForm(raw: unknown): unknown {
   if (typeof FormData !== "undefined" && raw instanceof FormData) {
     return { locale: String(raw.get("locale") ?? "") };
   }
   return raw;
-}, z.object({ locale: localeSchema }));
+}
+
+export const googleSignInSchema = z.preprocess(localeFromForm, z.object({ locale: localeSchema }));
+
+export const signOutSchema = z.preprocess(localeFromForm, z.object({ locale: localeSchema }));
 
 export const oauthCallbackSchema = z.object({
   locale: localeSchema,
@@ -43,7 +52,8 @@ export type AccessErrorKey =
   | "password_required"
   | "locale_invalid"
   | "oauth_cancelled"
-  | "input_invalid";
+  | "input_invalid"
+  | "confirmation_sent";
 
 export const ACCESS_ERROR_KEYS: readonly AccessErrorKey[] = [
   "identity_refused",
@@ -53,8 +63,14 @@ export const ACCESS_ERROR_KEYS: readonly AccessErrorKey[] = [
   "locale_invalid",
   "oauth_cancelled",
   "input_invalid",
+  "confirmation_sent",
 ];
 
 export function isAccessErrorKey(value: string): value is AccessErrorKey {
   return (ACCESS_ERROR_KEYS as readonly string[]).includes(value);
+}
+
+export function onboardingReturnPath(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  return onboardingReturn.safeParse(value).success ? value : undefined;
 }

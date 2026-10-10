@@ -10,13 +10,17 @@ byte-identical to the register as signed; no rationale has been added after
 the fact, because the signatures cover the decisions, not a later
 reconstruction of the reasoning.
 
+The live signed total is the figure in §2, asserted against this register's
+own rows. The 84 above is the promoted set and is not the file's current
+total (CF-156).
+
 New decisions are authored here in full — decision, date, rationale, and
 what it forecloses. Existing rows are amended only by formal amendment,
 never edited in place.
 
 ## 2. Decision register
 
-92 decisions, all signed. None open.
+104 decisions, all signed. None open.
 
 ### Group A — Product identity
 
@@ -29,6 +33,8 @@ never edited in place.
 | A5 | **Exclusions:** agencies serving unrelated clients from one login. Compliance guarantees (F2). Retail GTIN generation (H5). Legacy data migration as a built-in feature — CSV import replaces it. | SIGNED (derived) |
 | A6 | Done when many brands run their business from it. | SIGNED |
 | A7 | Every product links to business management, design, preparation, packaging and invoicing. Stock reaches component level. | SIGNED |
+| **A8** | **Release 1 includes a public site: a bilingual landing page at each locale root, sign-in and sign-up entry, and a privacy policy and terms of service whose text the owner supplies. It owns no data. It is built in P08.** | SIGNED 2026-09-30 |
+| **A9** | **Onboarding owns exactly one store, the onboarding draft. Every other answer is written where it belongs as soon as it is valid on its own. Business details land on LegalEntity, beside tenant, never on tenant.** | SIGNED 2026-10-03 |
 
 ### Group B — Legacy relationship
 
@@ -132,6 +138,13 @@ never edited in place.
 | **G17** | **`default_locale` is constrained to `en` and `ar`. `base_currency` is constrained to `EGP`, `USD`, `SAR`, `AED`, `EUR`. Enforced by the database, never by the wizard.** | SIGNED 2026-08-05 |
 | **G18** | **A `Member` may own at most three active `Tenant`s and perform at most three provisioning acts per rolling 24 hours. Both are policy values, hardcoded to the free plan in Release 1 and supplied by `Subscription` in Release 3.** | SIGNED 2026-08-05 |
 | **G19** | **`public.operator` is a system-managed table. An Operator is provisioned only by migration or by direct administrative access to the database. No API role holds INSERT, UPDATE or DELETE on it. Operator is the least-privileged platform administrator: account metadata, usage and billing (OD-G10) and nothing else. No text in this repository may describe it as a super-admin, superuser, admin or staff role.** | SIGNED 2026-08-31 |
+| **G20** | **Object storage stays Supabase Storage. `MediaAsset` and `AssetRendition` are objects under tenant-isolated paths governed by storage policies. ADR-008 stands. Cloudflare R2 is declined for Release 1 on isolation, not cost. No Asset-tier column, type or function name may contain the vendor. Revisit at P06 against measured object sizes and egress.** | SIGNED 2026-09-17 |
+| **G21** | **The platform's navigation, forms, tables, buttons and status indicators use one platform look for every tenant. A tenant's brand appears on its outputs, on the surfaces where that brand is being shown or edited, and as the tenant's logo in the header. The design-surface token layer is platform tokens for chrome, and the seven ColorRoles only where a brand is rendered or edited.** | SUPERSEDED 2026-10-01 by OD-G24 |
+| **G22** | **Every chrome neutral colour has red, green and blue equal. The platform introduces no colour cast: no tinted, warm, cool or signature grey, and no gold. A page or component uses a platform colour token or it is a defect.** | SUPERSEDED 2026-10-01 by OD-G25 |
+| **G23** | **The platform's interface is set in IBM Plex Sans for Latin and IBM Plex Sans Arabic for Arabic, treated as one superfamily. The font files are self-hosted and committed as assets, and are never loaded from a content delivery network. A tenant's typefaces are used only inside the brand frame (OD-G21) and never replace the platform face in chrome.** | SIGNED 2026-09-23 |
+| **G24** | **The platform's interface carries its own identity: Clay, a restrained terracotta, as its single accent, over warm natural neutrals. Clay marks primary actions, the current place in navigation, progress, focus and selection, and nothing else. A tenant's brand appears on its outputs, inside the brand frame, and as its logo in the header, and nowhere else. The platform identity never enters tenant output. Tenant output never mirrors and never changes with the interface language. B2S's mark never appears on tenant output. Status belongs to the platform.** | SIGNED 2026-10-01 |
+| **G25** | **Wherever a tenant's brand or packaging is shown for judgement, it sits on an achromatic surround. These are the only achromatic surfaces the platform defines, and they appear nowhere else. The rest of the platform uses warm neutrals, with chroma capped as DESIGN_SURFACE.md §2.2 states.** | SIGNED 2026-10-01 |
+| **G26** | **The tenant's slug is generated by the platform: twelve lowercase hexadecimal characters derived from gen_random_uuid(), unique and immutable. No caller supplies, sees a choice of, or changes a slug. Provisioning takes the business's name, base currency and default language.** | SIGNED 2026-10-03 |
 
 ### Group H — Quality & acceptance
 
@@ -149,6 +162,9 @@ never edited in place.
 | **H10** | **`MODULE_SPEC.md` §1 is the application tree. Repository-root configuration and infrastructure directories are outside its scope and are stated as such.** | SIGNED 2026-08-04 |
 | **H11** | **Every probe a gate invents becomes a permanent CI check or suite assertion. An adversarial pass is additive, never re-invented.** | SIGNED 2026-08-04 |
 | **H12** | **Nine build phases. P09 — launch and operations — is added. Staging and error visibility move into P03's entry; backup with a rehearsed restore moves into P05's exit. Release 1 is a pilot with a real brand, not a demo.** | SIGNED 2026-08-05 |
+| **H13** | **`BUILD_PHASES.md` §P03's entry condition "error visibility" means: an unhandled server error in production produces a record a builder can retrieve within one working session, keyed to a request identifier that also appears in what the person saw. The definition names no vendor. This OD defines the condition; it does not implement it.** | SIGNED 2026-09-17 |
+| **H14** | **No B2S procedure, local or in CI, requires Docker. `supabase db dump`, `supabase start` and any other Docker-backed command are not used. A control whose execution requires Docker is not a control this project has.** | SIGNED 2026-09-22 |
+| **H15** | **Production accepts no new accounts until launch. Production's authentication refuses new sign-ups until launch at P09. Opening it requires both: production on a Vercel plan whose runtime-log retention meets OD-H13 — Pro's one day, or longer — and the published privacy policy (OD-A8). Staging and preview deployments stay open for testing.** | SIGNED 2026-10-04 |
 
 ## 3. Decisions authored after the promotion
 
@@ -390,6 +406,8 @@ migration, because OD-G10 holds `Operator` to metadata.
 
 **Not covered.** The cap bounds tenants, not slugs. Named, not solved.
 
+**AMENDED 2026-10-03 — slugs can no longer be squatted (OD-G26).** The sentence above stands and is not edited (PR-07). It records the gap as it was signed. OD-G26 supersedes that gap in part: the slug is generated by the platform, so none can be chosen. The cap on tenants stands unchanged.
+
 ### OD-G19 — Operator is system-managed, and the least privileged administrator
 **Signed 2026-08-31.**
 
@@ -452,6 +470,10 @@ Staging and error visibility land at **P03's entry** — the first phase where a
 person puts real content in. Backup with a **rehearsed** restore lands at
 **P05's exit** — the first phase holding money records.
 
+**AMENDED 2026-10-04 (OD-H15).** The sentences above stand. Production's
+authentication accepts no new account until launch at P09. Staging stays
+open, and it is where content is entered before that launch.
+
 **The method document is authored last.** `DEV_OS.md` and `DEV_OS_REFERENCE.md`
 are retained as history. At P09's handoff, B2S authors its own method from the
 loop it actually ran — nine phases, the entry-readiness-gate lifecycle, the
@@ -462,4 +484,256 @@ never rewritten (PR-29).
 **Forecloses.** A launch with no owner for the security audit; monitoring
 discovered when a tenant reports an outage; a backup policy with no rehearsal;
 a method document written before the method was observed.
+
+### OD-G20 — Object storage stays Supabase Storage
+**Signed 2026-09-17.**
+
+`MediaAsset` and `AssetRendition` are objects in Supabase Storage under
+tenant-isolated paths governed by storage policies. ADR-008 stands and is not
+superseded. Cloudflare R2 was assembled as a fork at P03 entry (CF-158) and is
+declined for Release 1.
+
+The reason is not cost. R2's free allowance is larger and its egress is free
+at any volume, so on price it wins outright. It is declined on isolation.
+Supabase Storage is `storage.objects` — a Postgres table in the same database
+under RLS — so `current_tenant_id()` governs objects and rows through one
+mechanism, proven by one suite and re-derived by one gate. Under R2, storage
+isolation would stop being a database refusal and become a prefix convention
+plus signed URLs, enforced by application code being correct. P03 inherits
+P02's exit standard and tenant isolation is not waivable by OD, so R2 would
+oblige a second isolation mechanism, a second proof class — guessed key,
+listed prefix, swapped signed URL, expired URL, cross-tenant prefix — and a
+second privileged credential in a public repository, all in the phase that
+also lands seven entities, the wizard and `BRAND_CONFIG.md`.
+
+**Rider 1.** The Asset tier of `DATA_MODEL.md` records provider, bucket and
+key. No column, type or function name may contain the vendor. That tier is
+unauthored, so this costs nothing now and makes a future reversal an object
+migration rather than a schema change.
+
+**Rider 2.** An explicit revisit at P06 against measured object sizes and
+egress rather than estimates.
+
+**Forecloses.** A second object-store vendor in Release 1; a second
+privileged constructor beside ADR-005's quarantine; storage isolation proven
+by convention rather than by refusal.
+
+### OD-H13 — Error visibility is a checkable condition
+**Signed 2026-09-17.**
+
+`BUILD_PHASES.md` §P03's entry condition "error visibility" means: an
+unhandled server error in production produces a record a builder can retrieve
+within one working session, keyed to a request identifier that also appears
+in what the person saw. §P03's entry line is amended to state the definition
+rather than the phrase.
+
+§P03 made error visibility an entry condition and no document defined it, so
+the condition could be neither satisfied nor failed. An entry condition that
+cannot be checked is not a condition. The definition names no vendor — a log
+drain, an error-tracking DSN held in Vercel environment variables and never
+in the repository, or both, all satisfy it. What it requires is that the
+record exists, that a builder can reach it without asking anyone, and that
+the identifier ties the record to the person's report.
+
+This decision defines the condition; it does not implement it. Whether the
+condition is met is P03's to satisfy before the wizard accepts real content.
+
+**Forecloses.** Satisfying an entry condition by assertion; naming a vendor
+in a phase plan where a capability was meant.
+
+### OD-H14 — Docker is not a project dependency
+**Signed 2026-09-22.**
+
+**Decision.** No B2S procedure, local or in CI, requires Docker.
+`supabase db dump`, `supabase start` and any other Docker-backed command
+are not used. A control whose execution requires Docker is not a control
+this project has.
+
+**Reasoning.** Owner decision, 2026-09-22. The one procedure that depended
+on Docker — ADR-013's pre-migration snapshot — has a native equivalent, and
+a local-environment dependency added for one command is a dependency every
+future machine and contributor inherits. `supabase start` was already
+unnecessary: ADR-013 points local development at staging.
+
+**Forecloses.** Docker Desktop, Docker in CI, `supabase db dump`,
+`supabase start`, and any restore-verification method that starts a local
+Postgres container.
+
+### OD-G21 — The platform's own interface is neutral; tenant brand is rendered, not worn
+
+**SUPERSEDED 2026-10-01 by OD-G24.** The decision, reasoning and forecloses below are the original text, unedited.
+
+**Signed 2026-09-22.**
+
+Filed in Group G. The register's convention is the group title. Group D
+holds the tenant's brand inventory — fields, logos, colours, fonts — and
+Group H holds acceptance and method. Group G holds the platform itself:
+the client (G4), that the client is responsive (G5), and where it is
+hosted (G9). This decision constrains that client's chrome. It is not a
+brand-field rule and not an acceptance gate.
+
+**Decision.** The platform's navigation, forms, tables, buttons and status
+indicators use one platform look for every tenant. A tenant's brand
+appears on its outputs — packaging, labels, stickers, cartons, stands,
+garment tickets and every buyer-facing document — on the surfaces where
+that brand is being shown or edited, and as the tenant's logo in the
+header. The design-surface token layer is therefore two layers: platform
+tokens for chrome, and the seven ColorRoles only where a brand is rendered
+or edited.
+
+**Reasoning.** PRODUCT_BRIEF §1's "white-label" is satisfied by B2S's mark
+never appearing on a tenant's output; Balance Bites is a customer of the
+platform (OD-A4), not its face. BRAND_CONFIG.md §11 enforces contrast only
+between foreground and background, so a tenant accent failing against the
+page would make every button unreadable, and the platform cannot refuse a
+brand for being that brand. `critical` means warnings and regulatory
+marks, never decorative; if it recoloured the whole application, a
+warning in one tenant would be decoration in another. OD-G14 lets one
+member hold several tenants and switch by an explicit selector;
+recolouring the application on that switch would make two memberships
+look like two products.
+
+**Forecloses.** Tenant ColorRoles applied to platform chrome; a per-tenant
+restyle of navigation, forms, tables or status; B2S's mark on any
+tenant output.
+
+### OD-G22 — The chrome is achromatic
+
+**SUPERSEDED 2026-10-01 by OD-G25.** The decision, reasoning, held-by and forecloses below are the original text, unedited.
+
+**Signed 2026-09-23.**
+
+Filed in Group G. It extends OD-G21 from no accent to no cast, and it
+constrains the same chrome.
+
+**Decision.** Every chrome neutral colour has red, green and blue equal.
+The platform introduces no colour cast: no tinted, warm, cool or signature
+grey, and no gold. A page or component uses a platform colour token or it
+is a defect.
+
+**Reasoning.** This is part of the proofing model, not a style. Print
+colour is judged against neutral grey because a tinted surround shifts how
+the colour beside it is perceived — a cool grey makes a warm brand read
+warmer. B2S is where a brand owner decides what their packaging looks like,
+so the platform's chrome is that surround. It extends OD-G21 from no accent
+to no cast.
+
+**Held by.** CF-172 asserts every chrome neutral token has R = G = B, and
+that no colour value appears outside the token definitions.
+
+**Forecloses.** Any chrome neutral with unequal channels; a chrome colour
+chosen by a page or component; gold; and revisiting this as an aesthetic
+preference.
+
+### OD-G23 — The platform typeface is one superfamily
+**Signed 2026-09-23.**
+
+Filed in Group G. Tenant typefaces stay the brand inventory OD-G21 already
+keeps inside the brand frame. This decision names the platform face those
+typefaces do not replace.
+
+**Decision.** The platform's interface is set in IBM Plex Sans for Latin
+and IBM Plex Sans Arabic for Arabic, treated as one superfamily. The font
+files are self-hosted and committed as assets, and are never loaded from a
+content delivery network. A tenant's typefaces are used only inside the
+brand frame (OD-G21) and never replace the platform face in chrome.
+
+**Reasoning.** The two were designed together, so weights and vertical
+metrics match across scripts by design — an Arabic caption and an English
+one at the same step look like the same step. They carry tabular figures
+and are licensed under the SIL Open Font License 1.1. `ARCHITECTURE.md`
+already forbids a runtime CDN; this decision names the faces that rule
+bundles.
+
+**Held by.** CF-172 asserts no font family appears outside the token
+definitions other than these two and their generic fallbacks;
+`check-no-runtime-cdn` forbids a runtime font source.
+
+**Forecloses.** A second chrome typeface, a runtime font CDN, a per-page
+font choice, and a monospace face for data.
+
+### OD-G24 — The platform has its own identity; tenant output is the tenant's
+**Signed 2026-10-01.**
+
+Filed in Group G. It replaces OD-G21. OD-G21's text stands, unedited.
+
+**Decision.** The platform's interface carries its own identity: Clay, a restrained terracotta, as its single accent, over warm natural neutrals (DESIGN_SURFACE.md §2.2). Clay marks primary actions, the current place in navigation, progress, focus and selection, and nothing else. A tenant's brand — its colour roles, typefaces, logo and imagery — appears on its outputs, inside the brand frame, and as its logo in the header, and nowhere else. The platform identity never enters tenant output: no platform colour, neutral, shadow or typeface styles anything inside a brand frame or on a generated output. Tenant output never mirrors and never changes with the interface language: its layout, orientation, typography, numerals and imagery are set by the output itself. The digit system printed on an output belongs to that output's specification; CALC_SPEC.md R1-25 continues to govern numbers the platform renders in its own interface. B2S's mark never appears on tenant output. Status belongs to the platform.
+
+**Reasoning.** The owner reviewed the rendered monochrome catalog on 2026-09-30 and rejected it: a platform with no identity reads as unfinished, and B2S is the product brand owners choose. White-label means the tenant's brand is never displaced on its own output — not that the tool around it must look like nothing. OD-G21's reasons for keeping tenant colours off platform controls stand unchanged. The mirroring rule is new: a pouch is a physical object, and it's the same pouch whichever language its owner reads the interface in.
+
+**Supersedes OD-G21, whose text stands (PR-07). Forecloses.** Tenant colours on platform controls; any platform colour, neutral, shadow or face inside tenant output; tenant output that mirrors or restyles with the interface language; B2S's mark on tenant output; Clay as a status, a large background or decoration.
+
+### OD-G25 — The proofing surround is achromatic, and only the proofing surround
+**Signed 2026-10-01.**
+
+Filed in Group G. It replaces OD-G22. OD-G22's text stands, unedited.
+
+**Decision.** Wherever a tenant's brand or packaging is shown for judgement, it sits on an achromatic surround — --b2s-color-proof and --b2s-color-proof-edge, red, green and blue equal, in both themes. These are the only achromatic surfaces the platform defines, and they appear nowhere else. The rest of the platform uses warm neutrals, with chroma capped as DESIGN_SURFACE.md §2.2 states.
+
+**Reasoning.** A tinted surround shifts how the colour beside it is perceived, which matters where a brand is judged and nowhere else. OD-G22 applied it to the whole platform and removed the platform's identity to protect a judgement made in one place.
+
+**Supersedes OD-G22, whose text stands (PR-07). Forecloses.** A tinted proof; proof grey as a platform surface; anything warm inside the proof; a neutral above the ceiling.
+
+### OD-A8 — Release 1 includes a public site
+**Signed 2026-09-30.**
+
+Filed in Group A. The register's convention is the group title, as OD-G21 records it. This decision adds a module to `SCOPE.md`. Group A is Product identity: what the product is, and what it excludes (A5). Group G holds the client, hosting and chrome identity, which this decision uses and does not redefine. Group H holds acceptance and method.
+
+**Decision.** SCOPE.md gains module 23, Public site, Release 1: a bilingual landing page at the root of each locale, explaining what B2S does for a brand owner; entry points to sign in and to sign up, with sign-up leading into the wizard's Welcome step (BRAND_CONFIG.md §10 amendment); and a privacy policy and terms of service, whose text is the owner's to supply — legal content the platform presents but does not author. Nothing else in R1. It owns no data, reads no tenant data, sets no tracking cookie and loads no analytics. Its copy claims only what Release 1 scope delivers. It is platform chrome — Clay and warm neutrals — except that any brand or packaging image sits on the achromatic proof (OD-G25) and is a clearly labelled fictional sample. It is built in P08, release readiness, so it exists before P09's launch and before the Google sign-in client is taken out of testing.
+
+**Reasoning.** The root URL currently shows a placeholder, and it is the first thing a prospective business sees. Google's verification of a sign-in client generally requires a public home page and a privacy-policy link — to be confirmed against Google's rules when P08 runs. A published privacy policy is needed anyway for the buyer data B2S holds. P03's wizard needs none of it; the first real business does.
+
+**Forecloses.** Analytics, tracking or advertising scripts in R1; pricing, a blog, testimonials or case studies until separately decided; naming any real customer without their written consent; a claim beyond Release 1 scope; any read of tenant data from a public page; a public page that is not bilingual.
+
+### OD-G26 — The tenant's slug is generated by the platform
+**Signed 2026-10-03.**
+
+Filed in Group G. The register's groups are the titles in §2. This decision is about provisioning, the same subject as OD-G13 through OD-G18, and it supersedes part of OD-G18. Group G is Platform & access. Group D is brand fields; a slug is not a brand field. Group A is what the product is; this decision does not add a module.
+
+**Decision.** `provision_tenant` generates every tenant's slug: twelve lowercase hexadecimal characters derived from `gen_random_uuid()`, unique and immutable. No caller supplies, sees a choice of, or changes a slug. Provisioning takes the business's name, base currency and default language.
+
+**Reasoning.** A slug is permanent and must be URL-safe. An Arabic business name has no reliable Latin form, and asking an owner to invent a permanent identifier at the first screen trades a moment's friction for a mistake that can never be corrected.
+
+**Supersedes in part OD-G18's named gap — "the cap bounds tenants, not slugs."** Slugs can no longer be squatted, because none can be chosen. The cap on tenants stands unchanged. OD-G18's text stands, unedited (PR-07).
+
+**Forecloses.** A caller-supplied slug, a slug offered as a choice, and a slug that changes.
+
+### OD-A9 — Onboarding owns one store: its draft
+**Signed 2026-10-03.**
+
+Filed in Group A. The register's groups are the titles in §2. This decision amends what module 02 owns, which is product identity: Group A, where A1 defines the wizard and A8 defines a surface. Group C is domain shape; the tables are specified in `DATA_MODEL.md` under this decision, and the decision itself is which module owns the store. Group D is brand fields, which keep their own homes.
+
+**Decision.** Module 02's "owns no storage of its own" is amended: onboarding owns exactly one store, the onboarding draft — the step to resume at, and colours set before all seven exist. Every other answer is written where it belongs as soon as it is valid on its own. The draft is archived when onboarding completes. Business details land on LegalEntity, a table beside tenant, because tenant's row holds its status, which a business must never be able to edit.
+
+**Reasoning.** A theme cannot be saved with fewer than seven colours (BRAND_CONFIG.md §4), and the owner decided unfinished answers are kept rather than lost. The draft is the smallest store that keeps them without bending that rule.
+
+**Forecloses.** Storing an answer in the draft that has a real home; a draft that outlives completion; business details written to tenant.
+
+### OD-H15 — Production accepts no new accounts until launch
+**Signed 2026-10-04.**
+
+Filed in Group H. The register's groups are the titles in §2. Group H is
+Quality & acceptance: OD-H12 owns the phase that launches, and OD-H13 owns
+the checkable meaning of error visibility. This decision is the acceptance
+condition for opening production to a new account. It does not change how
+a person authenticates. That mechanism stays OD-G13, which is Group G,
+Platform & access.
+
+**Decision.** Production's authentication refuses new sign-ups until launch
+at P09. Opening it requires both: production on a Vercel plan whose
+runtime-log retention meets OD-H13 — Pro's one day, or longer — and the
+published privacy policy (OD-A8). Staging and preview deployments stay
+open for testing.
+
+**Reasoning.** OD-H13 requires a production error record a builder can
+retrieve within one working session; the Hobby plan keeps runtime logs for
+one hour and is restricted to non-commercial use. No privacy policy exists
+until P08. Merging P03 deploys the wizard to production, so without this
+any person could sign in, provision a business and enter real data before
+either condition holds. Refusing new accounts at the authentication layer
+refuses them before any application code runs, so no route, RPC or direct
+API call can open a business.
+
+**Forecloses.** A real business in production before launch; opening
+sign-up without OD-H13's retention and a published privacy policy.
 

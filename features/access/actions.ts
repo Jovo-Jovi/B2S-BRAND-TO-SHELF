@@ -16,12 +16,15 @@ import {
   googleSignInSchema,
   oauthCallbackSchema,
   signInSchema,
+  signOutSchema,
   signUpSchema,
   type AccessErrorKey,
 } from "./schema";
+import { acceptedSignUpPath } from "./sign-up-accepted";
 
-function signInPath(locale: "en" | "ar", errorKey: AccessErrorKey): string {
-  return `/${locale}/sign-in?error=${errorKey}`;
+function signInPath(locale: "en" | "ar", errorKey: AccessErrorKey, next?: string): string {
+  const base = `/${locale}/sign-in?error=${errorKey}`;
+  return next ? `${base}&next=${encodeURIComponent(next)}` : base;
 }
 
 function homePath(locale: "en" | "ar"): string {
@@ -67,10 +70,10 @@ export async function signInWithPassword(input: unknown) {
   });
 
   if (result.error) {
-    redirect(signInPath(parsed.data.locale, signInAuthErrorKey(authMessage(result.error))));
+    redirect(signInPath(parsed.data.locale, signInAuthErrorKey(authMessage(result.error)), parsed.data.next));
   }
 
-  redirect(homePath(parsed.data.locale));
+  redirect(parsed.data.next ?? homePath(parsed.data.locale));
 }
 
 export async function signUpWithPassword(input: unknown) {
@@ -91,7 +94,7 @@ export async function signUpWithPassword(input: unknown) {
     );
   }
 
-  redirect(homePath(parsed.data.locale));
+  redirect(acceptedSignUpPath(parsed.data.locale, result.data.session));
 }
 
 export async function signInWithGoogle(input: unknown) {
@@ -142,4 +145,19 @@ export async function completeOAuthCallback(input: unknown) {
   }
 
   redirect(homePath(parsed.data.locale));
+}
+
+export async function signOut(input: unknown) {
+  const parsed = signOutSchema.safeParse(input);
+  if (!parsed.success) {
+    redirect(signInPath(localeFromInput(input), zodErrorKey(parsed.error)));
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const result = await supabase.auth.signOut();
+  if (result.error) {
+    throw new Error("sign-out could not be completed");
+  }
+
+  redirect(`/${parsed.data.locale}/sign-in`);
 }

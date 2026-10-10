@@ -1,0 +1,114 @@
+# Human-pace onboarding measurement from a runner, against the preview.
+# One synthetic owner, torn down before the job exits. This job writes to
+# staging, so it takes the same turn as isolation and the browser tier.
+
+name: onboarding-tail
+
+concurrency:
+  group: tenant-isolation-staging
+  cancel-in-progress: false
+
+on:
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: "24"
+
+jobs:
+  tail:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Restore node_modules
+        uses: actions/cache@v6
+        with:
+          path: node_modules
+          key: node_modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          fail-on-cache-miss: true
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Require staging public config and prove it is not production
+        env:
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+          SUPABASE_STAGING_PROJECT_ID: ${{ secrets.SUPABASE_STAGING_PROJECT_ID }}
+          SUPABASE_STAGING_URL: ${{ secrets.SUPABASE_STAGING_URL }}
+          SUPABASE_STAGING_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_STAGING_PUBLISHABLE_KEY }}
+          SUPABASE_STAGING_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_STAGING_SERVICE_ROLE_KEY }}
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          PREVIEW_SHARE: ${{ secrets.PREVIEW_SHARE }}
+        run: |
+          missing=""
+          for name in SUPABASE_PROJECT_ID SUPABASE_STAGING_PROJECT_ID SUPABASE_STAGING_URL SUPABASE_STAGING_PUBLISHABLE_KEY SUPABASE_STAGING_SERVICE_ROLE_KEY SUPABASE_ACCESS_TOKEN PREVIEW_SHARE; do
+            eval "val=\$$name"
+            if [ -z "$val" ]; then
+              missing="$missing $name"
+            fi
+          done
+          if [ -n "$missing" ]; then
+            echo "FAIL: the tail measurement cannot run. Absent repository secret(s):$missing"
+            echo "This job never skips. An absent secret is a failure, not a reason to pass."
+            exit 1
+          fi
+          if [ "$SUPABASE_STAGING_PROJECT_ID" = "$SUPABASE_PROJECT_ID" ]; then
+            echo "FAIL: SUPABASE_STAGING_PROJECT_ID equals SUPABASE_PROJECT_ID"
+            exit 1
+          fi
+          host="$(node -e "process.stdout.write(new URL(process.env.SUPABASE_STAGING_URL).hostname.split('.')[0])")"
+          if [ "$host" != "$SUPABASE_STAGING_PROJECT_ID" ]; then
+            echo "FAIL: SUPABASE_STAGING_URL hostname label is not SUPABASE_STAGING_PROJECT_ID"
+            exit 1
+          fi
+          if [ "$host" = "$SUPABASE_PROJECT_ID" ]; then
+            echo "FAIL: SUPABASE_STAGING_URL hostname label equals SUPABASE_PROJECT_ID"
+            exit 1
+          fi
+          echo "OK: staging public config present and resolves to a different ref than production"
+
+      - name: Measure at human pace while sampling the database
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_STAGING_URL }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_STAGING_PUBLISHABLE_KEY }}
+          SUPABASE_STAGING_URL: ${{ secrets.SUPABASE_STAGING_URL }}
+          SUPABASE_STAGING_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_STAGING_PUBLISHABLE_KEY }}
+          SUPABASE_STAGING_PROJECT_ID: ${{ secrets.SUPABASE_STAGING_PROJECT_ID }}
+          SUPABASE_STAGING_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_STAGING_SERVICE_ROLE_KEY }}
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          PREVIEW_SHARE: ${{ secrets.PREVIEW_SHARE }}
+        run: |
+          mkdir -p test-results
+          printf '%s\n' "$PREVIEW_SHARE" > test-results/preview-share.txt
+          node scripts/sample-db-activity.mjs > test-results/db-sample.log 2>&1 &
+          echo $! > test-results/db-sample.pid
+          set +e
+          node scripts/measure-onboarding-tail.mjs --human
+          code=$?
+          set -e
+          if [ -f test-results/db-sample.pid ]; then
+            kill "$(cat test-results/db-sample.pid)" || true
+            wait "$(cat test-results/db-sample.pid)" || true
+          fi
+          node scripts/match-stalls.mjs
+          exit "$code"
+
+      - name: Upload the measurement
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: onboarding-tail
+          path: |
+            test-results/onboarding-tail.jsonl
+            test-results/db-activity.jsonl
+          if-no-files-found: error

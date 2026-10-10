@@ -10,9 +10,9 @@ enum.
 > This is a specification, not prose. One table. Every capability traces to a
 > `Can` cell in `TENANCY_MODEL.md` §3 or §5, and every owning phase is a real
 > heading in `BUILD_PHASES.md`. `scripts/check_roadmap.py` asserts both facts
-> on every push (OD-H9): no actor here that is not the enum plus the two named
-> exceptions, no phase here that `BUILD_PHASES.md` does not carry, and every
-> enum role holds at least one row.
+> on every push (OD-H9): no actor here that is not the enum plus the named
+> non-enum actors Operator, Buyer and Visitor, no phase here that
+> `BUILD_PHASES.md` does not carry, and every enum role holds at least one row.
 
 ---
 
@@ -28,6 +28,17 @@ Five carried on `Membership` — the `public.role` enum, verbatim: **owner**,
   `Membership`, and never opens a session. Its row exists precisely because
   that is the fact most likely to be misread from the name alone.
 
+**ANNOTATED 2026-10-02 — P03-T16, the public site.** OD-A8 gives an
+unauthenticated visitor a capability: view the public site and enter sign-up
+or sign-in, owning phase P08. `scripts/check_roadmap.py` admits a row only
+when its Role cell is a `public.role` enum value or one of the two named
+non-enum actors, Operator and Buyer. Measured: those seven are the whole
+accepted set, and an unauthenticated visitor is none of them. No table row
+was added, and no role was added. The capability is carried as a
+carry-forward whose owner is the reviewer.
+
+**AMENDED 2026-10-03 — Visitor is a row (OD-A8, OD-A9).** The annotation above stands and is not edited (PR-07). It records why P03-T16 added no row. `scripts/check_roadmap.py` now admits Visitor beside Operator and Buyer. The capability is a table row. Visitor is not a tenant role.
+
 ---
 
 ## The table
@@ -36,9 +47,12 @@ Five carried on `Membership` — the `public.role` enum, verbatim: **owner**,
 |---|---|---|---|
 | Owner | Manage tenant membership: invite, assign a `Role`, suspend or archive a `Membership` | P02 | `TENANCY_MODEL.md` §3 Can column ("member management"); bounded by the `membership_active_owner_required` trigger (§3 rule 1) — a tenant may never be left at zero active owners |
 | Owner | Issue, scope, time-box and revoke a `ConsentGrant` for Operator break-glass access | P02 | `TENANCY_MODEL.md` §5 — only an `Owner` may create one, never an `Operator` and never a support ticket |
-| Owner | Every Manager-level business operation, in addition to the two rows above | P04 | `TENANCY_MODEL.md` §3 Can column ("everything within the tenant"); P04 is the earliest phase that gives an Owner tenant business data to act on |
+| Owner | Capture and version the tenant `Brand`, `BrandLine`, `BrandProfile`, themes, typefaces, logos, guidelines and `MediaAsset` records | P03 | `TENANCY_MODEL.md` §3 Can column ("everything within the tenant"); SCOPE modules 02 and 03. Completing onboarding is an Owner act |
+| Manager | Maintain `BrandLine`, `BrandTheme`, `Typeface`, `LogoVariant`, `BrandGuideline` and `MediaAsset` records inside the tenant Brand | P03 | `TENANCY_MODEL.md` §3 Cannot column names "delete the brand" as the Manager exclusion, not every brand write. Catalog work at P04 reads what this row writes |
+| Owner | Every Manager-level business operation, in addition to the Owner rows above | P04 | `TENANCY_MODEL.md` §3 Can column ("everything within the tenant"); P04 is the earliest phase that gives an Owner catalog and sales data to act on |
 | Manager | Catalog and inventory operations | P04 | `TENANCY_MODEL.md` §3 Can column |
 | Manager | Sales, invoicing, payments, returns | P05 | `TENANCY_MODEL.md` §3 Can column |
+| Manager | Purchasing: suppliers, purchase orders and goods receipts | Release 2 | `SCOPE.md` module 12, Release 2, outside the nine-phase plan. `TENANCY_MODEL.md` §3 Can column names purchasing among the Manager's business operations |
 | Manager | CSV import of products and buyers | P07 | `TENANCY_MODEL.md` §3 Can column; `IMPORT_SPEC.md` is authored just-in-time at P07. CF-32 still names the pre-renumbering phase id `P-10` for this same work and has not been corrected |
 | Designer | Brand identity and asset management | P03 | `TENANCY_MODEL.md` §3 Can column |
 | Designer | Packaging templates and artwork authoring | P06 | `TENANCY_MODEL.md` §3 Can column |
@@ -51,6 +65,9 @@ Five carried on `Membership` — the `public.role` enum, verbatim: **owner**,
 | Operator | Reach restricted to metadata only, by construction | P02 | OD-G10. "`Operator` reach limited to metadata per OD-G10" is a named P02 deliverable. **Not:** an `Operator` never reaches tenant business data — no `Buyer`, `Invoice`, `Payment`, `CreditNote`, cost or margin figure, `Product` name, `MediaAsset`, `Artwork` or `BrandProfile` value — under any circumstance, without a live `ConsentGrant`; and there is no API path to become an Operator — no self-registration, invitation or public endpoint, and no API role holds INSERT, UPDATE or DELETE on `public.operator` (OD-G19) |
 | Operator | Break-glass access to a stated module, only under a live, time-boxed `ConsentGrant`, with every access logged as an `ActivityEvent` | P02 | `TENANCY_MODEL.md` §5's break-glass path; `ConsentGrant` and `ActivityEvent` are named P02 deliverables |
 | Buyer | None — a data record referenced by `SalesOrder` and `Invoice`, not a role with a capability | P05 | `TENANCY_MODEL.md` §3 does not name `Buyer` among the five roles at all; `SCOPE.md` module 13 creates the `Buyer` entity at P05. **Not:** a `Buyer` never signs in, holds no `Membership`, no `Role` and no session — misreading it as an actor is the failure this row exists to foreclose |
+| Owner | Complete the onboarding wizard: provision at Welcome, save and resume unfinished answers, make the brand profile current | P03 | OD-A9. Welcome provisions the tenant. Answers that are valid on their own are written where they belong. Colours wait in the onboarding draft until all seven roles hold a value. Review makes the profile current and archives the draft |
+| Owner | Record and edit the legal entity | P03 | OD-A9. Owner-only write. A Manager cannot change billing, and the legal entity is the identity every invoice names |
+| Visitor | View the public site and enter sign-up or sign-in | P08 | OD-A8. Not a tenant role. The public site owns no data |
 
 ---
 

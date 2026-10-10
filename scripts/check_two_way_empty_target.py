@@ -83,6 +83,7 @@ PROVEN_PAIRS = [
     ("scripts/check_ledger.py", "SESSION_CONTEXT.md"),
     ("scripts/check_ledger.py", "docs/method/CARRY_FORWARDS.md"),
     ("scripts/check_migration_split.py", "supabase/schema.sql"),
+    ("scripts/check_storage_tenant_media.py", "supabase/schema.sql"),
     ("scripts/check_migration_split.py", "supabase/migrations/ (directory)"),
     ("scripts/check_module_spec_tree.py", "docs/product/MODULE_SPEC.md"),
     ("scripts/check_roadmap.py", "docs/method/BUILD_PHASES.md"),
@@ -97,6 +98,8 @@ PROVEN_PAIRS = [
     ("scripts/check_roadmap.py", "docs/roadmap.html"),
     ("scripts/check_security_model_bypass.py", "docs/product/SECURITY_MODEL.md"),
     ("scripts/check_security_model_bypass.py", "supabase/schema.sql"),
+    ("scripts/check_security_model_catalog.py", "docs/product/SECURITY_MODEL.md"),
+    ("scripts/check_security_model_catalog.py", "supabase/schema.sql"),
     ("scripts/check_session_context_shape.py", "SESSION_CONTEXT.md"),
     ("scripts/check_stated_counts.py", "docs/product/DOMAIN_MODEL.md"),
     ("scripts/check_stated_counts.py", "docs/product/DECISIONS.md"),
@@ -106,6 +109,7 @@ PROVEN_PAIRS = [
     ("scripts/check_stated_counts.py", "docs/product/DATA_MODEL.md"),
     ("scripts/check_stated_counts.py", "supabase/schema.sql"),
     ("scripts/check_stated_counts.py", "scripts/check_two_way_empty_target.py (this file's own PROVEN_PAIRS)"),
+    ("scripts/check_stated_counts.py", "docs/product/ARCHITECTURE.md"),
     ("scripts/check-data-boundary.mjs", "lib/supabase/ (directory)"),
     ("scripts/check-enum-keys.mjs", "supabase/schema.sql"),
     ("scripts/check-no-hardcoded-literals.mjs", "scan roots [app, proxy.ts, lib, features]"),
@@ -113,6 +117,45 @@ PROVEN_PAIRS = [
     ("scripts/check-service-import.mjs", "lib/supabase/server-only/ (quarantine directory)"),
     ("scripts/check-service-import.mjs", "scan roots [app, features, components]"),
     ("scripts/check-zod-coverage.mjs", "features/ (directory)"),
+    ("scripts/check_mcp_containment.py", ".cursor/mcp.json"),
+    ("scripts/check_mcp_containment.py", "docs/method/CARRY_FORWARDS.md"),
+    ("scripts/check-logical-properties.mjs", "app/globals.css"),
+    ("scripts/check-catalog-parity.mjs", "app/[locale]/dictionaries/en.json"),
+    ("scripts/check-catalog-parity.mjs", "app/[locale]/dictionaries/ar.json"),
+    ("scripts/check-catalog-duplicates.mjs", "app/[locale]/dictionaries/en.json"),
+    ("scripts/check-catalog-duplicates.mjs", "app/[locale]/dictionaries/ar.json"),
+    ("scripts/check-token-values.mjs", "app/globals.css"),
+    ("scripts/check-token-values.mjs", "components/"),
+    ("scripts/check-token-values.mjs", "features/"),
+    ("scripts/check-contrast.mjs", "app/globals.css"),
+    ("scripts/check-contrast.mjs", "docs/product/DESIGN_SURFACE.md"),
+    ("scripts/check-contrast.mjs", "components/"),
+    ("scripts/check-component-variants.mjs", "docs/product/DESIGN_SURFACE.md"),
+    ("scripts/check-component-variants.mjs", "components/ui"),
+    ("scripts/check-component-states.mjs", "docs/product/DESIGN_SURFACE.md"),
+    ("scripts/check-component-states.mjs", "components/ui"),
+    ("scripts/check-component-a11y.mjs", "components/ui"),
+    ("scripts/check-locale-format.mjs", "scan roots [app, components, features, lib]"),
+    ("scripts/check-icon-registry.mjs", "components/ui/glyphs.tsx"),
+    ("scripts/check-icon-registry.mjs", "docs/product/DESIGN_SURFACE.md"),
+    ("scripts/check-brand-tokens.mjs", "components/ui/brand-frame/brand-frame.module.css"),
+    ("scripts/check-brand-tokens.mjs", "components"),
+    ("scripts/check-gallery-coverage.mjs", "docs/product/DESIGN_SURFACE.md"),
+    ("scripts/check-gallery-coverage.mjs", "app/[locale]/(public)/gallery/coverage.ts"),
+    ("scripts/check-gallery-coverage.mjs", "app/[locale]/(public)/gallery/gallery.tsx"),
+    ("scripts/check-gallery-coverage.mjs", "__tests__/browser/gallery.spec.ts"),
+    ("scripts/check-token-values.mjs", "lib/typeface/library.module.css"),
+    ("scripts/check-token-values.mjs", "lib/typeface/registry.ts"),
+    ("scripts/check-token-values.mjs", "public/fonts/library (directory)"),
+    ("scripts/check_wizard_write_paths.py", "supabase/schema.sql"),
+    ("scripts/check_wizard_write_paths.py", "docs/product/SECURITY_MODEL.md"),
+    ("scripts/check_onboarding_routes.py", "app/[locale]/(app)/onboarding (directory)"),
+    ("scripts/check_staging_writers.py", ".github/workflows/isolation.yml"),
+    ("scripts/check_staging_writers.py", ".github/workflows/browser.yml"),
+    ("scripts/check_staging_writers.py", ".github/workflows/onboarding-tail.yml"),
+    ("scripts/check-server-timing.mjs", "lib/observability/server-timing.ts"),
+    ("scripts/check-server-timing.mjs", "lib/observability/phase-timing.ts"),
+    ("scripts/check-server-timing.mjs", "lib/supabase/session.ts"),
 ]
 
 KNOWN_GAPS = [
@@ -432,6 +475,8 @@ def main():
             ["python", "scripts/check_ledger.py"], FileProbe("docs/method/CARRY_FORWARDS.md"))
     do_pair(results, "scripts/check_migration_split.py",
             ["python", "scripts/check_migration_split.py"], FileProbe("supabase/schema.sql"))
+    do_pair(results, "scripts/check_storage_tenant_media.py",
+            ["python", "scripts/check_storage_tenant_media.py"], FileProbe("supabase/schema.sql"))
     do_pair(results, "scripts/check_migration_split.py",
             ["python", "scripts/check_migration_split.py"], DirProbe("supabase/migrations"))
     do_pair(results, "scripts/check_module_spec_tree.py",
@@ -460,6 +505,10 @@ def main():
             ["python", "scripts/check_security_model_bypass.py"], FileProbe("docs/product/SECURITY_MODEL.md"))
     do_pair(results, "scripts/check_security_model_bypass.py",
             ["python", "scripts/check_security_model_bypass.py"], FileProbe("supabase/schema.sql"))
+    do_pair(results, "scripts/check_security_model_catalog.py",
+            ["python", "scripts/check_security_model_catalog.py"], FileProbe("docs/product/SECURITY_MODEL.md"))
+    do_pair(results, "scripts/check_security_model_catalog.py",
+            ["python", "scripts/check_security_model_catalog.py"], FileProbe("supabase/schema.sql"))
     do_pair(results, "scripts/check_session_context_shape.py",
             ["python", "scripts/check_session_context_shape.py"], FileProbe("SESSION_CONTEXT.md"))
     do_pair(results, "scripts/check_stated_counts.py",
@@ -479,6 +528,9 @@ def main():
     do_pair(results, "scripts/check_stated_counts.py",
             ["python", "scripts/check_stated_counts.py"],
             FileProbe("scripts/check_two_way_empty_target.py"))
+    do_pair(results, "scripts/check_stated_counts.py",
+            ["python", "scripts/check_stated_counts.py"],
+            FileProbe("docs/product/ARCHITECTURE.md"))
     do_pair(results, "scripts/check-data-boundary.mjs",
             ["node", "scripts/check-data-boundary.mjs"], DirProbe("lib/supabase"))
     do_pair(results, "scripts/check-enum-keys.mjs",
@@ -493,6 +545,96 @@ def main():
             ["node", "scripts/check-service-import.mjs"], RootsProbe(["app", "features", "components"]))
     do_pair(results, "scripts/check-zod-coverage.mjs",
             ["node", "scripts/check-zod-coverage.mjs"], DirProbe("features"))
+    do_pair(results, "scripts/check_mcp_containment.py",
+            ["python", "scripts/check_mcp_containment.py"], FileProbe(".cursor/mcp.json"))
+    do_pair(results, "scripts/check_mcp_containment.py",
+            ["python", "scripts/check_mcp_containment.py"], FileProbe("docs/method/CARRY_FORWARDS.md"))
+    do_pair(results, "scripts/check-logical-properties.mjs",
+            ["node", "scripts/check-logical-properties.mjs"], FileProbe("app/globals.css"))
+    do_pair(results, "scripts/check-catalog-parity.mjs",
+            ["node", "scripts/check-catalog-parity.mjs"], FileProbe("app/[locale]/dictionaries/en.json"))
+    do_pair(results, "scripts/check-catalog-parity.mjs",
+            ["node", "scripts/check-catalog-parity.mjs"], FileProbe("app/[locale]/dictionaries/ar.json"))
+    do_pair(results, "scripts/check-catalog-duplicates.mjs",
+            ["node", "scripts/check-catalog-duplicates.mjs"], FileProbe("app/[locale]/dictionaries/en.json"))
+    do_pair(results, "scripts/check-catalog-duplicates.mjs",
+            ["node", "scripts/check-catalog-duplicates.mjs"], FileProbe("app/[locale]/dictionaries/ar.json"))
+    do_pair(results, "scripts/check-token-values.mjs",
+            ["node", "scripts/check-token-values.mjs"], FileProbe("app/globals.css"))
+    do_pair(results, "scripts/check-token-values.mjs",
+            ["node", "scripts/check-token-values.mjs"], DirProbe("components"))
+    do_pair(results, "scripts/check-token-values.mjs",
+            ["node", "scripts/check-token-values.mjs"], DirProbe("features"))
+    do_pair(results, "scripts/check-token-values.mjs",
+            ["node", "scripts/check-token-values.mjs"], FileProbe("lib/typeface/library.module.css"))
+    do_pair(results, "scripts/check-token-values.mjs",
+            ["node", "scripts/check-token-values.mjs"], FileProbe("lib/typeface/registry.ts"))
+    do_pair(results, "scripts/check-token-values.mjs",
+            ["node", "scripts/check-token-values.mjs"], DirProbe("public/fonts/library"))
+    do_pair(results, "scripts/check-contrast.mjs",
+            ["node", "scripts/check-contrast.mjs"], FileProbe("app/globals.css"))
+    do_pair(results, "scripts/check-contrast.mjs",
+            ["node", "scripts/check-contrast.mjs"], FileProbe("docs/product/DESIGN_SURFACE.md"))
+    do_pair(results, "scripts/check-contrast.mjs",
+            ["node", "scripts/check-contrast.mjs"], DirProbe("components"))
+    do_pair(results, "scripts/check-component-variants.mjs",
+            ["node", "scripts/check-component-variants.mjs"], FileProbe("docs/product/DESIGN_SURFACE.md"))
+    do_pair(results, "scripts/check-component-variants.mjs",
+            ["node", "scripts/check-component-variants.mjs"], DirProbe("components/ui"))
+    do_pair(results, "scripts/check-component-states.mjs",
+            ["node", "scripts/check-component-states.mjs"], FileProbe("docs/product/DESIGN_SURFACE.md"))
+    do_pair(results, "scripts/check-component-states.mjs",
+            ["node", "scripts/check-component-states.mjs"], DirProbe("components/ui"))
+    do_pair(results, "scripts/check-component-a11y.mjs",
+            ["node", "scripts/check-component-a11y.mjs"], DirProbe("components/ui"))
+    do_pair(results, "scripts/check-locale-format.mjs",
+            ["node", "scripts/check-locale-format.mjs"],
+            RootsProbe(["app", "components", "features", "lib"]))
+    do_pair(results, "scripts/check-icon-registry.mjs",
+            ["node", "scripts/check-icon-registry.mjs"], FileProbe("components/ui/glyphs.tsx"))
+    do_pair(results, "scripts/check-icon-registry.mjs",
+            ["node", "scripts/check-icon-registry.mjs"], FileProbe("docs/product/DESIGN_SURFACE.md"))
+    do_pair(results, "scripts/check-brand-tokens.mjs",
+            ["node", "scripts/check-brand-tokens.mjs"],
+            FileProbe("components/ui/brand-frame/brand-frame.module.css"))
+    do_pair(results, "scripts/check-brand-tokens.mjs",
+            ["node", "scripts/check-brand-tokens.mjs"], DirProbe("components"))
+    do_pair(results, "scripts/check-gallery-coverage.mjs",
+            ["node", "scripts/check-gallery-coverage.mjs"], FileProbe("docs/product/DESIGN_SURFACE.md"))
+    do_pair(results, "scripts/check-gallery-coverage.mjs",
+            ["node", "scripts/check-gallery-coverage.mjs"],
+            FileProbe("app/[locale]/(public)/gallery/coverage.ts"))
+    do_pair(results, "scripts/check-gallery-coverage.mjs",
+            ["node", "scripts/check-gallery-coverage.mjs"],
+            FileProbe("app/[locale]/(public)/gallery/gallery.tsx"))
+    do_pair(results, "scripts/check-gallery-coverage.mjs",
+            ["node", "scripts/check-gallery-coverage.mjs"],
+            FileProbe("__tests__/browser/gallery.spec.ts"))
+    do_pair(results, "scripts/check_wizard_write_paths.py",
+            ["python", "scripts/check_wizard_write_paths.py"], FileProbe("supabase/schema.sql"))
+    do_pair(results, "scripts/check_wizard_write_paths.py",
+            ["python", "scripts/check_wizard_write_paths.py"], FileProbe("docs/product/SECURITY_MODEL.md"))
+    do_pair(results, "scripts/check_onboarding_routes.py",
+            ["python", "scripts/check_onboarding_routes.py"],
+            DirProbe("app/[locale]/(app)/onboarding"))
+    do_pair(results, "scripts/check_staging_writers.py",
+            ["python", "scripts/check_staging_writers.py"],
+            FileProbe(".github/workflows/isolation.yml"))
+    do_pair(results, "scripts/check_staging_writers.py",
+            ["python", "scripts/check_staging_writers.py"],
+            FileProbe(".github/workflows/browser.yml"))
+    do_pair(results, "scripts/check_staging_writers.py",
+            ["python", "scripts/check_staging_writers.py"],
+            FileProbe(".github/workflows/onboarding-tail.yml"))
+    do_pair(results, "scripts/check-server-timing.mjs",
+            ["node", "scripts/check-server-timing.mjs"],
+            FileProbe("lib/observability/server-timing.ts"))
+    do_pair(results, "scripts/check-server-timing.mjs",
+            ["node", "scripts/check-server-timing.mjs"],
+            FileProbe("lib/observability/phase-timing.ts"))
+    do_pair(results, "scripts/check-server-timing.mjs",
+            ["node", "scripts/check-server-timing.mjs"],
+            FileProbe("lib/supabase/session.ts"))
 
     proven = sum(1 for r in results if r["proven"])
     print(f"\n=== {proven}/{len(results)} pairs proven this run ===")

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Done-steps shape assertion. Every data row in SESSION_CONTEXT.md's done-steps
-table has exactly four columns, and for every row except the last the commit
-column must be either one or more backticked hex shas (comma-separated if
-several) or the declared sentinel em-dash. Only the **commit column** assertion
-exempts the last row: its commit cannot exist before the commit that contains it
-(PR-17). The column count is asserted on every row, last included.
+table has exactly four columns. The commit column, last row included, must be
+either one or more backticked hex shas (comma-separated if several) or the
+declared sentinel em-dash. The last row is not exempt: the placeholder may
+stand before the PR-17 follow-up fills the sha, and a bare sha or any other
+text fails there too. The column count is asserted on every row, last included.
 
 P02-READINESS / CF-151 — the **verdict column** is asserted on every row,
 last included. A non-last row must hold a real verdict (`PASS` or `FAIL`),
@@ -22,7 +22,7 @@ P02-T10 — the column count used to read "fewer than 4", which caught a truncat
 row and never a split one. A cell containing an unescaped `|` yields *more* than
 four columns, passed that test, and then presented some fragment of the
 description as the commit column. It was invisible for a whole task because the
-row carrying it was the last one, and the last row's commit column is exempt:
+row carrying it was the last one, and the last row's commit column used to be exempt:
 P02-T09-FIX's description contained a backticked table-row fragment with two
 pipes in it, so the row split into six columns and both roadmap outputs
 published a truncated description for it. Asserting exactly four catches the
@@ -157,22 +157,17 @@ def main():
                      f"{len(ALLOWED_PENDING_STEPS)} Step ids (CF-153). "
                      f"`pending` means no verdict has been issued; a new "
                      f"row must not carry it")
-            if is_last:
-                continue
         elif is_last:
             allowed_last = REAL_VERDICTS | {VERDICT_PLACEHOLDER}
             if verdict_cell not in allowed_last:
                 fail(f"{path}: last-row verdict is {verdict_cell!r}, expected "
                      f"PASS, FAIL, or the placeholder '{EM_DASH}' "
                      f"(CF-151). Step: {cells[0]!r}")
-            continue
         elif verdict_cell not in REAL_VERDICTS:
             fail(f"{path}: non-last verdict is {verdict_cell!r}, expected "
                  f"PASS or FAIL (CF-151). A leftover placeholder means the "
                  f"next land task did not write the reviewer's verdict. "
                  f"Step: {cells[0]!r}")
-        if is_last:
-            continue
         commit_cell = cells[3]
         if commit_cell == EM_DASH or SHA_CELL.match(commit_cell):
             continue

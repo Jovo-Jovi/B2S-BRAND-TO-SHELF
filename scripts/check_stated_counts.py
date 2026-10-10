@@ -31,7 +31,7 @@ FAIL = False
 
 EM_DASH = "\u2014"
 
-MINIMUM_ASSERTIONS = 9  # P02-T15 adds the always-on rules-file guard-path assertion
+MINIMUM_ASSERTIONS = 10  # P03-T25 adds ARCHITECTURE.md §6's guard table
 
 # P02-T10 — the done-steps table is the provenance assertion's premise. A table
 # with no data rows means this check read the wrong span rather than a project
@@ -44,6 +44,8 @@ WORD_NUMBERS = {
     "zero": 0, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
     "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10,
     "eleven": 11, "twelve": 12,
+    "thirteen": 13, "fourteen": 14, "fifteen": 15, "sixteen": 16,
+    "seventeen": 17, "eighteen": 18, "nineteen": 19,
 }
 
 
@@ -476,7 +478,7 @@ def check_data_model():
     asserted()
 
     m = re.search(
-        r"\n## 3\. The Platform tier\s*\n+(\w+) tables? and (\w+) enums?\b",
+        r"\n## 3\. The tables\s*\n+(\w+) tables? and (\w+) enums?\b",
         text,
     )
     if not m:
@@ -526,7 +528,7 @@ RULES_FILES = (
 # every `scripts/` path they name must exist and be invoked by a workflow. A
 # renamed guard in a hand-edited rules file is how CF-75's drift recurs.
 MINIMUM_RULES_FILES = 2
-MINIMUM_GUARD_PATHS = 7
+MINIMUM_GUARD_PATHS = 8
 
 SCRIPT_PATH_RE = re.compile(r"`(scripts/[^`\s]+)`")
 WORKFLOW_RUN_RE = re.compile(
@@ -659,6 +661,87 @@ def check_rules_file_guards():
                  f"in CI is not a guard (PR-21)")
 
 
+ARCHITECTURE_REL = "docs/product/ARCHITECTURE.md"
+SECTION6_RE = re.compile(
+    r"(?m)^## 6\. What CI enforces\n(.*?)(?=\n## |\Z)",
+    re.S,
+)
+GUARD_NAME_RE = re.compile(r"`([^`]+)`")
+JOB_KEY_RE_CACHE = {}
+
+
+def script_named(name):
+    """A guard name matches a file under scripts/ by stem, hyphen or underscore."""
+    stems = {name, name.replace("-", "_"), name.replace("_", "-")}
+    for stem in stems:
+        for ext in (".mjs", ".py", ".js"):
+            if os.path.isfile(os.path.join("scripts", stem + ext)):
+                return True
+    return False
+
+
+def workflow_job_named(name):
+    if name in JOB_KEY_RE_CACHE:
+        return JOB_KEY_RE_CACHE[name]
+    pattern = re.compile(rf"(?m)^  {re.escape(name)}:\s*$")
+    found = False
+    for path in glob.glob(os.path.join(".github", "workflows", "*.yml")):
+        with open(path, encoding="utf-8") as handle:
+            if pattern.search(handle.read()):
+                found = True
+                break
+    JOB_KEY_RE_CACHE[name] = found
+    return found
+
+
+def check_architecture_guards():
+    """P03-T25 / CF-163. ARCHITECTURE.md §6 names a guard for each rule.
+    Every guard it names either exists under scripts/, is a workflow job,
+    or the same cell is marked NOT YET ENFORCED. An unmarked name that
+    matches neither is a guard the table claims and the tree does not have.
+    """
+    text = read(ARCHITECTURE_REL)
+    if text is None:
+        return
+    section = SECTION6_RE.search(text)
+    if not section:
+        fail(f"{ARCHITECTURE_REL}: no '## 6. What CI enforces' section, so "
+             f"its guard table cannot be read")
+        return
+    tables = markdown_tables(section.group(1))
+    if not tables:
+        fail(f"{ARCHITECTURE_REL} §6 contains no markdown table, so there "
+             f"is no guard column to assert")
+        return
+    asserted()
+    rows = tables[0]
+    # header is the first row markdown_tables keeps; data rows follow.
+    data = rows[1:] if rows and rows[0] and rows[0][0].strip().lower() == "rule" else rows
+    if len(data) < 9:
+        fail(f"{ARCHITECTURE_REL} §6 guard table has {len(data)} data row(s), "
+             f"minimum 9. A table that lost a row has not been examined (PR-27)")
+        return
+    for row in data:
+        if len(row) < 2:
+            fail(f"{ARCHITECTURE_REL} §6 row has no guard cell: {row!r}")
+            continue
+        cell = row[1]
+        marked = "NOT YET ENFORCED" in cell
+        names = GUARD_NAME_RE.findall(cell)
+        if not names:
+            if marked or cell.strip() == "lint rule":
+                continue
+            fail(f"{ARCHITECTURE_REL} §6 guard cell names nothing that can be "
+                 f"found, and is not marked NOT YET ENFORCED: {cell!r}")
+            continue
+        for name in names:
+            if script_named(name) or workflow_job_named(name) or marked:
+                continue
+            fail(f"{ARCHITECTURE_REL} §6 names `{name}`, which is not a file "
+                 f"under scripts/, not a workflow job, and not marked "
+                 f"NOT YET ENFORCED")
+
+
 def main():
     check_domain_model()
     check_decisions()
@@ -669,6 +752,7 @@ def main():
     check_adr()
     check_data_model()
     check_rules_file_guards()
+    check_architecture_guards()
 
     if FAIL:
         sys.exit(1)

@@ -30,8 +30,10 @@ const FEATURES_DIR = "features";
 const ACTIONS_FILENAME = "actions.ts";
 
 // P02-T14 — one module (access), one actions.ts, four exported mutations.
-const MINIMUM_ACTION_FILES = 1;
-const MINIMUM_MUTATIONS = 4;
+// P03-T23 adds features/onboarding/actions.ts. Measured: 2 files, 9 mutations.
+const MINIMUM_ACTION_FILES = 2;
+// P03-T23 measured 9. P03-T24 measured 12 after company, guidelines and review.
+const MINIMUM_MUTATIONS = 12;
 
 const SCHEMA_PATH = /(^|\/)schema(\.ts|\.js)?$/;
 const ZOD_SPECIFIER = "zod";

@@ -69,14 +69,14 @@ never writes one of its own.
 **Status derivation — stated once, in code, so both outputs agree on the same
 rule.** For a phase P0N:
 
-  DONE          the done-steps table carries a row whose Step matches
-                `P0N-GATE` (any suffix, e.g. `-RERUN`, `-RUN3`) and whose
-                Verdict column reads PASS. A gate that ran and FAILED has not
-                exited the phase — BUILD_PHASES.md's own lifecycle re-runs the
-                gate in full after the FIX task, which is exactly the shape
-                the table already holds for P01 (P01-GATE FAIL,
-                P01-GATE-RERUN FAIL, P01-GATE-RUN3 PASS: DONE only once the
-                third row exists).
+  DONE          a gate run passes. The row is named P0N-GATE, or a re-run
+                whose name adds a suffix such as -RERUN or -RUN3, and the
+                Verdict column reads PASS. A row ending -FIX is a fix task,
+                never a gate run. A gate that ran and FAILED has not exited
+                the phase — BUILD_PHASES.md's lifecycle re-runs the gate in
+                full after the FIX task, which is the shape the table holds
+                for P01 (P01-GATE FAIL, P01-GATE-RERUN FAIL, P01-GATE-RUN3
+                PASS: DONE only once the re-run passes).
   IN PROGRESS   not DONE, and it is the phase named by SESSION_CONTEXT.md's
                 header ("Phase: P0N").
   QUEUED        neither of the above.
@@ -93,7 +93,8 @@ answer, then narrows it further:
                       carry-forward (a `CF-nn` token that is open in
                       docs/method/CARRY_FORWARDS.md) or an unsigned decision
                       (the literal word "unsigned" beside an `OD-` token).
-  QUEUED              none of the above.
+  QUEUED              none of the above, and the owning phase is one of the nine.
+  NOT IN THE PLAN     the owning-phase cell is the token Release 2.
 
 **An open carry-forward's status**, shown beside its id, is derived from its
 own row text in docs/method/CARRY_FORWARDS.md, never from a second ledger kept
@@ -108,9 +109,10 @@ here:
 Five statuses in total across the whole page, and only five: DONE, IN
 PROGRESS, QUEUED, PENDING A DECISION, NOT IN THE PLAN. A phase is never PENDING
 A DECISION or NOT IN THE PLAN; a carry-forward is never DONE, IN PROGRESS or
-QUEUED; a role-journey capability is never NOT IN THE PLAN, because OD-H9's
-conformance check (scripts/check_roadmap.py) refuses to land a row whose
-owning phase does not exist in BUILD_PHASES.md in the first place.
+QUEUED; a role-journey capability is NOT IN THE PLAN only when its
+owning-phase cell is the token Release 2, outside the nine-phase plan.
+scripts/check_roadmap.py accepts that token and still refuses every other
+phase that BUILD_PHASES.md does not contain.
 
 STOP and flag, rather than guess, if a later edit to any input file removes a
 value this script depends on — every parsing step below dies loudly with a
@@ -141,7 +143,11 @@ ELLIPSIS = "\u2026"
 
 FIELD_LABELS = ["Exit standard", "Entry", "Exit, additionally"]
 
-GATE_RE = re.compile(r"^P0*(\d+)-GATE\b", re.I)
+# The exit row is P0N-GATE, or a re-run whose name adds a suffix such as
+# -RERUN or -RUN3. A row ending -FIX is a fix task, never a gate run: a word
+# boundary after GATE matched P03-GATE-FIX and marked the phase done, and an
+# exact GATE ending then dropped P01-GATE-RUN3.
+GATE_RE = re.compile(r"^P0*(\d+)-GATE(?:-RERUN|-RUN\d+)?$", re.I)
 
 # Task 2 (P02-T11) — a log summary's clause is cut at the first sentence
 # terminator, never at an arbitrary character offset: this repository's own
@@ -513,14 +519,19 @@ def parse_role_journey(text):
                 f"columns (Role | Capability | Owning phase | Note): {line!r}")
         role, capability, phase, note = cells
         phase_m = re.match(r"^(P\d{2})\b", phase)
-        if not phase_m:
+        if phase_m:
+            phase_id = phase_m.group(1)
+        elif phase == "Release 2":
+            phase_id = phase
+        else:
             die(f"{ROLE_JOURNEY_REL}: row for {role!r} has an unreadable "
-                f"'Owning phase' cell (expected a leading 'P0N' token): "
+                f"'Owning phase' cell (expected a leading 'P0N' token, or "
+                f"'Release 2' for a capability outside the nine-phase plan): "
                 f"{phase!r}")
         rows.append({
             "role": role,
             "capability": capability,
-            "phase": phase_m.group(1),
+            "phase": phase_id,
             "note": note,
         })
     if not rows:
@@ -529,6 +540,8 @@ def parse_role_journey(text):
 
 
 def role_journey_status(row, phases_by_id, open_cf_ids):
+    if row["phase"] == "Release 2":
+        return "NOT IN THE PLAN"
     phase = phases_by_id.get(row["phase"])
     if phase is None:
         die(f"{ROLE_JOURNEY_REL}: row for {row['role']!r} names owning phase "
@@ -628,11 +641,13 @@ def render_markdown(data):
     )
     lines.append("")
     lines.append(
-        "Status is derived, never asserted here by hand. **DONE** means "
-        "`SESSION_CONTEXT.md`'s done-steps table carries a PASS row for that "
-        "phase's exit gate; **IN PROGRESS** means it is the current phase per "
-        "that file's header; everything else is **QUEUED**. A role-journey "
-        "capability additionally reads **PENDING A DECISION**, and an open "
+        "Status is derived, never asserted here by hand. **DONE** means a gate "
+        "run passes: a row named `P0N-GATE`, or a re-run whose name adds a "
+        "suffix such as `-RERUN` or `-RUN3`, with Verdict PASS. A row ending "
+        "`-FIX` is a fix task, never a gate run. **IN PROGRESS** means the "
+        "phase is current per `SESSION_CONTEXT.md`'s header and is not DONE; "
+        "everything else is **QUEUED**. A role-journey capability additionally "
+        "reads **PENDING A DECISION** or **NOT IN THE PLAN**, and an open "
         "carry-forward reads **PENDING A DECISION** or **NOT IN THE PLAN**. "
         "See `scripts/generate_roadmap.py`'s docstring for the exact rules."
     )
@@ -762,6 +777,7 @@ ROLE_STATUS_CLASS = {
     "IN PROGRESS": "status-in-progress",
     "PENDING A DECISION": "status-decide",
     "QUEUED": "status-queued",
+    "NOT IN THE PLAN": "status-gap",
 }
 
 ALL_STATUS_CLASSES = {

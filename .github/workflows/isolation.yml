@@ -1,0 +1,160 @@
+# Tenant-isolation suite against staging (ADR-013).
+#
+# "Touching schema" in this repository is the authoritative SQL, the split
+# migrations, the generated types that are the schema's TypeScript projection,
+# and the suite that proves the live schema. A change to any of those is a
+# schema-touching change. The workflow file that runs the suite is in the
+# path set so a job change is itself proven. DATA_MODEL.md is the spec the
+# schema implements, not the schema, and is not in this path set.
+#
+# This job never skips. Absent staging secrets are a failure, not a reason
+# to pass (PR-21, vitest.isolation.config.mts). It does not fall back to
+# production configuration.
+#
+# Staging is one database. Two suites seeding and tearing down at once
+# produce 4a "positive path empty" — the same shape as a real RLS failure.
+# The browser tier writes to the same database. Every job that holds the
+# staging write credentials declares this same group, so a browser run and
+# an isolation run never overlap. Serialise every such run; restrict none
+# of them. concurrency.group tenant-isolation-staging with
+# cancel-in-progress false is what does it: GitHub queues a second run in
+# the same group rather than starting it, so two writers never seed
+# together, and a run that may be mid-teardown is never cancelled. The
+# group is not branch-scoped, so two phase-branch pushes still serialise.
+# A pull-request run of this same workflow can still replace a push run
+# that has not started a job, even with cancel-in-progress false. The
+# push run is the proof. Re-run it after that pull-request run has
+# finished. A cancelled push run that never started a job is not a
+# failed suite. The root scrollbar compensation does not change D.
+#
+# The push trigger matches ci.yml (every branch). The path filter is
+# unchanged. BRANCHING §3 allows one pull request per phase, at the
+# phase exit, after the gate, so a main-only push trigger would leave
+# an entire phase unproven — the condition CF-109 existed to end.
+# Restricting the trigger to main was belt-and-braces that removed the
+# belt. CF-109 stays closed on its own terms; the gap is CF-164.
+#
+# The pull-request trigger runs only when the pull request is not a draft,
+# on opened, synchronize, reopened and ready_for_review. A draft is not
+# per-push isolation coverage: the push trigger already runs the suite
+# when the diff touches schema, migrations, types or the suite. Marking
+# the pull request ready is the gate moment, and that run tests the
+# merged result. The push trigger, its path filter and the concurrency
+# group are unchanged.
+
+name: isolation
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+    branches:
+      - main
+    paths:
+      - "supabase/migrations/**"
+      - "supabase/schema.sql"
+      - "types/database.ts"
+      - "__tests__/isolation/**"
+      - "vitest.isolation.config.mts"
+      - ".github/workflows/isolation.yml"
+  push:
+    branches:
+      - "**"
+    paths:
+      - "supabase/migrations/**"
+      - "supabase/schema.sql"
+      - "types/database.ts"
+      - "__tests__/isolation/**"
+      - "vitest.isolation.config.mts"
+      - ".github/workflows/isolation.yml"
+
+concurrency:
+  group: tenant-isolation-staging
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "24"
+
+jobs:
+  isolation:
+    if: github.event_name == 'push' || github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    # The suite ran about nine minutes at P03-T01-RESUME and has reached 15 to
+    # 20 minutes since, with no change to its 94 assertions. This job was
+    # already bounded at 20, which sits inside that range, so a slow run can
+    # be cancelled as a timeout. 30 sits above the observed duration and still
+    # stops a hang from burning hours of runner time. The slowdown itself
+    # belongs to P03-T13.
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Cache node_modules
+        id: cache
+        uses: actions/cache@v6
+        with:
+          path: node_modules
+          key: node_modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: npm ci
+
+      # This step is the whole point of the job. It runs before the suite,
+      # and it exits non-zero rather than warning. Do not add a conditional
+      # that skips it.
+      - name: Require staging secrets and prove they are not production
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+          SUPABASE_STAGING_PROJECT_ID: ${{ secrets.SUPABASE_STAGING_PROJECT_ID }}
+          SUPABASE_STAGING_URL: ${{ secrets.SUPABASE_STAGING_URL }}
+          SUPABASE_STAGING_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_STAGING_PUBLISHABLE_KEY }}
+          SUPABASE_STAGING_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_STAGING_SERVICE_ROLE_KEY }}
+        run: |
+          missing=""
+          for name in SUPABASE_ACCESS_TOKEN SUPABASE_STAGING_PROJECT_ID SUPABASE_STAGING_URL SUPABASE_STAGING_PUBLISHABLE_KEY SUPABASE_STAGING_SERVICE_ROLE_KEY SUPABASE_PROJECT_ID; do
+            eval "val=\$$name"
+            if [ -z "$val" ]; then
+              missing="$missing $name"
+            fi
+          done
+          if [ -n "$missing" ]; then
+            echo "FAIL: isolation cannot run. Absent repository secret(s):$missing"
+            echo "This job never skips. An absent secret is a failure, not a reason"
+            echo "to pass. Do not add a conditional to this step."
+            exit 1
+          fi
+          if [ "$SUPABASE_STAGING_PROJECT_ID" = "$SUPABASE_PROJECT_ID" ]; then
+            echo "FAIL: SUPABASE_STAGING_PROJECT_ID equals SUPABASE_PROJECT_ID"
+            exit 1
+          fi
+          host="$(node -e "process.stdout.write(new URL(process.env.SUPABASE_STAGING_URL).hostname.split('.')[0])")"
+          if [ "$host" != "$SUPABASE_STAGING_PROJECT_ID" ]; then
+            echo "FAIL: SUPABASE_STAGING_URL hostname label is not SUPABASE_STAGING_PROJECT_ID"
+            exit 1
+          fi
+          if [ "$host" = "$SUPABASE_PROJECT_ID" ]; then
+            echo "FAIL: SUPABASE_STAGING_URL hostname label equals SUPABASE_PROJECT_ID"
+            exit 1
+          fi
+          echo "OK: staging secrets present and resolve to a different ref than production"
+
+      - name: Tenant-isolation suite against staging
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+          SUPABASE_STAGING_PROJECT_ID: ${{ secrets.SUPABASE_STAGING_PROJECT_ID }}
+          SUPABASE_STAGING_URL: ${{ secrets.SUPABASE_STAGING_URL }}
+          SUPABASE_STAGING_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_STAGING_PUBLISHABLE_KEY }}
+          SUPABASE_STAGING_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_STAGING_SERVICE_ROLE_KEY }}
+        run: npm run test:isolation

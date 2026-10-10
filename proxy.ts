@@ -39,9 +39,14 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  return updateSession(request);
+  const phases = locales.some(
+    (locale) => pathname === `/${locale}/onboarding` || pathname.startsWith(`/${locale}/onboarding/`),
+  );
+  return updateSession(request, phases);
 }
 
 export const config = {
-  matcher: ["/((?!_next|favicon.ico).*)"],
+  // Public files are not locale routes. A request for one must not be
+  // redirected under /en or /ar, or the file 404s and the page logs it.
+  matcher: ["/((?!_next|favicon.ico|fonts/|gallery/sample-mark-).*)"],
 };

@@ -1,0 +1,1487 @@
+# DESIGN_SURFACE
+
+**Status:** SIGNED by the owner. Revision 1, 2026-09-23. **Revision 2, 2026-09-30** — the visual foundation (§0 to §3, §10, §12) rewritten around the platform identity the owner chose; see the head of Corrections. Precedence slot 12, directly after `UX_PRINCIPLES.md`, and yields to it.
+**Specifies:** `UX_PRINCIPLES.md` in full. Every rule here is that document made implementable.
+**Depends on:** OD-G4, OD-G14, `OD-G24`, `OD-G25`, `OD-G23`, OD-H13, OD-H14, `ADR-014` · `BRAND_CONFIG.md` §3, §4, §5, §7, §9, §10, §11 · `CALC_SPEC.md` R1-25 · `DOMAIN_MODEL.md` D8 · `SECURITY_MODEL.md` §2 · `GLOSSARY.md` §5 · `DATA_MODEL.md` `tenant.default_locale`, `color_value.srgb`.
+**Reuses:** the `--b2s-` custom-property convention already in `app/globals.css`.
+**Scope:** `components/ui`, `components/shared`, and every page composed from them. Not print: page geometry belongs to the print engine (P06) and `PRINT_CONTRACT.md`.
+
+---
+
+## How to read this document
+
+`MUST` and `MUST NOT` are normative. Everything else explains.
+
+Every primitive carries one fenced `component` block. **The block binds; the prose explains.** The static gates CF-173 and CF-174 parse these blocks, so where prose and block disagree, the block wins and the prose is a defect. The block format is a restricted YAML subset: top-level scalars and flow lists (`key: [a, b]`), plus one nested mapping, `states`.
+
+**A value this document does not give is not the implementer's to choose.** It routes back here, per `BUILD_PHASES.md` "The design surface". A builder who finds a gap reports it; a builder who fills it has designed, which is the one thing the method forbids a builder to do.
+
+---
+
+## 0. Signed invariants and resolved dependencies
+
+**Owner decisions bind this document from above.** A component, a page or a later amendment to this document may not reinterpret them.
+
+1. **The platform has its own identity, and tenant output is the tenant's** — `OD-G24`, which replaces OD-G21. The platform's interface uses Clay and warm neutrals. A tenant's brand appears on its outputs, inside the brand frame, and as its logo in the header — nowhere else. The platform identity never enters tenant output, and tenant output never mirrors or changes with the interface language.
+2. **The proofing surround is achromatic, and only the proofing surround** — `OD-G25`, which replaces OD-G22. Wherever a brand or packaging is shown for judgement, it sits on a surround whose red, green and blue are equal. The rest of the platform is not bound to be achromatic.
+3. **The platform typeface is IBM Plex Sans with IBM Plex Sans Arabic** — `OD-G23`. One superfamily for both scripts, self-hosted, never loaded from a CDN (§2.3).
+4. **Date presentation** — `CALC_SPEC.md` R1-25's locale block, amended 2026-09-23: Gregorian calendar; `DD/MM/YYYY` for display in both locales (`23/09/2026`); ISO 8601 for every machine-readable value; weeks start on Saturday. `DateField` references it and states none of it (PR-43).
+5. **The brand contrast constant** — `BRAND_CONFIG.md` §11, amended 2026-09-23: `foreground` meets **4.5:1** against `background` in every theme, because `foreground` is the text role. `ColorField` references it.
+
+**Formatting homes.** `lib/locale/` formats every number `CALC_SPEC.md` does not govern — counts, upload percentages, byte sizes — and dates. Money and domain quantities, which `CALC_SPEC.md` governs, are formatted through `lib/money/` at P05 under ADR-011.
+
+## 1. The one idea: a warm, confident platform around a neutral proof
+
+B2S has two jobs on one screen, and each gets the colour it needs.
+
+**The platform** is where a business owner works: onboarding, catalog, stock, invoices. It carries its own identity — Clay, a restrained terracotta, over warm natural neutrals — because a platform that looks like nothing reads as unfinished, and people trust a tool that looks cared for. Warm, crafted, human; never loud.
+
+**The proof** is where a brand is judged. Print colour is judged against neutral grey, because a tinted surround shifts how the colour beside it is perceived. So wherever a tenant's brand or packaging is shown for judgement, it sits on an achromatic surround (`OD-G25`). That grey appears nowhere else, and nothing warm appears inside it.
+
+The system spends its boldness in exactly two places. **Clay marks the one thing to do next** — the primary action, the current place in navigation, progress, focus, a selection. **The tenant's brand fills the proof.** Everything else is quiet, so both are unmistakable.
+
+Warmth is restrained by measurement, not taste: every neutral's chroma is capped (§2.2), so the interface reads as a professional platform with a warm temperament, not a warm theme.
+
+---
+
+## 2. Tokens
+
+### 2.1 Naming and layers
+
+- **Platform tokens:** `--b2s-{group}-{name}`, extending the existing convention. Consumed anywhere outside a brand frame.
+- **Brand tokens:** `--brand-{name}`. Defined only by `BrandFrame` (§3). Consumed only inside it (CF-171).
+- The tokens currently in `app/globals.css` are **unconsumed** — P03-T06's inventory found no rule assigning them — so this set replaces them and nothing breaks.
+- `leading` replaces `line-height` in token names so that no identifier carries a bare `line` (`GLOSSARY.md` §5).
+- No raw colour, spacing, radius, duration, shadow, font-family or z-index value appears anywhere outside the token definitions (CF-172). A `--b2s-` custom property is defined only in `app/globals.css`.
+- **A page or component never introduces a colour.** It uses a platform token or it is a defect. The set of platform colour tokens is closed: every one is defined in §2.2 or §2.11, and the check asserts the set against this document in both directions. The proofing tokens are achromatic (`OD-G25`); every other platform colour is chosen, not constrained to grey.
+
+### 2.2 Colour — platform
+
+**Neutrals.** Warm, natural and restrained.
+
+| Token | Light | Dark | Use |
+|---|---|---|---|
+| `--b2s-color-canvas` | `#f7f4f0` | `#1a1715` | Page background |
+| `--b2s-color-surface` | `#fffdfa` | `#221f1c` | Cards, panels, fields, table body |
+| `--b2s-color-sunken` | `#f0ebe5` | `#171412` | Wells, table header, side panels, read-only fields |
+| `--b2s-color-surface-active` | `#e7e0d8` | `#36312d` | Secondary and quiet pressed fill |
+| `--b2s-color-raised` | `#ffffff` | `#2a2623` | Menus, popovers, dialogs, notices |
+| `--b2s-color-border` | `#e4ddd5` | `#36302b` | Decorative dividers **only** — never a control boundary |
+| `--b2s-color-border-control` | `#857a70` | `#8a8078` | Every control boundary: fields, checkboxes, switch tracks |
+| `--b2s-color-text` | `#262220` | `#f3efea` | Primary text |
+| `--b2s-color-text-muted` | `#57504a` | `#c5bdb5` | Secondary text, help |
+| `--b2s-color-text-subtle` | `#6e665f` | `#a39a92` | Metadata, placeholders |
+
+**Clay — the platform accent.**
+
+| Token | Light | Dark | Use |
+|---|---|---|---|
+| `--b2s-color-action` | `#b04f2c` | `#e08961` | Primary action fill, progress fill, checked controls, current-navigation indicator |
+| `--b2s-color-action-text` | `#ffffff` | `#1a1715` | Text and marks on Clay |
+| `--b2s-color-action-hover` | `#963f20` | `#eda07c` | Primary action, hovered |
+| `--b2s-color-action-active` | `#7e341a` | `#f2b696` | Primary action, pressed |
+| `--b2s-color-accent-soft` | `#f5e7e0` | `#3a2a22` | Selected and current states: navigation item, segmented option, selected row |
+| `--b2s-color-accent-text` | `#9a4424` | `#eda07c` | Clay text on a neutral: links, the current navigation label, an eyebrow |
+| `--b2s-color-focus` | `#b04f2c` | `#e08961` | Focus ring |
+
+**Clay has five jobs and no others:** the primary action, the current place in navigation, progress, focus, and a selection. It is never a large background, never decoration, never a status, and never inside the proof (§3). One primary action per region still holds (§6, `Button`).
+
+**Support, status and danger.**
+
+| Token | Light | Dark | Use |
+|---|---|---|---|
+| `--b2s-color-support` | `#5b6a50` | `#a7b697` | Sage: supporting icons and completed setup steps. Subordinate to Clay, never a status |
+| `--b2s-color-support-soft` | `#e6ebdf` | `#262b22` | Sage tile behind a supporting icon |
+| `--b2s-color-danger-action` | `#9e1b32` | `#c4304b` | Destructive fill; text `--b2s-color-danger-action-text` |
+| `--b2s-color-danger-action-text` | `#ffffff` | `#ffffff` | Text on the danger action |
+| `--b2s-color-danger-action-active` | `#6c1223` | `#8e1f34` | Destructive fill, pressed |
+| `--b2s-color-success`, `--b2s-color-success-bg` | `#2e6b45` / `#e4efe7` | `#7cc196` / `#18261d` | Status |
+| `--b2s-color-warning`, `--b2s-color-warning-bg` | `#8a5a00` / `#faf0da` | `#e2b04d` / `#2a2211` | Status |
+| `--b2s-color-danger`, `--b2s-color-danger-bg` | `#9e1b32` / `#f9e3e6` | `#f59aaa` / `#33191e` | Status |
+| `--b2s-color-info`, `--b2s-color-info-bg` | `#3b5a7e` / `#e5ecf4` | `#9fb8d8` / `#1a2230` | Status |
+
+**The proof — achromatic, brand previews only** (`OD-G25`).
+
+| Token | Light | Dark | Use |
+|---|---|---|---|
+| `--b2s-color-proof` | `#e4e4e4` | `#3a3a3a` | The surround behind every brand and packaging preview. Red, green and blue equal |
+| `--b2s-color-proof-edge` | `#cccccc` | `#555555` | The mount boundary of a brand frame. Red, green and blue equal |
+| `--b2s-color-proof-text` | `#2e2e2e` | `#e6e6e6` | Text the platform writes inside the proof — named gap markers and the frame's own error. Red, green and blue equal |
+
+The proof's tokens are three: `proof`, `proof-edge` and `proof-text`. `proof` and `proof-edge` are the only achromatic surfaces in the platform, and all three appear only in `BrandFrame` (§3). A warm neutral never sits inside the proof, and proof grey never styles anything else. `proof-text` on `proof` meets 10.68 in light and 9.11 in dark; on `proof-edge` it meets 8.46 and 5.97.
+
+**Status colours are functional, not decorative.** They carry the four states and nothing else, and never appear as brand, accent, emphasis or illustration.
+
+**Danger is not Clay.** Clay is a warm terracotta; danger is a deeper, cooler crimson. Measured as CIE76 colour difference, `action` against `danger-action` is 25.6 in light and 39.0 in dark, `action` against `danger` 25.6 and 31.0, and `accent-text` against `danger` 24.1 and 26.8 — every pair at least 20, the floor this document sets. Colour is still never the only signal: every danger message carries its icon and words (§6, `Notice`, `StatusBadge`), and a destructive action names what it destroys (§6, `Dialog`).
+
+**Warmth, capped.** Warmth is measured as CIE L*a*b* chroma. `canvas`, `surface`, `sunken` and `raised` stay at or below **4** in both themes; every other neutral at or below **8**. Measured: canvas 2.3, surface 1.7, sunken 3.5 in light; the warmest neutral is `border-control` at 7.4. The large surfaces are about forty per cent less saturated than the mockups the owner reviewed, so the platform reads as warm without reading as tinted.
+
+**`border` and `border-control` are different jobs.** WCAG 2.2 1.4.11 requires 3:1 only where a boundary is needed to identify a control. Dividers are decorative and sit quieter; control boundaries meet 3:1 on every surface. A control's boundary is measured against the surface around it, which pressing does not change.
+
+**Contrast, computed rather than asserted** (PR-23). Ninety-four pairs, forty-seven per theme: each of `text`, `text-muted`, `text-subtle` and `accent-text` on `canvas`, `surface`, `sunken` and `raised`; `border-control`, `focus` and `action` against those four surfaces at 3:1; `action-text` on `action`, `action-hover` and `action-active`; `danger-action-text` on `danger-action`, `danger-action-hover` and `danger-action-active`; each status colour on its background and on `surface`; and `accent-text` on `accent-soft`, `text` on `accent-soft`, `text` on `surface-active` and `support` on `support-soft`; `proof-text` on `proof`. Every one meets WCAG 2.2 AA. The lowest text pair is 4.75 in light and 5.42 in dark; the lowest boundary 3.53 and 3.89. Selected rows:
+
+| Pair | Light | Dark |
+|---|---|---|
+| text on surface | 15.53 | 14.32 |
+| text-subtle on canvas | 5.14 | 6.45 |
+| accent-text on canvas | 5.94 | 8.43 |
+| accent-text on accent-soft | 5.39 | 6.47 |
+| action-text on action | 5.25 | 6.73 |
+| action-text on action-active | 8.77 | 10.11 |
+| danger-action-text on danger-action | 7.90 | 5.42 |
+| border-control on sunken, 3:1 | 3.53 | 4.75 |
+| focus on surface, 3:1 | 5.17 | 6.18 |
+| danger on danger-bg | 6.46 | 7.77 |
+| support on support-soft | 4.78 | 6.74 |
+
+`--b2s-color-border` is decorative and exempt. The WCAG contrast function has one home, `lib/colour/`. `ColorField` uses it, and `BRAND_CONFIG.md` §11's validation will. The static contrast gate does not evaluate brand pairs; they are runtime data, bound at profile completion.
+
+Placeholders use `text-subtle` and meet 4.5:1, but a placeholder is never a substitute for a caption (§6, `Field`).
+
+**Theme selection:** light by default; dark follows `prefers-color-scheme`; an explicit choice in the account menu overrides both. The explicit choice is a member preference, not tenant data, and it is never inferred from a tenant's brand.
+
+### 2.3 Typography
+
+**Families:** IBM Plex Sans for Latin, IBM Plex Sans Arabic for Arabic — a signed invariant (`OD-G23`).
+
+Chosen deliberately rather than by default. The two were designed as one superfamily, so weights and vertical metrics match across scripts by design rather than by adjustment — which in a bilingual interface means an Arabic caption and an English one at the same step look like the same step. Its engineered grotesque character suits a production platform whose subject is manufacturing and print. It carries tabular figures, and its licence is the SIL Open Font License 1.1.
+
+**Font files are self-hosted and committed as assets.** A runtime font CDN is forbidden (`check-no-runtime-cdn`). If the landing task proposes a package to supply the files, that is an ADR under `AGENTS.md` §2. Each face is loaded with `font-display: swap`, and the regular weight of each family is preloaded.
+
+**Stack:** `"IBM Plex Sans", "IBM Plex Sans Arabic", system-ui, sans-serif`. Under `:lang(ar)` the Arabic face is listed first, so shared glyphs — digits and punctuation — take the Arabic face's metrics and sit correctly on an Arabic line.
+
+**Weights:** 400 regular, 500 medium (captions, buttons, table headers), 600 semibold (headings). No 700 in the chrome.
+
+**Scale.** Leading is resolved by `:lang(ar)`, never by direction: a direction-isolated Latin SKU inside an Arabic sentence is set by its surrounding line.
+
+| Step | Size | Leading, Latin | Leading, Arabic | Use |
+|---|---|---|---|---|
+| `xs` | 0.75rem · 12px | 1.33 · 16px | 1.67 · 20px | Metadata only. Never body text |
+| `sm` | 0.875rem · 14px | 1.43 · 20px | 1.71 · 24px | Compact body, table cells, captions, help |
+| `md` | 1rem · 16px | 1.5 · 24px | 1.75 · 28px | Comfortable body |
+| `lg` | 1.125rem · 18px | 1.44 · 26px | 1.67 · 30px | Section headings, compact |
+| `xl` | 1.25rem · 20px | 1.4 · 28px | 1.6 · 32px | Page headings compact; section headings comfortable |
+| `2xl` | 1.75rem · 28px | 1.29 · 36px | 1.5 · 42px | Page headings, comfortable |
+| `3xl` | 2rem · 32px | 1.25 · 40px | 1.44 · 46px | Wizard step titles. Sparingly |
+
+Each step is a token: `--b2s-text-xs`, `--b2s-text-sm`, `--b2s-text-md`, `--b2s-text-lg`, `--b2s-text-xl`, `--b2s-text-2xl`, `--b2s-text-3xl`, each with its leading token — `--b2s-leading-xs`, `--b2s-leading-sm`, `--b2s-leading-md`, `--b2s-leading-lg`, `--b2s-leading-xl`, `--b2s-leading-2xl`, `--b2s-leading-3xl` — resolved by `:lang(ar)` as the table states. (Revision 2 names them one by one; Revision 1 gave only the pattern `--b2s-leading-{step}`, which a parser reading literal names cannot see.) Weights are tokens: `--b2s-weight-regular` (400), `--b2s-weight-medium` (500), `--b2s-weight-semibold` (600).
+
+**Numbers** use tabular figures in tables, numeric fields and totals, so digits align in columns. **A monospace face is never used for data**; tabular figures of the interface face do the job without making numbers look like code.
+
+**Case and tracking.** Sentence case everywhere. No all-caps text. **Letter-spacing is forbidden on any text that may render in Arabic**, because tracking breaks the joins that Arabic letterforms depend on — and since every string may render in Arabic, tracking is forbidden in the chrome outright.
+
+**Measure.** Prose runs to at most `--b2s-measure-prose`. Forms cap at `--b2s-measure-form`.
+
+### 2.4 Spacing
+
+A 4px grid. Only these values; no raw `px` anywhere (CF-172).
+
+| Token | Value | | Token | Value |
+|---|---|---|---|---|
+| `--b2s-space-0` | 0 | | `--b2s-space-6` | 1.25rem · 20px |
+| `--b2s-space-1` | 0.125rem · 2px | | `--b2s-space-7` | 1.5rem · 24px |
+| `--b2s-space-2` | 0.25rem · 4px | | `--b2s-space-8` | 2rem · 32px |
+| `--b2s-space-3` | 0.5rem · 8px | | `--b2s-space-9` | 2.5rem · 40px |
+| `--b2s-space-4` | 0.75rem · 12px | | `--b2s-space-10` | 3rem · 48px |
+| `--b2s-space-5` | 1rem · 16px | | `--b2s-space-11` | 4rem · 64px |
+
+### 2.5 Radius
+
+Radius grows with the size of the container: generous enough to feel crafted, controlled enough to stay a tool. One radius on everything is a tell of an assembled kit, not a system.
+
+| Token | Value | Use |
+|---|---|---|
+| `--b2s-radius-sm` | 6px | Checkboxes, badges, swatches' label chips |
+| `--b2s-radius-md` | 10px | Controls: buttons, fields, selects, segmented options |
+| `--b2s-radius-lg` | 16px | Cards, table containers, dialogs, notices |
+| `--b2s-radius-xl` | 20px | The proof surround and large panels |
+| `--b2s-radius-full` | 9999px | Switch tracks and thumbs, colour swatches, avatars |
+
+### 2.6 Elevation and containment
+
+**Subtle depth, where it clarifies.** Content that belongs together sits on a card — a surface with a `border-width` boundary in `border` and, in light, a soft shadow. Sections are still separated first by space and hierarchy; a shadow is added only where it makes the order of layers clearer, never as decoration.
+
+| Level | Light | Dark | Use |
+|---|---|---|---|
+| `--b2s-elevation-card` | `0 1px 2px rgb(38 34 32 / 0.04), 0 12px 32px -18px rgb(38 34 32 / 0.18)` | none; `surface` fill and a `border-width` boundary in `border` | Cards and panels |
+| `--b2s-elevation-action` | `0 1px 2px rgb(38 34 32 / 0.10), 0 6px 16px -8px rgb(176 79 44 / 0.45)` | none | The primary action only |
+| `--b2s-elevation-1` | `0 1px 2px rgb(38 34 32 / 0.06), 0 8px 20px -8px rgb(38 34 32 / 0.16)` | none; `raised` fill and a `border-width` boundary in `border` | Menus, popovers, tooltips |
+| `--b2s-elevation-2` | `0 2px 4px rgb(38 34 32 / 0.06), 0 16px 40px -12px rgb(38 34 32 / 0.22)` | none; `raised` fill and a `border-width` boundary in `border` | Dialogs, sheets |
+| `--b2s-elevation-3` | `0 2px 4px rgb(38 34 32 / 0.06), 0 12px 28px -10px rgb(38 34 32 / 0.18)` | none; `raised` fill and a `border-width` boundary in `border` | Notices |
+
+Shadows do nothing on a dark surface, so dark elevation is expressed as a lighter fill and a border. Shadow colour is the warm text colour at low alpha, never black, so depth reads as part of the palette; the one Clay-tinted shadow belongs to the primary action. No shadow ever appears inside the proof (§3).
+
+**Hover on an interactive card** raises it from `elevation-card` to `elevation-1` over `duration-base`; nothing translates. Under reduced motion the change is instant.
+
+### 2.7 Density
+
+Two identifiers, **`comfortable`** and **`compact`**. Not "studio" and "operations": `GLOSSARY.md` §5 forbids `studio` as an identifier. Brand work — the wizard, the brand editor, packaging — uses `comfortable`; operations — catalog, stock, invoices, returns — uses `compact`.
+
+Density is set once per page region by a `data-density` attribute and read through tokens. **A component never branches on density in its own logic**; the tokens change and the component follows.
+
+| Token | `comfortable` | `compact` |
+|---|---|---|
+| `--b2s-control-height` | 40px | 32px |
+| `--b2s-control-padding-inline` | `space-5` | `space-4` |
+| `--b2s-row-height` | 48px | 36px |
+| `--b2s-cell-padding-block` | `space-4` | 0.375rem · 6px — the one value off the 4px grid, defined here and used only by table cells |
+| `--b2s-cell-padding-inline` | `space-5` | `space-4` |
+| `--b2s-field-gap` | `space-7` | `space-5` |
+| `--b2s-text-body` | `md` | `sm` |
+| `--b2s-icon-size` | 20px | 16px |
+
+**Below 640px, density is `comfortable` regardless of region.** Stock is counted standing up, on a phone, with a thumb. Both densities exceed WCAG 2.2's 24 × 24px minimum target.
+
+### 2.8 Motion
+
+Motion answers an action. **Nothing animates on page load. Table rows never animate when data changes**, because movement in a list someone is scanning reads as a change they missed.
+
+| Token | Value | Use |
+|---|---|---|
+| `--b2s-duration-quick` | 100ms | Hover, press |
+| `--b2s-duration-base` | 160ms | Expand, collapse, small state change |
+| `--b2s-duration-enter` | 200ms | Menus, dialogs, notices appearing |
+| `--b2s-duration-exit` | 150ms | The same, leaving |
+| `--b2s-ease-standard` | `cubic-bezier(0.2, 0, 0.2, 1)` | State changes |
+| `--b2s-ease-enter` | `cubic-bezier(0.2, 0, 0, 1)` | Appearing |
+| `--b2s-ease-exit` | `cubic-bezier(0.4, 0, 1, 1)` | Leaving |
+
+Under `prefers-reduced-motion: reduce`, every transform is removed. What remains is an opacity change of at most 100ms, or nothing.
+
+### 2.9 Breakpoints
+
+`sm` 640px · `md` 768px · `lg` 1024px · `xl` 1280px. The layout at each is specified by `AppShell` (§7).
+
+### 2.10 Iconography
+
+One icon set of line glyphs at a 1.5px stroke, sized by `--b2s-icon-size`. **Every icon is registered with a `mirrors` flag**, and nothing else decides whether an icon flips.
+
+- **Mirror:** arrows, back and next chevrons, undo and redo, reply and forward, indent and outdent, progress arrows, the external-link arrow.
+- **Never mirror:** check, cross, plus, minus, search, clock, calendar, upload and download (vertical), delete, edit, camera, media playback, information and question marks, and every logo or brand mark.
+
+If the icon set arrives as a package, it is an ADR for the landing task under `AGENTS.md` §2.
+
+Until the icon registry lands, no primitive carries a direction-bearing icon, and a caller-supplied icon is rendered as given. The registry, and every directional icon, land together at P03-T10.
+
+### 2.11 Component dimensions
+
+Every fixed measure a component uses is a token here, so that no component carries a raw value (CF-172).
+
+| Token | Value | Used by |
+|---|---|---|
+| `--b2s-border-width` | 1px | Every divider and control boundary |
+| `--b2s-focus-width` | 2px | Every focus ring |
+| `--b2s-focus-offset` | 2px | Every focus ring |
+| `--b2s-check-size` | 1rem · 16px | `Checkbox`, `RadioGroup` |
+| `--b2s-status-bar-width` | 3px | `Notice` |
+| `--b2s-indicator-width` | 2px | `Tabs` selection, `AppShell` current section |
+| `--b2s-measure-prose` | 75ch | Running text |
+| `--b2s-measure-form` | 40rem | `FormSection`, `WizardStep`, forms |
+| `--b2s-dialog-width-small` | 24rem | `Dialog` small |
+| `--b2s-dialog-width-medium` | 32rem | `Dialog` medium |
+| `--b2s-dialog-width-large` | 48rem | `Dialog` large |
+| `--b2s-logo-height` | 28px compact · 32px comfortable | `PageHeader` |
+| `--b2s-color-scrim` | `rgb(0 0 0 / 0.4)`, both themes | `Dialog` backdrop |
+| `--b2s-color-danger-action-hover` | `#84162a` light · `#a8263e` dark | `Button` danger, hovered |
+| `--b2s-duration-pulse` | 1200ms | `Skeleton` |
+| `--b2s-delay-loader` | 150ms | `Skeleton`, `Spinner`, every loading state |
+| `--b2s-delay-tooltip` | 500ms | `Tooltip` |
+| `--b2s-notice-dismiss` | 5000ms | `Notice` toast, success and info |
+| `--b2s-layer-dropdown` | 10 | `Select` listbox |
+| `--b2s-layer-sticky` | 20 | Sticky chrome |
+| `--b2s-layer-scrim` | 30 | Scrim |
+| `--b2s-layer-dialog` | 40 | `Dialog` |
+| `--b2s-layer-notice` | 50 | `Notice` |
+| `--b2s-layer-tooltip` | 60 | `Tooltip` |
+| `--b2s-switch-block-size` | 1.25rem | `Switch`, both densities — the whole row is the target |
+| `--b2s-switch-inline-size` | 2.25rem | `Switch`, both densities — the whole row is the target |
+| `--b2s-switch-thumb-size` | 1rem | `Switch`, both densities — the whole row is the target |
+| `--b2s-switch-inset` | `var(--b2s-space-1)` | `Switch`, both densities — the whole row is the target |
+| `--b2s-radio-dot-size` | 0.5rem | `RadioGroup` |
+| `--b2s-multiline-rows-min` | 3 | `TextField` multiline |
+| `--b2s-multiline-rows-max` | 8 | `TextField` multiline |
+| `--b2s-skeleton-opacity-min` | 0.6 | `Skeleton` |
+| `--b2s-nav-width` | 17rem | `AppShell` side navigation at `lg` and above |
+| `--b2s-drawer-width` | min(18rem, 85vw) | `AppShell` navigation drawer |
+| `--b2s-preview-label-max` | 30rem | Label preview specimen |
+| `--b2s-preview-sticker-max` | 15rem | Sticker preview specimen |
+| `--b2s-proof-height-narrow` | 15rem | Retained; the narrow wizard specimen uses `--b2s-preview-narrow-block` |
+| `--b2s-preview-rule-block` | 3px | Label preview specimen, the accent rule's block size (§3.1) |
+| `--b2s-wizard-header-block` | 4.5rem · 72px | `WizardStep` header band |
+| `--b2s-mark-tile` | 2.25rem · 36px | Platform mark tile, `WizardStep` and `EntryFrame` |
+| `--b2s-step-mark` | 1.75rem · 28px | Step indicator circle, and the connector's inline size |
+| `--b2s-wizard-layout` | 60rem · 960px | Wizard two-column threshold |
+| `--b2s-wizard-form-pad-block` | 2.75rem · 44px | Wizard form column, padding at the block start |
+| `--b2s-wizard-action-block` | 2.75rem · 44px | Wizard footer actions |
+| `--b2s-text-preview` | 0.9375rem · 15px | Preview panel heading; leading is `--b2s-leading-sm` |
+| `--b2s-segment-block` | 2.25rem · 36px | Segmented control buttons |
+| `--b2s-preview-label-block` | 18.125rem · 290px | Label specimen block size at the wide cap |
+| `--b2s-preview-narrow-block` | 17.5rem · 280px | Label specimen block size below the wizard layout |
+| `--b2s-specimen-arabic` | 1.875rem · 30px | Arabic brand name at the 480px label cap (§3.1) |
+| `--b2s-specimen-latin` | 1.1875rem · 19px | English brand name at the 480px label cap (§3.1) |
+| `--b2s-entry-width` | 27.5rem · 440px | `EntryFrame` card |
+
+The six `--b2s-layer-*` tokens are every z-index in the catalog, and no other value is a z-index. The switch tokens are the same in both densities, because the whole row is the target. A multiline `TextField` grows to eight rows, then scrolls. The skeleton pulse runs between 0.6 and 1, so a placeholder never vanishes.
+
+---
+
+## 3. The brand layer
+
+`BrandFrame` is the only component that consumes brand tokens (`OD-G24`, `UX_PRINCIPLES.md` §2). Everything inside it renders in the brand; everything outside it renders in the platform.
+
+**Brand tokens**, defined by `BrandFrame` from a resolved `BrandProfile`:
+
+- `--brand-primary`, `--brand-secondary`, `--brand-accent`, `--brand-background`, `--brand-foreground`, `--brand-muted`, `--brand-critical` — the seven `ColorRole`s (`BRAND_CONFIG.md` §4), from the chosen `BrandTheme`, defaulting to the profile's default theme.
+- `--brand-font-heading-latin`, `--brand-font-heading-arabic`, `--brand-font-body-latin`, `--brand-font-body-arabic` — with weight and italic for each (`BRAND_CONFIG.md` §5).
+
+**Resolution** follows `BRAND_CONFIG.md` §7 exactly: the line's profile if it has one, otherwise the brand's current profile, resolved at read time and never stored.
+
+**Rules.**
+
+1. **No platform control inside a frame.** Editing affordances — edit, replace, remove — sit outside the frame's boundary, in chrome. The platform cannot refuse a brand for being that brand, but it can refuse to put a platform control on top of one (`UX_PRINCIPLES.md` §7).
+2. **Inside a frame, no platform token is referenced. Outside one, no brand token is** (CF-171).
+3. **The frame is a proofing mount:** the `proof` surround at `radius-xl`, a `border-width` boundary in `proof-edge`, and `space-5` of surround between the chrome and the brand's own `background`. The frame's own error and its named gap markers are set in `proof-text`. These, with `radius-xl`, `border-width` and `space-5`, are the platform tokens the frame uses (`OD-G25`).
+4. **Contrast inside a frame** is bound by `BRAND_CONFIG.md` §11's `foreground`/`background` constant, not by the platform's AA rule. The frame never "fixes" a brand's colours.
+5. **Missing values are named, never substituted** (`BRAND_CONFIG.md` §3, §9, §11). A missing role shows a named gap in that role's place. A missing locale string shows the field and the locale. A missing typeface pair renders the text in the platform face with a visible marker naming the pair — so the gap is seen, never hidden behind a plausible substitute.
+6. **The tenant's logo in the header is an image, not a brand-token consumer.** It needs no frame (§7, `PageHeader`).
+7. **A colour swatch in chrome is data, not a token.** A `ColorField` showing a stored `color_value` renders that value inline; it is not a brand-token reference, and CF-171 must not treat it as one.
+8. **The platform identity never enters the proof.** No Clay, no warm neutral, no platform shadow and no platform typeface styles anything inside the surround. A brand that happens to use terracotta shows its own terracotta, not the platform's (`OD-G24`).
+9. **Tenant output never mirrors.** What a frame shows keeps its physical layout, orientation, typography, numerals and imagery whatever the interface language. Switching the interface from English to Arabic mirrors the chrome around the frame and changes nothing inside it (`OD-G24`, §4 rule 12).
+10. **Content inside a frame resets inherited font size, leading and spacing to their initial values**, so the interface's type never enters tenant output. Tenant output typography is specified by templates at P06; until then the reset is the stated behaviour, not a design. P03-T14 reported the reset. Filling a typeface here would be a design this document does not state.
+
+### 3.1 Preview specimens — interim, until templates
+
+A preview specimen is a fixed illustration drawn from a resolved BrandProfile inside BrandFrame, so a business sees its brand on a real format while it sets the brand up. It is not a template render, not a PackagingTemplate and not print output; template-driven previews replace it at P06. Release 1 formats only (SCOPE.md module 07): Label and Sticker.
+
+Both render in the output's own direction and never mirror with the interface (OD-G24, §3 rule 9). Typography comes from the profile's heading and body typefaces for each script; a missing pair renders in the interim reset type with its named gap (§3 rule 5). Colours come only from the default theme's roles, mapped as below, and are never adjusted (§3 rule 4): a combination that reads poorly here reads poorly on the shelf, which is what a proof is for.
+
+Label — a landscape rectangle, aspect ratio 48:29, at most preview-label-max wide and preview-label-block tall, scaled down to fit and centred, with space-5 clear on every side, corner radius 3% of its width. Below the wizard layout the specimen is at most preview-narrow-block tall. An inline-start band, 33% of the width, in `primary`, holding the logo slot for the band's ground at 45% of the band's width. A content panel in `background`, a centred column: the Arabic name at specimen-arabic and the English name at specimen-latin, both in the heading face, in `foreground`. At the 480px cap those are 30px and 19px. The Arabic name is never smaller than the English. Inside BrandFrame the sizes are container-query widths of the label, 6.25cqw and 3.958333cqw, because a platform token and a raw length are both forbidden on the specimen (§3 rule 10, CF-171). A rule 10% of the label's width and 3px high in `accent`; a product-name line and a net-weight line in the body face, in `muted`. A strip along the block-end edge, 4% of the label's height, in `secondary`. A missing logo for the band's ground is an info note above the specimen, never a bullet list. The gallery's fictional-sample disclaimer appears only in the gallery, never on a tenant's brand.
+
+Sticker — a circle, at most preview-sticker-max in diameter, scaled to fit. Fill `primary`; an inner ring 4% of the diameter thick, inset 6%, in `accent`; centred, the logo slot for the primary's ground at 40% of the diameter, and beneath it the brand name in the business's default locale, heading face, in `background`.
+
+Ground — dark when `primary`'s relative luminance, computed by lib/colour/, is below 0.179, the point at which black and white contrast with it equally; light otherwise. The logo slot takes the `mark` logo for its ground, or, where that ground has no mark, the `full` logo for the same ground — never a logo made for the other ground (BRAND_CONFIG.md §9) and never a generated monogram. If that ground has neither, the slot stays empty and a named gap in proof-text says which variant is missing. The wizard creates full logos, and a slot accepting only a mark would show a gap on every new brand.
+
+Placeholders — the product-name and net-weight lines are catalog strings in brackets, [PRODUCT NAME] and [NET WT], in the business's default locale, because they stand for content that does not exist yet.
+
+`critical` appears on neither specimen: it marks warnings and regulatory marks, and neither specimen carries one.
+
+---
+
+## 4. Right-to-left is structure, not a mirroring pass
+
+1. **Direction is set once**, on the document root, from the locale — `app/[locale]/layout.tsx` already does this. Components do not read direction to choose styles.
+2. **Logical properties only:** `margin-inline-start` and `-end`, `padding-inline`, `inset-inline-start` and `-end`, `border-inline-start` and `-end`, `text-align: start` and `end`, `float: inline-start` and `inline-end`. **A physical `left` or `right` anywhere in the catalog is a defect** (CF-168). There is no chrome exception; the print engine's real-unit geometry is outside this document.
+3. **Flex and grid flow follow direction automatically.** Order is never reversed by hand.
+4. **Icons flip only by their registry flag** (§2.10). A flag, not a judgement made per page.
+5. **Mixed direction is isolated.** Every identifier, email, URL, hex colour, SKU, GTIN, batch number, invoice number, request identifier and file name renders in a direction-isolated span, left-to-right. Tenant text from a `TranslationEntry` renders in its own locale's direction, isolated. So an Arabic brand name inside an English sentence, or a Latin SKU inside an Arabic one, cannot reorder the text around it.
+6. **`lib/locale/` formats every number `CALC_SPEC.md` does not govern — counts, upload percentages, byte sizes — and dates.** Counts are integers, grouped by R1-25's locale definition. Percentages of progress are integers from 0 to 100, the completed fraction rounded down, so 100 appears only when the work is complete. The sign follows the value in both locales, as a catalog pattern. Byte sizes use decimal SI units, 1 kB = 1000 B, the largest of B, kB, MB and GB whose value is at least 1, one fractional digit below 10 and none from 10 upward, rounded half-up. The unit words are catalog strings. A count or a byte size below zero, or a progress value outside 0 to 1, is refused with a named RangeError and is never displayed. A value outside its domain is a defect upstream, and a formatter that hides it makes the defect invisible. Money and domain quantities, which `CALC_SPEC.md` governs, are formatted through `lib/money/` at P05 under ADR-011. A formatted number is never assembled by hand (CF-175). Under R1-25's locale definitions both locales use Latin digits, so a number is a left-to-right run that bidirectional layout places correctly in an Arabic line.
+7. **Numeric table columns align to the cell's end edge**, with tabular figures, so decimals line up in both directions.
+8. **Arrow keys follow visual direction.** In a right-to-left tab list, ArrowLeft moves to the next tab.
+9. **Steppers and progress** flow from start to end.
+10. **Arabic punctuation** — `،` `؛` `؟` — comes from the catalogs, never from code.
+11. **Plurals follow the locale's plural categories.** Arabic has six — zero, one, two, few, many, other — and every counted string carries all six in `ar`. **No string is ever built by concatenation**, because word order, gender and number agreement differ between the two languages.
+12. **Tenant output is outside interface direction.** A brand frame, a packaging preview and every generated output take their direction from the output, never from the interface. The chrome mirrors; the product does not. A bilingual field orders its locales by the business's default language, not the interface's, so switching the interface never reorders a tenant's fields (§6, `BilingualField`).
+
+CF-179 renders every primitive in `ar` and checks every rule above that a rendering can observe.
+
+---
+
+## 5. The component contract
+
+Every primitive declares:
+
+| Key | Contents |
+|---|---|
+| `name` | The export name. PascalCase, and clear of `GLOSSARY.md` §5 (§9) |
+| `parts` | Anatomy, in reading order. `?` marks an optional part |
+| `variants` | The complete set. CF-174 matches it |
+| `sizes` | `[compact, comfortable]` unless stated. Size follows region density by default |
+| `states` | **All eight required states** — `default`, `hover`, `focus`, `active`, `disabled`, `loading`, `error`, `empty` — plus `selected` or `checked` where it applies. Each is either a treatment or `n/a — <reason>`. A missing state is not an `n/a`; it is unfinished (CF-173) |
+| `keyboard` | Every key the component handles |
+| `aria` | Roles, names, relationships, live regions |
+| `mirrors` | What changes in right-to-left |
+| `tokens` | Every token consumed |
+
+**Focus, universally:** a ring of `--b2s-focus-width` in `--b2s-color-focus` at `--b2s-focus-offset`, the offset filled with the surface the component sits on, so the ring meets 3:1 on every surface including over a filled primary action. Focus is shown for keyboard focus (`:focus-visible`) and never removed.
+
+**Disabled, universally:** `text-subtle` on `sunken`, no pointer events, and still perceivable. Disabled is for actions that are impossible, never a way of signalling that a form is incomplete (§8).
+
+---
+
+## 6. Primitives
+
+`UX_PRINCIPLES.md` §9 names seventeen primitives. Four are added, making twenty-one, and one composition: **`Field`**, because every input needs caption, help and error, and one component for that anatomy beats the same markup written seventeen times; **`TextLink`**, because navigation inside prose is needed on the sign-in surface already; **`Skeleton`** and **`Spinner`**, because the `loading` state every primitive declares needs something to render it. The composition is **`AppShell`**, in §7, because §9 lists navigation as something that mirrors but lists no navigation.
+
+### Button
+
+```component
+name: Button
+parts: [container, icon_start?, text, icon_end?, spinner?]
+variants: [primary, secondary, quiet, danger]
+sizes: [compact, comfortable]
+states:
+  default: primary is action fill with action-text and elevation-action; secondary is surface fill with border-control; quiet is text only; danger is danger-action fill with danger-action-text
+  hover: primary to action-hover; secondary and quiet to sunken fill; danger to danger-action-hover
+  focus: universal focus ring
+  active: primary to action-active; secondary and quiet to surface-active; danger to danger-action-active; no movement, no scale
+  disabled: universal disabled
+  loading: spinner replaces icon_start; width locked to its idle width; text kept; aria-busy
+  error: n/a — a button reports no value of its own; the error belongs to the field or notice its action produces
+  empty: n/a — a button always has an accessible name
+keyboard: [Enter activates, Space activates]
+aria: native button element; an icon-only button carries an accessible name from the catalog; loading sets aria-busy and aria-disabled and never moves focus away
+mirrors: icon_start and icon_end are logical; a directional icon flips by its registry flag
+tokens: [control-height, control-padding-inline, radius-md, color-action, color-action-text, color-action-hover, color-action-active, color-surface, color-surface-active, color-border-control, color-sunken, color-danger-action, color-danger-action-text, color-danger-action-hover, color-danger-action-active, color-focus, focus-width, focus-offset, text-body, icon-size, duration-quick, delay-loader, elevation-action]
+```
+
+**Use:** one `primary` per region, for the action the region exists for. `secondary` for alternatives. `quiet` for low-emphasis and repeated actions — every row action in a table. `danger` for irreversible actions only. Archiving is reversible and is `secondary`.
+
+**Content:** a verb and its object — "Save brand", never "Submit" or "OK". The notice an action produces uses the same verb: "Save brand" produces "Brand saved". No trailing arrow glyphs.
+
+**Don't:** use a button for navigation (that is `TextLink`), disable a submit button to signal invalid input, or put two primaries side by side.
+
+### TextLink
+
+```component
+name: TextLink
+parts: [text, icon_end?]
+variants: [inline, standalone]
+sizes: [compact, comfortable]
+states:
+  default: accent-text colour, underlined
+  hover: underline thickens to focus-width
+  focus: universal focus ring
+  active: text-muted
+  disabled: n/a — a link that goes nowhere is text, not a disabled link
+  loading: n/a — navigation owns loading at the destination
+  error: n/a — a link carries no value
+  empty: n/a — a link always has visible text
+keyboard: [Enter follows]
+aria: native anchor; opening a new window is announced by an icon with an accessible name
+mirrors: icon_end is logical; the external-link arrow flips by its registry flag
+tokens: [color-accent-text, color-text-muted, color-focus, text-body]
+```
+
+**The underline is what makes it a link.** With no accent colour in the chrome, a link is never identified by colour — which WCAG requires anyway.
+
+### Field
+
+```component
+name: Field
+parts: [caption, optional_marker?, control_slot, help?, error?, counter?]
+variants: [standard]
+sizes: [compact, comfortable]
+states:
+  default: caption above the control; help below it in text-muted
+  hover: delegated to the control
+  focus: delegated to the control; the caption does not change
+  active: delegated to the control
+  disabled: caption and help in text-subtle
+  loading: delegated to the control
+  error: error line below help, danger icon plus message; the control's boundary becomes danger; aria-invalid on the control
+  empty: n/a — emptiness is the control's value, validated on submit, not a visual state of the field
+keyboard: [none of its own]
+aria: the caption is an HTML label element bound to the control; help and error are wired with aria-describedby; error text is announced when it appears on submit
+mirrors: none of its own; all parts stack in the block direction
+tokens: [field-gap, text-sm, color-text, color-text-muted, color-text-subtle, color-danger, space-2, space-3]
+```
+
+**The caption is always visible and always above the control.** Never a floating label, never a placeholder standing in for a caption: both disappear exactly when someone needs them. Captions above rather than beside the control also survive the length difference between Arabic and English.
+
+**Mark the optional fields, not the required ones.** The wizard is mostly required, so marking the few exceptions is less noise.
+
+**Errors name the problem and the fix**, in the interface's voice, without apology (`UX_PRINCIPLES.md` §5). "Enter the trading name in Arabic", not "Invalid input".
+
+**The identifier for the caption is `caption`**, not `label`. `GLOSSARY.md` §5 forbids `label` as an identifier because it names a packaging entity; the HTML `label` element is the platform's and is exempt.
+
+### TextField
+
+```component
+name: TextField
+parts: [container, prefix?, input, suffix?, clear_action?]
+variants: [text, email, number, identifier, multiline, password]
+sizes: [compact, comfortable]
+states:
+  default: surface fill, border-control boundary, radius-md
+  hover: boundary to text-muted
+  focus: one universal focus ring on the control's border box; the inner control draws no second ring; boundary to text
+  active: n/a — text entry has no pressed state distinct from focus
+  disabled: universal disabled
+  loading: spinner in the suffix position while a value is validated remotely; input stays editable
+  error: boundary to danger; Field shows the message
+  empty: placeholder in text-subtle where one helps; never carries the caption
+keyboard: [native text entry, Escape clears when clear_action is present]
+aria: native input or textarea inside Field; number uses inputmode decimal; identifier sets spellcheck off and autocapitalize off
+mirrors: prefix and suffix are logical; identifier and email inputs are left-to-right and isolated in either locale
+tokens: [control-height, control-padding-inline, radius-md, color-surface, color-border-control, color-text, color-text-subtle, color-danger, color-focus, text-body, leading-md, multiline-rows-min, multiline-rows-max]
+```
+
+**`number`** — for money, quantities and percentages. On input, U+0660–U+0669 and U+06F0–U+06F9 become the Latin digits 0–9; U+066B, the Arabic decimal separator, becomes "."; U+066C, the Arabic thousands separator, and "," are grouping and are removed. On blur it redisplays through the R1-25 formatter. The currency symbol sits in the `suffix`, after the value, as R1-25 defines.
+
+**`identifier`** — SKUs, GTINs, batch and invoice numbers. **Never normalised and never re-digited.** A scanned code has to match what is printed character for character, so every digit in U+0660–U+0669 and U+06F0–U+06F9 typed into an identifier is refused with the named error — "Use the digits 0 to 9" — rather than silently converted. The Extended Arabic-Indic range adopts P03-T09's choice.
+
+**`multiline`** — grows with content to eight rows (`--b2s-multiline-rows-max`), from a floor of three (`--b2s-multiline-rows-min`), then scrolls. Guideline bodies use it through `BilingualField`.
+
+**`password`** — a native password input. It is not re-digited, and it is not isolated to one direction. Sign-in and account creation use it.
+
+### BilingualField
+
+```component
+name: BilingualField
+parts: [caption, locale_group_primary, locale_group_secondary, completion_indicator, help?, error?]
+variants: [single, multiline]
+sizes: [compact, comfortable]
+states:
+  default: two inputs stacked, each with a visible locale tag; the primary locale first
+  hover: delegated to each input
+  focus: universal focus ring on the focused input; the other input is unchanged
+  active: n/a — as TextField
+  disabled: both inputs disabled together
+  loading: n/a — both values are local until the form saves
+  error: the message names the missing or invalid locale; only that input takes the danger boundary
+  empty: each empty locale is marked as missing by name in the completion indicator
+  complete: completion indicator shows both locales filled
+keyboard: [Tab moves from the primary locale input to the secondary]
+aria: one caption for the group; each input's accessible name is the caption and its locale name, both from the catalog; the completion indicator is text, not only an icon
+mirrors: each input takes its own locale's direction regardless of the page's direction; the group stacks in the block direction and does not mirror
+tokens: [field-gap, control-height, radius-md, color-surface, color-border-control, color-text, color-text-muted, color-success, color-warning, color-danger, text-sm, text-body]
+```
+
+**One control, two locales** (`UX_PRINCIPLES.md` §6). It maps to one `TranslationKey` and its two `TranslationEntry` rows (`BRAND_CONFIG.md` §3).
+
+**Order is the tenant's `default_locale` first**, then the other. That keeps the order stable for a tenant whatever interface language a member happens to be using, so the Arabic field is always where that tenant's people expect it.
+
+**It saves while incomplete and cannot be complete while incomplete.** A draft keeps partial values; "complete" requires both. The field's error names the missing locale, and a renderer later names it again rather than falling back to the other language.
+
+### Select
+
+```component
+name: Select
+parts: [trigger, value, chevron, listbox?, search_input?, options]
+variants: [native, searchable]
+sizes: [compact, comfortable]
+states:
+  default: TextField boundary and fill; chevron at inline-end
+  hover: boundary to text-muted
+  focus: one universal focus ring on the control's border box; the inner control draws no second ring
+  active: listbox open, elevation-1, layer-dropdown
+  disabled: universal disabled
+  loading: spinner replaces the chevron while options load; the trigger stays focusable
+  error: boundary to danger; Field shows the message
+  empty: searchable variant with no match shows a named no-results line in the listbox
+  selected: the chosen option carries a check and aria-selected
+keyboard: [native select handles its own keys; searchable opens on Enter, Space or ArrowDown, moves with arrows, selects on Enter, closes on Escape, type-ahead filters]
+aria: native uses the select element; searchable follows the combobox pattern with a listbox popup
+mirrors: chevron at inline-end; listbox aligns to inline-start of the trigger
+tokens: [control-height, radius-md, color-surface, color-raised, color-border-control, color-text, color-text-subtle, elevation-1, layer-dropdown, color-focus]
+```
+
+**`native` for short lists with no search** — it is the most robust option on every device and screen reader, and on a phone it opens the platform picker. **`searchable` for long lists**: the tenant switcher now, product and buyer pickers later. The identifier for the choices is `options`, never `items`.
+
+### Checkbox
+
+```component
+name: Checkbox
+parts: [box, check_mark, caption]
+variants: [standard, indeterminate]
+sizes: [compact, comfortable]
+states:
+  default: check-size box, border-control boundary, radius-sm
+  hover: boundary to text
+  focus: universal focus ring around the box
+  active: box fill to sunken
+  disabled: universal disabled
+  loading: n/a — a checkbox commits nothing on its own; it is submitted with its form
+  error: boundary to danger; Field shows the message
+  empty: n/a — unchecked is the checkbox's value, not an empty state
+  checked: action fill, action-text check mark
+keyboard: [Space toggles]
+aria: native input of type checkbox; indeterminate sets the native indeterminate property
+mirrors: box at inline-start of its caption
+tokens: [check-size, radius-sm, color-border-control, color-action, color-action-text, color-focus, text-body]
+```
+
+**The whole row is the hit target**, not just the box; the caption is a bound label.
+
+### RadioGroup
+
+```component
+name: RadioGroup
+parts: [group_caption, options]
+variants: [vertical, horizontal]
+sizes: [compact, comfortable]
+states:
+  default: check-size circles, border-control boundary
+  hover: boundary to text
+  focus: universal focus ring on the focused option
+  active: circle fill to sunken
+  disabled: universal disabled
+  loading: n/a — submitted with its form
+  error: boundaries to danger; Field shows the message
+  empty: n/a — a group always offers at least two options, and no option selected is a validation state
+  checked: action-filled inner dot at radio-dot-size
+keyboard: [Arrow keys move and select within the group, in visual direction; Tab enters and leaves the group]
+aria: fieldset with legend as the group caption; native radio inputs
+mirrors: options run from inline-start; arrow keys follow visual direction
+tokens: [check-size, radio-dot-size, radius-full, color-border-control, color-action, color-focus, space-3, text-body]
+```
+
+**`horizontal` for two or three short options only**; anything else is vertical.
+
+### Switch
+
+```component
+name: Switch
+parts: [track, thumb, caption, state_text]
+variants: [standard]
+sizes: [compact, comfortable]
+states:
+  default: track sunken with border-control boundary, switch-block-size by switch-inline-size; thumb is switch-thumb-size, inset by switch-inset, at inline-start
+  hover: track boundary to text
+  focus: universal focus ring around the track
+  active: thumb widens by space-1 while pressed
+  disabled: universal disabled
+  loading: thumb shows a spinner while the setting saves; switch stays in its new position
+  error: switch returns to its previous position and a Notice names what failed
+  empty: n/a — a switch is always on or off
+  checked: track action fill; thumb at inline-end
+keyboard: [Space toggles, Enter toggles]
+aria: role switch with aria-checked; the caption names the setting and the state text reads on or off from the catalog
+mirrors: the thumb moves from inline-start to inline-end, so it travels right-to-left in Arabic
+tokens: [radius-full, color-sunken, color-border-control, color-action, color-action-text, switch-block-size, switch-inline-size, switch-thumb-size, switch-inset, space-1, duration-base, ease-standard, color-focus]
+```
+
+**A switch takes effect immediately** — the theme, a notification preference. A value submitted with a form is a `Checkbox`. State is never carried by colour alone: the text says on or off.
+
+### FileDrop
+
+```component
+name: FileDrop
+parts: [drop_zone, instruction, browse_button, constraints_text, file_list]
+variants: [single, multiple]
+sizes: [comfortable]
+states:
+  default: dashed border-control boundary, instruction and the accepted types and size limit
+  hover: boundary to text
+  focus: universal focus ring on browse_button
+  active: drag-over — boundary solid, fill sunken, instruction says drop to upload
+  disabled: universal disabled
+  loading: per file — uploading with determinate progress and a formatted percentage, then processing while renditions are generated, indeterminate
+  error: per file — a named error for type, size or failure, with retry; nothing else in the list is affected
+  empty: the default state is the empty state
+  done: per file — thumbnail, file name isolated, formatted size, replace and remove actions outside any brand frame
+keyboard: [browse_button is a secondary Button; each file's actions are Buttons]
+aria: dragging is never the only way — browse_button always works; progress uses a progressbar role with a formatted value; completion is announced politely
+mirrors: file name isolated left-to-right; actions at inline-end
+tokens: [radius-md, color-border-control, color-sunken, color-action, color-text, color-text-muted, color-danger, color-success, space-5, text-sm]
+```
+
+**browse_button is a `secondary` Button.** A FileDrop sits inside a form region whose primary action is elsewhere, and Button allows one primary per region. **Always `comfortable`.** An upload is a brand task, never a dense operation. FileDrop is presentation only. It performs no upload and chooses no storage. Accepted types, the size limit and progress arrive as props. The limit and each file's size are shown through `lib/locale/`'s byte format, and progress through its percentage format. The accepted types and size limit come from the consuming module's specification, not from this component; the component only shows them. Where the object lands is `ADR-008` and `OD-G20`'s business, not this document's.
+
+### ColorField
+
+```component
+name: ColorField
+parts: [swatch, hex_input, picker_button, contrast_readout?]
+variants: [standard, paired]
+sizes: [compact, comfortable]
+states:
+  default: swatch at inline-start showing the stored value; hex input left-to-right and isolated
+  hover: boundary to text-muted
+  focus: one universal focus ring on the control's border box; the inner parts draw no second ring
+  active: native picker open
+  disabled: universal disabled
+  loading: n/a — the value is local until the form saves
+  error: value refused unless it matches ^#[0-9a-f]{6}$ after normalisation; Field names the problem
+  empty: swatch shows the empty name; the chooser stays mounted and opens on the brand's current background colour; the field commits nothing until the person chooses
+keyboard: [native text entry in hex_input; picker_button opens the platform picker]
+aria: swatch is decorative with the value exposed as text; contrast_readout is text stating the ratio and pass or fail, never colour alone
+mirrors: swatch at inline-start; hex input always left-to-right
+tokens: [control-height, radius-sm, radius-md, color-border-control, color-success, color-danger, text-sm]
+```
+
+**The hex value is normalised to lowercase with a leading `#`**, because `DATA_MODEL.md` constrains `color_value.srgb` to `^#[0-9a-f]{6}$`.
+
+ColorField offers a visual chooser in every state, empty included. An empty field shows its empty name and commits nothing until the person chooses; the chooser then opens on the brand's current background colour, which always has a value (`BRAND_CONFIG.md` §10). The hex box stays, for people who have a code.
+
+**`paired`** is for `foreground` and `background` in the brand theme editor. It shows the live contrast ratio between the two and whether it meets `BRAND_CONFIG.md` §11's constant of 4.5:1 (§0 item 4). The ratio is a formatted number.
+
+**The swatch is data, not a brand token** (§3 rule 7).
+
+### DateField
+
+```component
+name: DateField
+parts: [text_input, calendar_button, calendar_popover?]
+variants: [single]
+sizes: [compact, comfortable]
+states:
+  default: TextField appearance; display format from the locale definition
+  hover: boundary to text-muted
+  focus: one universal focus ring on the entry's border box; the inner input draws no second ring
+  active: calendar_popover open, elevation-1
+  disabled: universal disabled
+  loading: n/a — dates are local until the form saves
+  error: an unparseable or out-of-range date is named with the expected format
+  empty: placeholder shows the expected format from the catalog
+  selected: the chosen day in the grid carries action fill
+keyboard: [typing a date is always allowed; the calendar grid moves with arrow keys in visual direction, Page Up and Page Down move focus to the same day number in the previous or next month clamped to that month's last day, Shift with Page Up or Page Down does the same across a year, Home and End go to the week's start and end, Enter selects, Escape closes]
+aria: the text input is the primary control; the calendar follows the date-picker dialog pattern with grid semantics; a day cell's accessible name is the full date
+mirrors: the calendar grid runs from inline-start; weekday order starts from the locale's first day of the week
+tokens: [control-height, radius-md, color-surface, color-raised, color-border-control, color-action, color-action-text, elevation-1, color-focus]
+```
+
+**Display order, calendar and first weekday come from `CALC_SPEC.md` R1-25's locale block** (§0 item 3) — `DD/MM/YYYY`, Gregorian, weeks from Saturday — and are never restated in code. Stored and transmitted as ISO 8601. **Typing is never slower than picking** — the calendar is an aid, not a gate.
+
+**Calendar words are catalog strings.** No month or weekday name comes from `Intl` or any locale API (CF-175). Month names, Egyptian Gregorian forms: ar يناير، فبراير، مارس، أبريل، مايو، يونيو، يوليو، أغسطس، سبتمبر، أكتوبر، نوفمبر، ديسمبر; en January through December. Weekday headers, from Saturday: ar سبت، أحد، اثنين، ثلاثاء، أربعاء، خميس، جمعة; en Sat, Sun, Mon, Tue, Wed, Thu, Fri. Full weekday names, from Saturday: ar السبت، الأحد، الإثنين، الثلاثاء، الأربعاء، الخميس، الجمعة; en Saturday through Friday. A day cell's accessible name is the full date, a catalog pattern `{weekday} {day} {month} {year}` in both locales — en `Saturday 19 September 2026`, ar `السبت 19 سبتمبر 2026` — using those full weekday and month names, with the day and the year as ungrouped digits. The month heading is a catalog pattern of the month name and the year, in that order. The popover uses `--b2s-layer-dropdown`, the elevation-1 layer already used by an elevation-1 popover.
+
+### DataTable
+
+```component
+name: DataTable
+parts: [container, header_row, sort_control?, selection_cell?, body_rows, cells, row_actions?, bulk_action_bar?, pagination, status_region]
+variants: [standard, selectable]
+sizes: [compact, comfortable]
+states:
+  default: surface fill; sunken header; row-height by density; dividers of border-width in border between rows
+  hover: row fill to sunken
+  focus: universal focus ring on the focused interactive element within a row
+  active: n/a — a row is not itself a control; its actions are
+  disabled: n/a — a row that cannot be acted on shows no actions rather than disabled ones
+  loading: skeleton rows at the current row height, preserving column widths, after delay-loader
+  error: one full-width row within the body naming what failed, with retry and the request identifier
+  empty: two distinct cases — first use says what goes here and offers the action that creates the first row; no results says nothing matches the filters and offers to clear them
+  selected: row fill to accent-soft with a checked selection cell; bulk_action_bar shows the formatted count
+keyboard: [Tab moves through interactive elements only; Space toggles the focused row's selection; sort controls are Buttons]
+aria: native table element with th scope; sort state via aria-sort on the header; the status region announces result counts and completed bulk actions
+mirrors: column order follows reading direction; the selection column sits at inline-start and row_actions at inline-end; a sticky first column sticks at inline-start
+tokens: [row-height, cell-padding-block, cell-padding-inline, border-width, color-surface, color-sunken, color-accent-soft, color-border, color-text, color-text-muted, text-body, radius-lg, delay-loader]
+```
+
+**Numeric cells render what the caller passes**, end-aligned and tabular. Money and domain quantities are formatted by the caller through `lib/money/` at P05, never by the table. Counts the table itself shows go through `lib/locale/`. **Identifiers are never truncated**, because a truncated SKU cannot be matched; prose truncates with the full value available on hover and on focus. **Numbers are never truncated.**
+
+**A table scrolls inside its own container** (`UX_PRINCIPLES.md` §8), with a sticky header and, where the first column identifies the row, a sticky first column.
+
+**Native table semantics, not the grid pattern**, in Release 1. The grid pattern's keyboard model is heavy and easy to break, and native semantics give screen readers the structure they already understand. Revisit only when a real workflow needs cell-by-cell editing.
+
+**Pagination** shows a catalog pattern of from, to and total, each a count through `lib/locale/`. The pattern for the pages that use the table is `{from}–{to} of {total}` in English and `{from}–{to} من {total}` in Arabic. Page sizes are 25, 50 and 100, default 25, held for the session only. Persisting that choice is not decided. The sort cycle is absent, then ascending, then descending, then absent.
+
+### Tabs
+
+```component
+name: Tabs
+parts: [tab_list, tabs, panels]
+variants: [standard]
+sizes: [compact, comfortable]
+states:
+  default: tabs as text in text-muted; the list carries an underline of indicator-width in border
+  hover: tab text to text
+  focus: universal focus ring on the focused tab
+  active: n/a — activation is selection
+  disabled: universal disabled, and skipped by arrow keys
+  loading: the selected panel shows Skeleton; the tab list stays usable
+  error: the selected panel shows ErrorState; other tabs stay usable
+  empty: the selected panel shows EmptyState
+  selected: tab text in text, an underline of indicator-width in action
+keyboard: [Arrow keys move between tabs in visual direction, Home and End jump to first and last, Enter or Space activates]
+aria: tablist, tab and tabpanel roles with aria-selected and aria-controls
+mirrors: tab order follows reading direction; ArrowLeft moves to the next tab in right-to-left
+tokens: [space-4, space-5, indicator-width, color-text, color-text-muted, color-border, color-action, text-body, weight-medium]
+```
+
+**Manual activation** — arrows move focus, Enter or Space selects — wherever a panel loads data, so moving through tabs does not fire a request per tab.
+
+### Dialog
+
+```component
+name: Dialog
+parts: [scrim, container, title, description?, body, footer_actions, close_button]
+variants: [standard, confirmation]
+sizes: [small, medium, large]
+states:
+  default: raised fill, elevation-2, radius-lg; backdrop in color-scrim
+  hover: n/a — the dialog is a container
+  focus: focus moves into the dialog on open and is trapped until close
+  active: n/a — the dialog is a container
+  disabled: n/a — a dialog that cannot be used is not opened
+  loading: footer primary shows its loading state; the dialog stays open
+  error: an inline Notice at the top of the body names the failure; the dialog stays open
+  empty: n/a — a dialog always has content
+keyboard: [Escape closes unless a destructive action is pending, Tab cycles within, Enter submits when a form's primary action is focusable]
+aria: role dialog with aria-modal true, labelled by the title, described by the description; focus returns to the trigger on close
+mirrors: close_button at inline-end of the title; footer actions from inline-end, primary last in reading order
+tokens: [color-raised, color-border, color-scrim, elevation-2, radius-lg, dialog-width-small, dialog-width-medium, dialog-width-large, space-7, text-xl, duration-enter, duration-exit, ease-enter, ease-exit]
+```
+
+**Sizes:** `small` for confirmations, `medium`, `large` — `--b2s-dialog-width-*`. **Below 640px every dialog becomes a full-height bottom sheet.** The size identifiers are `small`, `medium` and `large`, not densities.
+
+**Confirmations name the object and the consequence**, and the confirm button repeats the verb: "Archive the line *Fruit Bites*? It stops appearing in new packaging and can be restored" with **Archive line**, never "OK". Initial focus on a confirmation goes to the least destructive action. **Dialogs never stack.**
+
+### Notice
+
+```component
+name: Notice
+parts: [status_icon, title, message, request_identifier?, actions?, dismiss_button?]
+variants: [toast, inline]
+sizes: [comfortable]
+states:
+  default: raised fill with a status-coloured bar of status-bar-width at inline-start; toast uses elevation-3
+  hover: toast auto-dismiss pauses
+  focus: universal focus ring on its actions; auto-dismiss pauses while focus is inside
+  active: n/a — a notice is not itself a control
+  disabled: n/a — a notice has no disabled form
+  loading: n/a — a notice reports an outcome, not a pending action
+  error: the danger tone — persists until dismissed, carries the request identifier with a copy action
+  empty: n/a — a notice always has a message
+keyboard: [its actions are Buttons; Escape dismisses a focused toast]
+aria: success and info use role status, polite; danger uses role alert, assertive; warning uses status unless it blocks work
+mirrors: toasts stack at the inline-end bottom corner; the status bar sits at inline-start
+tokens: [color-raised, color-text, elevation-3, radius-lg, status-bar-width, color-success, color-warning, color-danger, color-info, space-5, text-sm, duration-enter, duration-exit, notice-dismiss]
+```
+
+**Toasts:** at most three are visible. When a fourth arrives, the oldest success or info toast is dismissed early to make room. If all three visible are warning or danger, which persist, the new toast queues until one is dismissed. The newest sits nearest the inline-end bottom corner. Success and info otherwise dismiss after `--b2s-notice-dismiss`, paused on hover and focus. **Inline notices** sit inside the section they concern and persist.
+
+**Never for validation.** A field's error belongs to the field. A notice is for the outcome of an action.
+
+**A server error always carries the request identifier** (OD-H13) — isolated, copyable — and says what to do next. It never discloses whether an address, tenant or record exists (`SECURITY_MODEL.md` §2).
+
+### Tooltip
+
+```component
+name: Tooltip
+parts: [trigger_reference, bubble, pointer]
+variants: [standard]
+sizes: [compact]
+states:
+  default: hidden
+  hover: shows after delay-tooltip on hover
+  focus: shows immediately when the trigger takes keyboard focus
+  active: n/a — a tooltip is not interactive
+  disabled: n/a — tooltips are never attached to disabled triggers, which cannot take focus
+  loading: n/a — tooltip text is static
+  error: n/a — a tooltip carries no value
+  empty: n/a — a tooltip always has text
+keyboard: [Escape dismisses]
+aria: the trigger's aria-describedby references the bubble; the bubble has role tooltip
+mirrors: placement is logical; the pointer follows the placement
+tokens: [color-text, color-surface, elevation-1, radius-sm, text-xs, space-2, space-3, duration-quick, delay-tooltip]
+```
+
+**Supplementary only.** Never the only place essential information lives, never interactive content, no more than about sixty characters. It is how a truncated value is shown in full on hover and focus. Placement is block-start by default, and block-end when the viewport lacks room at block-start. Never inline-start or inline-end.
+
+### StatusBadge
+
+```component
+name: StatusBadge
+parts: [status_icon?, text]
+variants: [neutral, success, warning, danger, info]
+sizes: [compact]
+states:
+  default: tone background with tone text, radius-sm
+  hover: n/a — a badge is not interactive
+  focus: n/a — a badge is not focusable
+  active: n/a — a badge is not interactive
+  disabled: n/a — a badge reports a state; it has no disabled form
+  loading: n/a — a badge reports a settled state; pending is its own status text
+  error: the danger variant
+  empty: n/a — a badge always has text
+keyboard: [none]
+aria: plain text; status is never carried by colour alone — the text always states it
+mirrors: icon at inline-start
+tokens: [radius-sm, color-success-bg, color-warning-bg, color-danger-bg, color-info-bg, color-sunken, text-xs, space-1, space-2, weight-medium]
+```
+
+### BrandFrame
+
+```component
+name: BrandFrame
+parts: [mount_boundary, surround, brand_canvas, brand_content, gap_markers?]
+variants: [preview]
+sizes: [comfortable]
+states:
+  default: brand_canvas in --brand-background inside the achromatic proof surround at radius-xl, with a boundary of border-width in proof-edge
+  hover: n/a — the frame is a container; its content is brand-rendered and not a platform control
+  focus: n/a — nothing inside the frame is a platform control; editing affordances live outside it
+  active: n/a — the frame is a container
+  disabled: n/a — a frame that cannot render shows its error or empty state instead
+  loading: surround shows Skeleton at the frame's size while the profile resolves
+  error: surround shows a named error — the profile could not be resolved — with the request identifier, its text in proof-text
+  empty: the brand has no current profile — named, with the action to finish the brand outside the frame
+  incomplete: renders what exists and places a named gap marker for each missing role, locale string or typeface pair, the marker text in proof-text
+keyboard: [none of its own]
+aria: region labelled with the brand or line name; gap markers are text, not colour alone
+mirrors: brand_content follows the direction of the locale being previewed, which may differ from the interface's
+tokens: [border-width, color-proof, color-proof-edge, color-proof-text, radius-xl, space-5, brand-primary, brand-secondary, brand-accent, brand-background, brand-foreground, brand-muted, brand-critical, brand-font-heading-latin, brand-font-heading-arabic, brand-font-body-latin, brand-font-body-arabic]
+```
+
+**The only component allowed to consume `--brand-*` tokens**, and the only one that defines them (§3). **The previewed locale can differ from the interface locale**: a member working in English can preview the Arabic label, and the frame renders that content right-to-left inside a left-to-right page.
+
+### Skeleton
+
+```component
+name: Skeleton
+parts: [shapes]
+variants: [text, block, table_rows]
+sizes: [compact, comfortable]
+states:
+  default: sunken shapes matching the final layout's size and rhythm
+  hover: n/a — not interactive
+  focus: n/a — not focusable
+  active: n/a — not interactive
+  disabled: n/a — a placeholder has no disabled form
+  loading: this primitive is the loading state; a slow opacity pulse between skeleton-opacity-min and 1, so a placeholder never vanishes, removed under reduced motion
+  error: n/a — replaced by ErrorState
+  empty: n/a — replaced by EmptyState
+keyboard: [none]
+aria: aria-hidden; the containing region carries aria-busy
+mirrors: shapes follow reading direction
+tokens: [color-sunken, radius-sm, row-height, duration-pulse, delay-loader, skeleton-opacity-min]
+```
+
+**Content areas only**, and only after `--b2s-delay-loader` so fast responses never flash a placeholder. **It reserves the final layout's space**, so nothing shifts when content arrives.
+
+### Spinner
+
+```component
+name: Spinner
+parts: [arc]
+variants: [standard]
+sizes: [compact, comfortable]
+states:
+  default: a rotating 270-degree arc in the current text colour
+  hover: n/a — not interactive
+  focus: n/a — not focusable
+  active: n/a — not interactive
+  disabled: n/a — has no disabled form
+  loading: this primitive is the loading state; under reduced motion the arc stops and the containing control's text states it is working
+  error: n/a — its container reports the error
+  empty: n/a — has no content
+keyboard: [none]
+aria: aria-hidden; the containing control carries aria-busy
+mirrors: none — rotation direction does not mirror
+tokens: [icon-size, color-text, duration-base, delay-loader]
+```
+
+**Actions and indeterminate waits only.** Never both a spinner and a skeleton for the same wait.
+
+---
+
+## 7. Shared compositions
+
+### AppShell
+
+The frame of every signed-in page: **header**, **navigation**, **main**.
+
+- **Header:** `PageHeader` — tenant logo, `TenantSwitcher`, locale switch, theme switch, account menu.
+- **Navigation:** at `lg` and above, the side navigation is a sticky grid column of `nav-width`, adopting P03-T15's reading. Below `lg` it opens in a drawer: the native dialog element opened modally as a side sheet from inline-start, at `drawer-width` and full block size, over the scrim, focus contained, Escape closing it and focus returning to the menu button. The top layer places it; no z-index is used. This replaces P03-T15's in-flow disclosure. The current section takes `accent-soft` fill, its label in `accent-text` at the semibold weight, and an inline-start bar of `indicator-width` in `action`. Weight and the bar carry it, so it is never colour alone.
+- **Main:** full width for tables; forms and wizards capped at `--b2s-measure-form`.
+- **A skip link** is the first focusable element and moves focus to `main`. Landmarks: `banner`, `navigation`, `main`.
+
+### PageHeader
+
+**The tenant's logo** uses the `LogoVariant` whose ground matches the platform theme: the `light`-ground variant in the light theme, `dark` in the dark. **If that combination does not exist, the tenant's name renders as text** — never a different variant pressed into service, and never a platform placeholder mark (`BRAND_CONFIG.md` §9). Logo height is `--b2s-logo-height`. **No B2S mark appears here or anywhere a tenant's output can reach** (OD-G21).
+
+**The theme choice** is a `RadioGroup` in the account menu — System, Light, Dark — where System follows `prefers-color-scheme`. This replaces P03-T15's two secondary buttons.
+
+### TenantSwitcher
+
+Lists the member's active memberships by tenant name and mark; `searchable` beyond seven. **Switching sets the per-request selector and persists nothing** — no storage, no cookie, no remembered choice — because OD-G14 forbids storing a last-selected tenant. The switcher shows the tenant the current request resolved, not a remembered one.
+
+### FormSection
+
+A title, a one-sentence description, fields in one column at `field-gap`, and optional section-level actions. One column always: two-column forms break reading order and translate badly between the two directions.
+
+### Filtered data table
+
+A filter bar above `DataTable`: search, then filters. Active filters appear as removable chips, "Clear filters" returns to the unfiltered set, and the result count is a formatted number announced in the status region. The no-results empty state is distinct from first use.
+
+### EmptyState
+
+A title saying what goes here, one sentence on why it matters or how it fills, and one primary action. **First use** invites creation. **No results** offers to clear the filters. An empty screen is an invitation to act, never a mood. EmptyState is in-flow content, not a card, and takes no elevation, adopting P03-T15's reading.
+
+### ErrorState
+
+What failed, in plain words; what to do next; a retry action; and the request identifier, isolated and copyable (OD-H13). Nothing that discloses whether an address, tenant or record exists (`SECURITY_MODEL.md` §2). No apology. ErrorState is in-flow content, not a card, and takes no elevation, adopting P03-T15's reading.
+
+### WizardStep
+
+The wizard renders in its own frame, not AppShell — nothing in the navigation exists before onboarding completes. Every screen renders exactly one `h1`, and that heading is inside this frame.
+
+- **Header:** a band `--b2s-wizard-header-block` tall across the full width, on `surface`, with a bottom border. At the wizard layout and above the band is exactly that tall; below it, the band is at least that tall. The lockup and the header actions share the first row, and the one-line indicator takes the full width of the next row, so the line is not squeezed between them. Inline start: a mark tile `--b2s-mark-tile` square, radius `radius-md`, in `action` with `action-text`, carrying the platform mark glyph — an isometric box drawn as two paths, registered as `mark` and never mirrored, because it is a brand mark (§2.10). Beside it "B2S" at `text-md` semibold, and the tagline beneath at `text-xs` in `text-muted`: "Brand to Shelf" / "من العلامة إلى الرف". Centre: the step indicator. Inline end: the other-language link and Sign out. Sign out ends the session and returns to sign-in. It is the frame's only header action in Release 1. The frame carries no help control in Release 1: help was named without a behaviour, and a control that does nothing is worse than none. It returns when there is help content to show.
+- **Step indicator:** an ordered list of the five numbered steps, Brand to Review. Welcome precedes it and is not shown. Each step is a circle `--b2s-step-mark` across holding its number, its label at `text-sm`, and a connector `--b2s-step-mark` by `--b2s-indicator-width` before the next. Completed: `action` fill with the number in `action-text`, label regular, a link to that step. Current: a `--b2s-focus-width` ring in `action` with the number in `action`, label semibold, `aria-current="step"`. Upcoming: a `border-control` boundary, number in `text-muted`, not a link. Below the wizard layout it becomes one line — "Step 2 of 5 · Typography" / "الخطوة 2 من 5 · الطباعة" — over a progress bar `--b2s-space-2` thick, on completion as on every numbered step. Completion's line names the last step, "Step 5 of 5 · Review" / "الخطوة 5 من 5 · المراجعة", and the bar is full.
+- **Body:** from the wizard layout, two columns. The form column is `--b2s-measure-form` wide, including `--b2s-space-11` inline padding and `--b2s-wizard-form-pad-block` padding at the block start. The preview column fills the rest, on `surface`, as tall as the viewport below the header, its content sticky at the block start so the preview stays in view while the form scrolls. Below the wizard layout: one column. The preview is a card after the heading block, and the specimen is scaled to the column at most `--b2s-preview-narrow-block` tall. A step with no preview stays one column, capped at `measure-form`.
+- **Heading block:** an eyebrow at `text-sm` semibold in `accent-text`, "Step 1 of 5 · Your brand" / "الخطوة 1 من 5 · علامتك التجارية"; the `h1` at `text-3xl` semibold; the lead at `text-md` in `text-muted`. Welcome has no eyebrow. For Brand the copy is binding: "See your brand on your product" / "شاهد علامتك التجارية على منتجك", and "Start with the essentials. Your packaging takes shape as you type." / "ابدأ بالأساسيات، وشاهد عبوتك تتشكّل أثناء الكتابة." Other steps' headings are the builder's to draft in that voice.
+- **Footer:** sticky to the bottom of the form column, on `canvas`, with a top border. The actions are set per screen, never all three by default, and they are `--b2s-wizard-action-block` tall. Welcome shows Continue only. Brand, the first numbered step, shows Save and finish later and Continue, with no Back, because once Welcome has provisioned the business the gate never returns anyone to it. Typography, Company and Guidelines show Back, Save and finish later and Continue. Review shows Back and Finish setup. Back is `quiet` at inline-start where the step has it. Save and finish later is `secondary`, and Continue or Finish setup is `primary`, both at inline-end. The wizard is resumable (`BRAND_CONFIG.md` §10). The save Notice appears directly above the footer — saved, and the person can leave and return here later — announced politely, without moving focus. A save that fails shows a danger Notice naming what could not be saved.
+- **Preview panel:** a header row: a dot `--b2s-space-3` in `action`, "Live preview" / "معاينة مباشرة" as an `h2` at `--b2s-text-preview` semibold, and a segmented control for Label and Sticker. The buttons are `--b2s-segment-block` tall in a group with `--b2s-space-2` padding. The control replaces Tabs on the wizard preview. The label specimen is at most preview-label-max by preview-label-block, scaled down to fit and centred. Help text is stated once per section, never repeated under each field.
+- **Completion:** the same header, with every step completed. A centred column holds the heading "Your brand is ready" / "علامتك التجارية جاهزة", one sentence, and the preview at the bounded size, with no disclaimer. There is no footer.
+- **Validation on Continue:** an error summary appears at the top, lists each problem as a link to its field, and takes focus. Each field also shows its own error. Input is always preserved.
+
+### EntryFrame
+
+The frame for screens a person sees before they belong to a business. A card on `surface`, at most `--b2s-entry-width` wide, padding `--b2s-space-8`, radius `radius-lg`, with a border, centred on the canvas. At 360 CSS pixels the card fills the width inside `space-5` margins. Inside it, the mark tile, "B2S" and the tagline at the top, and the other-language link at the inline end. The wordmark is the caller's; the frame itself does not add a heading, so the screen's one `h1` is the caller's. The Google button and the primary button are full width. The divider is a rule on each side of "or". It carries no tenant brand, ever (OD-G24), and it draws no third-party mark.
+
+---
+
+## 8. Patterns
+
+**Forms and validation.** Format is validated on blur, completeness on submit, and never on the first keystroke. **Submit is never disabled to signal an incomplete form**; the person submits and the form says what is missing, which is both more accessible and more honest. Input is never lost on error. Leaving a form with unsaved changes asks first.
+
+**Writes the server may refuse are never rendered optimistically.** Row-level isolation can refuse a write, and a refused optimistic update shows the person something that is about to be taken back. The control shows its pending state until the result is known.
+
+**Perceived performance.** A loader appears only after `--b2s-delay-loader`. Skeletons for content, spinners for actions, never both for one wait. Layout is reserved in advance so nothing shifts as content arrives.
+
+**Keyboard.** Focus is always visible and follows reading order. **No single-character shortcuts in Release 1**, because WCAG 2.2 2.1.4 requires that they can be turned off or remapped, and the operations half does not need them to be fast.
+
+**Content.** Every visible string comes from the catalogs (`UX_PRINCIPLES.md` §4). Sentence case, active verbs, and the same verb through a flow. Errors say what happened and how to fix it, without apology. Prose may truncate with the full text available on hover and focus; identifiers and numbers never truncate.
+
+---
+
+## 9. Identifiers in this catalog
+
+Component, prop, part, variant and token names are identifiers, and `GLOSSARY.md` §5 binds them.
+
+| Instead of | This catalog uses | Because §5 forbids |
+|---|---|---|
+| `label` | `caption` | `label` — a packaging entity |
+| `items` | `options` | `item` |
+| `studio`, `operations` as density | `comfortable`, `compact` | `studio` |
+| `order` for sorting | `direction` | `order` — `SalesOrder`, `PurchaseOrder` |
+| `asset` | `media` | `asset` — `MediaAsset` |
+| `line-height` | `leading` | `line` — `InvoiceLine` |
+| `template`, `preset`, `design`, `output` | not used | all four |
+
+HTML elements and ARIA attributes — the `label` element, `aria-label` — are the platform's vocabulary and are exempt.
+
+---
+
+## 10. Gate traceability
+
+Every gate the catalog landing task builds, and the part of this document it holds.
+
+| Gate | Tier | Holds | What it reads |
+|---|---|---|---|
+| CF-168 | Static | §4 rule 2 | Style sources for physical `left` and `right` properties |
+| CF-169 | Static | `UX_PRINCIPLES.md` §4; §4 rule 11 here | `en` and `ar` key sets, including every plural category |
+| CF-170 | Static | `UX_PRINCIPLES.md` §4 (CF-74) | Duplicate values per catalog namespace |
+| CF-171 | Static | §3 rules 2 and 7 | `--brand-*` is referenced only in `BrandFrame`'s stylesheet; within it, `--brand-*` only on canvas and content selectors, and `--b2s-*` only on mount and surround selectors; `--brand-*` is defined only by `BrandFrame`, and only from expressions; `proof`, `proof-edge` and `proof-text` are referenced only in `BrandFrame` |
+| CF-172 | Static | §2.1; §2.2; §0 items 1 to 3 | Raw colour, spacing, radius, duration, shadow, font-family or z-index outside token definitions; the colour token set closed against §2.2 and §2.11 in both directions; `proof`, `proof-edge` and `proof-text` achromatic; the warmth ceiling; the Clay–danger distinction floor; font families only the two `OD-G23` names |
+| CF-198 | Static | §2.2 | Text and background declared together, or through a state selector of the same component, at 4.5:1 in both themes. Only `--b2s-color-border-control` is a boundary, at 3:1 against canvas, surface, sunken and raised, in both themes. `--b2s-color-border` is decorative and exempt. Brand pairs are not evaluated. Pairs inherited from an ancestor are outside it. Not a substitute for CF-177 |
+| CF-173 | Static | §5; every `component` block | Each primitive implements every state not marked `n/a` |
+| CF-174 | Static | Every `component` block | Variant and size names match exactly |
+| CF-175 | Static | §4 rule 6; `TextField` `number` | Formatted numbers only through the R1-25 formatter |
+| CF-176 | Component-rendered | Every `aria` line; `ADR-014` | Accessible name, role and label, every state, both locales. Layout-dependent rules, colour contrast among them, are excluded here by an asserted list and owned by CF-177 |
+| CF-177 | Browser-rendered | §2.2 | AA contrast, light and dark, as rendered |
+| CF-178 | Browser-rendered | §2.7, §2.9, `AppShell` | 360px and desktop; no horizontal page scroll |
+| CF-179 | Browser-rendered | §4 | Every primitive in `ar`; mirroring and the never-mirror exceptions |
+| CF-180 | Acceptance | §11 | The wizard's first step from primitives alone |
+
+---
+
+## 11. Acceptance: the wizard's first step, from primitives alone
+
+The catalog is finished when the first real screen it exists for can be built from it with **no page-level styling at all** (CF-180). Inventory is not the test; composition is.
+
+**The screen:** step 1, Brand (BRAND_CONFIG.md §10 amendment), in the wizard's own frame. FormSection "Brand name": a BilingualField, the business's default locale first. FormSection "Your brand's colours": ColorFields for primary, secondary and accent. FormSection "Text and background": a paired ColorField for background and foreground, and ColorFields for muted and critical, each showing its starting value as a starting value. FormSection "Logo": a FileDrop. The preview region: a segmented control, Label and Sticker, each choice a BrandFrame holding its §3.1 specimen. Footer: Save and finish later, Continue. Help text is once per section.
+
+**It passes when**, in both locales, both themes, at 360 and 1280 CSS pixels:
+
+1. The screen's own stylesheet holds no rule.
+2. Continue with one locale of the brand name empty shows the error summary with a link to that field, focus on the summary, and the field's error naming the missing locale — and an empty colour role is named the same way.
+3. In the Arabic interface the frame, stepper, footer and sections mirror, the bilingual field keeps the business's default locale first, each input keeps its own direction, and the preview is identical to the English interface's.
+4. Every string comes from the catalogs, with equal key sets.
+5. Every control is keyboard-reachable in reading order with a visible focus ring and AA contrast, the proof's content excepted under §3 rule 4.
+6. Editing the brand name, any colour, or the logo updates the specimen, the segmented control shows the label or the sticker, and a ground with neither a mark nor a full logo shows its named gap as an info note above the specimen.
+
+Persistence — save and finish later keeping partial values — is not claimed here; it stays with CF-214.
+
+---
+
+## 12. What this forecloses
+
+- A proofing surround with any tint, and proof grey anywhere but around a brand.
+- The platform identity — Clay, a warm neutral, a platform shadow or face — inside tenant output.
+- Clay as a status, a large background or decoration, and a neutral warmer than the stated ceiling.
+- Tenant output that mirrors, reorders or restyles with the interface language.
+- Danger told apart from Clay by colour alone.
+- A brand token outside `BrandFrame`, a platform token inside it, and a platform control inside a brand.
+- A physical `left` or `right` anywhere in the catalog.
+- Letter-spacing on text that may be Arabic, and all-caps text anywhere.
+- A monospace face for data.
+- A number assembled by hand, and an identifier re-digited, normalised or truncated.
+- A string built by concatenation, and a counted string without every plural category.
+- A placeholder standing in for a caption, and a submit button disabled to signal an incomplete form.
+- An optimistic write the server may refuse.
+- A remembered tenant selection.
+- A value the implementer chooses because this document did not state it.
+
+---
+
+## 13. The onboarding screens
+
+Every screen renders in WizardStep's own frame (§7). Welcome is unnumbered; steps 1 to 5 are numbered. UI copy is the builder's to draft in both languages within the meanings stated here, and it is reviewed at the phase gate; headlines and help named here are binding in meaning.
+
+**Welcome** — a headline welcoming the owner and one sentence saying setup takes a few steps and can be resumed. A FormSection with: the business's main language, a RadioGroup of العربية and English, preselected to the interface language; the base currency, a Select of EGP, USD, SAR, AED and EUR (OD-G17), preselected to EGP, help "Prices and invoices use this currency"; the business's name, a TextField whose direction follows the chosen language, help saying the names that print on labels come next. Footer: Continue only. Continue validates all three, provisions the tenant (OD-G26) and opens the draft at `brand`.
+
+**1 Brand** — as §11. The heading block is binding: eyebrow "Step 1 of 5 · Your brand" / "الخطوة 1 من 5 · علامتك التجارية"; heading "See your brand on your product" / "شاهد علامتك التجارية على منتجك"; lead "Start with the essentials. Your packaging takes shape as you type." / "ابدأ بالأساسيات، وشاهد عبوتك تتشكّل أثناء الكتابة."
+
+**2 Typography** — a FormSection "Arabic" with Selects for heading and body; a FormSection "Latin" with Selects for heading and body. Each lists the library's families for its script by name, in the platform face. The help saying the choices appear on the label as they are made is the section description, once, not repeated under each field. No starting values; an unchosen pair is named on Continue (§11 rule 6 of BRAND_CONFIG.md). The preview region as in Brand, rendering the chosen faces at 700 for headings and 400 for body. Footer: Back, Save and finish later, Continue.
+
+**3 Company** — no preview region. FormSection "Legal details": BilingualField legal name, required; BilingualField trading name, optional; TextField `identifier` tax registration number, optional. FormSection "Registered address": a multiline BilingualField, required. FormSection "Contact": TextField email, optional; TextField phone, optional, accepting international form or an Egyptian national number, shown as stored, left-to-right and isolated. Footer: Back, Save and finish later, Continue.
+
+**4 Guidelines** — optional; help saying guidelines are rules the brand follows, shown to the team and never enforced by the platform (BRAND_CONFIG.md §8). Each guideline is a FormSection with a BilingualField title, a multiline BilingualField body and a quiet Remove button whose name says which guideline it removes. "Add a guideline" is a secondary Button. None at all is valid. Footer: Back, Save and finish later, Continue.
+
+**5 Review** — a summary FormSection per step, each with a TextLink whose name says which step it edits; the preview region; and a list of everything still needed, each item named by its rule and linked to where it is fixed. Footer: Back, and Finish setup as the primary action. Finish setup is never disabled: pressed with gaps, it shows the error summary listing each gap with its link. On success the profile becomes current, the draft is archived, and the owner arrives at the wizard's completion screen.
+
+**Completion** — WizardStep's header with every step completed; a centred column holding the heading "Your brand is ready" / "علامتك التجارية جاهزة", one sentence, and the preview at the bounded size, with no disclaimer. It states nothing about features that do not yet exist. The dashboard is module 22 and is not built in P03.
+
+**Resume** — an owner who returns with an unarchived draft lands on the draft's step, with every saved answer in place.
+
+## 14. The entry screens
+
+**Root** — until the public site exists (OD-A8, P08), the locale root shows nothing of its own: a signed-out visitor goes to sign-in, and a signed-in person goes wherever the onboarding gate sends them.
+
+**Sign in** — one screen in EntryFrame, with Tabs for "Sign in" and "Create account". Each tab holds a secondary Button "Continue with Google", in text only and with no third-party logo drawn; a divider reading "or"; an email TextField and a password TextField, each in Field with its label and error; and a primary Button. Field errors are inline. A failed sign-in is a danger Notice that never reveals whether an email address has an account (`SECURITY_MODEL.md` §2). Identity refused renders as a danger Notice. A cancelled Google sign-in renders as an info Notice. A sign-up the server accepts redirects to the locale root and shows no confirmation message: the catalogs have none.
+
+## Corrections
+
+**Revision 2 — 2026-09-30, signed by the owner.** The owner reviewed the rendered catalog, rejected the monochrome chrome, and chose a platform identity from rendered mockups: Clay over warm neutrals, with the achromatic surround kept only around brand and packaging previews. Revision 2 replaces §0, §1, §2.2, §2.5 and §2.6 in full, changes one row of §2.3 and names its leading tokens one by one, changes one row of §2.11, adds rules 8 and 9 to §3 and rule 12 to §4, updates the TextLink, Button, DataTable, FileDrop and BrandFrame blocks, and rewrites the CF-172 row of §10 and the first two items of §12. It follows `OD-G24` and `OD-G25`, which replace OD-G21 and OD-G22. Token names are unchanged except for nine additions — `accent-soft`, `accent-text`, `support`, `support-soft`, `proof`, `proof-edge`, `radius-xl`, `elevation-card`, `elevation-action` — so every primitive keeps its contract. The Revision 1 text stands in the repository at `c5aebfe`: `git show c5aebfe:docs/product/DESIGN_SURFACE.md`. That commit is its record under PR-07; this note says where to find it rather than copying ten thousand words into the document it replaced.
+
+A correction changes the text in place, because the component blocks are a machine contract that gates parse and a contract that is wrong where it binds is wrong. This section records each prior text verbatim. Git keeps the rest.
+
+**2026-09-25 — P03-T08.** The scale steps and the weights were not tokens. Component blocks referenced `text-xs`, `text-sm`, `text-xl` and `weight-500`, and no definition in this document contained those names. Prior token lines in the blocks:
+
+`tokens: [space-4, space-5, indicator-width, color-text, color-text-muted, color-border, color-action, text-body, weight-500]`
+
+`tokens: [radius-sm, color-success-bg, color-warning-bg, color-danger-bg, color-info-bg, color-sunken, text-xs, space-1, space-2, weight-500]`
+
+`weight-500` is now `weight-medium`. The scale and the three weights are defined as tokens after the scale table.
+
+**2026-09-25 — P03-T08.** The self-hosting paragraph did not state `font-display` or preload. Prior text:
+
+`**Font files are self-hosted and committed as assets.** A runtime font CDN is forbidden (`check-no-runtime-cdn`). If the landing task proposes a package to supply the files, that is an ADR under `AGENTS.md` §2.`
+
+The paragraph now also states that each face loads with `font-display: swap` and that the regular weight of each family is preloaded.
+
+**2026-09-25 — P03-T08.** The contrast sentence claimed a count the document does not enumerate, and the border-control row published a dark ratio from the rejected zinc palette. Prior text:
+
+`**Contrast, computed rather than asserted** (PR-23). Seventy text and control pairs, both themes; every one meets WCAG 2.2 AA. Selected rows:`
+
+`| border-control on sunken (lowest) | 3.67 | 3.93 | 3.0 |`
+
+The sentence now states fifty-six, which is the set the colour table enumerates. The border-control row is lowest light 3.67 on sunken and lowest dark 3.33 on raised. The other selected ratios were recomputed from the hex values and were unchanged.
+
+**2026-09-25 — P03-T08.** Status background tokens were written as a suffix, so a reader that does not invent the expansion cannot see the name the blocks use. Prior text:
+
+`| `--b2s-color-success` / `-bg` | `#1f7a3d` / `#eef7f1` | `#6fcf8f` / `#16261b` | Status |`
+
+and the same `/ `-bg`` form for warning, danger and info. Each background token is now written in full.
+
+**2026-09-26 — P03-T09-FIX.** §2.1's raw-value sentence did not name z-index, and it did not say where a `--b2s-` custom property may be defined. Prior text:
+
+`- No raw colour, spacing, radius, duration, shadow or font-family value appears anywhere outside the token definitions (CF-172).`
+
+The sentence now includes z-index, and a `--b2s-` custom property is defined only in `app/globals.css`.
+
+**2026-09-26 — P03-T09-FIX.** §2.2 named white text on the danger fill and did not name a token for it, and it did not state the pressed fills. Prior text:
+
+`| `--b2s-color-danger-action` | `#b3261e` | `#c62f26` | Destructive fill; text `#ffffff` |`
+
+and, in the contrast sentence, `white on `danger-action` and on `danger-action-hover``. The danger row now names `--b2s-color-danger-action-text`. The table gains `--b2s-color-danger-action-text` (`#ffffff` / `#ffffff`), `--b2s-color-danger-action-active` (`#7a1a14` / `#8f211b`), `--b2s-color-action-active` (`#000000` / `#bdbdbd`) and `--b2s-color-surface-active` (`#e3e3e3` / `#333333`). `danger-action-active` joins the closed chromatic set. `danger-action-text`, `action-active` and `surface-active` are achromatic. The selected contrast row `white on danger-action` is now `danger-action-text` on the danger fill, the hover and the pressed fill, plus `action-text` on `action-active` and `text` on `surface-active`. Beside that table: a control's boundary is measured against the surface around it, which pressing does not change, so `border-control` against `surface-active` (2.78 in dark) is not a WCAG 2.2 1.4.11 requirement.
+
+**2026-09-26 — P03-T09-FIX.** Button's `default` and `active` lines, and its tokens list. Prior text:
+
+`default: primary is action fill with action-text; secondary is surface fill with border-control; quiet is text only; danger is danger-action fill with white text`
+
+`active: fill deepens one step; no movement, no scale`
+
+`tokens: [control-height, control-padding-inline, radius-md, color-action, color-action-text, color-action-hover, color-surface, color-border-control, color-sunken, color-danger-action, color-danger-action-hover, color-focus, focus-width, focus-offset, text-body, icon-size, duration-quick, delay-loader]`
+
+`active` is now primary to `action-active`, secondary and quiet to `surface-active`, danger to `danger-action-active`, with no movement and no scale. `default` names `danger-action-text` for the danger variant. The tokens list gains the four new colour tokens.
+
+**2026-09-26 — P03-T09-FIX.** §2.11 did not state a z-index scale, the switch's size, the radio dot, the multiline ceiling or the skeleton pulse floor. The component blocks named none of those tokens. Prior `Select` active line: `active: listbox open, elevation-1`. Prior `RadioGroup` checked line: `checked: action-filled inner dot`. Prior `Switch` default line: `default: track sunken with border-control boundary; thumb at inline-start`. Prior `Switch` tokens line: `tokens: [radius-full, color-sunken, color-border-control, color-action, color-action-text, duration-base, ease-standard, color-focus]`. Prior `TextField` tokens line: `tokens: [control-height, control-padding-inline, radius-md, color-surface, color-border-control, color-text, color-text-subtle, color-danger, color-focus, text-body]`. Prior `Skeleton` loading line: `loading: this primitive is the loading state; a slow opacity pulse, removed under reduced motion`. Prior `Skeleton` tokens line: `tokens: [color-sunken, radius-sm, row-height, duration-pulse, delay-loader]`. Prior `RadioGroup` tokens line: `tokens: [check-size, color-border-control, color-action, color-focus, space-3, text-body]`. Prior `Select` tokens line: `tokens: [control-height, radius-md, color-surface, color-raised, color-border-control, color-text, color-text-subtle, elevation-1, color-focus]`.
+
+§2.11 now defines `--b2s-layer-dropdown` 10, `--b2s-layer-sticky` 20, `--b2s-layer-scrim` 30, `--b2s-layer-dialog` 40, `--b2s-layer-notice` 50 and `--b2s-layer-tooltip` 60, and states that these are every z-index in the catalog. It defines `--b2s-switch-block-size` 1.25rem, `--b2s-switch-inline-size` 2.25rem, `--b2s-switch-thumb-size` 1rem and `--b2s-switch-inset` as `var(--b2s-space-1)`, the same in both densities because the whole row is the target. It defines `--b2s-radio-dot-size` 0.5rem, `--b2s-multiline-rows-min` 3, `--b2s-multiline-rows-max` 8 and `--b2s-skeleton-opacity-min` 0.6, and states that a multiline field grows to eight rows then scrolls and that the pulse runs between 0.6 and 1. `Select`, `Switch`, `RadioGroup`, `TextField` and `Skeleton` name those tokens.
+
+**2026-09-26 — P03-T09-FIX.** `TextField` `number` and `identifier` did not state the digit ranges or the grouping characters, and `multiline` did not state its ceiling. Prior text:
+
+`**`number`** — for money, quantities and percentages. On input it accepts Latin **and** Arabic-Indic digits and both decimal separators, and normalises them before validation, because a person on an Arabic keyboard or pasting from another document may produce either. On blur it redisplays through the R1-25 formatter. The currency symbol sits in the `suffix`, after the value, as R1-25 defines.`
+
+`**`identifier`** — SKUs, GTINs, batch and invoice numbers. **Never normalised and never re-digited.** A scanned code has to match what is printed character for character, so an Arabic-Indic digit typed into an identifier is refused with a named error — "Use the digits 0 to 9" — rather than silently converted.`
+
+`**`multiline`** — grows with content to a limit, then scrolls. Guideline bodies use it through `BilingualField`.`
+
+`number` now states the two digit ranges, U+066B becoming ".", and U+066C and "," removed as grouping. `identifier` refuses every digit in both ranges with the named error. The Extended Arabic-Indic range adopts P03-T09's choice. `multiline` names the three-row floor and the eight-row ceiling.
+
+**2026-09-26 — P03-T09-FIX.** §2.10 did not say what a primitive does with an icon before the registry exists. Prior closing sentence:
+
+`If the icon set arrives as a package, it is an ADR for the landing task under `AGENTS.md` §2.`
+
+The section now states that until the icon registry lands, no primitive carries a direction-bearing icon, and a caller-supplied icon is rendered as given. The registry and every directional icon land together at P03-T10.
+
+**2026-09-26 — P03-T09-FIX.** The CF-172 row of §10 did not name z-index or the definition site. Prior text:
+
+`| CF-172 | Static | §2.1; §1; §0 items 1 and 2 | Raw colour, spacing, radius, duration, shadow or font-family values outside token definitions; every chrome neutral achromatic; font families only the two `OD-G23` names |`
+
+The row now includes z-index, every stylesheet and inline style, and the `app/globals.css` definition site. §10 gains the static contrast row for pairs declared together. That row is not CF-177.
+
+**2026-09-26 — P03-T10.** §0 did not say where date formatting and money formatting complete. Prior text, the close of item 4 running straight into §1:
+
+`4. **The brand contrast constant** — `BRAND_CONFIG.md` §11, amended 2026-09-23: `foreground` meets **4.5:1** against `background` in every theme, because `foreground` is the text role. `ColorField` references it.`
+
+`## 1. The one idea: the chrome is a proofing surround`
+
+A paragraph now sits between them: date formatting is complete at P03 through `lib/locale/`. Money and quantity formatting, TextField `number` redisplay and DataTable numeric cells complete at P05 through `lib/money/`, under ADR-011. Item 3's date rules are unchanged.
+
+**2026-09-27 — P03-T11.** Notice's block did not name `--b2s-color-text`. Prior tokens line:
+
+`tokens: [color-raised, elevation-3, radius-lg, status-bar-width, color-success, color-warning, color-danger, color-info, space-5, text-sm, duration-enter, duration-exit, notice-dismiss]`
+
+The tokens line now names `color-text`.
+
+**2026-09-27 — P03-T11.** Notice overflow did not say what happens when a fourth toast arrives, or where the newest sits. Prior text:
+
+`**Toasts:** at most three stacked; success and info dismiss after `--b2s-notice-dismiss`, paused on hover and focus; **warning and danger stay until dismissed**. **Inline notices** sit inside the section they concern and persist.`
+
+At most three toasts are visible. When a fourth arrives, the oldest success or info toast is dismissed early to make room. If all three visible are warning or danger, which persist, the new toast queues until one is dismissed. The newest sits nearest the inline-end bottom corner.
+
+**2026-09-27 — P03-T11.** Tooltip placement did not name a side. Prior text:
+
+`**Supplementary only.** Never the only place essential information lives, never interactive content, no more than about sixty characters. It is how a truncated value is shown in full on hover and focus.`
+
+Placement is block-start by default, and block-end when the viewport lacks room at block-start. Never inline-start or inline-end.
+
+**2026-09-27 — P03-T11.** §0 and §4 rule 6 sent every formatted number through one home. Prior §0 text:
+
+`**Formatting homes, added 2026-09-26 — P03-T10.** Date formatting is complete at P03 through `lib/locale/`. Money and quantity formatting, TextField `number` redisplay and DataTable numeric cells complete at P05 through `lib/money/`, under ADR-011.`
+
+Prior §4 rule 6:
+
+`6. **Formatted numbers pass through the locale formatter only** (`CALC_SPEC.md` R1-25; CF-175) and are never assembled by hand. Under R1-25's locale definitions both locales use Latin digits, so a number is a left-to-right run that bidirectional layout places correctly in an Arabic line.`
+
+`lib/locale/` formats every number `CALC_SPEC.md` does not govern — counts, upload percentages, byte sizes — and dates. Money and domain quantities, which `CALC_SPEC.md` governs, are formatted through `lib/money/` at P05 under ADR-011.
+
+**2026-09-27 — P03-T11.** The WCAG contrast function had no home, and the boundary sentence did not say which token owes 3:1 or that brand pairs are outside the static gate. Prior text, which still stands and is now followed by the new sentences:
+
+`A control's boundary is measured against the surface around it, which pressing does not change, so `border-control` against `surface-active` (2.78 in dark) is not a WCAG 2.2 1.4.11 requirement.`
+
+Only `--b2s-color-border-control` owes 3:1, against canvas, surface, sunken and raised, in both themes. `--b2s-color-border` is decorative and exempt. The function's one home is `lib/colour/`. `ColorField` uses it, and `BRAND_CONFIG.md` §11's validation will. The static gate does not evaluate brand pairs.
+
+**2026-09-27 — P03-T11.** Dialog's dark elevation border is restored, so the block names `color-border`. Prior tokens line:
+
+`tokens: [color-raised, color-scrim, elevation-2, radius-lg, dialog-width-small, dialog-width-medium, dialog-width-large, space-7, text-xl, duration-enter, duration-exit, ease-enter, ease-exit]`
+
+**2026-09-27 — P03-T11.** The CF-171 and CF-198 rows of §10 described a narrower claim than the gates now hold. Prior CF-171 row:
+
+`| CF-171 | Static | §3 rules 2 and 7 | `--brand-*` references outside `BrandFrame`; `--b2s-*` references inside it |`
+
+Prior CF-198 row:
+
+`| CF-198 | Static | §2.2 | Text and background declared together, or through a state selector of the same component, at 4.5:1 in both themes; a boundary token against the surface declared with it at 3:1. Pairs inherited from an ancestor are outside it. Not a substitute for CF-177 |`
+
+CF-171 now states the selector split and that a `--brand-*` definition is an expression. CF-198 now measures `border-control` against the four surfaces and exempts the decorative border. Brand pairs stay unevaluated.
+
+**2026-09-27 — P03-T12.** §4 rule 6 named the formats and did not state their rules. Prior text:
+
+`` `lib/locale/` formats every number `CALC_SPEC.md` does not govern — counts, upload percentages, byte sizes — and dates. Money and domain quantities, which `CALC_SPEC.md` governs, are formatted through `lib/money/` at P05 under ADR-011. ``
+
+Counts are integers, grouped by R1-25. Progress percentages are the completed fraction rounded down, 0 to 100. Byte sizes are decimal SI, half-up, with catalog unit words. The sign of a percentage follows the value in both locales.
+
+**2026-09-27 — P03-T12.** FileDrop did not say that it performs no upload. Prior text:
+
+`` **Always `comfortable`.** An upload is a brand task, never a dense operation. The accepted types and size limit come from the consuming module's specification, not from this component; the component only shows them. Where the object lands is `ADR-008` and `OD-G20`'s business, not this document's. ``
+
+The component is presentation only. Accepted types, the size limit and progress arrive as props and are shown through `lib/locale/`.
+
+**2026-09-27 — P03-T12.** DateField did not state the calendar words. Prior text:
+
+`` **Display order, calendar and first weekday come from `CALC_SPEC.md` R1-25's locale block** (§0 item 3) — `DD/MM/YYYY`, Gregorian, weeks from Saturday — and are never restated in code. Stored and transmitted as ISO 8601. **Typing is never slower than picking** — the calendar is an aid, not a gate. ``
+
+Month names, weekday headers and full weekday names are catalog strings, Egyptian Gregorian forms, Saturday first. The month heading is a catalog pattern of month name and year. The popover takes `--b2s-layer-dropdown`.
+
+**2026-09-27 — P03-T12.** DataTable sent numeric cells through the R1-25 formatter and called the page size a member preference without a size. Prior text:
+
+`` **Numbers:** end-aligned, tabular, and only through the R1-25 formatter. ``
+
+`` **Pagination** shows a formatted range and total. The page size is a member preference. ``
+
+Numeric cells render what the caller passes. Page sizes are 25, 50 and 100, default 25, held for the session. Sort direction is `ascending`, `descending`, or absent. The words between from, to and total are not stated.
+
+**2026-09-27 — P03-T12.** BrandFrame's `editor_preview` differed in nothing from `preview`. Prior variants line:
+
+`` variants: [preview, editor_preview] ``
+
+The block now declares `[preview]` alone.
+
+**2026-09-28 — P03-T12-FIX.** A day cell's accessible name was the full weekday name alone. Prior sentence, the reviewer's ambiguous wording that caused the defect:
+
+`Full names for each day cell's accessible name`
+
+The sentence stood in:
+
+`Full names for each day cell's accessible name: ar السبت، الأحد، الإثنين، الثلاثاء، الأربعاء، الخميس، الجمعة; en Saturday through Friday.`
+
+The accessible name is now the full date, catalog pattern `{weekday} {day} {month} {year}` in both locales. The full weekday names remain the weekday part of that date. Prior keyboard line:
+
+`keyboard: [typing a date is always allowed; the calendar grid moves with arrow keys in visual direction, PageUp and PageDown change month, Home and End go to the week's start and end, Enter selects, Escape closes]`
+
+Prior aria line:
+
+`aria: the text input is the primary control; the calendar follows the date-picker dialog pattern with grid semantics`
+
+Page Up and Page Down keep the same day number, clamped to the destination month's last day. Shift with either key moves by a year. The aria line now says a day cell's accessible name is the full date.
+
+**2026-09-28 — P03-T12-FIX.** FileDrop's browse_button had no variant, so the implementation took Button's default. Prior keyboard line:
+
+`keyboard: [browse_button is a Button; each file's actions are Buttons]`
+
+browse_button is a secondary Button, because a FileDrop sits in a form region whose primary action is elsewhere and Button allows one primary per region.
+
+**2026-09-28 — P03-T12-FIX.** `lib/locale/` displayed a count, a byte size or a progress value outside its domain. Prior text, the close of §4 rule 6's byte-size sentence running into the money sentence:
+
+`` The unit words are catalog strings. Money and domain quantities, which `CALC_SPEC.md` governs, are formatted through `lib/money/` at P05 under ADR-011. ``
+
+A count or a byte size below zero, or a progress value outside 0 to 1, is refused with a named RangeError and is never displayed.
+
+**2026-09-28 — P03-T12-FIX.** DataTable named the sort directions and did not state the cycle or the pagination words. Prior text:
+
+`` Sort `direction` is `ascending`, `descending`, or absent. The words between from, to and total are not stated; the table fills the pattern the caller supplies and does not invent the sentence. ``
+
+The sort cycle is absent, then ascending, then descending, then absent. Adopted from P03-T12. The pagination pattern is `{from}–{to} of {total}` in English and `{from}–{to} من {total}` in Arabic.
+
+**2026-10-02 — P03-T15.** The proof had no text colour, so BrandFrame's named error and gap markers had nothing achromatic to be set in. Prior proof table ended at proof-edge, and the sentence after it read:
+
+`These two are the only achromatic surfaces in the platform, and they appear only in BrandFrame (§3). A warm neutral never sits inside the proof, and proof grey never styles anything else.`
+
+The table gains `--b2s-color-proof-text`, `#2e2e2e` light and `#e6e6e6` dark, red, green and blue equal. The proof's tokens are now three. Measured: proof-text on proof is 10.68 light and 9.11 dark; on proof-edge, 8.46 and 5.97.
+
+**2026-10-02 — P03-T15.** The contrast sentence enumerated ninety-two pairs. Prior opening:
+
+`Ninety-two pairs, forty-six per theme:`
+
+The sentence now enumerates ninety-four pairs, forty-seven per theme, and gains `proof-text` on `proof`.
+
+**2026-10-02 — P03-T15.** Rule 3 did not name the text the frame itself writes. Prior text:
+
+`3. **The frame is a proofing mount:** the proof surround at radius-xl, a border-width boundary in proof-edge, and space-5 of surround between the chrome and the brand's own background. These are the only platform tokens the frame uses (OD-G25).`
+
+The frame's error and named gap markers are set in proof-text. BrandFrame's block names color-proof-text.
+
+**2026-10-02 — P03-T15.** §3 did not state the reset P03-T14 reported. Content inside a frame resets inherited font size, leading and spacing to their initial values. Tenant output typography is specified by templates at P06; until then the reset is the stated behaviour, not a design. That is rule 10.
+
+**2026-10-02 — P03-T15.** AppShell's current section was weight and a bar, and did not name the fill or the label colour. Prior text:
+
+`The current section is marked by weight and an inline-start bar of --b2s-indicator-width, never by colour alone.`
+
+The current section takes accent-soft fill, its label in accent-text at the semibold weight, and an inline-start bar of indicator-width in action. Weight and the bar carry it, so it is never colour alone.
+
+**2026-10-02 — P03-T15.** The stepper did not name its steps, and the progress example counted six. Prior text:
+
+`**Stepper:** numbered, because onboarding genuinely is a sequence. Steps are completed, current or upcoming. Completed steps are reachable; upcoming ones are not until reached. Progress is also stated in text — "Step 2 of 6" — so it is never carried by the graphic alone.`
+
+The stepper numbers Brand to Review, five steps. Welcome precedes the stepper and is not numbered. The progress example is "Step 2 of 5".
+
+**2026-10-02 — P03-T15.** §11's specimen was "Company identity". Prior text:
+
+`**The screen:** "Company identity" — BRAND_CONFIG.md §10's first row: legal name and trading name, landing on tenant through TranslationKey.`
+
+and the tree that placed FormSection "Company identity" under WizardStep. The specimen is step 1, Brand. Criteria one to five stand. Criterion six stays with CF-214. The specimen's tree arrives with P03-T16.
+
+**2026-10-02 — P03-T15.** §10's CF-171 and CF-172 rows named two proof tokens. Prior CF-172 clause: `` `proof` and `proof-edge` achromatic ``. Both rows now name `proof`, `proof-edge` and `proof-text`.
+
+**2026-10-02 — P03-T16.** §2.11 gained the measures the compositions and the preview specimens use. Prior table ended at `--b2s-skeleton-opacity-min`. The new rows are `--b2s-nav-width` 17rem, `--b2s-drawer-width` min(18rem, 85vw), `--b2s-preview-label-max` 30rem, `--b2s-preview-sticker-max` 15rem, `--b2s-proof-height-narrow` 15rem, and `--b2s-preview-rule-block` 3px. The 3px row is §3.1's accent-rule block size. The raw-value gate admits that length only as a token, and §2.11 already says every fixed measure a component uses is a token.
+
+**2026-10-02 — P03-T16.** AppShell's navigation sentence specified a fixed panel and an undescribed drawer. Prior text:
+
+`at lg and above, a side navigation fixed at inline-start; below lg, a drawer opened from the header.`
+
+At lg and above the side navigation is a sticky grid column of nav-width. Below lg it is a native dialog opened modally as a side sheet from inline-start, at drawer-width and full block size, over the scrim, focus contained, Escape closing it and focus returning to the menu button. The top layer places it. No z-index is used.
+
+**2026-10-02 — P03-T16.** PageHeader did not name the theme control. Prior section ended at the sentence forbidding a B2S mark on tenant output. The theme choice is a RadioGroup in the account menu — System, Light, Dark — and System follows prefers-color-scheme.
+
+**2026-10-02 — P03-T16.** EmptyState and ErrorState did not say whether they were cards. Prior EmptyState ended at "An empty screen is an invitation to act, never a mood." Prior ErrorState ended at "No apology." Both are in-flow content, not cards, and take no elevation.
+
+**2026-10-02 — P03-T16.** WizardStep did not give the wizard its own frame or a preview region. Prior block opened on the stepper. The wizard renders in its own frame, not AppShell. The header carries the platform mark, the stepper, the language switch and help. The optional preview is an inline-end column on sunken at lg and above, and precedes the form below lg at proof-height-narrow, not sticky.
+
+**2026-10-02 — P03-T16.** §3 had no preview specimens. §3.1 is new. There is no prior text.
+
+**2026-10-02 — P03-T16.** §11 was rewritten for the Brand step. Prior text:
+
+`**The screen:** step 1, Brand. The §10 amendment moved company data to step 3. Welcome precedes Brand and is too small a screen to prove the catalog. Brand exercises the bilingual fields, the swatches, the logo, and a live preview inside BrandFrame. Its full specification arrives with P03-T16. This section does not specify that screen's tree.`
+
+and the six criteria that named the legal name, a page stylesheet, and save-and-finish-later. The screen is the Brand step in the wizard's own frame, with the four sections, the two specimens, and the footer named in the section. Criterion six is the live preview. Persistence stays with CF-214.
+
+**2026-10-03 — P03-T19.** §3.1's logo slot accepted only a mark. Prior label clause: `holding the `mark` logo for the band's ground at 45% of the band's width.` Prior sticker clause: `centred, the `mark` logo for the primary's ground at 40% of the diameter`. Prior ground paragraph:
+
+`Ground — dark when `primary`'s relative luminance, computed by lib/colour/, is below 0.179, the point at which black and white contrast with it equally; light otherwise. The matching `mark` variant is used. If it does not exist, the logo slot stays empty and a named gap in proof-text says which variant is missing — never a substituted variant (BRAND_CONFIG.md §9) and never a generated monogram.`
+
+The slot takes the mark for its ground, or, where that ground has no mark, the full logo for the same ground. Never a logo made for the other ground, and never a generated monogram. The wizard creates full logos, and a mark-only slot would show a gap on every new brand.
+
+**2026-10-03 — P03-T19.** §11 criterion 6 required a gap whenever the mark was missing. Prior text:
+
+`6. Editing the brand name, any colour, or the logo updates the specimen, switching tabs shows the label or the sticker, and a missing mark for the ground shows its named gap.`
+
+A gap is named when that ground has neither a mark nor a full logo.
+
+**2026-10-03 — P03-T19.** §13, The onboarding screens, is new. There is no prior text.
+
+**2026-10-04 — P03-T24.** §7 WizardStep's header named a help control, and its footer always showed Back, Save and finish later and Continue. Prior header sentence:
+
+`The wizard renders in its own frame, not AppShell — nothing in the navigation exists before onboarding completes. The frame's header carries the platform mark, the stepper, the language switch and help.`
+
+Prior footer:
+
+`- **Footer:** **Back** as `quiet` at inline-start, **Continue** as `primary` at inline-end, and **Save and finish later** as `secondary`, because the wizard is resumable (`BRAND_CONFIG.md` §10).`
+
+The header carries no help control in Release 1. The footer's actions are set per screen: Welcome shows Continue only; Brand shows Save and finish later and Continue, with no Back; Typography, Company and Guidelines show Back, Save and finish later and Continue; Review shows Back and Finish setup.
+
+**2026-10-04 — P03-T24.** §11 Brand's footer included Back to Welcome. Prior clause: `Footer: Back to Welcome, Save and finish later, Continue.` The footer is Save and finish later, Continue. Once Welcome has provisioned the business, the gate never returns anyone to it.
+
+**2026-10-04 — P03-T24.** §13 Review sent the owner to the dashboard. Prior ending: `On success the profile becomes current, the draft is archived, and the owner arrives at the dashboard.` On success the owner arrives at the wizard's completion screen. The completion screen confirms setup is complete and shows the current brand in the preview. It states nothing about features that do not yet exist. The dashboard is module 22 and is not built in P03.
+
+**2026-10-09 — P03-T26.** §7 gained EntryFrame. There is no prior text.
+
+**2026-10-09 — P03-T26.** §14, The entry screens, is new. There is no prior text.
+
+**2026-10-09 — P03-T26.** WizardStep's header did not carry Sign out. Prior text:
+
+`The wizard renders in its own frame, not AppShell — nothing in the navigation exists before onboarding completes. The frame's header carries the platform mark, the stepper and the language switch. It carries no help control in Release 1: help was named without a behaviour, and a control that does nothing is worse than none. It returns when there is help content to show.`
+
+The header's inline end carries a quiet Button that signs out. It is the frame's only header action in Release 1. It still carries no help control.
+
+**2026-10-09 — P03-T26.** TextField gained a password variant. Prior variants line:
+
+`variants: [text, email, number, identifier, multiline]`
+
+Password is a native input type. It is not re-digited.
+
+**2026-10-09 — P03-T27.** ColorField's chooser was optional and the empty state showed only a no-colour pattern. Prior parts line: `parts: [swatch, hex_input, picker_button?, contrast_readout?]`. Prior empty state: `empty: swatch shows a named no-colour pattern; never a default colour pretending to be the brand's`. The chooser is present in every state, empty included. An empty field shows its empty name and commits nothing until the person chooses; the chooser opens on the brand's current background colour, which always has a value. The hex box stays.
+
+**2026-10-09 — P03-T27.** §7 WizardStep's footer did not say what Save and finish later shows. Prior footer ended at ``The wizard is resumable (`BRAND_CONFIG.md` §10).`` Save and finish later shows a success Notice in the step — saved, and the person can leave and return here later — announced politely, without moving focus. A save that fails shows a danger Notice naming what could not be saved.
+
+**2026-10-10 — P03-T30.** §2.11 gained the wizard frame's measures. Prior table ended at `--b2s-preview-rule-block`. The new rows are `--b2s-wizard-header-block` 4.5rem, `--b2s-mark-tile` 2.25rem, `--b2s-step-mark` 1.75rem, `--b2s-wizard-layout` 60rem, `--b2s-wizard-form-pad-block` 2.75rem, `--b2s-wizard-action-block` 2.75rem, `--b2s-text-preview` 0.9375rem, `--b2s-segment-block` 2.25rem, `--b2s-preview-label-block` 18.125rem, `--b2s-preview-narrow-block` 17.5rem, `--b2s-specimen-arabic` 1.875rem, `--b2s-specimen-latin` 1.1875rem, and `--b2s-entry-width` 27.5rem. Prior `--b2s-proof-height-narrow` used-by cell: `Wizard preview below lg`. The narrow specimen now uses `--b2s-preview-narrow-block`.
+
+**2026-10-10 — P03-T30.** §3.1 sized the other locale's name at 60% of the default. Prior sentence: `the brand name in the business's default locale in its script's heading face, in foreground; the name in the other locale in its script's heading face at 60% of that size, in foreground`. The Arabic name is specimen-arabic and the English name is specimen-latin, both in the heading face, and the Arabic name is never smaller than the English.
+
+**2026-10-10 — P03-T30.** §7 WizardStep specified components and never the approved mockup's composition. Prior opening:
+
+`The wizard renders in its own frame, not AppShell — nothing in the navigation exists before onboarding completes. The frame's header carries the platform mark, the stepper and the language switch. The header's inline end carries a quiet Button "Sign out", which ends the session and returns to sign-in. It is the frame's only header action in Release 1. It carries no help control in Release 1: help was named without a behaviour, and a control that does nothing is worse than none. It returns when there is help content to show. WizardStep gains an optional preview region: at lg and above, an inline-end column on sunken with a border-inline-start, the form capped at measure-form; below lg, the preview precedes the form with its proof at proof-height-narrow, not sticky.`
+
+Prior stepper: `numbered, because onboarding genuinely is a sequence. It numbers Brand to Review, five steps. Welcome precedes the stepper and is not numbered. Steps are completed, current or upcoming. Completed steps are reachable; upcoming ones are not until reached. Progress is also stated in text — "Step 2 of 5" — so it is never carried by the graphic alone.`
+
+Prior body: `a step title at 3xl, one sentence of purpose, then one or more FormSections.`
+
+The header, indicator, two-column body, heading block, sticky footer, preview panel and completion are stated in §7.
+
+**2026-10-10 — P03-T30.** §7 EntryFrame was a column at the form measure. Prior text:
+
+`The frame for screens a person sees before they belong to a business. It holds the platform's name as a wordmark in the platform face (--b2s-font-family), with no new logo asset; a TextLink to the same screen in the other language; and one column at the form measure (--b2s-measure-form), centred on the canvas. At 360 CSS pixels the column fills the width inside space-5 margins. It carries no tenant brand, ever (OD-G24).`
+
+It is a card at most entry-width, with the mark tile, the tagline, full-width actions and a ruled divider.
+
+**2026-10-10 — P03-T30.** TextField, Select, ColorField and DateField put the focus ring on the inner control as well as the border box. Prior TextField focus: `universal focus ring; boundary to text`. Prior Select focus: `universal focus ring`. Prior ColorField focus: `universal focus ring on the focused part`. Prior DateField focus: `universal focus ring`. Each now draws one ring on the control's border box.
+
+**2026-10-10 — P03-T30.** §11's preview region was Tabs. Prior clause: `The preview region: Tabs, Label and Sticker, each panel a BrandFrame holding its §3.1 specimen.` It is a segmented control. Criterion six's "switching tabs" is that control. The gallery's fictional-sample disclaimer is not part of a tenant's brand.
+
+**2026-10-10 — P03-T30.** §13 Brand was "as §11" with no heading copy, Typography repeated its help under each field, and Completion only confirmed that setup is complete. Prior Typography clause included `help saying the choices appear on the label as they are made`. That sentence is the section description, once. Prior Completion: `confirms that setup is complete and shows the current brand in the preview`. The heading is "Your brand is ready" / "علامتك التجارية جاهزة", with one sentence and the preview at the bounded size, and no disclaimer.
+
+**2026-10-10 — P03-T30.** §7 said completion kept the five circles below the wizard layout. Prior sentence: `On completion, below the wizard layout, the five completed circles stay visible and the one-line form is hidden.` Below the wizard layout the indicator is the one line on every screen, completion included. At the wizard layout and above, completion shows the five completed circles. Prior header sentence said the one-line indicator sits with the lockup. Below the wizard layout the lockup and the header actions share the first row, and the one-line indicator takes the full width of the next.

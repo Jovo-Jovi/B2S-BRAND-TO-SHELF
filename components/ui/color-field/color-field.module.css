@@ -1,0 +1,103 @@
+.root {
+  display: flex;
+  align-items: center;
+  column-gap: var(--b2s-space-2);
+  box-sizing: border-box;
+  min-block-size: var(--b2s-control-height);
+  padding-inline: var(--b2s-control-padding-inline);
+  border-radius: var(--b2s-radius-md);
+  border: var(--b2s-border-width) solid var(--b2s-color-border-control);
+  background-color: var(--b2s-color-surface);
+  color: var(--b2s-color-text);
+  font-size: var(--b2s-text-sm);
+}
+
+.swatch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  inline-size: var(--b2s-control-height);
+  block-size: var(--b2s-control-height);
+  border-radius: var(--b2s-radius-sm);
+  background-color: var(--b2s-color-sunken);
+  color: var(--b2s-color-text);
+  font-size: var(--b2s-text-sm);
+}
+
+.hex {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  border: 0;
+  padding-block: var(--b2s-space-2);
+  padding-inline: 0;
+  background-color: transparent;
+  color: inherit;
+  font: inherit;
+  unicode-bidi: isolate;
+}
+
+.picker {
+  flex: none;
+  inline-size: var(--b2s-control-height);
+  block-size: var(--b2s-control-height);
+  padding-block: 0;
+  padding-inline: 0;
+  border: 0;
+  background-color: transparent;
+}
+
+.readout {
+  margin-block: 0;
+  margin-inline: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.pass {
+  color: var(--b2s-color-success);
+}
+
+.fail {
+  color: var(--b2s-color-danger);
+}
+
+.root:hover,
+.root[data-state="hover"] {
+  border-block-color: var(--b2s-color-text-muted);
+  border-inline-color: var(--b2s-color-text-muted);
+}
+
+.hex:focus,
+.hex:focus-visible,
+.picker:focus,
+.picker:focus-visible {
+  outline: none;
+}
+
+.root:has(:focus-visible),
+.root[data-state="focus"] {
+  outline-style: solid;
+  outline-width: var(--b2s-focus-width);
+  outline-color: var(--b2s-color-focus);
+  outline-offset: var(--b2s-focus-offset);
+}
+
+.root[data-state="disabled"],
+.root:has(:disabled) {
+  color: var(--b2s-color-text-subtle);
+  background-color: var(--b2s-color-sunken);
+  pointer-events: none;
+}
+
+.root[data-state="error"],
+.root:has([aria-invalid="true"]) {
+  border-block-color: var(--b2s-color-danger);
+  border-inline-color: var(--b2s-color-danger);
+}
+
+.root[data-state="active"] .picker {
+  outline-style: solid;
+  outline-width: var(--b2s-focus-width);
+  outline-color: var(--b2s-color-focus);
+  outline-offset: var(--b2s-focus-offset);
+}
